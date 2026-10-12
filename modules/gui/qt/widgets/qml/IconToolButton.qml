@@ -40,6 +40,11 @@ T.ToolButton {
 
     property real radius: VLCStyle.button_radius
 
+    // redesign: Figma icon (Widgets.RdIcon) drawn instead of the font glyph when set;
+    // rdIconChecked is the variant shown while checked (e.g. "subtitles_state-active")
+    property string rdIcon: ""
+    property string rdIconChecked: ""
+
     // Settings
 
     padding: 0
@@ -105,19 +110,48 @@ T.ToolButton {
         radius: control.radius
     }
 
-    contentItem: Widgets.IconLabel {
-        text: control.text
+    contentItem: Item {
+        implicitWidth: control.rdIcon !== "" ? rdIconItem.implicitWidth : glyph.implicitWidth
+        implicitHeight: control.rdIcon !== "" ? rdIconItem.implicitHeight : glyph.implicitHeight
+        baselineOffset: glyph.baselineOffset
 
-        color: control.color
+        Widgets.IconLabel {
+            id: glyph
 
-        DelayedBehavior on color {
-            delayedEnabled: theme.initialized
+            anchors.fill: parent
 
-            ColorAnimation {
-                duration: VLCStyle.duration_long
+            visible: control.rdIcon === ""
+
+            text: control.text
+
+            color: control.color
+
+            DelayedBehavior on color {
+                delayedEnabled: theme.initialized
+
+                ColorAnimation {
+                    duration: VLCStyle.duration_long
+                }
             }
+
+            font: control.font
         }
 
-        font: control.font
+        Widgets.RdIcon {
+            id: rdIconItem
+
+            anchors.centerIn: parent
+
+            visible: control.rdIcon !== ""
+
+            name: {
+                if (control.rdIcon === "")
+                    return ""
+                return (control.checked && control.rdIconChecked !== "") ? control.rdIconChecked : control.rdIcon
+            }
+            size: control.font.pixelSize
+            color: control.color
+            accentColor: theme.accent
+        }
     }
 }
