@@ -128,7 +128,8 @@ T.Pane {
 
             // redesign: cone-shaped track. 0-100% fills the first 63 px of 88, 100-200% the rest
             // (Figma volume variants 50%=33, 100%=63, 200%=88). Gradient #95D318 > #B2A918 > #D37918 >
-            // #FF3737 across the whole cone, darkened 20%; unfilled part #090909.
+            // #FF3737 across the whole cone, darkened 20%, in every theme and accent (video 17:44-17:49);
+            // unfilled part BG/B2.
             background: Canvas {
                 id: cone
 
@@ -144,7 +145,10 @@ T.Pane {
                         return Math.max(0, v) * knee
                     return Math.min(1, knee + (v - 1) * (1 - knee) / Math.max(0.01, root._maxvolpos - 1))
                 }
+                readonly property color emptyColor: VLCStyle.palette.rdBgB2
+
                 onLevelChanged: requestPaint()
+                onEmptyColorChanged: requestPaint()
                 onWidthChanged: requestPaint()
                 onHeightChanged: requestPaint()
 
@@ -169,7 +173,7 @@ T.Pane {
                         ctx.closePath()
                     }
                     wedge()
-                    ctx.fillStyle = "#090909"
+                    ctx.fillStyle = emptyColor
                     ctx.fill()
                     if (level <= 0)
                         return

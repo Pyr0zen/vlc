@@ -304,20 +304,86 @@ SystemPalette::SystemPalette(QObject* parent)
 
 }
 
-// redesign: derive the Figma accent shades (Bright, DIm, BG/Accent Bright, BG/Accent Dark)
-// from a main accent color, keeping the hue and scaling saturation/value with the same
-// ratios as the original orange set (#D37918 -> #FC9729, #AB6314, #371F06, #1A1611).
-static QColor deriveAccentShade(const QColor& main, float satRatio, float valRatio)
+namespace {
+// redesign: one Figma color style set (redesign/reference/figma/styles.txt)
+struct RdThemeColors
+{
+    const char* fg1; const char* fg2;
+    const char* fgA1; const char* fgA2; const char* fgA3; const char* fgA4; const char* fgB1;
+    const char* accentMain; const char* accentBright; const char* accentDim;
+    const char* bgAccentBright; const char* bgAccentDark;
+    const char* bgA1; const char* bgA2; const char* bgA3; const char* bgA4; const char* bgA5;
+    const char* bgB1; const char* bgB2;
+    QRgb bgA3Transparent; QRgb bgB1Transparent; QRgb bgB2Transparent;
+    const char* dividerBright; const char* dividerDim;
+    QRgb hoverOverlay;
+};
+
+const RdThemeColors rdDarkColors = {
+    "#EAEAEA", "#C6C6C6",
+    "#969696", "#8F8F8F", "#6B6B6B", "#404040", "#161616",
+    "#D37918", "#FC9729", "#AB6314",
+    "#371F06", "#1A1611",
+    "#222222", "#1F1F1F", "#1B1B1B", "#191919", "#151515",
+    "#0E0E0E", "#090909",
+    qRgba(0x19, 0x19, 0x19, 242), qRgba(0x0E, 0x0E, 0x0E, 242), qRgba(0x00, 0x00, 0x00, 204),
+    "#373737", "#222222",
+    qRgba(0xFF, 0xFF, 0xFF, 15),
+};
+
+// Light/FG/1 and Light/FG/2 are copies of the dark values in the Figma file (Decision 20);
+// these two are the proposed corrections, every other value is the Figma "Light" style.
+const RdThemeColors rdLightColors = {
+    "#111111", "#222222",
+    "#3C3C3C", "#2E2E2E", "#6B6B6B", "#3B3B3B", "#161616",
+    "#E8851A", "#FFA13B", "#965916",
+    "#D8BA9A", "#C6AB89",
+    "#EDEDED", "#DDDDDD", "#D5D5D5", "#B3B3B3", "#888888",
+    "#E7E7E7", "#DEDEDE",
+    qRgba(0xD5, 0xD5, 0xD5, 191), qRgba(0xE7, 0xE7, 0xE7, 204), qRgba(0xDE, 0xDE, 0xDE, 204),
+    "#9B9B9B", "#ACACAC",
+    qRgba(0x00, 0x00, 0x00, 15),
+};
+
+// derive an accent shade for a user accent: keep its hue and scale saturation and
+// value the way the theme's reference set scales them from its own main accent
+QColor deriveAccentShade(const QColor& main, const QColor& refMain, const QColor& refShade)
 {
     float h, s, v, a;
     main.getHsvF(&h, &s, &v, &a);
     if (h < 0)
         h = 0;
+    const float satRatio = refMain.hsvSaturationF() > 0 ? refShade.hsvSaturationF() / refMain.hsvSaturationF() : 1.f;
+    const float valRatio = refMain.valueF() > 0 ? refShade.valueF() / refMain.valueF() : 1.f;
     return QColor::fromHsvF(h, std::min(1.f, s * satRatio), std::min(1.f, v * valRatio));
 }
+}
 
-void SystemPalette::applyAccent()
+void SystemPalette::applyRdColors()
 {
+    const RdThemeColors& t = m_isDark ? rdDarkColors : rdLightColors;
+    rdFg1 = QColor(t.fg1);
+    rdFg2 = QColor(t.fg2);
+    rdFgA1 = QColor(t.fgA1);
+    rdFgA2 = QColor(t.fgA2);
+    rdFgA3 = QColor(t.fgA3);
+    rdFgA4 = QColor(t.fgA4);
+    rdFgB1 = QColor(t.fgB1);
+    rdBgA1 = QColor(t.bgA1);
+    rdBgA2 = QColor(t.bgA2);
+    rdBgA3 = QColor(t.bgA3);
+    rdBgA4 = QColor(t.bgA4);
+    rdBgA5 = QColor(t.bgA5);
+    rdBgB1 = QColor(t.bgB1);
+    rdBgB2 = QColor(t.bgB2);
+    rdBgA3Transparent = QColor::fromRgba(t.bgA3Transparent);
+    rdBgB1Transparent = QColor::fromRgba(t.bgB1Transparent);
+    rdBgB2Transparent = QColor::fromRgba(t.bgB2Transparent);
+    rdDividerBright = QColor(t.dividerBright);
+    rdDividerDim = QColor(t.dividerDim);
+    rdHoverOverlay = QColor::fromRgba(t.hoverOverlay);
+
+    // accent: the user's choice (qt-accent-color, live from MainCtx), else the theme's own
     QColor main;
     if (m_ctx && m_ctx->accentColor().isValid())
         main = m_ctx->accentColor();
@@ -333,32 +399,32 @@ void SystemPalette::applyAccent()
 #endif
         free(accentColor);
     }
-    if (!main.isValid())
-        main = QColor("#D37918"); // Dark/Accent/Main
 
-    orange500 = main;
-    rdAccentMain = main;
-    if (main == QColor("#D37918"))
+    const QColor refMain(t.accentMain);
+    // the default accent (Dark/Accent/Main) maps to each theme's exact Figma set
+    if (!main.isValid() || main == QColor(rdDarkColors.accentMain))
+        main = refMain;
+
+    rdAccentMain = orange500 = main;
+    if (main == refMain)
     {
-        // exact Figma values for the default accent
-        orange800 = rdAccentBright = QColor("#FC9729");
-        rdAccentDim = QColor("#AB6314");
-        rdBgAccentBright = QColor("#371F06");
-        rdBgAccentDark = QColor("#1A1611");
+        rdAccentBright = orange800 = QColor(t.accentBright);
+        rdAccentDim = QColor(t.accentDim);
+        rdBgAccentBright = QColor(t.bgAccentBright);
+        rdBgAccentDark = QColor(t.bgAccentDark);
     }
     else
     {
-        orange800 = rdAccentBright = deriveAccentShade(main, 0.945f, 1.195f);
-        rdAccentDim = deriveAccentShade(main, 0.997f, 0.811f);
-        rdBgAccentBright = deriveAccentShade(main, 1.006f, 0.261f);
-        rdBgAccentDark = deriveAccentShade(main, 0.390f, 0.123f);
+        rdAccentBright = orange800 = deriveAccentShade(main, refMain, QColor(t.accentBright));
+        rdAccentDim = deriveAccentShade(main, refMain, QColor(t.accentDim));
+        rdBgAccentBright = deriveAccentShade(main, refMain, QColor(t.bgAccentBright));
+        rdBgAccentDark = deriveAccentShade(main, refMain, QColor(t.bgAccentDark));
     }
 }
 
 void SystemPalette::componentComplete()
 {
     assert(m_ctx);
-    applyAccent();
     updatePalette();
 }
 
@@ -409,11 +475,8 @@ void SystemPalette::setCtx(MainCtx* ctx)
     if (m_ctx)
     {
         // redesign: live accent recolor (Decision 9 / 15)
-        m_accentConnection = connect(m_ctx, &MainCtx::accentColorChanged, this, [this]() {
-            applyAccent();
-            updatePalette();
-        });
-        applyAccent();
+        m_accentConnection = connect(m_ctx, &MainCtx::accentColorChanged,
+                                     this, &SystemPalette::updatePalette);
     }
     emit ctxChanged();
     updatePalette();
@@ -509,6 +572,7 @@ QColor SystemPalette::getColor(ColorContext::ColorSet colorSet, ColorContext::Co
 void SystemPalette::makeLightPalette()
 {
     m_isDark = false;
+    applyRdColors();
 
     typedef ColorContext C;
 
@@ -725,12 +789,12 @@ void SystemPalette::makeDarkPalette()
     // redesign: values are the Figma "Dark" color styles (redesign/reference/figma/styles.txt).
     // The accent follows orange500 / orange800 so qt-accent-color keeps working.
     m_isDark = true;
+    applyRdColors();
 
     m_colorMap.clear();
 
     typedef ColorContext C;
 
-    const QColor white6 = setColorAlpha(Qt::white, 0.06);
 
     {
         C::ColorSet CS = C::View;
@@ -789,8 +853,8 @@ void SystemPalette::makeDarkPalette()
     {
         C::ColorSet CS = C::TabButton;
         setColor(CS, C::Bg, C::Primary, C::Normal, setColorAlpha(rdBgB2, 0.0));
-        setColor(CS, C::Bg, C::Primary, C::Focused, white6);
-        setColor(CS, C::Bg, C::Primary, C::Hovered, white6);
+        setColor(CS, C::Bg, C::Primary, C::Focused, rdHoverOverlay);
+        setColor(CS, C::Bg, C::Primary, C::Hovered, rdHoverOverlay);
 
         setColor(CS, C::Fg, C::Primary, C::Normal, rdFgA3);
         setColor(CS, C::Fg, C::Primary, C::Focused, rdFg1);
@@ -803,8 +867,8 @@ void SystemPalette::makeDarkPalette()
     {
         C::ColorSet CS = C::ToolButton;
         setColor(CS, C::Bg, C::Primary, C::Normal, Qt::transparent);
-        setColor(CS, C::Bg, C::Primary, C::Hovered, white6);
-        setColor(CS, C::Bg, C::Primary, C::Focused, white6);
+        setColor(CS, C::Bg, C::Primary, C::Hovered, rdHoverOverlay);
+        setColor(CS, C::Bg, C::Primary, C::Focused, rdHoverOverlay);
         setColor(CS, C::Bg, C::Secondary, C::Normal, rdBgB2);
 
         setColor(CS, C::Fg, C::Primary, C::Normal, rdFgA2);
@@ -981,6 +1045,7 @@ void SystemPalette::makeSystemPalette()
     else
     {
         m_isDark = palette->isThemeDark();
+        applyRdColors();
     }
 
     m_palettePriv = std::move(palette);

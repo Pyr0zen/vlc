@@ -236,7 +236,7 @@ FocusScope{
 
                 background: Rectangle {
                     radius: VLCStyle.rd_radius_normal
-                    color: folderChip.hovered ? Qt.rgba(1, 1, 1, 0.06) : "transparent"
+                    color: folderChip.hovered ? VLCStyle.palette.rdHoverOverlay : "transparent"
                 }
 
                 contentItem: Row {

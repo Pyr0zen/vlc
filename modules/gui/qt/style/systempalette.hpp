@@ -115,7 +115,8 @@ public:
     COLOR_DEFINITION(orange500, "#D37918");
     COLOR_DEFINITION(orange800, "#FC9729");
 
-    // redesign: Figma "Dark" color styles, exposed to QML as palette.rd* (redesign/reference/figma/styles.txt)
+    // redesign: Figma color styles of the current theme, exposed to QML as palette.rd*
+    // (set by applyRdColors() from redesign/reference/figma/styles.txt)
     COLOR_DEFINITION(rdFg1, "#EAEAEA");
     COLOR_DEFINITION(rdFg2, "#C6C6C6");
     COLOR_DEFINITION(rdFgA1, "#969696");
@@ -140,6 +141,8 @@ public:
     COLOR_DEFINITION(rdBgB2Transparent, QColor(0x00, 0x00, 0x00, 204)); // #000000 80%
     COLOR_DEFINITION(rdDividerBright, "#373737");
     COLOR_DEFINITION(rdDividerDim, "#222222");
+    COLOR_DEFINITION(rdHoverOverlay, QColor(0xFF, 0xFF, 0xFF, 15)); // hover tint over any background
+    COLOR_DEFINITION(rdShadow, QColor(0x00, 0x00, 0x00, 117)); // Figma effect drop shadow #000000 46%
 
     COLOR_DEFINITION(orange400, "#f89a06"); //FIXME name have been chosen randomly by me
     COLOR_DEFINITION(orange200, "#e29a06"); //FIXME name have been chosen randomly by me
@@ -194,7 +197,7 @@ signals:
 
 private:
     void updatePalette();
-    void applyAccent();
+    void applyRdColors();
 
     void makeLightPalette();
     void makeDarkPalette();
