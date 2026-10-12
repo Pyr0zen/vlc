@@ -1,0 +1,87 @@
+/*****************************************************************************
+ * Copyright (C) 2026 VLC authors and VideoLAN
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * ( at your option ) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ *****************************************************************************/
+
+// Redesign segmented control (Figma component "Values": Relative / Pixels, Dark / Light / System,
+// None / Horizontal / Vertical). Selected segment: BG/Accent Bright fill, Accent/Main text.
+import QtQuick
+
+import VLC.MainInterface
+import VLC.Style
+
+Rectangle {
+    id: root
+
+    property var model: []              // list of segment labels
+    property int currentIndex: 0
+    signal activated(int index)
+
+    readonly property SystemPalette rdPalette: VLCStyle.palette
+
+    implicitWidth: VLCStyle.dp(213)
+    implicitHeight: VLCStyle.dp(44)
+
+    radius: VLCStyle.rd_radius_normal
+    color: rdPalette.rdBgB2
+
+    Row {
+        id: row
+
+        anchors.fill: parent
+        anchors.margins: VLCStyle.dp(2)
+        spacing: VLCStyle.dp(2)
+
+        Repeater {
+            model: root.model
+
+            delegate: Rectangle {
+                id: segment
+
+                required property int index
+                required property var modelData
+
+                readonly property bool selected: index === root.currentIndex
+
+                width: (row.width - row.spacing * (root.model.length - 1)) / Math.max(1, root.model.length)
+                height: row.height
+                radius: VLCStyle.rd_radius_small
+                color: selected ? root.rdPalette.rdBgAccentBright
+                                : (mouse.containsMouse ? root.rdPalette.rdBgA2 : root.rdPalette.rdBgA4)
+
+                Text {
+                    anchors.centerIn: parent
+                    text: segment.modelData
+                    font.family: VLCStyle.rd_fontFamily
+                    font.pixelSize: VLCStyle.rd_fontSize_label
+                    color: segment.selected ? root.rdPalette.rdAccentMain : root.rdPalette.rdFgA2
+                }
+
+                MouseArea {
+                    id: mouse
+
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                        root.currentIndex = segment.index
+                        root.activated(segment.index)
+                    }
+                }
+            }
+        }
+    }
+}
