@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 #include "systempalette.hpp"
+
+#include <algorithm>
 #include <QGuiApplication>
 #include <QPalette>
 #include <QSettings>
@@ -302,36 +304,61 @@ SystemPalette::SystemPalette(QObject* parent)
 
 }
 
-void SystemPalette::componentComplete()
+// redesign: derive the Figma accent shades (Bright, DIm, BG/Accent Bright, BG/Accent Dark)
+// from a main accent color, keeping the hue and scaling saturation/value with the same
+// ratios as the original orange set (#D37918 -> #FC9729, #AB6314, #371F06, #1A1611).
+static QColor deriveAccentShade(const QColor& main, float satRatio, float valRatio)
 {
-    {
-        assert(m_ctx);
-        char* accentColor = var_InheritString(m_ctx->getIntf(), "qt-accent-color");
-        assert(accentColor);
+    float h, s, v, a;
+    main.getHsvF(&h, &s, &v, &a);
+    if (h < 0)
+        h = 0;
+    return QColor::fromHsvF(h, std::min(1.f, s * satRatio), std::min(1.f, v * valRatio));
+}
 
-        if (!strcmp(accentColor, "default"))
-        {
-            // Use default
-        }
+void SystemPalette::applyAccent()
+{
+    QColor main;
+    if (m_ctx && m_ctx->accentColor().isValid())
+        main = m_ctx->accentColor();
+    else if (m_ctx)
+    {
+        char* accentColor = var_InheritString(m_ctx->getIntf(), "qt-accent-color");
 #if QT_VERSION >= QT_VERSION_CHECK(6, 6, 0)
-        else if (!strcmp(accentColor, "system"))
+        if (accentColor && !strcmp(accentColor, "system"))
         {
             assert(qApp);
-            const auto palette = qApp->palette();
-
-            orange500 = palette.color(QPalette::Normal, QPalette::Accent);
-            orange800 = orange500.lighter(150);
+            main = qApp->palette().color(QPalette::Normal, QPalette::Accent);
         }
 #endif
-        else
-        {
-            orange500 = QColor(accentColor);
-            orange800 = orange500.lighter(150);
-        }
-
         free(accentColor);
     }
+    if (!main.isValid())
+        main = QColor("#D37918"); // Dark/Accent/Main
 
+    orange500 = main;
+    rdAccentMain = main;
+    if (main == QColor("#D37918"))
+    {
+        // exact Figma values for the default accent
+        orange800 = rdAccentBright = QColor("#FC9729");
+        rdAccentDim = QColor("#AB6314");
+        rdBgAccentBright = QColor("#371F06");
+        rdBgAccentDark = QColor("#1A1611");
+    }
+    else
+    {
+        orange800 = rdAccentBright = deriveAccentShade(main, 0.945f, 1.195f);
+        rdAccentDim = deriveAccentShade(main, 0.997f, 0.811f);
+        rdBgAccentBright = deriveAccentShade(main, 1.006f, 0.261f);
+        rdBgAccentDark = deriveAccentShade(main, 0.390f, 0.123f);
+    }
+}
+
+void SystemPalette::componentComplete()
+{
+    assert(m_ctx);
+    applyAccent();
     updatePalette();
 }
 
@@ -377,7 +404,18 @@ void SystemPalette::setCtx(MainCtx* ctx)
 {
     if (ctx == m_ctx)
         return;
+    if (m_ctx)
+        disconnect(m_ctx, &MainCtx::accentColorChanged, this, nullptr);
     m_ctx = ctx;
+    if (m_ctx)
+    {
+        // redesign: live accent recolor (Decision 9 / 15)
+        connect(m_ctx, &MainCtx::accentColorChanged, this, [this]() {
+            applyAccent();
+            updatePalette();
+        });
+        applyAccent();
+    }
     emit ctxChanged();
     updatePalette();
 }

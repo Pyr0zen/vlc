@@ -194,6 +194,7 @@ signals:
 
 private:
     void updatePalette();
+    void applyAccent();
 
     void makeLightPalette();
     void makeDarkPalette();
