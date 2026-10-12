@@ -111,8 +111,35 @@ public:
     Q_PROPERTY(CSDMetrics* csdMetrics READ getCSDMetrics NOTIFY CSDMetricsChanged FINAL)
 
     //standard color definitions used by light/dark themes
-    COLOR_DEFINITION(orange500, "#FF8800");
-    COLOR_DEFINITION(orange800, "#FF610A");
+    // redesign: accent defaults to Dark/Accent/Main and Dark/Accent/Bright (redesign/reference/figma/styles.txt)
+    COLOR_DEFINITION(orange500, "#D37918");
+    COLOR_DEFINITION(orange800, "#FC9729");
+
+    // redesign: Figma "Dark" color styles, exposed to QML as palette.rd* (redesign/reference/figma/styles.txt)
+    COLOR_DEFINITION(rdFg1, "#EAEAEA");
+    COLOR_DEFINITION(rdFg2, "#C6C6C6");
+    COLOR_DEFINITION(rdFgA1, "#969696");
+    COLOR_DEFINITION(rdFgA2, "#8F8F8F");
+    COLOR_DEFINITION(rdFgA3, "#6B6B6B");
+    COLOR_DEFINITION(rdFgA4, "#404040");
+    COLOR_DEFINITION(rdFgB1, "#161616");
+    COLOR_DEFINITION(rdAccentMain, "#D37918");
+    COLOR_DEFINITION(rdAccentBright, "#FC9729");
+    COLOR_DEFINITION(rdAccentDim, "#AB6314");
+    COLOR_DEFINITION(rdBgAccentBright, "#371F06");
+    COLOR_DEFINITION(rdBgAccentDark, "#1A1611");
+    COLOR_DEFINITION(rdBgA1, "#222222");
+    COLOR_DEFINITION(rdBgA2, "#1F1F1F");
+    COLOR_DEFINITION(rdBgA3, "#1B1B1B");
+    COLOR_DEFINITION(rdBgA4, "#191919");
+    COLOR_DEFINITION(rdBgA5, "#151515");
+    COLOR_DEFINITION(rdBgB1, "#0E0E0E");
+    COLOR_DEFINITION(rdBgB2, "#090909");
+    COLOR_DEFINITION(rdBgA3Transparent, QColor(0x19, 0x19, 0x19, 242)); // #191919 95%
+    COLOR_DEFINITION(rdBgB1Transparent, QColor(0x0E, 0x0E, 0x0E, 242)); // #0E0E0E 95%
+    COLOR_DEFINITION(rdBgB2Transparent, QColor(0x00, 0x00, 0x00, 204)); // #000000 80%
+    COLOR_DEFINITION(rdDividerBright, "#373737");
+    COLOR_DEFINITION(rdDividerDim, "#222222");
 
     COLOR_DEFINITION(orange400, "#f89a06"); //FIXME name have been chosen randomly by me
     COLOR_DEFINITION(orange200, "#e29a06"); //FIXME name have been chosen randomly by me

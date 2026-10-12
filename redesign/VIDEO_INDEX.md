@@ -70,6 +70,9 @@ Decided by Tony on 2026-10-12. General rule for anything not listed: her final v
 
 ## Decisions (Claude)
 Extra decisions made during the build, one line each (date, row IDs, decision, reason).
+- 2026-10-13 P1-05 / W2.1: dark palette mapping to VLC color sets: View bg BG/A3, secondary BG/B2, main text FG/A1, secondary text FG/A3, borders Divider/Bright, separators Divider/Dim, icon buttons FG/A2 with #FFFFFF 6% hover, accent buttons solid accent + FG/B1 text, standard buttons BG/A3 + FG/A2 (Figma Cancel). Reason: Figma uses FG/A1-FG/A3 grays for almost all text, brighter FG/2-FG/1 only for hover/selected.
+- 2026-10-13 W2.1: dark ("Night") is the default color scheme when the user has none saved (Decision 20).
+- 2026-10-13 W2.1: Figma colors are exposed to QML as `palette.rd*` (systempalette.hpp) and Figma sizes as `VLCStyle.rd_*` tokens, so components use exact design values.
 
 ## Core changes (status)
 Approved by Decision 27 (minimal and isolated); reverse playback postponed (Decision 29).
