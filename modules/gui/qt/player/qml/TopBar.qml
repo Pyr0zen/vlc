@@ -16,6 +16,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
+// redesign: single 40 px top bar (video 3:35-5:14, 11:24-11:40; Figma "topbar"):
+// [cone] [...] [sidebar toggle] | [folder chip]      title      [minimize maximize fullscreen close]
+// Background BG/A3. Title Inter 400 14 FG/A2, centered on the window.
 import QtQuick
 import QtQuick.Templates as T
 import QtQuick.Layouts
@@ -24,6 +27,7 @@ import QtQuick.Window
 
 import VLC.MainInterface
 import VLC.Style
+import VLC.Player
 import VLC.PlayerControls
 import VLC.Playlist
 import VLC.Widgets as Widgets
@@ -33,7 +37,7 @@ import VLC.Util
 FocusScope{
     id: root
 
-    // Properties
+    // Properties (same interface as before the redesign, used by Player.qml)
 
     required property int textWidth
 
@@ -41,7 +45,7 @@ FocusScope{
     // Not strictly necessary to set
     property Item plListView
 
-    property int reservedHeight: 0
+    property int reservedHeight: implicitHeight
 
     property int topMargin: 0
     property int sideMargin: 0
@@ -52,24 +56,25 @@ FocusScope{
     property bool showToolbar: false
     property bool pinControls: false
 
+    property bool playlistVisible: false
+
     readonly property ColorContext colorContext: ColorContext {
         id: theme
         colorSet: ColorContext.Window
     }
 
-    // Private
-
-    property bool _showTopBar: (pinControls === false || showToolbar === false)
-
-    property bool _showCenterText: (pinControls && showToolbar === false && showCSD)
-
-    readonly property int _sideMargin: VLCStyle.margin_small + sideMargin
+    // Parent folder of the playing file, shown in the folder chip (video 11:24-11:31)
+    readonly property string folderName: {
+        const url = Player.url ? Player.url.toString() : ""
+        if (url === "")
+            return ""
+        const parts = decodeURIComponent(url).replace(/\\/g, "/").split("/").filter((p) => p !== "")
+        return parts.length >= 2 ? parts[parts.length - 2] : ""
+    }
 
     // Aliases
 
     property alias resumeVisible: resumeDialog.visible
-
-    property alias playlistVisible: playlistButton.checked
 
     // Signals
 
@@ -82,124 +87,18 @@ FocusScope{
 
     // Settings
 
+    implicitHeight: topMargin + VLCStyle.rd_topBarHeight
+
     Accessible.role: Accessible.ToolBar
     Accessible.name: qsTr("Player topbar")
     AccessibleCompat.id: "playerTopBar"
 
-    // Events
-
-    Component.onCompleted: _layout()
-
-    onShowCSDChanged: _layout()
-    onPinControlsChanged: _layout()
-    onShowToolbarChanged: _layout()
-    onTopMarginChanged: _layout()
-    onSideMarginChanged: _layout()
-
-    on_ShowTopBarChanged: _layout()
-    on_ShowCenterTextChanged: _layout()
-
-    // Functions
-
-    // FIXME: Imperative layouting in QML is stupid, this needs to be gone.
-    function _layoutLine(c1, c2, offset)
-    {
-        let c1Height = c1?.implicitHeight ?? 0
-        let c2Height = c2?.implicitHeight ?? 0
-
-        if (c2 === csdDecorations) {
-            //csdDecorations.implicitHeight gets overwritten when the height is set,
-            //VLCStyle.icon_normal is its initial value
-            c2Height = VLCStyle.icon_normal
-        }
-
-        const lineHeight = Math.max(c1Height, c2Height)
-
-        if (c1) {
-            c1.height = lineHeight
-            c1.anchors.topMargin = offset
-        }
-
-        if (c2) {
-            c2.height = lineHeight
-            c2.anchors.topMargin = offset
-        }
-        return lineHeight
-    }
-
-    // FIXME: Imperative layouting in QML is stupid, this needs to be gone.
-    //FIXME: if CSD will be weirdly placed if application safe-area are used,
-    //nota that if you need a safe area (kiosk mode), you probably don't need CSD
-    function _layout() {
-        let offset = topMargin
-
-        if (_showCenterText) {
-            //place everything on one line
-            //csdDecorations.implicitHeight gets overwritten when the height is set,
-            //VLCStyle.icon_normal is its initial value
-            const lineHeight = Math.max(logoOrResume.implicitHeight, playlistGroup.implicitHeight, VLCStyle.icon_normal)
-
-            centerTitleText.y = 0
-            centerTitleText.height = lineHeight
-
-            csdDecorations.height  = lineHeight
-
-            logoOrResume.height =  lineHeight
-
-            playlistGroup.height = lineHeight
-            playlistGroup.anchors.topMargin = 0
-            playlistGroup.extraRightMargin = Qt.binding(function() { return width - csdDecorations.x })
-
-
-            implicitHeight = lineHeight
-            offset += lineHeight
-
-        } else {
-            playlistGroup.extraRightMargin = 0
-
-            let left = undefined
-            let right = undefined
-            let logoPlaced = false
-
-            if (showToolbar) {
-                left = menubar
-            }
-
-            if (showCSD) {
-                right = csdDecorations
-                if (!left) {
-                    left = logoOrResume
-                    logoPlaced = true
-                }
-            }
-
-            if (!!left || !!right) {
-                offset += _layoutLine(left, right, offset)
-
-                if (showCSD) {
-                    tapNDrag.height = offset
-                }
-            }
-
-            if (!logoPlaced) {
-                left = logoOrResume
-            } else {
-                left = undefined
-            }
-
-            if (_showTopBar)
-                right = playlistGroup
-            else
-                right = undefined
-
-            offset += _layoutLine(left, right, offset)
-        }
-
-        implicitHeight = offset
-        reservedHeight = offset
-    }
-
     // Children
+
+    Rectangle {
+        anchors.fill: parent
+        color: VLCStyle.palette.rdBgA3
+    }
 
     //drag and dbl click the titlebar in CSD mode
     Loader {
@@ -218,293 +117,254 @@ FocusScope{
         }
     }
 
-    // Components -
-    Menus.Menubar {
-        id: menubar
-
-        anchors.top: parent.top
-        anchors.left: parent.left
-        anchors.leftMargin: root.sideMargin
-        anchors.right: root.showCSD ? csdDecorations.left : parent.right
-
-
-        visible: root.showToolbar
-        enabled: root.showToolbar
-
-        onHoveredChanged: menu => root.requestLockUnlockAutoHide(hovered)
-        onMenuOpenedChanged: menu => root.requestLockUnlockAutoHide(menuOpened)
-        onImplicitHeightChanged: root._layout()
-    }
-
     Item {
-        id: logoOrResume
+        id: bar
 
-        anchors.left: root.left
-        anchors.top: root.top
-        anchors.leftMargin:  root._sideMargin
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        height: VLCStyle.rd_topBarHeight
 
-        implicitWidth: resumeVisible ? resumeDialog.implicitWidth
-                                     : logoGroup.implicitWidth
+        Row {
+            id: leftGroup
 
-        implicitHeight: {
-            if (root.resumeVisible) {
-                // Only if there are multiple lines use `resumeDialog`'s implicit height, otherwise the video
-                // window may get resized by few pixels unnecessarily when `resumeDialog` is no longer visible.
-                if (resumeDialog.implicitHeight >= (logoGroup.implicitHeight + resumeDialog.baselineOffset))
-                    return resumeDialog.implicitHeight
-                else
-                    return logoGroup.implicitHeight
-            } else if (_showTopBar)
-                return logoGroup.implicitHeight
-            else
-                return 0
-        }
+            anchors.left: parent.left
+            anchors.leftMargin: VLCStyle.dp(6, VLCStyle.scale) + root.sideMargin
+            anchors.verticalCenter: parent.verticalCenter
 
-        onImplicitHeightChanged: root._layout()
+            spacing: VLCStyle.dp(7, VLCStyle.scale)
 
-        Item {
-            id: logoGroup
+            // cone (Figma "Frame 8", 38x28 cell, 24 px icon, accent colored: Decision 9 live accent)
+            Item {
+                width: VLCStyle.dp(38, VLCStyle.scale)
+                height: VLCStyle.dp(28, VLCStyle.scale)
 
-            anchors.fill: parent
-
-            visible: (root._showTopBar && root.resumeVisible === false)
-
-            implicitHeight: VLCStyle.icon_banner + VLCStyle.margin_xxsmall * 2
-            implicitWidth: backBtn.implicitWidth + logo.implicitWidth + VLCStyle.margin_xxsmall
+                Widgets.BannerCone {
+                    anchors.centerIn: parent
+                    color: theme.accent
+                }
+            }
 
             Widgets.IconToolButton {
-                id: backBtn
+                id: menuSelector
 
                 anchors.verticalCenter: parent.verticalCenter
-                anchors.left: parent.left
+                width: VLCStyle.rd_iconButtonWidth
+                height: VLCStyle.rd_iconButtonHeight
+                font.pixelSize: VLCStyle.rd_iconSize
 
-                objectName: "IconToolButton"
-                font.pixelSize: VLCStyle.icon_banner
-                text: VLCIcons.back
-                description: qsTr("Back")
+                text: VLCIcons.more
+                description: qsTr("Menu")
+
+                AccessibleCompat.id: "topBarMenuButton"
+
+                focus: true
+                checked: contextMenu.shown
+
+                Navigation.parentItem: root
+                Navigation.rightItem: sidebarButton
+
+                onClicked: contextMenu.popup(this.mapToGlobal(0, height))
+
+                onHoveredChanged: root.requestLockUnlockAutoHide(hovered)
+
+                Menus.QmlGlobalMenu {
+                    id: contextMenu
+
+                    ctx: MainCtx
+
+                    onAboutToShow: root.requestLockUnlockAutoHide(true)
+                    onAboutToHide: root.requestLockUnlockAutoHide(false)
+                }
+
+                Connections {
+                    target: root
+
+                    function onForceUnlock() {
+                        contextMenu.close()
+                    }
+                }
+            }
+
+            // sidebar toggle (video 11:37): opens the library. Until the compact library sidebar
+            // exists (BUILD_PLAN W5.1) this uses VLC's library view.
+            Widgets.IconToolButton {
+                id: sidebarButton
+
+                anchors.verticalCenter: parent.verticalCenter
+                width: VLCStyle.rd_iconButtonWidth
+                height: VLCStyle.rd_iconButtonHeight
+                font.pixelSize: VLCStyle.rd_iconSize
+
+                text: VLCIcons.panel_left
+                description: qsTr("Library")
 
                 AccessibleCompat.id: "topBarBackButton"
 
-                focus: true
-
                 Navigation.parentItem: root
-                Navigation.rightItem: menuSelector
-                onClicked: root.backRequested()
+                Navigation.leftItem: menuSelector
+                Navigation.rightItem: folderChip
 
+                onClicked: root.backRequested()
                 onHoveredChanged: root.requestLockUnlockAutoHide(hovered)
             }
 
-            Widgets.BannerCone {
-                id: logo
+            Rectangle {
+                visible: folderChip.visible
+                anchors.verticalCenter: parent.verticalCenter
+                width: VLCStyle.dp(1, VLCStyle.scale)
+                height: VLCStyle.dp(20, VLCStyle.scale)
+                color: VLCStyle.palette.rdDividerBright
+            }
+
+            // folder chip (Figma "Frame 12": 82x28 min, radius 6, gap 4): folder icon + folder name
+            T.AbstractButton {
+                id: folderChip
+
+                visible: root.folderName !== "" && !root.resumeVisible
+                anchors.verticalCenter: parent.verticalCenter
+
+                implicitHeight: VLCStyle.dp(28, VLCStyle.scale)
+                implicitWidth: Math.max(VLCStyle.dp(82, VLCStyle.scale), chipRow.implicitWidth + VLCStyle.dp(8, VLCStyle.scale))
+
+                Accessible.name: qsTr("Open folder %1 in the library").arg(root.folderName)
+
+                Navigation.parentItem: root
+                Navigation.leftItem: sidebarButton
+
+                onClicked: root.backRequested()
+                onHoveredChanged: root.requestLockUnlockAutoHide(hovered)
+
+                background: Rectangle {
+                    radius: VLCStyle.rd_radius_normal
+                    color: folderChip.hovered ? Qt.rgba(1, 1, 1, 0.06) : "transparent"
+                }
+
+                contentItem: Row {
+                    id: chipRow
+
+                    spacing: VLCStyle.dp(4, VLCStyle.scale)
+                    leftPadding: VLCStyle.dp(4, VLCStyle.scale)
+
+                    Widgets.IconLabel {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: VLCIcons.topbar_video
+                        font.pixelSize: VLCStyle.dp(20, VLCStyle.scale)
+                        color: VLCStyle.palette.rdFgA2
+                    }
+
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: root.folderName
+                        elide: Text.ElideRight
+                        width: Math.min(implicitWidth, VLCStyle.dp(220, VLCStyle.scale))
+                        font.family: VLCStyle.rd_fontFamily
+                        font.pixelSize: VLCStyle.rd_fontSize_label
+                        color: VLCStyle.palette.rdFgA2
+                    }
+                }
+            }
+
+            // "continue where you left off" stays here until the resume toast (W3.8) replaces it
+            ResumeDialog {
+                id: resumeDialog
 
                 anchors.verticalCenter: parent.verticalCenter
-                anchors.left: backBtn.right
-                anchors.leftMargin: VLCStyle.margin_xxsmall
+                height: VLCStyle.rd_topBarHeight
 
-                color: theme.accent
-            }
-        }
+                maxWidth: rightGroup.x - leftGroup.x - VLCStyle.margin_large
 
-        ResumeDialog {
-            id: resumeDialog
+                colorContext.palette: theme.palette
 
-            anchors.fill: parent
-            //add aditional margin so it align with menubar text when visible (see MenuBar.qml)
-            anchors.leftMargin: VLCStyle.margin_xsmall
+                Navigation.parentItem: rootPlayer
 
-            maxWidth: ((root.showCSD && !root.pinControls) ? csdDecorations : playlistGroup).x
-                - VLCStyle.applicationHorizontalMargin
-                - VLCStyle.margin_large
-
-            colorContext.palette: theme.palette
-
-            Navigation.parentItem: rootPlayer
-
-            onHidden: {
-                if (activeFocus) {
-                    backBtn.forceActiveFocus()
+                onHidden: {
+                    if (activeFocus) {
+                        menuSelector.forceActiveFocus()
+                    }
                 }
-            }
 
-            onVisibleChanged: {
-                root.requestLockUnlockAutoHide(visible)
-            }
-        }
-    }
-
-    //FIXME use the the right class
-    T.Label {
-        id: centerTitleText
-
-        readonly property int _leftLimit: logoOrResume.x + logoOrResume.width
-        readonly property int _rightLimit: playlistGroup.x
-        readonly property int _availableWidth: _rightLimit - _leftLimit
-        readonly property int _centerX: ((root.width - centerTitleText.implicitWidth) / 2)
-        readonly property bool _alignHCenter: _centerX > _leftLimit
-                                              && _centerX + centerTitleText.implicitWidth < _rightLimit
-
-        visible: (_showCenterText && root.resumeVisible === false)
-
-        enabled: visible
-
-        width: Math.min(centerTitleText._availableWidth, centerTitleText.implicitWidth)
-
-        leftPadding: VLCStyle.margin_small
-        rightPadding: VLCStyle.margin_small
-
-        text: root.title
-        color: theme.fg.primary
-        font.pixelSize: VLCStyle.dp(13, VLCStyle.scale)
-        font.weight: Font.DemiBold
-        elide: Text.ElideRight
-        verticalAlignment: Text.AlignVCenter
-
-        on_AlignHCenterChanged: _layout()
-        Component.onCompleted: _layout()
-
-        function _layout() {
-            if (_alignHCenter) {
-                centerTitleText.x = 0
-                centerTitleText.anchors.horizontalCenter = root.horizontalCenter
-            } else {
-                centerTitleText.anchors.horizontalCenter = undefined
-                centerTitleText.x = Qt.binding(function() { return centerTitleText._leftLimit })
-            }
-        }
-    }
-
-    //FIXME use the the right class
-    T.Label {
-        id: leftTitleText
-
-        anchors.left: parent.left
-        anchors.top: logoOrResume.bottom
-        anchors.leftMargin: root._sideMargin
-
-        width: root.textWidth - VLCStyle.margin_normal
-
-        visible: !root.pinControls
-
-        enabled: visible
-
-        topPadding: VLCStyle.margin_large
-        leftPadding: logo.x
-
-        text: root.title
-        horizontalAlignment: Text.AlignLeft
-        color: theme.fg.primary
-        font.weight: Font.DemiBold
-        font.pixelSize: VLCStyle.dp(18, VLCStyle.scale)
-        elide: Text.ElideRight
-    }
-
-    Loader {
-        id: csdDecorations
-
-        anchors.top: parent.top
-        anchors.right: parent.right
-
-        focus: false
-        height: VLCStyle.icon_normal
-        active: root.showCSD
-        enabled: root.showCSD
-        visible: root.showCSD
-        source:  VLCStyle.palette.hasCSDImage
-            ? "qrc:///qt/qml/VLC/Widgets/CSDThemeButtonSet.qml"
-            : "qrc:///qt/qml/VLC/Widgets/CSDWindowButtonSet.qml"
-
-        Connections {
-            target: csdDecorations.item
-            enabled: csdDecorations.status === Loader.Ready
-            function onButtonHoveredChanged() { root.requestLockUnlockAutoHide(csdDecorations.item.buttonHovered) }
-        }
-    }
-
-    Row {
-        id: playlistGroup
-
-        property int extraRightMargin: 0
-
-        focus: true
-        spacing: VLCStyle.margin_xxsmall
-
-        anchors.top: parent.top
-        anchors.right: parent.right
-        anchors.rightMargin: root._sideMargin + extraRightMargin
-
-        visible: root._showTopBar
-
-        Widgets.IconToolButton {
-            id: menuSelector
-
-            anchors.verticalCenter: parent.verticalCenter
-            visible: !root.showToolbar
-            enabled: visible
-            focus: visible
-            font.pixelSize: VLCStyle.icon_banner
-
-            width: VLCStyle.bannerButton_width
-            height: VLCStyle.bannerButton_height
-
-            text: VLCIcons.more
-            description: qsTr("Menu")
-
-            AccessibleCompat.id: "topBarMenuButton"
-
-            checked: contextMenu.shown
-
-            Navigation.parentItem: root
-            Navigation.leftItem: backBtn
-            Navigation.rightItem: playlistButton
-
-            onClicked: contextMenu.popup(this.mapToGlobal(0, height))
-
-            onHoveredChanged: root.requestLockUnlockAutoHide(hovered)
-
-            Menus.QmlGlobalMenu {
-                id: contextMenu
-
-                ctx: MainCtx
-
-                onAboutToShow: root.requestLockUnlockAutoHide(true)
-                onAboutToHide: root.requestLockUnlockAutoHide(false)
-            }
-
-            Connections {
-                target: root
-
-                function onForceUnlock() {
-                    contextMenu.close()
+                onVisibleChanged: {
+                    root.requestLockUnlockAutoHide(visible)
                 }
             }
         }
 
-        PlaylistPane.PlaylistToggleButton {
-            id: playlistButton
+        T.Label {
+            id: centerTitleText
 
-            anchors.verticalCenter: parent.verticalCenter
-            objectName: ControlListModel.PLAYLIST_BUTTON
-            font.pixelSize: VLCStyle.icon_banner
-            text: VLCIcons.playlist
-            description: qsTr("Play Queue")
+            readonly property real _maxWidth: Math.max(0, Math.min(root.width - 2 * Math.max(leftGroup.width + leftGroup.x,
+                                                                                                root.width - rightGroup.x),
+                                                                     root.width))
 
-            AccessibleCompat.id: "topBarPlayqueueButton"
+            anchors.centerIn: parent
+            width: Math.min(implicitWidth, _maxWidth)
 
-            focus: root.showToolbar
+            visible: !root.resumeVisible && width > 0
 
-            width: VLCStyle.bannerButton_width
-            height: VLCStyle.bannerButton_height
+            text: root.title
+            color: VLCStyle.palette.rdFgA2
+            font.family: VLCStyle.rd_fontFamily
+            font.pixelSize: VLCStyle.rd_fontSize_label
+            elide: Text.ElideRight
+            verticalAlignment: Text.AlignVCenter
+        }
 
-            plListView: root.plListView
-            
-            Navigation.parentItem: root
-            Navigation.leftItem: menuSelector.visible ? menuSelector : backBtn
+        Item {
+            id: rightGroup
 
-            onClicked: togglePlaylistVisibility()
+            anchors.right: parent.right
+            anchors.rightMargin: root.sideMargin
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
 
-            Accessible.onToggleAction:togglePlaylistVisibility()
+            width: root.showCSD ? csdDecorations.width : fullscreenButton.width + VLCStyle.dp(6, VLCStyle.scale)
 
-            onHoveredChanged: root.requestLockUnlockAutoHide(hovered)
+            Loader {
+                id: csdDecorations
+
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                anchors.right: parent.right
+
+                focus: false
+                active: root.showCSD
+                enabled: root.showCSD
+                visible: root.showCSD
+                source:  VLCStyle.palette.hasCSDImage
+                    ? "qrc:///qt/qml/VLC/Widgets/CSDThemeButtonSet.qml"
+                    : "qrc:///qt/qml/VLC/Widgets/CSDWindowButtonSet.qml"
+
+                onLoaded: {
+                    if (item.showFullscreenButton !== undefined)
+                        item.showFullscreenButton = true
+                }
+
+                Connections {
+                    target: csdDecorations.item
+                    enabled: csdDecorations.status === Loader.Ready
+                    function onButtonHoveredChanged() { root.requestLockUnlockAutoHide(csdDecorations.item.buttonHovered) }
+                }
+            }
+
+            // fullscreen when the window has native decorations (or a themed CSD set)
+            Widgets.IconToolButton {
+                id: fullscreenButton
+
+                visible: !root.showCSD || !(csdDecorations.item && csdDecorations.item.showFullscreenButton !== undefined)
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.right: root.showCSD ? csdDecorations.left : parent.right
+                anchors.rightMargin: root.showCSD ? 0 : VLCStyle.dp(6, VLCStyle.scale)
+                width: VLCStyle.rd_iconButtonWidth
+                height: VLCStyle.rd_iconButtonHeight
+                font.pixelSize: VLCStyle.rd_iconSize
+
+                text: (MainCtx.intfMainWindow.visibility === Window.FullScreen) ? VLCIcons.defullscreen : VLCIcons.fullscreen
+                description: qsTr("Fullscreen")
+
+                onClicked: MainCtx.toggleInterfaceFullScreen()
+                onHoveredChanged: root.requestLockUnlockAutoHide(hovered)
+            }
         }
     }
 }
