@@ -46,8 +46,9 @@ For every element, every time:
 ## Current phase
 READY TO BUILD. Next session: read CLAUDE.md, VIDEO_INDEX.md, FIGMA_FLOWS.md and BUILD_PLAN.md, then run the build from Phase 1 through all phases continuously, following the test loop, without stopping unless truly blocked.
 
-- Last completed: preparation (video index, Figma data, decisions, build plan). No VLC code changed yet, no workflow file yet.
-- Next work package: W1.1 (Windows CI build, BUILD_PLAN.md section 3).
+- Last completed: preparation (video index, Figma data, decisions, build plan), commit 10402f4e5d.
+- In progress: W1.1 (Windows CI build). Workflow `.github/workflows/build-windows.yml` pushed; first run being watched. Log in `redesign/BUILD_NOTES.md`.
+- Next work package after W1.1: W2.1 (dark palette, fonts, tokens).
 - Update this section after every item: last completed row/WP with commit hash, next WP, latest green run.
 
 ## Working rules for the build

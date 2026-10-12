@@ -1,0 +1,95 @@
+# Windows 64-bit build of the redesign branch.
+# Mirrors VideoLAN's own "win64" job (extras/ci/gitlab-ci.yml): same Docker image,
+# same build script (extras/package/win32/build.sh) and the same prebuilt contribs.
+name: build-windows
+
+on:
+  push:
+    branches: [redesign]
+  workflow_dispatch: {}
+
+concurrency:
+  group: build-windows-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Keep in sync with VLC_WIN64_IMAGE in extras/ci/gitlab-ci.yml
+  VLC_IMAGE: registry.videolan.org/vlc-debian-win64-posix:20260611225331
+
+jobs:
+  win64:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL /usr/local/share/boost
+          sudo docker image prune -af
+          df -h /
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # get-contrib-sha.sh needs the history
+
+      - name: Contrib SHA and prebuilt URL
+        id: sha
+        run: |
+          SHA=$(extras/ci/get-contrib-sha.sh win64)
+          URL="https://artifacts.videolan.org/vlc/win64/vlc-contrib-x86_64-w64-mingw32-${SHA}.tar.zst"
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          if extras/ci/check-url.sh "$URL"; then
+            echo "url=$URL" >> "$GITHUB_OUTPUT"
+            echo "Prebuilt contribs found: $URL"
+          else
+            echo "No prebuilt contribs for $SHA, contribs will be built from source"
+          fi
+
+      - name: Cache contribs built from source
+        if: steps.sha.outputs.url == ''
+        uses: actions/cache@v4
+        with:
+          path: |
+            contrib/x86_64-w64-mingw32
+            contrib/tarballs
+          key: contrib-win64-${{ steps.sha.outputs.sha }}
+
+      - name: Cache tools and compiler cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            extras/tools/build
+            .ccache
+          key: tools-ccache-${{ steps.sha.outputs.sha }}-${{ github.sha }}
+          restore-keys: tools-ccache-${{ steps.sha.outputs.sha }}-
+
+      - name: Pull build image
+        run: docker pull "$VLC_IMAGE"
+
+      - name: Build in VideoLAN's image
+        run: |
+          docker run --rm -v "$PWD:/build" -w /build \
+            -e VLC_PREBUILT_CONTRIBS_URL="${{ steps.sha.outputs.url }}" \
+            -e CCACHE_DIR=/build/.ccache \
+            "$VLC_IMAGE" bash -ec '
+              git config --global --add safe.directory /build
+              if command -v ccache >/dev/null; then echo "ccache available"; ccache -s || true; fi
+              P=""
+              if [ -n "$VLC_PREBUILT_CONTRIBS_URL" ]; then P="-p"; else unset VLC_PREBUILT_CONTRIBS_URL; fi
+              extras/package/win32/build.sh -r -a x86_64 $P
+              cd win64
+              make package-win32-zip'
+          sudo chown -R "$(id -u):$(id -g)" .
+          df -h /
+
+      - name: Unpack zip so the artifact is a single zip
+        run: |
+          ls -la win64/*.zip
+          mkdir dist
+          unzip -q win64/vlc-*-win64.zip -d dist
+          ls dist dist/*
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vlc-redesign-win64
+          path: dist/
+          retention-days: 14
