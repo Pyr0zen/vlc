@@ -29,6 +29,9 @@ StateGroup {
 
     required property Item target
 
+    // redesign: bars appear and disappear instantly (Decision 4)
+    property bool animated: true
+
     states: [
         State {
             name: "hidden"
@@ -55,6 +58,7 @@ StateGroup {
     transitions: [
         Transition {
             to: "hidden"
+            enabled: root.animated
 
             SequentialAnimation {
                 NumberAnimation {
@@ -71,6 +75,7 @@ StateGroup {
         },
         Transition {
             to: "visible"
+            enabled: root.animated
 
             SequentialAnimation {
                 PropertyAction {

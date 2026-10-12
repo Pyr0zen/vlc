@@ -62,6 +62,25 @@ FocusScope {
 
     property bool _keyPressed: false
 
+    // redesign: each bar shows only while the mouse is near it and hides instantly when it leaves
+    // (video 3:46-3:55, Decision 4). Menus, the queue, keyboard use and audio mode show both bars
+    // (except the far one while the mouse is in the other bar's zone).
+    readonly property real _barHoverZone: VLCStyle.dp(40, VLCStyle.scale)
+    readonly property bool _mouseNearTop: barZoneHover.hovered
+                                          && barZoneHover.point.position.y <= topBar.height + _barHoverZone
+    readonly property bool _mouseNearBottom: barZoneHover.hovered
+                                             && barZoneHover.point.position.y >= height - controlBar.height - _barHoverZone
+    readonly property bool _showBothBars: playerToolbarVisibilityFSM.isVisible
+                                          && (!MainCtx.hasEmbededVideo || playerToolbarVisibilityFSM.keyboardShown)
+    readonly property bool _topBarVisible: _controlsUnderVideo || _showBothBars || _mouseNearTop
+                                           || (playerToolbarVisibilityFSM.isLocked && !_mouseNearBottom)
+    readonly property bool _controlBarVisible: _controlsUnderVideo || _showBothBars || _mouseNearBottom
+                                               || (playerToolbarVisibilityFSM.isLocked && !_mouseNearTop)
+
+    HoverHandler {
+        id: barZoneHover
+    }
+
     // Settings
 
     Accessible.role: Accessible.Client
@@ -985,7 +1004,7 @@ FocusScope {
         //initial state value is "", using a binding avoid animation on startup
         Binding on state {
             when: playerToolbarVisibilityFSM.started
-            value: (playerToolbarVisibilityFSM.isVisible || rootPlayer._controlsUnderVideo) ? "visible" : "hidden"
+            value: rootPlayer._topBarVisible ? "visible" : "hidden"
         }
 
         onTogglePlaylistVisibility: playlistVisibility.togglePlaylistVisibility()
@@ -1003,6 +1022,7 @@ FocusScope {
 
         FadeControllerStateGroup {
             target: topBar
+            animated: false
         }
 
         // TODO: Make TopBar a Control and use background
@@ -1323,7 +1343,7 @@ FocusScope {
         //initial state value is "", using a binding avoid animation on startup
         Binding on state {
             when: playerToolbarVisibilityFSM.started
-            value: (playerToolbarVisibilityFSM.isVisible || rootPlayer._controlsUnderVideo) ? "visible" : "hidden"
+            value: rootPlayer._controlBarVisible ? "visible" : "hidden"
         }
 
         onRequestLockUnlockAutoHide: (lock) => rootPlayer.lockUnlockAutoHide(lock)
@@ -1366,6 +1386,7 @@ FocusScope {
 
         FadeControllerStateGroup {
             target: controlBar
+            animated: false
         }
     }
 

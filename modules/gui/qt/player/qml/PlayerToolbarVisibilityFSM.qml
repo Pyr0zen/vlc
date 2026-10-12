@@ -57,6 +57,9 @@ FSM {
  
     //exposed internal states
     property alias isVisible: fsmVisible.active
+    // redesign: per-bar hover zones need to know why the toolbars are visible
+    property alias isLocked: fsmLocked.active
+    property bool keyboardShown: false
 
     property int lockCount: 0 // Track the number of locks
     property int timeoutDuration: MainCtx.mouseHideTimeout
@@ -130,14 +133,14 @@ FSM {
                     mouseMove: {
                         guard: () => !Player.isInteractive,
                         action: () => { 
-                            fsm.timeoutDuration = MainCtx.mouseHideTimeout;
+                            fsm.timeoutDuration = MainCtx.mouseHideTimeout; fsm.keyboardShown = false;
                         },
                         target: fsmVideoMode
                     },
                     keyboardMove: {
                         guard: () => !Player.isInteractive,
                         action: () => { 
-                            fsm.timeoutDuration = MainCtx.mouseHideTimeout * 2
+                            fsm.timeoutDuration = MainCtx.mouseHideTimeout * 2; fsm.keyboardShown = true
                         },
                         target: fsmVideoMode
                     }
@@ -177,14 +180,14 @@ FSM {
             mouseMove: {
                 guard: () => !Player.isInteractive,
                 action: () => {
-                    fsm.timeoutDuration = MainCtx.mouseHideTimeout
+                    fsm.timeoutDuration = MainCtx.mouseHideTimeout; fsm.keyboardShown = false
                 },
                 target: fsmVisible
             },
             keyboardMove: {
                 guard: () => !Player.isInteractive,
                 action: () => {
-                    fsm.timeoutDuration = MainCtx.mouseHideTimeout * 2
+                    fsm.timeoutDuration = MainCtx.mouseHideTimeout * 2; fsm.keyboardShown = true
                 },
                 target: fsmVisible
             },
