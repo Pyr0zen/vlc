@@ -968,6 +968,7 @@ qml_modules += {
         'widgets/qml/RdSectionHeader.qml',
         'widgets/qml/RdPanel.qml',
         'widgets/qml/RdTooltip.qml',
+        'widgets/qml/RdIcon.qml',
     ),
 }
 

@@ -30,6 +30,8 @@ T.Button {
     property color color
     property color hoverColor
     property string iconTxt: ""
+    // redesign: Figma icon (Widgets.RdIcon) drawn instead of iconTxt when set
+    property string rdIcon: ""
     property bool showHovered: false
     property bool isThemeDark: false
     property bool externalPressed: false
@@ -62,9 +64,17 @@ T.Button {
     }
 
     contentItem: Item {
+        Widgets.RdIcon {
+            anchors.centerIn: parent
+            visible: control.rdIcon !== ""
+            name: control.rdIcon
+            color: control.color
+        }
+
         Widgets.IconLabel {
             id: icon
             anchors.centerIn: parent
+            visible: control.rdIcon === ""
             text: control.iconTxt
 
             font.family:{
