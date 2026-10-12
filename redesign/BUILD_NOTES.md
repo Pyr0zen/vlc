@@ -10,3 +10,6 @@ Log of every CI problem and fix (newest last). Workflow: `.github/workflows/buil
 - Run 38315049322 (commit 241edd8f49): green in 27 min total, build step 23 min (prebuilt contribs found for a5538c557d27, tools built from scratch). Artifact vlc-redesign-win64 = vlc-4.0.0-dev folder, 225 MB unpacked.
 - Tested on Tony's PC (isolated APPDATA): vlc.exe opens, plays redesign/reference/vlc_redesign.mp4, auto-loads the .srt, closes cleanly. Phase 1 done.
 - Windows Defender Firewall asks on first start of a new vlc.exe path (network access). Left for Tony to answer; not needed for local playback.
+
+## 2026-10-13 W1.1 cached tools permission error
+- Run 38317777499 failed after 5 min in extras/tools: `install: cannot change permissions of /build/extras/tools/build/share/autoconf-vlc/build-aux: Operation not permitted`. Cause: the restored tools cache belongs to the runner user, the image's own build user cannot chmod it (the chmod a+rwX workaround only gives write access). Fix: run the container with `--user $(id -u):$(id -g)` so everything has one owner; the chmod/chown workaround is removed. (The meson download 404 from downloads.videolan.org is harmless: the script falls back to GitHub.)

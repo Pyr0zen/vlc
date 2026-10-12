@@ -71,10 +71,9 @@ jobs:
 
       - name: Build in VideoLAN's image
         run: |
-          # the image runs as its own non-root user: make the checkout writable for it
+          # run as the runner's user so the checkout, caches and build output have one owner
           mkdir -p .ccache
-          sudo chmod -R a+rwX .
-          docker run --rm -v "$PWD:/build" -w /build -e HOME=/tmp \
+          docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/build" -w /build -e HOME=/tmp \
             -e VLC_PREBUILT_CONTRIBS_URL="${{ steps.sha.outputs.url }}" \
             -e CCACHE_DIR=/build/.ccache \
             "$VLC_IMAGE" bash -ec '
@@ -85,7 +84,6 @@ jobs:
               extras/package/win32/build.sh -r -a x86_64 $P
               cd win64
               make package-win32-zip'
-          sudo chown -R "$(id -u):$(id -g)" .
           df -h /
 
       - name: Unpack zip so the artifact is a single zip
