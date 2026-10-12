@@ -21,7 +21,9 @@
 - `vlc_redesign.en.srt` its transcript, with her reasoning for every change.
 - `frames/` scene-change frames already extracted.
 - `figma/figma_file.json` full Figma file from the API (LOCAL ONLY, git-excluded); `redesign/FIGMA_FLOWS.md` summarizes its prototype interactions and exact specs.
-- `redesign/BUILD_PLAN.md` architecture map, work packages, Phase 1 workflow, test loop, risks.
+- `redesign/BUILD_PLAN.md` architecture map, work packages (Step 1 UI only, then Step 2 new features), Phase 1 workflow, test loop, risks.
+- `redesign/RESIDUAL_AUDIT.md` every element of VLC's current interface marked KEEP / MOVE / NOT IN VIDEO. Remove nothing until Tony decides.
+- `redesign/STATUS.md` latest status (see Status file rule).
 - `figma/` 105 PNG exports from her Figma file (68 screen frames, 35 component sets, 2 labels). Source of truth for how things LOOK.
 - `figma/styles.txt` exact color and effect values. Always use these, never sample colors from PNGs.
 
@@ -46,9 +48,9 @@ For every element, every time:
 ## Current phase
 READY TO BUILD. Next session: read CLAUDE.md, VIDEO_INDEX.md, FIGMA_FLOWS.md and BUILD_PLAN.md, then run the build from Phase 1 through all phases continuously, following the test loop, without stopping unless truly blocked.
 
-- Last completed: preparation (video index, Figma data, decisions, build plan), commit 10402f4e5d.
-- In progress: W1.1 (Windows CI build). Workflow `.github/workflows/build-windows.yml` pushed; first run being watched. Log in `redesign/BUILD_NOTES.md`.
-- Next work package after W1.1: W2.1 (dark palette, fonts, tokens).
+- Last completed: W1.1 Windows CI build (Phase 1): run 38315049322 green, stock VLC plays a local video on Tony's PC.
+- In progress: VERIFICATION of the already-coded Step 1 work (W2.1, W2.2, W2.5, W3.1-W3.8, W4.1/W4.2 part 1, commits f6664a9196..e6930fc114), pushed as run 38317777499. Next: download, run on this PC, test every state, fix, review (quality rules below). Nothing counts as done until it ran on this PC.
+- After verification: W2.3 icons (Figma SVG export is in redesign/reference/frames_work/figma_svg, local only) and Inter font, then the rest of Step 1 (BUILD_PLAN.md), then Step 2.
 - Update this section after every item: last completed row/WP with commit hash, next WP, latest green run.
 
 ## Working rules for the build
@@ -56,7 +58,19 @@ READY TO BUILD. Next session: read CLAUDE.md, VIDEO_INDEX.md, FIGMA_FLOWS.md and
 - **Continuity rule:** keep VIDEO_INDEX.md Status (`todo` / `in progress` / `done (<commit>)` / `blocked (<reason>)`) and the "Current phase" section above updated after every item, so any new session can resume from the files alone.
 - **Stop rule:** only stop if truly blocked or something only Tony can do is needed (login, payment, an API key like OpenSubtitles). Otherwise keep going to the next work package. Publishing a public GitHub Release (W9.1) needs Tony's go first.
 - **Decisions:** Tony's decisions below are final. Anything not covered: her final version in the video wins, the Figma prototype fills what the video does not show. Every extra decision goes under "Decisions (Claude)" in VIDEO_INDEX.md, one line each.
-- **Verification:** screenshot every state of every built element and compare with the video frames at the matching timestamps and the Figma PNGs before marking it done (BUILD_PLAN.md section 5).
+- **Verification:** screenshot every state of every built element and compare with the video frames at the matching timestamps and the Figma PNGs before marking it done (BUILD_PLAN.md section 5). The video is the main guide: look at its frames BEFORE building each element, and always crop and zoom into the detail (icons, edges, spacing, text) instead of judging full frames.
+- **Status file (permanent):** keep `redesign/STATUS.md` updated and push it after every finished work package, every phase, and whenever you stop or get blocked. It holds, at the top, the date and time, the current work package and the last 10 commits (hash + message), then the latest PROGRESS REPORT. Overwrite it each time.
+
+## Quality rules (mandatory for every work package; a package is NOT done until all pass)
+- **Code quality:** follow VLC's existing code style and patterns in `modules/gui/qt`. Reuse existing VLC components and APIs. No hacks, no hardcoded values that belong in the theme (use `palette.rd*` / `VLCStyle.rd_*`), no commented-out code, no TODOs left behind. New code in new files where possible.
+- **Zero new warnings:** no new compiler warnings and no new QML warnings (qmllint where available, plus the runtime console output). Fix, never suppress.
+- **Independent review:** after each package, a fresh subagent that did not write the code reviews the full diff, hunting for bugs: null/undefined access, missing bindings, broken signal connections, leaks, race conditions, wrong state after open/close cycles, missing qtr/qsTr translations, keyboard focus and tab order. Fix, review again until clean.
+- **Behavior tests on the real build:** every state of the package's features plus edge cases: window very small to maximized, fullscreen, Windows scaling 100/125/150 percent, no media, no subtitles, several audio and subtitle tracks, very long file names, audio-only files, keyboard-only use, rapid repeated clicking, opening and closing panels many times.
+- **Regression checklist after every package:** open file, play, pause, seek, volume, mute, next/previous, fullscreen in and out, subtitle on/off and track switching, audio track switching, queue add/remove, drag and drop a file, keyboard shortcuts, settings survive a restart, app closes cleanly.
+- **Visual check:** crop and zoom against the video frames and the Figma PNGs.
+- **Crashes:** any crash or freeze stops everything until fixed.
+- **Small commits:** one logical change each. Never more than one work package unverified at a time.
+- **Bug log:** log every bug found and fixed in `redesign/BUILD_NOTES.md`.
 
 ## Decisions (Tony, 2026-10-12)
 General rule for anything not listed: her final version in the video wins, the Figma prototype fills what the video does not show.
@@ -99,6 +113,11 @@ PROGRESS REPORT
 - Decisions (Claude) added since the last report
 - Remaining differences from the video, with timestamps
 - Core changes made so far and which files they touch
+- Warnings: new compiler / QML warnings count (must be 0)
+- Review findings fixed (independent subagent review)
+- Edge cases tested
+- Regression checklist result
+- Known bugs remaining
 - Blocked on: what exactly, or "nothing"
 
 ## Public release rules (apply from day one)
