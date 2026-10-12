@@ -955,47 +955,38 @@ FocusScope {
     // (video 9:29 / 11:41 zoomed: ~6 px frame on the sides and bottom, ~8 px inner radius; with the
     // bars hidden a thin frame stays all around, video 3:50 and 5:28). Drawn above the video, below
     // the bars (W3.7).
-    Canvas {
+    // Qt is built without Canvas and Shapes, so the frame is the thick border of a rounded
+    // rectangle: its inner edge is the rounded video opening, its outer edge lies outside the window.
+    Item {
         id: videoFrame
 
         anchors.fill: parent
         visible: MainCtx.hasEmbededVideo && (MainCtx.intfMainWindow.visibility !== Window.FullScreen)
         enabled: false
+        clip: true
 
         readonly property real inset: VLCStyle.dp(6, VLCStyle.scale)
         readonly property real innerRadius: VLCStyle.dp(8, VLCStyle.scale)
         readonly property real topEdge: topBar.visible ? topBar.height : inset
         readonly property real bottomEdge: height - (controlBar.visible ? controlBar.height : inset)
-        readonly property color frameColor: VLCStyle.palette.rdBgA3
 
-        onTopEdgeChanged: requestPaint()
-        onBottomEdgeChanged: requestPaint()
-        onWidthChanged: requestPaint()
-        onHeightChanged: requestPaint()
-        onFrameColorChanged: requestPaint()
+        Rectangle {
+            // wide enough that the outer rounded corners stay outside the window
+            readonly property real frameWidth: 2 * Math.max(videoFrame.topEdge, videoFrame.height - videoFrame.bottomEdge)
+                                               + 2 * videoFrame.innerRadius + VLCStyle.dp(10, VLCStyle.scale)
+            readonly property real openingWidth: Math.max(0, videoFrame.width - 2 * videoFrame.inset)
+            readonly property real openingHeight: Math.max(0, videoFrame.bottomEdge - videoFrame.topEdge)
 
-        onPaint: {
-            const ctx = getContext("2d")
-            ctx.reset()
-            const x0 = inset, y0 = topEdge, x1 = width - inset, y1 = bottomEdge
-            if (x1 <= x0 || y1 <= y0)
-                return
-            const r = Math.min(innerRadius, (x1 - x0) / 2, (y1 - y0) / 2)
-            ctx.fillStyle = frameColor
-            ctx.fillRule = Qt.OddEvenFill
-            ctx.beginPath()
-            ctx.rect(0, 0, width, height)
-            ctx.moveTo(x0 + r, y0)
-            ctx.lineTo(x1 - r, y0)
-            ctx.arcTo(x1, y0, x1, y0 + r, r)
-            ctx.lineTo(x1, y1 - r)
-            ctx.arcTo(x1, y1, x1 - r, y1, r)
-            ctx.lineTo(x0 + r, y1)
-            ctx.arcTo(x0, y1, x0, y1 - r, r)
-            ctx.lineTo(x0, y0 + r)
-            ctx.arcTo(x0, y0, x0 + r, y0, r)
-            ctx.closePath()
-            ctx.fill()
+            x: videoFrame.inset - frameWidth
+            y: videoFrame.topEdge - frameWidth
+            width: openingWidth + 2 * frameWidth
+            height: openingHeight + 2 * frameWidth
+
+            color: "transparent"
+            border.width: frameWidth
+            border.color: VLCStyle.palette.rdBgA3
+            radius: frameWidth + Math.min(videoFrame.innerRadius, openingWidth / 2, openingHeight / 2)
+            antialiasing: true
         }
     }
 

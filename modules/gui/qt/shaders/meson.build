@@ -24,6 +24,7 @@ shader_sources = [
     'DualKawaseBlur_downsample.frag',
     'DualKawaseBlur_upsample.frag',
     'DualKawaseBlur_upsample_postprocess.frag',
+    'VolumeCone.frag',
 ]
 
 shader_files = files(shader_sources)
