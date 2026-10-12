@@ -409,6 +409,8 @@ qt_plugin_sources = files(
     'style/systempalette.hpp',
     'style/vlcicons.cpp',
     'style/vlcicons.hpp',
+    'style/rdfonts.cpp',
+    'style/rdfonts.hpp',
     'style/defaultthemeproviders.hpp',
     'style/systempalettethemeprovider.cpp',
     'player/input_models.cpp',

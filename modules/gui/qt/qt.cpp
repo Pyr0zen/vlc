@@ -96,6 +96,7 @@ extern "C" char **environ;
 # include "maininterface/mainctx.hpp"   /* MainCtx creation */
 #endif
 #include "style/defaultthemeproviders.hpp"
+#include "style/rdfonts.hpp"
 #include "dialogs/extensions/extensions_manager.hpp" /* Extensions manager */
 #include "dialogs/help/help.hpp"     /* Launch Update */
 #include "util/dismiss_popup_event_filter.hpp"
@@ -1283,6 +1284,8 @@ static void *Thread( void *obj )
         app.setWindowIcon( QIcon::fromTheme( "vlc", QIcon( ":/logo/vlc256.png" ) ) );
 
     app.setDesktopFileName( PACKAGE );
+
+    loadRedesignFonts( app );
 
     DialogErrorModel::getInstance( p_intf );
     VLCDialogModel::getInstance( p_intf );
