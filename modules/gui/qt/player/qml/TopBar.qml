@@ -153,6 +153,7 @@ FocusScope{
                 font.pixelSize: VLCStyle.rd_iconSize
 
                 text: VLCIcons.more
+                rdIcon: "more"
                 description: qsTr("Menu")
 
                 AccessibleCompat.id: "topBarMenuButton"
@@ -196,6 +197,8 @@ FocusScope{
                 font.pixelSize: VLCStyle.rd_iconSize
 
                 text: VLCIcons.panel_left
+                rdIcon: "sidebar_direction-left"
+                rdIconChecked: "sidebar_state-active"
                 description: qsTr("Library")
 
                 AccessibleCompat.id: "topBarBackButton"
@@ -245,10 +248,9 @@ FocusScope{
                     spacing: VLCStyle.dp(4, VLCStyle.scale)
                     leftPadding: VLCStyle.dp(4, VLCStyle.scale)
 
-                    Widgets.IconLabel {
+                    Widgets.RdIcon {
                         anchors.verticalCenter: parent.verticalCenter
-                        text: VLCIcons.topbar_video
-                        font.pixelSize: VLCStyle.dp(20, VLCStyle.scale)
+                        name: "folder"
                         color: VLCStyle.palette.rdFgA2
                     }
 
@@ -335,6 +337,7 @@ FocusScope{
                 font.pixelSize: VLCStyle.rd_iconSize
 
                 text: (MainCtx.intfMainWindow.visibility === Window.FullScreen) ? VLCIcons.defullscreen : VLCIcons.fullscreen
+                rdIcon: (MainCtx.intfMainWindow.visibility === Window.FullScreen) ? "fullscreen_state-active" : "fullscreen"
                 description: qsTr("Fullscreen")
 
                 onClicked: MainCtx.toggleInterfaceFullScreen()

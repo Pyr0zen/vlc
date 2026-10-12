@@ -52,9 +52,9 @@ Item {
 
         Repeater {
             model: [
-                { key: "video", label: qsTr("Video"), icon: VLCIcons.topbar_video },
-                { key: "audio", label: qsTr("Audio"), icon: VLCIcons.visualization },
-                { key: "subtitles", label: qsTr("Subtitles"), icon: VLCIcons.audiosub }
+                { key: "video", label: qsTr("Video"), icon: "video" },
+                { key: "audio", label: qsTr("Audio"), icon: "audio" },
+                { key: "subtitles", label: qsTr("Subtitles"), icon: "subtitles" }
             ]
 
             delegate: T.AbstractButton {
@@ -74,11 +74,11 @@ Item {
                         anchors.centerIn: parent
                         spacing: VLCStyle.dp(8, VLCStyle.scale)
 
-                        Widgets.IconLabel {
+                        Widgets.RdIcon {
                             anchors.verticalCenter: parent.verticalCenter
-                            text: tabButton.modelData.icon
-                            font.pixelSize: VLCStyle.dp(18, VLCStyle.scale)
-                            color: tabButton.active ? root.rdPalette.rdAccentMain : root.rdPalette.rdFgA3
+                            name: tabButton.active ? tabButton.modelData.icon + "_state-active" : tabButton.modelData.icon
+                            size: VLCStyle.dp(20, VLCStyle.scale)
+                            color: root.rdPalette.rdFgA3
                         }
 
                         Text {
@@ -143,7 +143,7 @@ Item {
             SectionLabel {
                 visible: root.tab === "subtitles"
                 text: qsTr("External Tracks")
-                actionIcon: VLCIcons.add
+                actionIcon: "add"
                 actionDescription: qsTr("Add subtitle file")
                 onActionTriggered: DialogsProvider.loadSubtitlesFile()
             }
@@ -157,7 +157,7 @@ Item {
             SectionLabel {
                 visible: root.tab === "audio"
                 text: qsTr("Output Device")
-                actionIcon: VLCIcons.ic_fluent_arrow_sync_24_regular
+                actionIcon: "refresh"
                 actionDescription: qsTr("Refresh output devices")
                 onActionTriggered: Player.audioDevices.refresh()
             }
@@ -194,6 +194,7 @@ Item {
         id: section
 
         property alias text: label.text
+        // Figma icon name (Widgets.RdIcon)
         property string actionIcon: ""
         property string actionDescription: ""
         signal actionTriggered()
@@ -219,8 +220,9 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             width: VLCStyle.rd_iconButtonWidth
             height: VLCStyle.rd_iconButtonHeight
-            font.pixelSize: VLCStyle.dp(20, VLCStyle.scale)
-            text: section.actionIcon
+            font.pixelSize: VLCStyle.rd_iconSize
+            text: VLCIcons.add
+            rdIcon: section.actionIcon
             description: section.actionDescription
             onClicked: section.actionTriggered()
         }
@@ -261,15 +263,13 @@ Item {
                 }
 
                 contentItem: Item {
-                    Widgets.IconLabel {
+                    Widgets.RdIcon {
                         id: check
 
-                        x: VLCStyle.dp(8, VLCStyle.scale)
+                        x: VLCStyle.dp(4, VLCStyle.scale)
                         anchors.verticalCenter: parent.verticalCenter
                         visible: !!row.model.checked
-                        text: VLCIcons.check
-                        font.pixelSize: VLCStyle.dp(18, VLCStyle.scale)
-                        color: VLCStyle.palette.rdAccentMain
+                        name: "check_state-active"
                     }
 
                     Text {

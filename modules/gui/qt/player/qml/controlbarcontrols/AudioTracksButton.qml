@@ -32,6 +32,8 @@ Widgets.IconToolButton {
     signal menuOpened(var menu)
 
     text: VLCIcons.visualization
+    rdIcon: "audio"
+    rdIconChecked: "audio_state-active"
     description: qsTr("Audio tracks and output")
 
     checked: !paintOnly && RdPanels.current === "audio"

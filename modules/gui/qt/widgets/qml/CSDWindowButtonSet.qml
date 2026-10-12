@@ -78,6 +78,19 @@ Row {
 
             isThemeDark: theme.palette.isDark
 
+            // redesign: Figma window icons (maximize has no separate restore variant)
+            rdIcon: {
+                switch (modelData.type) {
+                case CSDButton.Minimize:
+                    return "minimize"
+                case CSDButton.MaximizeRestore:
+                    return "maximize"
+                case CSDButton.Close:
+                    return "close"
+                }
+                return ""
+            }
+
             iconTxt:{
                 switch (modelData.type) {
                 case CSDButton.Minimize:
@@ -146,6 +159,7 @@ Row {
         hoverColor: windowButtonGroup.hoverColor
         isThemeDark: theme.palette.isDark
         iconTxt: (MainCtx.intfMainWindow.visibility === Window.FullScreen) ? VLCIcons.defullscreen : VLCIcons.fullscreen
+        rdIcon: (MainCtx.intfMainWindow.visibility === Window.FullScreen) ? "fullscreen_state-active" : "fullscreen"
         onClicked: MainCtx.toggleInterfaceFullScreen()
     }
 
@@ -170,6 +184,19 @@ Row {
             hoverColor: (modelData.type === CSDButton.Close) ? "red" : windowButtonGroup.hoverColor
 
             isThemeDark: theme.palette.isDark
+
+            // redesign: Figma window icons (maximize has no separate restore variant)
+            rdIcon: {
+                switch (modelData.type) {
+                case CSDButton.Minimize:
+                    return "minimize"
+                case CSDButton.MaximizeRestore:
+                    return "maximize"
+                case CSDButton.Close:
+                    return "close"
+                }
+                return ""
+            }
 
             iconTxt:{
                 switch (modelData.type) {
