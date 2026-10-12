@@ -72,9 +72,8 @@ FocusScope{
         return parts.length >= 2 ? parts[parts.length - 2] : ""
     }
 
-    // Aliases
-
-    property alias resumeVisible: resumeDialog.visible
+    // the resume prompt is now a toast above the control bar (Player.qml)
+    property bool resumeVisible: false
 
     // Signals
 
@@ -262,30 +261,6 @@ FocusScope{
                         font.pixelSize: VLCStyle.rd_fontSize_label
                         color: VLCStyle.palette.rdFgA2
                     }
-                }
-            }
-
-            // "continue where you left off" stays here until the resume toast (W3.8) replaces it
-            ResumeDialog {
-                id: resumeDialog
-
-                anchors.verticalCenter: parent.verticalCenter
-                height: VLCStyle.rd_topBarHeight
-
-                maxWidth: rightGroup.x - leftGroup.x - VLCStyle.margin_large
-
-                colorContext.palette: theme.palette
-
-                Navigation.parentItem: rootPlayer
-
-                onHidden: {
-                    if (activeFocus) {
-                        menuSelector.forceActiveFocus()
-                    }
-                }
-
-                onVisibleChanged: {
-                    root.requestLockUnlockAutoHide(visible)
                 }
             }
         }

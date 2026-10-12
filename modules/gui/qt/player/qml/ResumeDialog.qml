@@ -16,6 +16,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
+// redesign: resume toast near the playback controls (video 13:55-14:10, Figma "continue":
+// 552x52 pill, radius 16, BG/A3 95%, Inter 16 FG/2 text with the time in bold, "Continue Watching"
+// primary button 146x32, dark 44x32 close button).
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Templates as T
@@ -30,10 +33,10 @@ import VLC.Util
 FocusScope {
     id: resumePanel
 
-    property int maxWidth
+    property int maxWidth: VLCStyle.dp(552, VLCStyle.scale)
 
-    implicitHeight: continueBtn.y + continueBtn.implicitHeight
-    implicitWidth: maxWidth
+    implicitHeight: VLCStyle.dp(52, VLCStyle.scale)
+    implicitWidth: Math.min(maxWidth, content.implicitWidth + VLCStyle.dp(30, VLCStyle.scale))
 
     baselineOffset: label.baselineOffset
 
@@ -84,7 +87,6 @@ FocusScope {
         colorSet: ColorContext.Window
     }
 
-
     Component.onCompleted: {
         if (Player.canRestorePlayback) {
             showResumePanel()
@@ -95,107 +97,87 @@ FocusScope {
         hideResumePanel()
     }
 
-    TextMetrics {
-        id: textMetrics
-
-        font: label.font
-        text: label.text
+    Rectangle {
+        anchors.fill: parent
+        radius: VLCStyle.rd_radius_toast
+        color: VLCStyle.palette.rdBgA3Transparent
     }
 
-    //FIXME use the right xxxLabel class
-    T.Label {
-        id: label
+    RowLayout {
+        id: content
 
-        anchors.topMargin: VLCStyle.margin_small
-        anchors.top: parent.top
-        anchors.left: parent.left
+        anchors.fill: parent
+        anchors.leftMargin: VLCStyle.dp(20, VLCStyle.scale)
+        anchors.rightMargin: VLCStyle.dp(10, VLCStyle.scale)
+        spacing: VLCStyle.dp(10, VLCStyle.scale)
 
-        color: theme.fg.primary
-        font.pixelSize: VLCStyle.fontSize_normal
-        font.bold: true
-        wrapMode: Text.Wrap
+        T.Label {
+            id: label
 
-        text: qsTr("Do you want to restart the playback where you left off?")
-    }
+            Layout.fillWidth: true
+            Layout.alignment: Qt.AlignVCenter
 
-    Widgets.ButtonExt {
-        id: continueBtn
+            textFormat: Text.StyledText
+            elide: Text.ElideRight
+            color: VLCStyle.palette.rdFg2
+            font.family: VLCStyle.rd_fontFamily
+            font.pixelSize: VLCStyle.rd_fontSize_header
 
-        anchors.verticalCenter: label.verticalCenter
-        anchors.left: label.right
-        anchors.leftMargin: VLCStyle.margin_xsmall
-
-        text: qsTr("Continue")
-
-        AccessibleCompat.id: "resumeContinueButton"
-
-        font.bold: true
-        color: theme.fg.primary
-        focus: true
-        onClicked: {
-            Player.restorePlaybackPos()
-            hideResumePanel()
+            text: Player.restoreTime.valid()
+                  ? qsTr("You already watched till %1").arg("<b>" + Player.restoreTime.formatHMS() + "</b>")
+                  : qsTr("Do you want to restart the playback where you left off?")
         }
 
-        Navigation.parentItem: resumePanel
-        Navigation.rightItem: closeBtn
-        Keys.priority: Keys.AfterItem
-        Keys.onPressed: (event) =>  continueBtn.Navigation.defaultKeyAction(event)
-    }
+        Widgets.RdButton {
+            id: continueBtn
 
-    Widgets.ButtonExt {
-        id: closeBtn
+            Layout.alignment: Qt.AlignVCenter
+            Layout.leftMargin: VLCStyle.dp(50, VLCStyle.scale)
 
-        anchors.verticalCenter: label.verticalCenter
-        anchors.left: continueBtn.right
+            style: Widgets.RdButton.Style.Primary
+            text: qsTr("Continue Watching")
 
-        text: qsTr("Dismiss")
+            AccessibleCompat.id: "resumeContinueButton"
 
-        AccessibleCompat.id: "resumeDismissButton"
-
-        font.bold: true
-        color: theme.fg.primary
-        onClicked: hideResumePanel()
-
-        Navigation.parentItem: resumePanel
-        Navigation.leftItem: continueBtn
-        Keys.priority: Keys.AfterItem
-        Keys.onPressed: (event) => closeBtn.Navigation.defaultKeyAction(event)
-    }
-
-    states: [
-        State {
-            name: "small"
-
-            PropertyChanges {
-                target: label
-
-                width: resumePanel.maxWidth
+            focus: true
+            onClicked: {
+                Player.restorePlaybackPos()
+                hideResumePanel()
             }
 
-            PropertyChanges {
-                target: continueBtn
+            Navigation.parentItem: resumePanel
+            Navigation.rightItem: closeBtn
+        }
 
-                anchors.leftMargin: -VLCStyle.margin_xsmall
+        T.Button {
+            id: closeBtn
+
+            Layout.alignment: Qt.AlignVCenter
+            implicitWidth: VLCStyle.dp(44, VLCStyle.scale)
+            implicitHeight: VLCStyle.dp(32, VLCStyle.scale)
+
+            AccessibleCompat.id: "resumeDismissButton"
+            Accessible.name: qsTr("Dismiss")
+
+            onClicked: hideResumePanel()
+
+            Navigation.parentItem: resumePanel
+            Navigation.leftItem: continueBtn
+            Keys.priority: Keys.AfterItem
+            Keys.onPressed: (event) => closeBtn.Navigation.defaultKeyAction(event)
+
+            background: Rectangle {
+                radius: VLCStyle.rd_radius_normal
+                color: closeBtn.hovered ? VLCStyle.palette.rdBgA2 : VLCStyle.palette.rdBgA1
             }
 
-            AnchorChanges {
-                target: continueBtn
-
-                anchors.top: label.bottom
-                anchors.verticalCenter: undefined
-                anchors.left: parent.left
-            }
-
-            AnchorChanges {
-                target: closeBtn
-
-                anchors.top: label.bottom
-                anchors.verticalCenter: undefined
+            contentItem: Widgets.IconLabel {
+                text: VLCIcons.close
+                font.pixelSize: VLCStyle.dp(16, VLCStyle.scale)
+                color: VLCStyle.palette.rdFgA2
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
             }
         }
-    ]
-
-    state: (textMetrics.width + VLCStyle.margin_xsmall + continueBtn.width + closeBtn.width
-            > maxWidth) ? "small" : ""
+    }
 }

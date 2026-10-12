@@ -33,6 +33,7 @@
 #include <vlc_cxx_helpers.hpp>
 #include <vlc_vout.h>
 #include <vlc_preparser.h>
+#include <vlc_media_library.h>
 
 #include <QFile>
 #include <QDir>
@@ -987,6 +988,34 @@ static void on_player_playback_restore_queried(vlc_player_t *, void *data)
     msg_Dbg( that->p_intf, "on_playback_restore_queried");
     that->callAsync([that](){
         that->m_canRestorePlayback = true;
+        // redesign: the resume toast shows where playback would continue; the media library
+        // keeps the progress of each file
+        that->m_restoreTime = VLCDuration();
+        if (vlc_medialibrary_t* ml = vlc_ml_instance_get(that->p_intf))
+        {
+            QByteArray mrl;
+            {
+                vlc_player_locker lock{ that->m_player };
+                input_item_t* item = vlc_player_GetCurrentMedia(that->m_player);
+                if (item)
+                {
+                    vlc_mutex_lock(&item->lock);
+                    if (item->psz_uri)
+                        mrl = QByteArray(item->psz_uri);
+                    vlc_mutex_unlock(&item->lock);
+                }
+            }
+            if (!mrl.isEmpty())
+            {
+                vlc_ml_media_t* media = vlc_ml_get_media_by_mrl(ml, mrl.constData());
+                if (media)
+                {
+                    if (media->f_progress > 0 && media->i_duration > 0)
+                        that->m_restoreTime = VLCDuration::fromMS(static_cast<int64_t>(media->f_progress * media->i_duration));
+                    vlc_ml_release(media);
+                }
+            }
+        }
         emit that->q_func()->playbackRestoreQueried();
     });
 }
@@ -2284,6 +2313,7 @@ PRIMITIVETYPE_GETTER(bool, isRewindable, m_capabilities & VLC_PLAYER_CAP_REWIND)
 PRIMITIVETYPE_GETTER(bool, isPausable, m_capabilities & VLC_PLAYER_CAP_PAUSE)
 PRIMITIVETYPE_GETTER(bool, isRateChangable, m_capabilities & VLC_PLAYER_CAP_CHANGE_RATE)
 PRIMITIVETYPE_GETTER(bool, canRestorePlayback, m_canRestorePlayback);
+PRIMITIVETYPE_GETTER(VLCDuration, getRestoreTime, m_restoreTime);
 PRIMITIVETYPE_GETTER(float, getSubtitleFPS, m_subtitleFPS)
 PRIMITIVETYPE_GETTER(bool, hasVideoOutput, m_hasVideo)
 PRIMITIVETYPE_GETTER(float, getBuffering, m_buffering)
