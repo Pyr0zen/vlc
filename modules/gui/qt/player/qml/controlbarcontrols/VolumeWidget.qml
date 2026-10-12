@@ -151,17 +151,21 @@ T.Pane {
                 onPaint: {
                     const ctx = getContext("2d")
                     const w = width, h = height
-                    const tip = h * 0.15
+                    // horizontal cone centered vertically: rounded narrow tip on the left,
+                    // full height on the right (video 3:08, 11:41)
+                    const tipR = h * 0.12
+                    const cy = h / 2
+                    const r = 2
                     ctx.reset()
                     function wedge() {
                         ctx.beginPath()
-                        ctx.moveTo(0, h - tip)
-                        ctx.lineTo(w - 2, 0)
-                        ctx.quadraticCurveTo(w, 0, w, 2)
-                        ctx.lineTo(w, h - 2)
-                        ctx.quadraticCurveTo(w, h, w - 2, h)
-                        ctx.lineTo(1, h)
-                        ctx.quadraticCurveTo(0, h, 0, h - 1)
+                        ctx.moveTo(tipR, cy - tipR)
+                        ctx.lineTo(w - r, 0)
+                        ctx.quadraticCurveTo(w, 0, w, r)
+                        ctx.lineTo(w, h - r)
+                        ctx.quadraticCurveTo(w, h, w - r, h)
+                        ctx.lineTo(tipR, cy + tipR)
+                        ctx.arc(tipR, cy, tipR, Math.PI / 2, 3 * Math.PI / 2, false)
                         ctx.closePath()
                     }
                     wedge()
