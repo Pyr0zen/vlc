@@ -34,7 +34,9 @@ T.Pane {
     enum TimeTextPosition {
         Hide,
         AboveSlider,
-        LeftRightSlider
+        LeftRightSlider,
+        // redesign: one 54 px row, the seek row sits between the left and right controls
+        Inline
     }
 
     implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
@@ -113,7 +115,16 @@ T.Pane {
     }
 
     background: Rectangle {
-        color: theme.bg.primary
+        color: root.textPosition === ControlBar.TimeTextPosition.Inline ? VLCStyle.palette.rdBgA3Transparent
+                                                                         : theme.bg.primary
+
+        // redesign: 1 px top line Divider/Dim
+        Rectangle {
+            visible: root.textPosition === ControlBar.TimeTextPosition.Inline
+            width: parent.width
+            height: VLCStyle.dp(1, VLCStyle.scale)
+            color: VLCStyle.palette.rdDividerDim
+        }
     }
 
     contentItem: ColumnLayout {
@@ -131,15 +142,29 @@ T.Pane {
             T.Label {
                 id: mediaTime
 
-                Layout.preferredWidth: (textPosition === ControlBar.TimeTextPosition.LeftRightSlider) ? timeTextMetrics.width : -1
+                Layout.preferredWidth: (textPosition === ControlBar.TimeTextPosition.Inline) ? VLCStyle.rd_timeLabelWidth
+                                     : (textPosition === ControlBar.TimeTextPosition.LeftRightSlider) ? timeTextMetrics.width : -1
+                Layout.preferredHeight: (textPosition === ControlBar.TimeTextPosition.Inline) ? VLCStyle.rd_seekBarHeight : -1
+                verticalAlignment: Text.AlignVCenter
 
                 text: {
                     const length = Player.length
                     return Player.time.formatHMS(length.isSubSecond() ? VLCTick.SubSecondFormattedAsMS : 0)
                 }
-                color: theme.fg.primary
+                color: (textPosition === ControlBar.TimeTextPosition.Inline) ? VLCStyle.palette.rdFgA2 : theme.fg.primary
                 font: timeTextMetrics.font
                 horizontalAlignment: Text.AlignHCenter
+
+                // redesign: hover background BG/B2 (Figma "Current Time" state=hover)
+                background: Rectangle {
+                    visible: textPosition === ControlBar.TimeTextPosition.Inline && mediaTimeHover.hovered
+                    radius: VLCStyle.rd_radius_normal
+                    color: VLCStyle.palette.rdBgB2
+                }
+
+                HoverHandler {
+                    id: mediaTimeHover
+                }
 
                 // TODO: Do not use `Binding` when minimum Qt is 6.12:
                 Binding {
@@ -156,7 +181,10 @@ T.Pane {
             T.Label {
                 id: mediaRemainingTime
 
-                Layout.preferredWidth: (textPosition === ControlBar.TimeTextPosition.LeftRightSlider) ? timeTextMetrics.width : -1
+                Layout.preferredWidth: (textPosition === ControlBar.TimeTextPosition.Inline) ? VLCStyle.rd_timeLabelWidth
+                                     : (textPosition === ControlBar.TimeTextPosition.LeftRightSlider) ? timeTextMetrics.width : -1
+                Layout.preferredHeight: (textPosition === ControlBar.TimeTextPosition.Inline) ? VLCStyle.rd_seekBarHeight : -1
+                verticalAlignment: Text.AlignVCenter
 
                 readonly property bool showRemainingTime: (MainCtx.showRemainingTime && Player.remainingTime.valid())
 
@@ -167,7 +195,14 @@ T.Pane {
                 font: timeTextMetrics.font
                 horizontalAlignment: Text.AlignHCenter
 
-                visible: root.showRemainingTime
+                visible: root.showRemainingTime || textPosition === ControlBar.TimeTextPosition.Inline
+
+                // redesign: hover background BG/B2 like the current time label
+                background: Rectangle {
+                    visible: textPosition === ControlBar.TimeTextPosition.Inline && mediaRemainingTimeHover.hovered
+                    radius: VLCStyle.rd_radius_normal
+                    color: VLCStyle.palette.rdBgB2
+                }
 
                 // TODO: Do not use `Binding` when minimum Qt is 6.12:
                 Binding {
@@ -217,7 +252,8 @@ T.Pane {
             SliderBar {
                 id: trackPositionSlider
 
-                barHeight: root.sliderHeight
+                barHeight: (textPosition === ControlBar.TimeTextPosition.Inline) ? VLCStyle.rd_seekBarHeight : root.sliderHeight
+                thick: textPosition === ControlBar.TimeTextPosition.Inline
 
                 Accessible.role: Accessible.Slider
                 Accessible.name: qsTr("Progress")
@@ -241,7 +277,7 @@ T.Pane {
                 id: bookmarksLoader
 
                 parent: root
-                active: MainCtx.mediaLibraryAvailable
+                active: MainCtx.mediaLibraryAvailable && (textPosition !== ControlBar.TimeTextPosition.Inline)
                 source: "qrc:///qt/qml/VLC/MediaLibrary/Bookmarks.qml"
 
                 x: root.leftPadding + trackPositionSlider.x + row2.Layout.leftMargin
@@ -278,6 +314,7 @@ T.Pane {
                     return [mediaTime, mediaRemainingTime]
                 case ControlBar.TimeTextPosition.Hide:
                 case ControlBar.TimeTextPosition.LeftRightSlider:
+                case ControlBar.TimeTextPosition.Inline:
                 default:
                     return []
                 }
@@ -294,6 +331,7 @@ T.Pane {
                     return [trackPositionSlider]
                 case ControlBar.TimeTextPosition.LeftRightSlider:
                     return [mediaTime, trackPositionSlider, mediaRemainingTime]
+                case ControlBar.TimeTextPosition.Inline:
                 default:
                     return []
                 }
@@ -311,17 +349,35 @@ T.Pane {
             Layout.rightMargin: Layout.leftMargin
         }
 
+        // redesign: seek row (time, thick seek bar, duration) shown inside the controls row
+        RowLayout {
+            id: inlineSeekRow
+
+            visible: textPosition === ControlBar.TimeTextPosition.Inline
+            spacing: VLCStyle.dp(8, VLCStyle.scale)
+            anchors.verticalCenter: parent ? parent.verticalCenter : undefined
+            width: parent ? parent.width : 0
+            height: VLCStyle.rd_seekBarHeight
+
+            children: (textPosition === ControlBar.TimeTextPosition.Inline) ? [mediaTime, trackPositionSlider, mediaRemainingTime] : []
+        }
+
         PlayerControlLayout {
             id: playerControlLayout
 
             Layout.fillWidth: true
             Layout.fillHeight: true
-            Layout.leftMargin: VLCStyle.margin_large
-            Layout.rightMargin: VLCStyle.margin_large
+            Layout.leftMargin: (textPosition === ControlBar.TimeTextPosition.Inline) ? VLCStyle.rd_controlBarSpacing : VLCStyle.margin_large
+            Layout.rightMargin: Layout.leftMargin
 
             identifier: root.identifier
 
-            implicitHeight: MainCtx.pinVideoControls ? VLCStyle.controlLayoutHeightPinned
+            middleItem: (textPosition === ControlBar.TimeTextPosition.Inline) ? inlineSeekRow : null
+            spacing: (textPosition === ControlBar.TimeTextPosition.Inline) ? VLCStyle.dp(8, VLCStyle.scale) : VLCStyle.margin_normal
+            layoutSpacing: (textPosition === ControlBar.TimeTextPosition.Inline) ? VLCStyle.rd_controlBarSpacing : VLCStyle.margin_xxlarge
+
+            implicitHeight: (textPosition === ControlBar.TimeTextPosition.Inline) ? VLCStyle.rd_controlBarHeight - 2 * VLCStyle.rd_controlBarPaddingV
+                          : MainCtx.pinVideoControls ? VLCStyle.controlLayoutHeightPinned
                                                      : VLCStyle.controlLayoutHeight
 
             visible: !model?.empty ?? false
