@@ -67,7 +67,10 @@ jobs:
 
       - name: Build in VideoLAN's image
         run: |
-          docker run --rm -v "$PWD:/build" -w /build \
+          # the image runs as its own non-root user: make the checkout writable for it
+          mkdir -p .ccache
+          sudo chmod -R a+rwX .
+          docker run --rm -v "$PWD:/build" -w /build -e HOME=/tmp \
             -e VLC_PREBUILT_CONTRIBS_URL="${{ steps.sha.outputs.url }}" \
             -e CCACHE_DIR=/build/.ccache \
             "$VLC_IMAGE" bash -ec '
