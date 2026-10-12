@@ -24,3 +24,9 @@ Log of every CI problem and fix (newest last). Workflow: `.github/workflows/buil
 - Run 38318378755: tools step fixed (runs as runner uid). Compile error: control_list_model.hpp:114 `static_assert(RESERVED_0X2B == 0x2B)` after renaming slot 0x2B to AUDIO_TRACKS_BUTTON. Fix: assert `AUDIO_TRACKS_BUTTON == 0x2B` (keeps the alignment check).
 - Found in review before the next push: `disconnect(m_ctx, &MainCtx::accentColorChanged, this, nullptr)` cannot deduce the slot type. Fix: keep the QMetaObject::Connection and disconnect it.
 - Seen in every log, harmless: `Project ERROR: Unknown module(s) in QT: qmltest` (test project probe).
+
+## 2026-10-13 fixes prepared during the first verification build
+- The play button was never restyled in W3.2 (still VLC's round gradient button with hardcoded colors). Fixed: Figma 54x28 pill, accent / FG/A3 by play state, Figma play / pause icons.
+- Hardcoded colors left in redesign code: folder chip hover rgba white 6%, RdShadow black 46%, volume cone empty part #090909. Fixed with palette tokens rdHoverOverlay, rdShadow, rdBgB2; the cone repaints when the palette changes.
+- palette.rd* were dark-only. Fixed: applyRdColors() sets the Figma Dark or Light set with the color scheme.
+- Open panels did not close on Escape, and the tracks popup stayed open across media changes. Fixed in Player.qml (lock released through RdPanels).
