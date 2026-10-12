@@ -1390,6 +1390,22 @@ FocusScope {
         }
     }
 
+    // redesign: resume toast centered just above the control bar (video 14:00-14:10, W3.8)
+    ResumeDialog {
+        id: resumeToast
+
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: controlBar.top
+        anchors.bottomMargin: VLCStyle.margin_small
+        z: 2
+
+        maxWidth: Math.min(VLCStyle.dp(552, VLCStyle.scale), rootPlayer.width - 2 * VLCStyle.margin_normal)
+
+        Navigation.parentItem: rootPlayer
+
+        onVisibleChanged: rootPlayer.lockUnlockAutoHide(visible)
+    }
+
     QmlAudioContextMenu {
         id: audioContextMenu
 
