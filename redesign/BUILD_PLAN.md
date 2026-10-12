@@ -4,6 +4,40 @@ Written 2026-10-12 from a read-only study of VLC master (HEAD a5538c557d276378d5
 
 Paths below are relative to the repo root; `Q/` = `modules/gui/qt/`.
 
+## 0. Build order in two steps (Sticky, 2026-10-13)
+
+The work packages below stay as defined in section 7; this section sets the order. Packages that mix both kinds of work are split into a Step 1 part (restyle / move what VLC already does) and a Step 2 part (functionality VLC does not have). Phase 1 (W1.1, CI build) is done.
+
+### STEP 1, UI ONLY: the app looks and is laid out exactly like the video
+Order (dependencies respected; lanes from section 4 still apply inside each group):
+1. Foundation: W2.1 palette + Inter font + tokens, W2.2 accent color (VLC already has `qt-accent-color`; Step 1 = live recolor + the 9 options), W2.3 icons (Figma SVG export, accent-colorable), W2.5 component kit.
+2. Player chrome: W3.1 top bar, W3.2 control bar, W3.3a thick seek bar, W3.4 cone volume (0-200%), W3.5 time labels (remaining time exists; click-to-type jump reuses VLC's seek), W3.6 per-bar show/hide, W3.7 inset video frame, W3.8 resume toast.
+3. Panels and menus: W4.1 panel framework, W4.2 tracks popup, W4.3a Playback tab with existing options (speed, audio visualizer), W4.4 Video tab (existing transform / adjust / zoom / aspect / crop / HDR mode / renderer), W4.5 Audio tab (existing EQ + presets with curve icons, compressor, spatializer, widener, pitch, delay, stereo mode), W4.6 Subtitles tab (existing delay / fps / text scale / freetype options), W4.8 Queue / Bookmarks / Chapters sidebar (existing playlist, bookmarks, chapters), W4.9 main menu, W4.10 right-click menu incl. Hide UI (Ctrl+\) and wiring of the prototype placeholder links to real actions.
+4. Library: W5.1 library shell (rail, compact panel, full window, back/forward, breadcrumb), W5.3a music views (songs / albums / artists / genres, music player view with cover), W5.4a network streams list + Open Network Stream dialog restyle, W5.5a playlists list + New Playlist dialog restyle + add to playlist, W5.6a Home and Recent (existing ML history), W5.7a sort / view mode / search / row and grid states / file and folder menus, W5.8a mini player restyle, W5.9 drag from library to queue (existing drag and drop).
+5. Settings and dialogs: W6.1 settings dialog shell, W6.2 settings pages mapped to existing options, W6.3 Keyboard Shortcuts dialog, W6.4 open dialogs split and restyled.
+6. Customization and onboarding: W8.1a Customize Player restyle of the existing toolbar editor, W8.3 onboarding (replaces the existing first-run wizard), W8.4 light theme (last).
+
+### STEP 2, NEW FEATURES: everything VLC does not have today
+1. W3.3b seek preview thumbnails (thumbnailer).
+2. W4.3b Playback tab new items: sleep timer, Show Statistics, Show Metadata panel, Show Subtitle Timeline / Show Waveform toggles (reverse playback postponed, Decision 29).
+3. W4.7 per-show presets across all tabs.
+4. W4.8b Ctrl+B creates a bookmark instantly.
+5. W5.2 folder-based Videos / Music categories with user folders.
+6. W5.4b pasted m3u link saved as a named stream playlist.
+7. W5.5b New Playlist thumbnail picker.
+8. W5.6b pins in the library rail, Latest Streams.
+9. W5.7b Unwatched First / Watched First sorting, Mark as Watched.
+10. W5.8b mini player with attached queue, draggable to corners.
+11. W6.5 Add Subtitles dialog (folder / playlist targets, auto-matching, manual re-match, OpenSubtitles needs Sticky's API key, From Link).
+12. W7.1 subtitle timeline on the seek bar (external files first; core cue export later, Decision 27).
+13. W7.2 waveform seek bar.
+14. W7.3 OSD shows the pressed shortcut (core change, Decision 27).
+15. W8.1b new Customize controls (File / Folder / Playlist / Artist name, Favorite, Thumbnail, Bookmarks, Right Sidebar, Go Home ...) and editable top bar.
+16. W8.2 profiles (layout + settings, restart notice).
+17. Then W9.1 release (needs Sticky's go).
+
+Status of Step 1 work coded before this split: W2.1, W2.2, W2.5, W3.1-W3.8 (W3.5 click-to-jump included), W4.1/W4.2 part 1 are coded and in verification (run 38317777499). The restoreTime property (resume toast time) and AudioDeviceModel.refresh() expose data VLC already has.
+
 ## 1. How the VLC 4 Qt interface is built (what we work with)
 
 - **One Qt module, mostly QML.** C++ models and controllers in `Q/`, QML views in `Q/*/qml/`. Every new QML file or C++ class must be added to BOTH `Q/meson.build` (QML in `qml_modules += {...}` blocks around lines 605-858, sources around line 350, moc headers line 31) AND `Q/Makefile.am` (`libqml_module_<mod>_a_QML`, `_SOURCES`, `nodist_..._SOURCES` for `.moc.cpp`). C++ types are registered for QML in `Q/maininterface/mainui.cpp` (lines 230-490) or with `QML_ELEMENT`. The Windows CI build uses autotools (`build.sh` without `-m`), so `Makefile.am` is the one that must be right first.
@@ -139,7 +173,7 @@ Notes and fallbacks (log every problem and fix in `redesign/BUILD_NOTES.md`):
 - Done when: the run is green, the artifact `vlc-redesign-win64` contains `vlc-<version>/vlc.exe`, `libvlc.dll`, `libvlccore.dll`, `plugins/`, and Sticky (or the test loop on this PC) can unzip it, start `vlc.exe` and play a local video.
 - Download from this PC: `gh run download <run-id> -R Pyr0zen/vlc -n vlc-redesign-win64 -D "$env:USERPROFILE\Desktop\vlc-redesign\builds\<run-id>"`.
 
-## 4. Build order
+## 4. Build order (phases; superseded in order by section 0, lanes still apply)
 
 Dependency order of phases; inside a phase, packages with different lane letters can run in parallel (one subagent per lane, each in its own git worktree, merged back by the main session before the next CI run). Same lane = sequential.
 
