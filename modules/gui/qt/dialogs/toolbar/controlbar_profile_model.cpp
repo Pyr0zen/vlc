@@ -98,50 +98,48 @@ decltype (ControlbarProfileModel::m_defaults)
                 N_("Default Style"),
                 {
                     {
+                        // redesign (video 3:16-3:24, Figma "Controls"): one row,
+                        // [prev play next] <seek row> [volume, tracks, settings, queue].
+                        // Fullscreen lives in the top bar (Decision 1).
                         PlayerControlbarModel::Videoplayer,
                         {
                             {
                                 {
-                                    ControlListModel::LANG_BUTTON,
-                                    ControlListModel::BOOKMARK_BUTTON,
-                                    ControlListModel::EXTENDED_BUTTON,
-                                    ControlListModel::NAVIGATION_BUTTONS
-                                },
-                                {
-                                    ControlListModel::SKIP_BACK_BUTTON,
                                     ControlListModel::PREVIOUS_BUTTON,
                                     ControlListModel::PLAY_BUTTON,
-                                    ControlListModel::NEXT_BUTTON,
-                                    ControlListModel::SKIP_FW_BUTTON
+                                    ControlListModel::NEXT_BUTTON
+                                },
+                                {
                                 },
                                 {
                                     ControlListModel::VOLUME,
-                                    ControlListModel::RENDERER_BUTTON,
-                                    ControlListModel::FULLSCREEN_BUTTON
+                                    ControlListModel::LANG_BUTTON,
+                                    ControlListModel::EXTENDED_BUTTON,
+                                    ControlListModel::PLAYLIST_BUTTON
                                 }
                             }
                         }
                     },
                     {
+                        // redesign (video 12:14-12:23, Figma "Player - Music"):
+                        // [prev -15 play +15 next] <seek row> [volume, tracks, settings, queue]
                         PlayerControlbarModel::Audioplayer,
                         {
                             {
                                 {
-                                    ControlListModel::LANG_BUTTON,
-                                    ControlListModel::BOOKMARK_BUTTON,
-                                    ControlListModel::EXTENDED_BUTTON
+                                    ControlListModel::PREVIOUS_BUTTON,
+                                    ControlListModel::SKIP_BACK_BUTTON,
+                                    ControlListModel::PLAY_BUTTON,
+                                    ControlListModel::SKIP_FW_BUTTON,
+                                    ControlListModel::NEXT_BUTTON
                                 },
                                 {
-                                    ControlListModel::RANDOM_BUTTON,
-                                    ControlListModel::PREVIOUS_BUTTON,
-                                    ControlListModel::PLAY_BUTTON,
-                                    ControlListModel::NEXT_BUTTON,
-                                    ControlListModel::LOOP_BUTTON
                                 },
                                 {
                                     ControlListModel::VOLUME,
-                                    ControlListModel::RENDERER_BUTTON,
-                                    ControlListModel::FULLSCREEN_BUTTON
+                                    ControlListModel::LANG_BUTTON,
+                                    ControlListModel::EXTENDED_BUTTON,
+                                    ControlListModel::PLAYLIST_BUTTON
                                 }
                             }
                         }

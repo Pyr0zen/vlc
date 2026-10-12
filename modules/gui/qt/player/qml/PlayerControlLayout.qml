@@ -36,6 +36,10 @@ FocusScope {
 
     property int identifier: -1
 
+    // redesign: item placed between the left and right controls (seek row of the one-row
+    // control bar). Only used when the center zone is empty.
+    property Item middleItem: null
+
     readonly property PlayerControlbarModel model: {
         if (!!MainCtx.controlbarProfileModel.currentModel)
             return MainCtx.controlbarProfileModel.currentModel.getModel(identifier)
@@ -118,6 +122,8 @@ FocusScope {
             }
 
             Item {
+                id: middleSlot
+
                 function containsVisibleItem(repeater) {
                     for (let i = 0; i < repeater.count; ++i) {
                         const item = repeater.itemAt(i)
@@ -133,7 +139,15 @@ FocusScope {
                                                                                                                : 0
 
                 Layout.fillWidth: true
+                Layout.fillHeight: true
                 visible: true
+
+                Binding {
+                    target: playerControlLayout.middleItem
+                    when: !!playerControlLayout.middleItem
+                    property: "parent"
+                    value: middleSlot
+                }
             }
 
             ControlRepeater {

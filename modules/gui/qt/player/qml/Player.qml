@@ -1292,13 +1292,13 @@ FocusScope {
 
         focus: true
 
+        // redesign: one 54 px row (Figma "Controls": padding 11 top/bottom, 20 left/right inside the layout)
         rightPadding: VLCStyle.applicationHorizontalMargin
         leftPadding: VLCStyle.applicationHorizontalMargin
-        bottomPadding: VLCStyle.applicationVerticalMargin + VLCStyle.margin_xsmall
+        topPadding: VLCStyle.rd_controlBarPaddingV
+        bottomPadding: VLCStyle.applicationVerticalMargin + VLCStyle.rd_controlBarPaddingV
 
-        textPosition: (MainCtx.pinVideoControls)
-                      ? ControlBar.TimeTextPosition.LeftRightSlider
-                      : ControlBar.TimeTextPosition.AboveSlider
+        textPosition: ControlBar.TimeTextPosition.Inline
 
         // hide right text so that it won't overlap with play queue
         showRemainingTime: (textPosition !== ControlBar.TimeTextPosition.AboveSlider)
@@ -1336,10 +1336,12 @@ FocusScope {
         background: Rectangle {
             id: controlBarBackground
 
-            visible: !MainCtx.hasEmbededVideo || MainCtx.pinVideoControls || !rootPlayer.displayFadeRectangles
+            visible: true
 
             opacity: {
-                if (MainCtx.hasEmbededVideo && !MainCtx.pinVideoControls && !rootPlayer.displayFadeRectangles) {
+                if (controlBar.textPosition === ControlBar.TimeTextPosition.Inline) {
+                    return 1.0
+                } else if (MainCtx.hasEmbededVideo && !MainCtx.pinVideoControls && !rootPlayer.displayFadeRectangles) {
                     return 0.6
                 } else if ((Window.visibility === Window.FullScreen) && MainCtx.hasEmbededVideo) {
                     return MainCtx.pinOpacity
@@ -1350,7 +1352,16 @@ FocusScope {
                 }
             }
 
-            color: windowTheme.bg.primary
+            // redesign: BG/A3 95% with a 1 px Divider/Dim top line
+            color: (controlBar.textPosition === ControlBar.TimeTextPosition.Inline) ? VLCStyle.palette.rdBgA3Transparent
+                                                                                    : windowTheme.bg.primary
+
+            Rectangle {
+                visible: controlBar.textPosition === ControlBar.TimeTextPosition.Inline
+                width: parent.width
+                height: VLCStyle.dp(1, VLCStyle.scale)
+                color: VLCStyle.palette.rdDividerDim
+            }
         }
 
         FadeControllerStateGroup {
