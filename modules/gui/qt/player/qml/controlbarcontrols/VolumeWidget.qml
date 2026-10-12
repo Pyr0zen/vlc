@@ -132,7 +132,7 @@ T.Pane {
             // (Figma volume variants 50%=33, 100%=63, 200%=88). Gradient #95D318 > #B2A918 > #D37918 >
             // #FF3737 across the whole cone, darkened 20%, in every theme and accent (video 17:44-17:49);
             // unfilled part BG/B2.
-            background: Canvas {
+            background: ShaderEffect {
                 id: cone
 
                 implicitWidth: VLCStyle.rd_volumeWidth
@@ -140,6 +140,9 @@ T.Pane {
                 width: volControl.availableWidth
                 height: volControl.availableHeight
 
+                readonly property size size: Qt.size(width, height)
+                readonly property real tipRadius: height * 0.12
+                readonly property color emptyColor: VLCStyle.palette.rdBgB2
                 readonly property real level: {
                     const v = volControl.value
                     const knee = 63 / 88
@@ -147,52 +150,9 @@ T.Pane {
                         return Math.max(0, v) * knee
                     return Math.min(1, knee + (v - 1) * (1 - knee) / Math.max(0.01, root._maxvolpos - 1))
                 }
-                readonly property color emptyColor: VLCStyle.palette.rdBgB2
 
-                onLevelChanged: requestPaint()
-                onEmptyColorChanged: requestPaint()
-                onWidthChanged: requestPaint()
-                onHeightChanged: requestPaint()
-
-                onPaint: {
-                    const ctx = getContext("2d")
-                    const w = width, h = height
-                    // horizontal cone centered vertically: rounded narrow tip on the left,
-                    // full height on the right (video 3:08, 11:41)
-                    const tipR = h * 0.12
-                    const cy = h / 2
-                    const r = 2
-                    ctx.reset()
-                    function wedge() {
-                        ctx.beginPath()
-                        ctx.moveTo(tipR, cy - tipR)
-                        ctx.lineTo(w - r, 0)
-                        ctx.quadraticCurveTo(w, 0, w, r)
-                        ctx.lineTo(w, h - r)
-                        ctx.quadraticCurveTo(w, h, w - r, h)
-                        ctx.lineTo(tipR, cy + tipR)
-                        ctx.arc(tipR, cy, tipR, Math.PI / 2, 3 * Math.PI / 2, false)
-                        ctx.closePath()
-                    }
-                    wedge()
-                    ctx.fillStyle = emptyColor
-                    ctx.fill()
-                    if (level <= 0)
-                        return
-                    ctx.save()
-                    wedge()
-                    ctx.clip()
-                    const g = ctx.createLinearGradient(0, 0, w, 0)
-                    g.addColorStop(0.0, "#95D318")
-                    g.addColorStop(0.579, "#B2A918")
-                    g.addColorStop(0.792, "#D37918")
-                    g.addColorStop(1.0, "#FF3737")
-                    ctx.fillStyle = g
-                    ctx.fillRect(0, 0, w * level, h)
-                    ctx.fillStyle = "rgba(0, 0, 0, 0.2)"
-                    ctx.fillRect(0, 0, w * level, h)
-                    ctx.restore()
-                }
+                blending: true
+                fragmentShader: "qrc:///shaders/VolumeCone.frag.qsb"
             }
 
             property bool _inhibitPlayerVolumeUpdate: false

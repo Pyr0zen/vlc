@@ -30,3 +30,6 @@ Log of every CI problem and fix (newest last). Workflow: `.github/workflows/buil
 - Hardcoded colors left in redesign code: folder chip hover rgba white 6%, RdShadow black 46%, volume cone empty part #090909. Fixed with palette tokens rdHoverOverlay, rdShadow, rdBgB2; the cone repaints when the palette changes.
 - palette.rd* were dark-only. Fixed: applyRdColors() sets the Figma Dark or Light set with the color scheme.
 - Open panels did not close on Escape, and the tracks popup stayed open across media changes. Fixed in Player.qml (lock released through RdPanels).
+
+## 2026-10-13 first run of the redesign build on this PC (run 38319216444)
+- The player page did not load: `Player.qml:958:5: Canvas is not a type`. VLC's contrib Qt is built with `-DFEATURE_quick_canvas=OFF` and `-DFEATURE_quick_path=OFF` (contrib/src/qtdeclarative/rules.mak), so Canvas, Shapes and Path do not exist. VLC fell back to a bare video window. Fix: the volume cone is a fragment shader (shaders/VolumeCone.frag, built by VLC's qsb pipeline), the video frame is the thick border of a rounded Rectangle. Rule added to INTERACTIONS.md: never use Canvas, Shapes, Path, AnimatedImage, Flipable, Sprite or particles.

@@ -10,7 +10,7 @@ The user can switch Dark / Light / System and pick one of 9 accent colors at any
 - Icons: SVGs with colorizer slots only (`_res_C1` gray, `_res_C2` Accent/DIm, `_res_ACCENT` accent). No baked-in orange. Two-tone menu icons use Accent/DIm, which is derived from the accent too.
 - Accent shades (Bright, DIm, BG/Accent Bright, BG/Accent Dark) are derived from the chosen accent; light theme has its own Accent set (Light/Accent/Main #E8851A) to derive from.
 - Exceptions shown in the video: the volume cone keeps its green to red gradient in every accent and theme (17:44-17:49); the video area stays dark in light theme (17:43).
-- Anything drawn with Canvas (cone, video frame, waveform, timeline) must repaint when palette colors change.
+- VLC's Qt is built without Canvas, Shapes and Path (also no AnimatedImage, Flipable, Sprite, particles): custom drawing (cone, video frame, waveform, subtitle timeline) uses ShaderEffect shaders in modules/gui/qt/shaders or plain Rectangles/Images, bound to palette colors so it recolors live.
 
 ## 2. Bars, panels and video area
 - Top bar and control bar show per hover zone and hide instantly (Decision 4). Anything that opens from a bar (tracks popup, settings sidebar, queue sidebar, menus, tooltips, the editable time field, the resume toast) must keep the bars visible while open (lock) and release the lock when closed, including when closed by Escape, outside click, media change or window change.
