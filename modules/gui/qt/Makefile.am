@@ -1388,7 +1388,21 @@ libqml_module_widgets_a_QML = \
 	widgets/qml/VoronoiSnow.qml \
 	widgets/qml/DualKawaseBlur.qml \
 	widgets/qml/CheckBoxExt.qml \
-	widgets/qml/ProgressBarExt.qml
+	widgets/qml/ProgressBarExt.qml \
+	widgets/qml/RdShadow.qml \
+	widgets/qml/RdToggle.qml \
+	widgets/qml/RdSegmented.qml \
+	widgets/qml/RdSlider.qml \
+	widgets/qml/RdButton.qml \
+	widgets/qml/RdTextField.qml \
+	widgets/qml/RdOptionRow.qml \
+	widgets/qml/RdDropdown.qml \
+	widgets/qml/RdMenuPanel.qml \
+	widgets/qml/RdMenuDivider.qml \
+	widgets/qml/RdExpander.qml \
+	widgets/qml/RdSectionHeader.qml \
+	widgets/qml/RdPanel.qml \
+	widgets/qml/RdTooltip.qml
 libqml_module_widgets_a_Singleton_QML =
 libqml_module_widgets_a_SOURCES = $(QML_MODULE_widgets_SRC)
 nodist_libqml_module_widgets_a_SOURCES = widgets/qmlassets.cpp $(QML_MODULE_widgets_NODIST_EXTRA)
