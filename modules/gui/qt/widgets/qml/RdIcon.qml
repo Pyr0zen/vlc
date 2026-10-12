@@ -22,7 +22,6 @@
 // button's state color here), color2 (#00FFFF) the two-tone Accent/DIm part, accent (#FF8800)
 // the active / accent part.
 import QtQuick
-import QtQuick.Window
 
 import VLC.MainInterface
 import VLC.Style
@@ -38,17 +37,20 @@ Image {
     property color accentColor: VLCStyle.palette.rdAccentMain
     property real size: VLCStyle.rd_iconSize
 
-    readonly property real _eDPR: MainCtx.effectiveDevicePixelRatio(Window.window) || 1.0
-
-    implicitWidth: size
-    implicitHeight: size
+    width: size
+    height: size
 
     fillMode: Image.PreserveAspectFit
-    sourceSize: Qt.size(size * _eDPR, size * _eDPR)
+    // logical size: Image already loads at sourceSize x the window's device pixel ratio
+    sourceSize: Qt.size(size, size)
+
+    // the colorizer writes opaque colors, so the main color's alpha (disabled states,
+    // light theme tool buttons) is applied to the whole icon
+    opacity: color.a
 
     source: name === "" ? ""
                         : SVGColorImage.colorize("qrc:///rd/" + name + ".svg")
-                              .color1(root.color)
+                              .color1(Qt.rgba(root.color.r, root.color.g, root.color.b, 1))
                               .color2(root.color2)
                               .accent(root.accentColor)
                               .uri()

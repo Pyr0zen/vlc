@@ -33,11 +33,15 @@ void loadRedesignFonts(QGuiApplication& app)
         ":/fonts/Inter-Bold.ttf",
     };
 
-    bool loaded = false;
+    bool hasInter = false;
     for (const char* file : fontFiles)
-        loaded |= QFontDatabase::addApplicationFont(QString::fromLatin1(file)) >= 0;
+    {
+        const int id = QFontDatabase::addApplicationFont(QString::fromLatin1(file));
+        if (id >= 0 && QFontDatabase::applicationFontFamilies(id).contains(QStringLiteral("Inter")))
+            hasInter = true;
+    }
 
-    if (!loaded || !QFontDatabase::families().contains(QStringLiteral("Inter")))
+    if (!hasInter)
         return;
 
     QFont font = app.font();
