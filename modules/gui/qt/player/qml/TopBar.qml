@@ -198,7 +198,6 @@ FocusScope{
 
                 text: VLCIcons.panel_left
                 rdIcon: "sidebar_direction-left"
-                rdIconChecked: "sidebar_state-active"
                 description: qsTr("Library")
 
                 AccessibleCompat.id: "topBarBackButton"

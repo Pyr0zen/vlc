@@ -100,13 +100,6 @@ FocusScope {
         if (event.accepted)
             return
 
-        // redesign: Escape closes the open player panel first
-        if (event.key === Qt.Key_Escape && RdPanels.current !== "") {
-            RdPanels.close()
-            event.accepted = true
-            return
-        }
-
         _keyPressed = true
 
         rootPlayer.Navigation.defaultKeyAction(event)
@@ -1474,6 +1467,14 @@ FocusScope {
                 rootPlayer.lockUnlockAutoHide(open)
             }
         }
+    }
+
+    // Escape closes the open player panel first. A shortcut runs before the focused control's
+    // own cancel action (the control bar would otherwise leave the player).
+    Shortcut {
+        sequences: [StandardKey.Cancel]
+        enabled: RdPanels.current !== ""
+        onActivated: RdPanels.close()
     }
 
     // the tracks popup belongs to the current file: close it when the media changes

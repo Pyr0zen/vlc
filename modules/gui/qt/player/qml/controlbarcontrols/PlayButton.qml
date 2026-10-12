@@ -169,7 +169,8 @@ T.Control {
 
         color: {
             if (root._playing)
-                return root.cursorInside ? VLCStyle.palette.rdFgA2 : VLCStyle.palette.rdFgA3
+                return root.cursorInside ? Qt.tint(VLCStyle.palette.rdFgA3, VLCStyle.palette.rdHoverOverlay)
+                                         : VLCStyle.palette.rdFgA3
             return root.cursorInside ? VLCStyle.palette.rdAccentBright : VLCStyle.palette.rdAccentMain
         }
 
