@@ -100,6 +100,13 @@ FocusScope {
         if (event.accepted)
             return
 
+        // redesign: Escape closes the open player panel first
+        if (event.key === Qt.Key_Escape && RdPanels.current !== "") {
+            RdPanels.close()
+            event.accepted = true
+            return
+        }
+
         _keyPressed = true
 
         rootPlayer.Navigation.defaultKeyAction(event)
@@ -1466,6 +1473,16 @@ FocusScope {
                 rootPlayer._panelLocked = open
                 rootPlayer.lockUnlockAutoHide(open)
             }
+        }
+    }
+
+    // the tracks popup belongs to the current file: close it when the media changes
+    Connections {
+        target: Player
+
+        function onInputChanged() {
+            if (RdPanels.tracksOpen)
+                RdPanels.close()
         }
     }
 

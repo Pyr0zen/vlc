@@ -28,7 +28,7 @@ import VLC.Widgets as Widgets
 Widgets.RoundedRectangleShadow {
     id: root
 
-    color: Qt.rgba(0, 0, 0, 0.46)
+    color: VLCStyle.palette.rdShadow
     yOffset: VLCStyle.dp(8)
     blurRadius: VLCStyle.dp(15)
 }
