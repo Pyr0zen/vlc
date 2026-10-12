@@ -101,6 +101,14 @@
     <qresource prefix="/">
         <file alias="VLCIcons.ttf">pixmaps/VLCIcons.ttf</file>
     </qresource>
+    <qresource prefix="/fonts">
+        <file alias="Inter-Light.ttf">pixmaps/fonts/Inter-Light.ttf</file>
+        <file alias="Inter-Regular.ttf">pixmaps/fonts/Inter-Regular.ttf</file>
+        <file alias="Inter-Medium.ttf">pixmaps/fonts/Inter-Medium.ttf</file>
+        <file alias="Inter-SemiBold.ttf">pixmaps/fonts/Inter-SemiBold.ttf</file>
+        <file alias="Inter-Bold.ttf">pixmaps/fonts/Inter-Bold.ttf</file>
+        <file alias="LICENSE-Inter.txt">pixmaps/fonts/LICENSE-Inter.txt</file>
+    </qresource>
     <qresource prefix="/prefsmenu">
         <file alias="advprefs_audio.svg">pixmaps/prefs/advprefs_audio.svg</file>
         <file alias="advprefs_codec.svg">pixmaps/prefs/advprefs_codec.svg</file>
