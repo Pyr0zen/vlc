@@ -327,6 +327,45 @@ QtObject {
     readonly property int controlLayoutHeight: MainCtx.dp(64, scale)
     readonly property int controlLayoutHeightPinned: MainCtx.dp(32, scale)
 
+    // redesign: sizes from the Figma file (redesign/FIGMA_FLOWS.md, "Exact specs"), 1x units scaled like the rest
+    readonly property string rd_fontFamily: "Inter"
+    readonly property int rd_fontSize_label: MainCtx.dp(14, scale)      // Inter 400 14 / 16.9
+    readonly property int rd_fontSize_time: MainCtx.dp(15, scale)       // time labels 400 15 / 18.2
+    readonly property int rd_fontSize_header: MainCtx.dp(16, scale)     // section headers 500 16
+    readonly property int rd_fontSize_toggle: MainCtx.dp(12, scale)     // toggle ON/OFF 400 12
+    readonly property int rd_fontSize_title: MainCtx.dp(24, scale)      // onboarding titles
+    readonly property int rd_fontSize_display: MainCtx.dp(32, scale)    // "Welcome to VLC!"
+    readonly property int rd_radius_xsmall: MainCtx.dp(2, scale)        // setting category row, thumbnails
+    readonly property int rd_radius_small: MainCtx.dp(4, scale)         // icon buttons, seek fill, option rows
+    readonly property int rd_radius_normal: MainCtx.dp(6, scale)        // play button, time labels, inputs, buttons
+    readonly property int rd_radius_panel: MainCtx.dp(10, scale)        // menus, side panels
+    readonly property int rd_radius_large: MainCtx.dp(14, scale)        // dialogs, mini player, thumbnail card
+    readonly property int rd_radius_toast: MainCtx.dp(16, scale)        // resume toast
+    readonly property int rd_radius_video: MainCtx.dp(19, scale)        // inset video area
+    readonly property int rd_topBarHeight: MainCtx.dp(40, scale)
+    readonly property int rd_controlBarHeight: MainCtx.dp(54, scale)
+    readonly property int rd_controlBarSpacing: MainCtx.dp(20, scale)
+    readonly property int rd_controlBarPaddingV: MainCtx.dp(11, scale)
+    readonly property int rd_seekBarHeight: MainCtx.dp(28, scale)
+    readonly property int rd_seekFillHeight: MainCtx.dp(24, scale)
+    readonly property int rd_seekHandleWidth: MainCtx.dp(8, scale)
+    readonly property int rd_iconSize: MainCtx.dp(24, scale)
+    readonly property int rd_iconButtonWidth: MainCtx.dp(30, scale)
+    readonly property int rd_iconButtonHeight: MainCtx.dp(32, scale)
+    readonly property int rd_playButtonWidth: MainCtx.dp(54, scale)
+    readonly property int rd_playButtonHeight: MainCtx.dp(28, scale)
+    readonly property int rd_timeLabelWidth: MainCtx.dp(76, scale)
+    readonly property int rd_volumeWidth: MainCtx.dp(88, scale)
+    readonly property int rd_sidePanelWidth: MainCtx.dp(400, scale)
+    readonly property int rd_sidePanelTabHeight: MainCtx.dp(50, scale)
+    readonly property int rd_libraryRailWidth: MainCtx.dp(50, scale)
+    readonly property int rd_libraryPanelWidth: MainCtx.dp(377, scale)
+    readonly property int rd_menuRowHeight: MainCtx.dp(48, scale)
+    readonly property int rd_menuWidth: MainCtx.dp(265, scale)
+    readonly property int rd_mainMenuWidth: MainCtx.dp(375, scale)
+    readonly property int rd_rowHeight: MainCtx.dp(32, scale)
+    readonly property real rd_blurRadius: 50                              // effect "bg blur"
+
     // Scroll bar (size means width or height, depending on the orientation):
     readonly property real scrollBarInteractingSize: MainCtx.dp(8, scale)
     readonly property real scrollBarNonInteractingSize: MainCtx.dp(2, scale)
