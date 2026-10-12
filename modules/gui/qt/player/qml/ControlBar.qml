@@ -151,19 +151,79 @@ T.Pane {
                     const length = Player.length
                     return Player.time.formatHMS(length.isSubSecond() ? VLCTick.SubSecondFormattedAsMS : 0)
                 }
-                color: (textPosition === ControlBar.TimeTextPosition.Inline) ? VLCStyle.palette.rdFgA2 : theme.fg.primary
+                color: mediaTime.editing ? "transparent"
+                       : (textPosition === ControlBar.TimeTextPosition.Inline) ? VLCStyle.palette.rdFgA2 : theme.fg.primary
                 font: timeTextMetrics.font
                 horizontalAlignment: Text.AlignHCenter
 
                 // redesign: hover background BG/B2 (Figma "Current Time" state=hover)
                 background: Rectangle {
-                    visible: textPosition === ControlBar.TimeTextPosition.Inline && mediaTimeHover.hovered
+                    visible: textPosition === ControlBar.TimeTextPosition.Inline && (mediaTimeHover.hovered || mediaTime.editing)
                     radius: VLCStyle.rd_radius_normal
                     color: VLCStyle.palette.rdBgB2
                 }
 
                 HoverHandler {
                     id: mediaTimeHover
+                }
+
+                // redesign: click the current time to type a time and jump there; Enter confirms,
+                // Escape or leaving the field cancels (Figma "Current Time" state=click, F-02)
+                property bool editing: false
+
+                function _commitEdit(text) {
+                    const parts = text.trim().split(":").map((p) => parseInt(p, 10))
+                    if (parts.length === 0 || parts.some((p) => isNaN(p) || p < 0))
+                        return
+                    const seconds = parts.reduce((acc, p) => acc * 60 + p, 0)
+                    const length = Player.length.valid() ? Player.length.toSeconds() : 0
+                    if (length > 0)
+                        Player.position = Math.min(1, seconds / length)
+                }
+
+                TapHandler {
+                    enabled: textPosition === ControlBar.TimeTextPosition.Inline && Player.seekable
+                    onTapped: {
+                        mediaTime.editing = true
+                        timeEditor.text = mediaTime.text
+                        timeEditor.selectAll()
+                        timeEditor.forceActiveFocus()
+                        root.requestLockUnlockAutoHide(true)
+                    }
+                }
+
+                TextInput {
+                    id: timeEditor
+
+                    anchors.fill: parent
+                    visible: mediaTime.editing
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    font: mediaTime.font
+                    color: VLCStyle.palette.rdFg2
+                    selectionColor: VLCStyle.palette.rdAccentDim
+                    selectByMouse: true
+                    inputMethodHints: Qt.ImhPreferNumbers
+                    validator: RegularExpressionValidator { regularExpression: /^[0-9:]{0,9}$/ }
+
+                    cursorDelegate: Rectangle {
+                        width: VLCStyle.dp(1, VLCStyle.scale)
+                        color: VLCStyle.palette.rdAccentMain
+                    }
+
+                    function _finish(commit) {
+                        if (!mediaTime.editing)
+                            return
+                        if (commit)
+                            mediaTime._commitEdit(text)
+                        mediaTime.editing = false
+                        root.requestLockUnlockAutoHide(false)
+                    }
+
+                    Keys.onReturnPressed: _finish(true)
+                    Keys.onEnterPressed: _finish(true)
+                    Keys.onEscapePressed: _finish(false)
+                    onActiveFocusChanged: if (!activeFocus) _finish(false)
                 }
 
                 // TODO: Do not use `Binding` when minimum Qt is 6.12:
