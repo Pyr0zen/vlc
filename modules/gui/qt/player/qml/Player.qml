@@ -948,6 +948,54 @@ FocusScope {
         }
     }
 
+    // redesign: the video sits in an inset area with rounded corners, framed by the window color
+    // (video 9:29 / 11:41 zoomed: ~6 px frame on the sides and bottom, ~8 px inner radius; with the
+    // bars hidden a thin frame stays all around, video 3:50 and 5:28). Drawn above the video, below
+    // the bars (W3.7).
+    Canvas {
+        id: videoFrame
+
+        anchors.fill: parent
+        visible: MainCtx.hasEmbededVideo && (MainCtx.intfMainWindow.visibility !== Window.FullScreen)
+        enabled: false
+
+        readonly property real inset: VLCStyle.dp(6, VLCStyle.scale)
+        readonly property real innerRadius: VLCStyle.dp(8, VLCStyle.scale)
+        readonly property real topEdge: topBar.visible ? topBar.height : inset
+        readonly property real bottomEdge: height - (controlBar.visible ? controlBar.height : inset)
+        readonly property color frameColor: VLCStyle.palette.rdBgA3
+
+        onTopEdgeChanged: requestPaint()
+        onBottomEdgeChanged: requestPaint()
+        onWidthChanged: requestPaint()
+        onHeightChanged: requestPaint()
+        onFrameColorChanged: requestPaint()
+
+        onPaint: {
+            const ctx = getContext("2d")
+            ctx.reset()
+            const x0 = inset, y0 = topEdge, x1 = width - inset, y1 = bottomEdge
+            if (x1 <= x0 || y1 <= y0)
+                return
+            const r = Math.min(innerRadius, (x1 - x0) / 2, (y1 - y0) / 2)
+            ctx.fillStyle = frameColor
+            ctx.fillRule = Qt.OddEvenFill
+            ctx.beginPath()
+            ctx.rect(0, 0, width, height)
+            ctx.moveTo(x0 + r, y0)
+            ctx.lineTo(x1 - r, y0)
+            ctx.arcTo(x1, y0, x1, y0 + r, r)
+            ctx.lineTo(x1, y1 - r)
+            ctx.arcTo(x1, y1, x1 - r, y1, r)
+            ctx.lineTo(x0 + r, y1)
+            ctx.arcTo(x0, y1, x0, y1 - r, r)
+            ctx.lineTo(x0, y0 + r)
+            ctx.arcTo(x0, y0, x0 + r, y0, r)
+            ctx.closePath()
+            ctx.fill()
+        }
+    }
+
     TopBar {
         id: topBar
 
