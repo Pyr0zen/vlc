@@ -53,6 +53,8 @@ QtObject {
         { id: ControlListModel.LOOP_BUTTON, file: "LoopButton.qml", label: VLCIcons.repeat_all, text: qsTr("Loop") },
         { id: ControlListModel.INFO_BUTTON, file: "InfoButton.qml", label: VLCIcons.info, text: qsTr("Information") },
         { id: ControlListModel.LANG_BUTTON, file: "LangButton.qml", label: VLCIcons.audiosub, text: qsTr("Open subtitles") },
+        { id: ControlListModel.AUDIO_TRACKS_BUTTON, file: "AudioTracksButton.qml", label: VLCIcons.visualization, text: qsTr("Audio tracks") },
+        { id: ControlListModel.SUBTITLE_TRACKS_BUTTON, file: "SubtitleTracksButton.qml", label: VLCIcons.audiosub, text: qsTr("Subtitle tracks") },
         { id: ControlListModel.BOOKMARK_BUTTON, file: "BookmarkButton.qml", label: VLCIcons.bookmark, text: qsTr("Bookmark Button") },
         { id: ControlListModel.CHAPTER_PREVIOUS_BUTTON, file: "ChapterPreviousButton.qml", label: VLCIcons.dvd_prev, text: qsTr("Previous chapter") },
         { id: ControlListModel.CHAPTER_NEXT_BUTTON, file: "ChapterNextButton.qml", label: VLCIcons.dvd_next, text: qsTr("Next chapter") },

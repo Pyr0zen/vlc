@@ -746,6 +746,7 @@ qml_modules += {
        'player/qml/SliderBar.qml',
        'player/qml/TopBar.qml',
        'player/qml/TracksMenu.qml',
+       'player/qml/TracksPopup.qml',
        'player/qml/TracksPage.qml',
        'player/qml/TracksPageAudio.qml',
        'player/qml/TracksPageSpeed.qml',
@@ -757,6 +758,7 @@ qml_modules += {
    ),
    'singletons' : files(
        'player/qml/PlayerControlbarControls.qml',
+       'player/qml/RdPanels.qml',
    )
 }
 
@@ -782,6 +784,8 @@ qml_modules += {
        'player/qml/controlbarcontrols/FullscreenButton.qml',
        'player/qml/controlbarcontrols/InfoButton.qml',
        'player/qml/controlbarcontrols/LangButton.qml',
+       'player/qml/controlbarcontrols/AudioTracksButton.qml',
+       'player/qml/controlbarcontrols/SubtitleTracksButton.qml',
        'player/qml/controlbarcontrols/LoopButton.qml',
        'player/qml/controlbarcontrols/MenuButton.qml',
        'player/qml/controlbarcontrols/NavigationBoxButton.qml',

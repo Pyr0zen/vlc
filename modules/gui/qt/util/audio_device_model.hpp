@@ -50,6 +50,9 @@ public:
 
     QHash<int, QByteArray> roleNames() const override;
 
+    // redesign: re-read the output devices (refresh button of the tracks popup, video 4:41)
+    Q_INVOKABLE void refresh();
+
 private:
     int m_inputs = 0;
     char **m_names = nullptr;

@@ -90,7 +90,10 @@ FocusScope {
     // Events
 
     Component.onCompleted: MainCtx.preferHotkeys = true
-    Component.onDestruction: MainCtx.preferHotkeys = false
+    Component.onDestruction: {
+        MainCtx.preferHotkeys = false
+        RdPanels.close()
+    }
 
     Keys.priority: Keys.AfterItem
     Keys.onPressed: (event) => {
@@ -1435,6 +1438,34 @@ FocusScope {
         FadeControllerStateGroup {
             target: controlBar
             animated: false
+        }
+    }
+
+    // redesign: player panels (tracks popup now; settings and queue sidebars follow). An open panel
+    // keeps the bars visible (F-06).
+    TracksPopup {
+        id: tracksPopup
+
+        anchors.right: parent.right
+        anchors.rightMargin: VLCStyle.dp(20, VLCStyle.scale)
+        anchors.bottom: controlBar.top
+        anchors.bottomMargin: VLCStyle.dp(12, VLCStyle.scale)
+        width: VLCStyle.rd_sidePanelWidth
+        height: implicitHeight
+        z: 2
+    }
+
+    property bool _panelLocked: false
+
+    Connections {
+        target: RdPanels
+
+        function onCurrentChanged() {
+            const open = RdPanels.current !== ""
+            if (open !== rootPlayer._panelLocked) {
+                rootPlayer._panelLocked = open
+                rootPlayer.lockUnlockAutoHide(open)
+            }
         }
     }
 

@@ -1,0 +1,47 @@
+/*****************************************************************************
+ * Copyright (C) 2026 VLC authors and VideoLAN
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * ( at your option ) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ *****************************************************************************/
+
+// redesign: which player panel is open (Figma "Controls" variants, F-06). The control bar buttons
+// toggle a panel: clicking the same button again closes it, clicking another one switches.
+//   tracks popup:      "video", "audio", "subtitles"
+//   settings sidebar:  "playback", "videoSettings", "audioSettings", "subtitleSettings"
+//   queue sidebar:     "queue", "bookmarks", "chapters"
+pragma Singleton
+
+import QtQml
+
+QtObject {
+    property string current: ""
+
+    readonly property bool tracksOpen: current === "video" || current === "audio" || current === "subtitles"
+    readonly property bool settingsOpen: current === "playback" || current === "videoSettings"
+                                         || current === "audioSettings" || current === "subtitleSettings"
+    readonly property bool queueOpen: current === "queue" || current === "bookmarks" || current === "chapters"
+
+    function toggle(name) {
+        current = (current === name) ? "" : name
+    }
+
+    function open(name) {
+        current = name
+    }
+
+    function close() {
+        current = ""
+    }
+}
