@@ -33,7 +33,7 @@ T.Button {
     enum Style { Standard, Save, Primary, Bar }
 
     property int style: RdButton.Style.Standard
-    property string iconText: ""          // optional VLCIcons glyph shown before the text
+    property string rdIcon: ""            // optional Figma icon (Widgets.RdIcon) shown before the text
 
     readonly property SystemPalette rdPalette: VLCStyle.palette
 
@@ -83,12 +83,11 @@ T.Button {
             anchors.centerIn: parent
             spacing: VLCStyle.dp(6)
 
-            Text {
-                visible: control.iconText !== ""
+            RdIcon {
+                visible: control.rdIcon !== ""
                 anchors.verticalCenter: parent.verticalCenter
-                text: control.iconText
-                font.family: VLCIcons.fontFamily
-                font.pixelSize: VLCStyle.dp(20)
+                name: control.rdIcon
+                size: VLCStyle.dp(20)
                 color: control._fg
             }
 

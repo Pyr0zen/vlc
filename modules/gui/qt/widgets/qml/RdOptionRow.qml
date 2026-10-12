@@ -27,8 +27,7 @@ import VLC.Style
 T.ItemDelegate {
     id: control
 
-    property string iconText: ""            // VLCIcons glyph (monochrome)
-    property url iconSource: ""             // or an SVG (two-tone menu icons)
+    property string rdIcon: ""              // Figma icon name (Widgets.RdIcon), two-tone menu icons included
     property string shortcut: ""
     property bool hasSubmenu: false
     property bool selected: false           // orange check at the right
@@ -59,27 +58,11 @@ T.ItemDelegate {
     contentItem: Row {
         spacing: control.spacing
 
-        Item {
-            visible: control.iconText !== "" || control.iconSource.toString() !== ""
-            width: VLCStyle.rd_iconSize
-            height: VLCStyle.rd_iconSize
+        RdIcon {
+            visible: control.rdIcon !== ""
             anchors.verticalCenter: parent.verticalCenter
-
-            Text {
-                visible: control.iconText !== ""
-                anchors.centerIn: parent
-                text: control.iconText
-                font.family: VLCIcons.fontFamily
-                font.pixelSize: VLCStyle.rd_iconSize
-                color: control.rdPalette.rdFgA2
-            }
-
-            Image {
-                visible: control.iconSource.toString() !== ""
-                anchors.fill: parent
-                source: control.iconSource
-                sourceSize: Qt.size(width, height)
-            }
+            name: control.rdIcon
+            color: control.rdPalette.rdFgA2
         }
 
         Text {
@@ -111,14 +94,12 @@ T.ItemDelegate {
                 color: control.rdPalette.rdFgA3
             }
 
-            Text {
+            RdIcon {
                 visible: control.hasSubmenu || control.selected
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
-                text: control.selected ? VLCIcons.check : VLCIcons.ic_fluent_chevron_right_24
-                font.family: VLCIcons.fontFamily
-                font.pixelSize: control.selected ? VLCStyle.dp(18) : VLCStyle.dp(16)
-                color: control.selected ? control.rdPalette.rdAccentMain : control.rdPalette.rdFgA3
+                name: control.selected ? "check_state-active" : "chevron_direction-right"
+                color: control.rdPalette.rdFgA3
             }
         }
     }

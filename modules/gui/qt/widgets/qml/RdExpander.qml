@@ -62,13 +62,11 @@ Item {
                 color: headerMouse.containsMouse ? root.rdPalette.rdFgA2 : root.rdPalette.rdFgA3
             }
 
-            Text {
+            RdIcon {
                 anchors.right: parent.right
                 anchors.rightMargin: VLCStyle.dp(12)
                 anchors.verticalCenter: parent.verticalCenter
-                text: root.expanded ? VLCIcons.ic_fluent_chevron_down_24 : VLCIcons.ic_fluent_chevron_right_24
-                font.family: VLCIcons.fontFamily
-                font.pixelSize: VLCStyle.dp(16)
+                name: root.expanded ? "chevron_direction-down" : "chevron_direction-right"
                 color: root.rdPalette.rdFgA3
             }
 

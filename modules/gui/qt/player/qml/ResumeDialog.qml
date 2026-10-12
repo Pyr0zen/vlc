@@ -171,12 +171,12 @@ FocusScope {
                 color: closeBtn.hovered ? VLCStyle.palette.rdBgA2 : VLCStyle.palette.rdBgA1
             }
 
-            contentItem: Widgets.IconLabel {
-                text: VLCIcons.close
-                font.pixelSize: VLCStyle.dp(16, VLCStyle.scale)
-                color: VLCStyle.palette.rdFgA2
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
+            contentItem: Item {
+                Widgets.RdIcon {
+                    anchors.centerIn: parent
+                    name: "close"
+                    color: VLCStyle.palette.rdFgA2
+                }
             }
         }
     }

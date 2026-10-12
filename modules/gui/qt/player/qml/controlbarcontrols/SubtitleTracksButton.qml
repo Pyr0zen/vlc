@@ -32,6 +32,8 @@ Widgets.IconToolButton {
     signal menuOpened(var menu)
 
     text: VLCIcons.audiosub
+    rdIcon: "subtitles"
+    rdIconChecked: "subtitles_state-active"
     description: qsTr("Subtitles")
 
     checked: !paintOnly && RdPanels.current === "subtitles"

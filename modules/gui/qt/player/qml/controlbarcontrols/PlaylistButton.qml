@@ -28,6 +28,8 @@ Widgets.IconToolButton {
     id: playlistBtn
 
     text: VLCIcons.playlist
+    rdIcon: "lists"
+    rdIconChecked: "lists_state-active"
     onClicked: {
         MainCtx.playqueuePanel.visible = !MainCtx.playqueuePanel.visible
         if (MainCtx.playqueuePanel.visible && MainCtx.playqueuePanel.docked) {

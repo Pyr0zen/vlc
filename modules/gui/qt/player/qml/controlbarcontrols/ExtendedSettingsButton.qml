@@ -27,6 +27,8 @@ Widgets.IconToolButton {
     id: extdSettingsBtn
 
     text: VLCIcons.effect_filter
+    rdIcon: "playback-settings"
+    rdIconChecked: "playback-settings_state-active"
 
     description: qsTr("Extended settings")
 

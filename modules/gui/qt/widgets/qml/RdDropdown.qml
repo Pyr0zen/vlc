@@ -67,12 +67,10 @@ T.ComboBox {
         color: control.rdPalette.rdFgA2
     }
 
-    indicator: Text {
-        x: control.width - width - VLCStyle.dp(16)
+    indicator: RdIcon {
+        x: control.width - width - VLCStyle.dp(14)
         y: (control.height - height) / 2
-        text: control.openUpward ? VLCIcons.ic_fluent_chevron_up_24 : VLCIcons.ic_fluent_chevron_down_24
-        font.family: VLCIcons.fontFamily
-        font.pixelSize: VLCStyle.dp(16)
+        name: control.openUpward ? "chevron_direction-up" : "chevron_direction-down"
         color: control.rdPalette.rdFgA2
     }
 

@@ -74,6 +74,8 @@ T.Pane {
                 else
                     return VLCIcons.volume_high
             }
+            // redesign: Figma speaker icon; the design has no muted variant, so muted keeps VLC's glyph
+            rdIcon: _player.muted ? "" : "volume_value-high"
             description: qsTr("Mute")
 
             AccessibleCompat.id: "muteButton"
