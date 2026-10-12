@@ -13,3 +13,14 @@ Log of every CI problem and fix (newest last). Workflow: `.github/workflows/buil
 
 ## 2026-10-13 W1.1 cached tools permission error
 - Run 38317777499 failed after 5 min in extras/tools: `install: cannot change permissions of /build/extras/tools/build/share/autoconf-vlc/build-aux: Operation not permitted`. Cause: the restored tools cache belongs to the runner user, the image's own build user cannot chmod it (the chmod a+rwX workaround only gives write access). Fix: run the container with `--user $(id -u):$(id -g)` so everything has one owner; the chmod/chown workaround is removed. (The meson download 404 from downloads.videolan.org is harmless: the script falls back to GitHub.)
+
+## 2026-10-13 INTERACTIONS.md review of the coded Step 1 work (fix batch after verification)
+1. palette.rd* are dark-only constants; they must switch to the Figma Light values with the theme (INTERACTIONS 1).
+2. TopBar folder chip hover uses a hardcoded white 6%; make it a palette token (rdHoverOverlay) shared with the icon buttons (INTERACTIONS 1).
+3. TracksPopup must close on Escape and when the media changes, releasing the bar lock (INTERACTIONS 2).
+4. The inline seek row is bound to PlayerControlLayout's middle slot; W8.1 must turn it into a movable control (INTERACTIONS 3). Design it that way when W8.1 starts.
+
+## 2026-10-13 first compile of the redesign code
+- Run 38318378755: tools step fixed (runs as runner uid). Compile error: control_list_model.hpp:114 `static_assert(RESERVED_0X2B == 0x2B)` after renaming slot 0x2B to AUDIO_TRACKS_BUTTON. Fix: assert `AUDIO_TRACKS_BUTTON == 0x2B` (keeps the alignment check).
+- Found in review before the next push: `disconnect(m_ctx, &MainCtx::accentColorChanged, this, nullptr)` cannot deduce the slot type. Fix: keep the QMetaObject::Connection and disconnect it.
+- Seen in every log, harmless: `Project ERROR: Unknown module(s) in QT: qmltest` (test project probe).
