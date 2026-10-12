@@ -82,8 +82,8 @@ public:
         NAVIGATION_BUTTONS,
         PROGRAM_BUTTON,
         NAVIGATION_BOX,
-        RESERVED_0X2B,
-        RESERVED_0X2C,
+        AUDIO_TRACKS_BUTTON,    // redesign (0x2B): audio tracks + output device popup
+        SUBTITLE_TRACKS_BUTTON, // redesign (0x2C): subtitle tracks popup
         RESERVED_0X2D,
         RESERVED_0X2E,
         RESERVED_0X2F,

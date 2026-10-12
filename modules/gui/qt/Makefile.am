@@ -1180,6 +1180,7 @@ libqml_module_player_a_QML = \
 	player/qml/SliderBar.qml \
 	player/qml/TopBar.qml \
 	player/qml/TracksMenu.qml \
+	player/qml/TracksPopup.qml \
 	player/qml/TracksPage.qml \
 	player/qml/TracksPageAudio.qml \
 	player/qml/TracksPageSpeed.qml \
@@ -1190,7 +1191,8 @@ libqml_module_player_a_QML = \
 	player/qml/NavigationBox.qml
 
 libqml_module_player_a_Singleton_QML = \
-	player/qml/PlayerControlbarControls.qml
+	player/qml/PlayerControlbarControls.qml \
+	player/qml/RdPanels.qml
 libqml_module_player_a_SOURCES = $(QML_MODULE_player_SRC)
 nodist_libqml_module_player_a_SOURCES = player/qmlassets.cpp $(QML_MODULE_player_NODIST_EXTRA)
 QML_MODULE_LIBS += libqml_module_player.a
@@ -1217,6 +1219,8 @@ libqml_module_playercontrols_a_QML = \
 	player/qml/controlbarcontrols/FullscreenButton.qml \
 	player/qml/controlbarcontrols/InfoButton.qml \
 	player/qml/controlbarcontrols/LangButton.qml \
+	player/qml/controlbarcontrols/AudioTracksButton.qml \
+	player/qml/controlbarcontrols/SubtitleTracksButton.qml \
 	player/qml/controlbarcontrols/LoopButton.qml \
 	player/qml/controlbarcontrols/MenuButton.qml \
 	player/qml/controlbarcontrols/NavigationBoxButton.qml \
