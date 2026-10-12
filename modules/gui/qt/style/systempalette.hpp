@@ -202,6 +202,7 @@ private:
 
 private:
     MainCtx* m_ctx = nullptr;
+    QMetaObject::Connection m_accentConnection; // redesign: live accent
 
     ColorSchemeModel::ColorScheme m_source = ColorSchemeModel::ColorScheme::Day;
     bool m_isDark = false;

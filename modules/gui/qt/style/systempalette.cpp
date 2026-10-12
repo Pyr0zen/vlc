@@ -404,13 +404,12 @@ void SystemPalette::setCtx(MainCtx* ctx)
 {
     if (ctx == m_ctx)
         return;
-    if (m_ctx)
-        disconnect(m_ctx, &MainCtx::accentColorChanged, this, nullptr);
+    disconnect(m_accentConnection);
     m_ctx = ctx;
     if (m_ctx)
     {
         // redesign: live accent recolor (Decision 9 / 15)
-        connect(m_ctx, &MainCtx::accentColorChanged, this, [this]() {
+        m_accentConnection = connect(m_ctx, &MainCtx::accentColorChanged, this, [this]() {
             applyAccent();
             updatePalette();
         });
