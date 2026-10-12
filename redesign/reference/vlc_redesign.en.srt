@@ -1,0 +1,2448 @@
+1
+00:00:00,000 --> 00:00:03,000
+VLC, the goat of media players that can
+
+2
+00:00:03,000 --> 00:00:05,000
+play almost any media file and on any
+
+3
+00:00:05,000 --> 00:00:07,000
+OS. We love VLC for a lot of reasons,
+
+4
+00:00:07,000 --> 00:00:09,000
+but the UI is not one of them. A lot of
+
+5
+00:00:09,000 --> 00:00:11,000
+people say it's old, but I don't think
+
+6
+00:00:11,000 --> 00:00:13,000
+that's a bad thing because VLC has far
+
+7
+00:00:13,000 --> 00:00:16,000
+worse UI issues. I've been using VC for
+
+8
+00:00:16,000 --> 00:00:18,000
+a thousand years now. So, I decided to
+
+9
+00:00:18,000 --> 00:00:20,000
+try and redesign the UI. I asked you
+
+10
+00:00:20,000 --> 00:00:22,000
+guys about your preferences and issues
+
+11
+00:00:22,000 --> 00:00:24,000
+and asked the VC creator for the top
+
+12
+00:00:24,000 --> 00:00:26,000
+design priorities and he was incredibly
+
+13
+00:00:26,000 --> 00:00:28,000
+nice and helpful. He also tried to warn
+
+14
+00:00:28,000 --> 00:00:31,000
+me, to which I said, "I'd love to try."
+
+15
+00:00:31,000 --> 00:00:33,000
+Oh, only if you knew how bad things
+
+16
+00:00:33,000 --> 00:00:36,000
+really are.
+
+17
+00:00:36,000 --> 00:00:38,000
+VLC's design is simple, and we're going
+
+18
+00:00:38,000 --> 00:00:40,000
+to keep it simple. Starting with the
+
+19
+00:00:40,000 --> 00:00:42,000
+colors. The VC logo is an orange traffic
+
+20
+00:00:42,000 --> 00:00:44,000
+cone, which is because the creator had a
+
+21
+00:00:44,000 --> 00:00:46,000
+traffic cone collection. I got a lot of
+
+22
+00:00:46,000 --> 00:00:48,000
+messages saying keep the traffic cone. I
+
+23
+00:00:48,000 --> 00:00:50,000
+mean, why wouldn't I? Oh, apparently
+
+24
+00:00:50,000 --> 00:00:52,000
+some people don't like it. That's
+
+25
+00:00:52,000 --> 00:00:54,000
+interesting. But I'm going to keep the
+
+26
+00:00:54,000 --> 00:00:56,000
+cone and the orange color. We need some
+
+27
+00:00:56,000 --> 00:00:58,000
+neutral gray and black colors for the
+
+28
+00:00:58,000 --> 00:01:00,000
+background. And that's pretty much it.
+
+29
+00:01:00,000 --> 00:01:02,000
+For the icons, I noticed DLC uses these
+
+30
+00:01:02,000 --> 00:01:05,000
+detailed two-tone icons with gray and
+
+31
+00:01:05,000 --> 00:01:06,000
+orange. And I'm going to keep that
+
+32
+00:01:06,000 --> 00:01:09,000
+style, but modernize it and make them
+
+33
+00:01:09,000 --> 00:01:11,000
+all consistent. I'll use these for the
+
+34
+00:01:11,000 --> 00:01:13,000
+menus where the icon isn't clickable.
+
+35
+00:01:13,000 --> 00:01:15,000
+And another monochrome set for
+
+36
+00:01:15,000 --> 00:01:16,000
+everywhere else. Finally, we have the
+
+37
+00:01:16,000 --> 00:01:18,000
+round versus sharp argument. Right now,
+
+38
+00:01:18,000 --> 00:01:21,000
+VC is pretty sharp and rectangular, and
+
+39
+00:01:21,000 --> 00:01:23,000
+most other media players are not. And I
+
+40
+00:01:23,000 --> 00:01:25,000
+think that gives VC the personality it
+
+41
+00:01:25,000 --> 00:01:27,000
+has. I just can't make it circular. So,
+
+42
+00:01:27,000 --> 00:01:29,000
+I'm going to keep things rectangular but
+
+43
+00:01:29,000 --> 00:01:32,000
+a little less sharp. Keeping DLC's
+
+44
+00:01:32,000 --> 00:01:35,000
+unique visual identity.
+
+45
+00:01:35,000 --> 00:01:37,000
+Let's be honest, most of us just want to
+
+46
+00:01:37,000 --> 00:01:39,000
+click on a video, have it play, chill,
+
+47
+00:01:39,000 --> 00:01:41,000
+and hope that the UI will be a quiet
+
+48
+00:01:41,000 --> 00:01:43,000
+little bar that will just do its job.
+
+49
+00:01:43,000 --> 00:01:46,000
+But in VLC, it's quiet and kind of
+
+50
+00:01:46,000 --> 00:01:48,000
+useless. So, let's rebuild this. First
+
+51
+00:01:48,000 --> 00:01:50,000
+off, let's move the play button to the
+
+52
+00:01:50,000 --> 00:01:52,000
+center. Nuh-uh. I know every player
+
+53
+00:01:52,000 --> 00:01:54,000
+right now is like that. Even VC is
+
+54
+00:01:54,000 --> 00:01:56,000
+working on a redesign where the play
+
+55
+00:01:56,000 --> 00:01:57,000
+button is in the center. But like I said
+
+56
+00:01:57,000 --> 00:01:59,000
+before, that makes VC less unique,
+
+57
+00:01:59,000 --> 00:02:01,000
+causes the control bar to be massive,
+
+58
+00:02:01,000 --> 00:02:04,000
+covering huge chunk of the video. And
+
+59
+00:02:04,000 --> 00:02:05,000
+the majority of you guys just use the
+
+60
+00:02:05,000 --> 00:02:07,000
+keyboard or some other shortcut to play
+
+61
+00:02:07,000 --> 00:02:09,000
+and pause. It's kind of like YouTube.
+
+62
+00:02:09,000 --> 00:02:12,000
+So, let's keep this here, but make it a
+
+63
+00:02:12,000 --> 00:02:14,000
+tiny bit bigger and move the next and
+
+64
+00:02:14,000 --> 00:02:16,000
+previous icons around it. Then, we have
+
+65
+00:02:16,000 --> 00:02:18,000
+the full screen icon here for some
+
+66
+00:02:18,000 --> 00:02:20,000
+reason. On most players, full screen or
+
+67
+00:02:20,000 --> 00:02:22,000
+settings icons are actually on the right
+
+68
+00:02:22,000 --> 00:02:24,000
+side. So, let's move them there. Then we
+
+69
+00:02:24,000 --> 00:02:26,000
+have tuggle playlist. Hm. A singular
+
+70
+00:02:26,000 --> 00:02:30,000
+playlist. What? Oh, you mean a Q. Uh,
+
+71
+00:02:30,000 --> 00:02:32,000
+no, that's a playlist. Yeah, but you say
+
+72
+00:02:32,000 --> 00:02:35,000
+NQ. Well, yes, but I also say add to
+
+73
+00:02:35,000 --> 00:02:38,000
+playlist or save playlist to file.
+
+74
+00:02:38,000 --> 00:02:40,000
+We need a Q that plays things
+
+75
+00:02:40,000 --> 00:02:43,000
+automatically and playlists that are
+
+76
+00:02:43,000 --> 00:02:45,000
+just your collection of media. For now,
+
+77
+00:02:45,000 --> 00:02:47,000
+I'm going to turn this icon into a Q
+
+78
+00:02:47,000 --> 00:02:49,000
+icon and put these on the right side.
+
+79
+00:02:49,000 --> 00:02:51,000
+Ideally, you just drag files into the
+
+80
+00:02:51,000 --> 00:02:53,000
+queue or use these icons to add whatever
+
+81
+00:02:53,000 --> 00:02:55,000
+file you want to it. It's really simple.
+
+82
+00:02:55,000 --> 00:02:57,000
+On the right side, we also have a volume
+
+83
+00:02:57,000 --> 00:02:59,000
+slider. This is a cool design and I
+
+84
+00:02:59,000 --> 00:03:01,000
+don't want to oversimplify it in the new
+
+85
+00:03:01,000 --> 00:03:03,000
+design like modern players. I want to
+
+86
+00:03:03,000 --> 00:03:05,000
+keep the spirit. If you think about it,
+
+87
+00:03:05,000 --> 00:03:07,000
+this looks like a deformed cone. So,
+
+88
+00:03:07,000 --> 00:03:09,000
+let's make it a full cone and of course
+
+89
+00:03:09,000 --> 00:03:11,000
+keep the colors. Finally, the seek bar.
+
+90
+00:03:11,000 --> 00:03:13,000
+I don't know why every modern player has
+
+91
+00:03:13,000 --> 00:03:16,000
+a thin tiny slider. In a controversial
+
+92
+00:03:16,000 --> 00:03:18,000
+move, I'm going to put the seat bar down
+
+93
+00:03:18,000 --> 00:03:20,000
+here and make it a lot thicker. Just
+
+94
+00:03:20,000 --> 00:03:22,000
+trust the process. Now, we can clean the
+
+95
+00:03:22,000 --> 00:03:24,000
+whole thing up a bit and make a thin row
+
+96
+00:03:24,000 --> 00:03:26,000
+that doesn't disrupt the video. Also,
+
+97
+00:03:26,000 --> 00:03:28,000
+notice how you'll see doesn't show a
+
+98
+00:03:28,000 --> 00:03:30,000
+thumbnail as you seek through the video.
+
+99
+00:03:30,000 --> 00:03:32,000
+It could be a nice feature to add. On
+
+100
+00:03:32,000 --> 00:03:34,000
+the top, we have a menu, media title,
+
+101
+00:03:34,000 --> 00:03:35,000
+and window decorations. I'm going to
+
+102
+00:03:35,000 --> 00:03:37,000
+update it with our new style before
+
+103
+00:03:37,000 --> 00:03:39,000
+talking about the details, like how it
+
+104
+00:03:39,000 --> 00:03:41,000
+disappears on full screen. How are we
+
+105
+00:03:41,000 --> 00:03:42,000
+supposed to see the title? Are we
+
+106
+00:03:42,000 --> 00:03:44,000
+supposed to get out of full screen for
+
+107
+00:03:44,000 --> 00:03:46,000
+something so simple? Most people look at
+
+108
+00:03:46,000 --> 00:03:48,000
+the top area to find the title, so why
+
+109
+00:03:48,000 --> 00:03:50,000
+not just keep both the top and the
+
+110
+00:03:50,000 --> 00:03:52,000
+bottom UI and only show them when you
+
+111
+00:03:52,000 --> 00:03:53,000
+hover near them and immediately
+
+112
+00:03:53,000 --> 00:03:55,000
+disappear when you move away. I also
+
+113
+00:03:55,000 --> 00:03:57,000
+like the idea of putting the full screen
+
+114
+00:03:57,000 --> 00:03:59,000
+icon and maybe even a picturein picture
+
+115
+00:03:59,000 --> 00:04:01,000
+icon up here. That would be pretty
+
+116
+00:04:01,000 --> 00:04:03,000
+simple to use, but tell me which one you
+
+117
+00:04:03,000 --> 00:04:07,000
+prefer, up or down.
+
+118
+00:04:07,000 --> 00:04:08,000
+We have the layout, but I can't wait to
+
+119
+00:04:08,000 --> 00:04:10,000
+actually watch this. Wait, we need
+
+120
+00:04:10,000 --> 00:04:12,000
+subtitles at this point. I just
+
+121
+00:04:12,000 --> 00:04:13,000
+automatically right click and go to
+
+122
+00:04:13,000 --> 00:04:15,000
+subtitle, then subtitle track. But
+
+123
+00:04:15,000 --> 00:04:17,000
+that's way too much and it's annoying
+
+124
+00:04:17,000 --> 00:04:19,000
+when the menus keep closing. I mean, we
+
+125
+00:04:19,000 --> 00:04:21,000
+can put a record button down here, but
+
+126
+00:04:21,000 --> 00:04:23,000
+subtitles take multiple clicks. In the
+
+127
+00:04:23,000 --> 00:04:25,000
+upcoming DLC design, there's an icon
+
+128
+00:04:25,000 --> 00:04:27,000
+that's supposed to show tracks, and it's
+
+129
+00:04:27,000 --> 00:04:29,000
+on the left side. Once again, most
+
+130
+00:04:29,000 --> 00:04:30,000
+people look for that on the bottom
+
+131
+00:04:30,000 --> 00:04:32,000
+right. So, let's put a subtitle icon on
+
+132
+00:04:32,000 --> 00:04:34,000
+the right side that opens a list of
+
+133
+00:04:34,000 --> 00:04:36,000
+subtitle tracks. Right next to it, we
+
+134
+00:04:36,000 --> 00:04:38,000
+can have an audio icon that shows both
+
+135
+00:04:38,000 --> 00:04:40,000
+audio tracks and audio output like
+
+136
+00:04:40,000 --> 00:04:42,000
+headphones or speakers. So, you don't
+
+137
+00:04:42,000 --> 00:04:44,000
+have to get out of PLC for that.
+
+138
+00:04:44,000 --> 00:04:46,000
+Finally, we can add one more tab for
+
+139
+00:04:46,000 --> 00:04:49,000
+video tracks, but not an icon on the bar
+
+140
+00:04:49,000 --> 00:04:51,000
+because most of you guys never or rarely
+
+141
+00:04:51,000 --> 00:04:53,000
+use that. And if you want to use it,
+
+142
+00:04:53,000 --> 00:04:55,000
+you've got both this and the right-click
+
+143
+00:04:55,000 --> 00:04:56,000
+menu. We want to put things where we
+
+144
+00:04:56,000 --> 00:04:58,000
+mostly need them. So, the menus should
+
+145
+00:04:58,000 --> 00:05:00,000
+be more efficient. Like look at these
+
+146
+00:05:00,000 --> 00:05:02,000
+ones. This top menu is straight up the
+
+147
+00:05:02,000 --> 00:05:03,000
+same as the rightclick menu. is just
+
+148
+00:05:03,000 --> 00:05:05,000
+repeating the same things. So, let's
+
+149
+00:05:05,000 --> 00:05:08,000
+remove the extra and create one menu
+
+150
+00:05:08,000 --> 00:05:10,000
+icon where we'll just put these media
+
+151
+00:05:10,000 --> 00:05:12,000
+related options or these extra settings.
+
+152
+00:05:12,000 --> 00:05:14,000
+And that's how it's going to look for
+
+153
+00:05:14,000 --> 00:05:16,000
+now. VC is so bad at menus that it's
+
+154
+00:05:16,000 --> 00:05:18,000
+normal for you to think if I want a
+
+155
+00:05:18,000 --> 00:05:19,000
+setting, I should probably rightclick
+
+156
+00:05:19,000 --> 00:05:21,000
+the video. So, the rightclick menu is
+
+157
+00:05:21,000 --> 00:05:23,000
+essential. I'll just clean it up and
+
+158
+00:05:23,000 --> 00:05:25,000
+update it with our style and add one
+
+159
+00:05:25,000 --> 00:05:27,000
+option to completely hide the UI. If you
+
+160
+00:05:27,000 --> 00:05:28,000
+want, you could do that with a keyboard
+
+161
+00:05:28,000 --> 00:05:30,000
+shortcut, too. This has all just been
+
+162
+00:05:30,000 --> 00:05:31,000
+the tip of the iceberg where you
+
+163
+00:05:31,000 --> 00:05:33,000
+casually watch something and go about
+
+164
+00:05:33,000 --> 00:05:35,000
+your day. From here on, we enter pro
+
+165
+00:05:35,000 --> 00:05:39,000
+gamer territory.
+
+166
+00:05:39,000 --> 00:05:41,000
+I'm trying to watch this show, but the
+
+167
+00:05:41,000 --> 00:05:43,000
+subtitles kind of suck. So, I got to
+
+168
+00:05:43,000 --> 00:05:45,000
+look online, download a zip, extract it
+
+169
+00:05:45,000 --> 00:05:47,000
+in the same folder, and even then the
+
+170
+00:05:47,000 --> 00:05:49,000
+file names don't match. Amazing. VC does
+
+171
+00:05:49,000 --> 00:05:51,000
+look for similar file names in the
+
+172
+00:05:51,000 --> 00:05:53,000
+folder. But if I had a penny for every
+
+173
+00:05:53,000 --> 00:05:55,000
+time I had to manually drag subtitle
+
+174
+00:05:55,000 --> 00:05:57,000
+files into VC for every episode, I
+
+175
+00:05:57,000 --> 00:05:59,000
+probably afford to upgrade my RAM right
+
+176
+00:05:59,000 --> 00:06:00,000
+now. This has to be easier. We have a
+
+177
+00:06:00,000 --> 00:06:02,000
+new subtitle section. What if when you
+
+178
+00:06:02,000 --> 00:06:04,000
+click on add, it opens a dialogue with
+
+179
+00:06:04,000 --> 00:06:06,000
+three options of adding subtitles to
+
+180
+00:06:06,000 --> 00:06:08,000
+this file or this folder or this
+
+181
+00:06:08,000 --> 00:06:10,000
+playlist. Then we could have another
+
+182
+00:06:10,000 --> 00:06:11,000
+option of choosing files from this
+
+183
+00:06:11,000 --> 00:06:13,000
+computer or a website like open
+
+184
+00:06:13,000 --> 00:06:15,000
+subtitles. This way, you could add
+
+185
+00:06:15,000 --> 00:06:17,000
+subtitles to entire folders and they'd
+
+186
+00:06:17,000 --> 00:06:19,000
+either get automatically matched or you
+
+187
+00:06:19,000 --> 00:06:20,000
+could manually select the correct
+
+188
+00:06:20,000 --> 00:06:23,000
+subtitle files for every episode and
+
+189
+00:06:23,000 --> 00:06:25,000
+have it saved for all future episodes.
+
+190
+00:06:25,000 --> 00:06:26,000
+Okay, this should be working. Let's
+
+191
+00:06:26,000 --> 00:06:29,000
+play. Evil, evil man. You'll pay for my
+
+192
+00:06:29,000 --> 00:06:31,000
+lost aura. Okay, something's off. The
+
+193
+00:06:31,000 --> 00:06:34,000
+subtitle is a bit delayed. Let's try
+
+194
+00:06:34,000 --> 00:06:35,000
+fixing it. You'll see this little icon I
+
+195
+00:06:35,000 --> 00:06:37,000
+didn't address earlier. It's like the
+
+196
+00:06:37,000 --> 00:06:40,000
+Pandora's box. Half the settings you
+
+197
+00:06:40,000 --> 00:06:41,000
+need while watching the video, including
+
+198
+00:06:41,000 --> 00:06:44,000
+subtitle timing, live here. and somehow
+
+199
+00:06:44,000 --> 00:06:46,000
+it has to cover half the screen. So, you
+
+200
+00:06:46,000 --> 00:06:48,000
+use it, then close it, rewind the video,
+
+201
+00:06:48,000 --> 00:06:49,000
+and just do this 10 times till they're
+
+202
+00:06:49,000 --> 00:06:51,000
+synced. You can also press this or this
+
+203
+00:06:51,000 --> 00:06:53,000
+on your keyboard, but that doesn't solve
+
+204
+00:06:53,000 --> 00:06:55,000
+the main issue. What if there was a
+
+205
+00:06:55,000 --> 00:06:57,000
+subtitle timeline that showed the times
+
+206
+00:06:57,000 --> 00:06:59,000
+that texts appear? So, you would wait
+
+207
+00:06:59,000 --> 00:07:02,000
+for the audio, pause the video, and just
+
+208
+00:07:02,000 --> 00:07:04,000
+move the subtitles back. But what if you
+
+209
+00:07:04,000 --> 00:07:06,000
+don't use keyboard shortcuts? This is
+
+210
+00:07:06,000 --> 00:07:08,000
+still a problem. You have subtitle
+
+211
+00:07:08,000 --> 00:07:10,000
+tracks over here. So, why not move all
+
+212
+00:07:10,000 --> 00:07:12,000
+these preferences to the right and turn
+
+213
+00:07:12,000 --> 00:07:14,000
+them into a sidebar with four tabs? I'll
+
+214
+00:07:14,000 --> 00:07:16,000
+explain what they are. First, subtitles.
+
+215
+00:07:16,000 --> 00:07:18,000
+We need these three subtitle timing
+
+216
+00:07:18,000 --> 00:07:20,000
+options, but imagine having to type when
+
+217
+00:07:20,000 --> 00:07:23,000
+it could be an easy slider instead.
+
+218
+00:07:23,000 --> 00:07:25,000
+Then, we need the subtitle font, font
+
+219
+00:07:25,000 --> 00:07:27,000
+size, outline, or position so you could
+
+220
+00:07:27,000 --> 00:07:29,000
+change them while watching a video. A
+
+221
+00:07:29,000 --> 00:07:31,000
+lot of you guys said you wish VC had
+
+222
+00:07:31,000 --> 00:07:34,000
+exact font values, not small or big. And
+
+223
+00:07:34,000 --> 00:07:36,000
+here's the thing, it does. It's just
+
+224
+00:07:36,000 --> 00:07:39,000
+hidden deep inside advanced settings for
+
+225
+00:07:39,000 --> 00:07:40,000
+some reason. And the settings are a
+
+226
+00:07:40,000 --> 00:07:42,000
+whole different labyrinth we're going to
+
+227
+00:07:42,000 --> 00:07:43,000
+talk about later. So, let's have two
+
+228
+00:07:43,000 --> 00:07:46,000
+options of relative or precise for
+
+229
+00:07:46,000 --> 00:07:48,000
+sizes. Now, I set my subtitle delay and
+
+230
+00:07:48,000 --> 00:07:50,000
+formatting, but do I need to change it
+
+231
+00:07:50,000 --> 00:07:53,000
+manually every single episode? Hell no.
+
+232
+00:07:53,000 --> 00:07:55,000
+We should be able to save all these
+
+233
+00:07:55,000 --> 00:07:57,000
+settings for this specific show through
+
+234
+00:07:57,000 --> 00:07:59,000
+a preset and then later you just select
+
+235
+00:07:59,000 --> 00:08:02,000
+whatever preset you want and immediately
+
+236
+00:08:02,000 --> 00:08:03,000
+bring the settings back up. Another
+
+237
+00:08:03,000 --> 00:08:05,000
+thing I don't want to have to reseelect
+
+238
+00:08:05,000 --> 00:08:07,000
+every episode is the subtitle track.
+
+239
+00:08:07,000 --> 00:08:09,000
+It's like a binger's nightmare. And if
+
+240
+00:08:09,000 --> 00:08:10,000
+you have enough persistence and
+
+241
+00:08:10,000 --> 00:08:12,000
+determination, you end up searching for
+
+242
+00:08:12,000 --> 00:08:14,000
+the solution. And it says you got to go
+
+243
+00:08:14,000 --> 00:08:16,000
+to input/codeex deep in advanced
+
+244
+00:08:16,000 --> 00:08:19,000
+settings. Input/codeex? That's so oddly
+
+245
+00:08:19,000 --> 00:08:21,000
+irrelevant considering subtitle settings
+
+246
+00:08:21,000 --> 00:08:23,000
+are in a whole different place. How are
+
+247
+00:08:23,000 --> 00:08:25,000
+we supposed to know this? I swear there
+
+248
+00:08:25,000 --> 00:08:27,000
+should be a VC expert certificate or
+
+249
+00:08:27,000 --> 00:08:28,000
+something because why do we have to put
+
+250
+00:08:28,000 --> 00:08:30,000
+in so much effort just to set a default
+
+251
+00:08:30,000 --> 00:08:32,000
+subtitle track? This could just be
+
+252
+00:08:32,000 --> 00:08:34,000
+another simple setting in the sidebar
+
+253
+00:08:34,000 --> 00:08:35,000
+where you choose a subtitle track or
+
+254
+00:08:35,000 --> 00:08:37,000
+language to automatically select on
+
+255
+00:08:37,000 --> 00:08:39,000
+every episode and it's saved in your
+
+256
+00:08:39,000 --> 00:08:42,000
+preset. The same things apply to audio
+
+257
+00:08:42,000 --> 00:08:44,000
+with default audio track or audio delay
+
+258
+00:08:44,000 --> 00:08:46,000
+and so on. Then we have a bunch of audio
+
+259
+00:08:46,000 --> 00:08:48,000
+filters that could be expanded like the
+
+260
+00:08:48,000 --> 00:08:51,000
+equalizer which is for audio nerds but a
+
+261
+00:08:51,000 --> 00:08:53,000
+casual user can benefit from basic
+
+262
+00:08:53,000 --> 00:08:55,000
+friendly presets with preview icons next
+
+263
+00:08:55,000 --> 00:08:57,000
+to them. Let's do the same exact thing
+
+264
+00:08:57,000 --> 00:08:59,000
+for video filters, too, because let's be
+
+265
+00:08:59,000 --> 00:09:00,000
+honest, you need to see a preview of
+
+266
+00:09:00,000 --> 00:09:03,000
+whatever you're doing. Flip, rotate,
+
+267
+00:09:03,000 --> 00:09:06,000
+zoom, HDR, resolution, aspect ratio, and
+
+268
+00:09:06,000 --> 00:09:08,000
+similar settings can be here, too.
+
+269
+00:09:08,000 --> 00:09:09,000
+Finally, playback settings will house
+
+270
+00:09:09,000 --> 00:09:11,000
+the extras like speed. Then, we want a
+
+271
+00:09:11,000 --> 00:09:14,000
+reverse feature. Sleep timer, show
+
+272
+00:09:14,000 --> 00:09:16,000
+subtitle, timeline, show waveform on the
+
+273
+00:09:16,000 --> 00:09:18,000
+seek bar, and finally, show metadata.
+
+274
+00:09:18,000 --> 00:09:22,000
+Okay, let's continue watching.
+
+275
+00:09:22,000 --> 00:09:25,000
+You'll never find the wand. What? Oh my
+
+276
+00:09:25,000 --> 00:09:27,000
+god, I got to watch the next episode.
+
+277
+00:09:27,000 --> 00:09:29,000
+Why doesn't it work? My bad for not
+
+278
+00:09:29,000 --> 00:09:31,000
+adding the whole thing to the queue.
+
+279
+00:09:31,000 --> 00:09:32,000
+Either way, there's got to be an easier
+
+280
+00:09:32,000 --> 00:09:35,000
+way to do this. Um, actually, there is.
+
+281
+00:09:35,000 --> 00:09:36,000
+You can go to the file browser, find
+
+282
+00:09:36,000 --> 00:09:38,000
+your videos, and add them to the
+
+283
+00:09:38,000 --> 00:09:40,000
+playlist. You know, VC has a superpower,
+
+284
+00:09:40,000 --> 00:09:42,000
+which is having a billion features and
+
+285
+00:09:42,000 --> 00:09:44,000
+making sure no one finds them. Right
+
+286
+00:09:44,000 --> 00:09:45,000
+now, you can add different files to your
+
+287
+00:09:45,000 --> 00:09:47,000
+media library, and they would just all
+
+288
+00:09:47,000 --> 00:09:49,000
+show up next to each other regardless of
+
+289
+00:09:49,000 --> 00:09:51,000
+the folder they are in. And in the new
+
+290
+00:09:51,000 --> 00:09:52,000
+design, you have different categories,
+
+291
+00:09:52,000 --> 00:09:54,000
+but to add anything to them, you got to
+
+292
+00:09:54,000 --> 00:09:56,000
+go to this browse section. Why does it
+
+293
+00:09:56,000 --> 00:09:58,000
+have a Wi-Fi icon? And then use this
+
+294
+00:09:58,000 --> 00:10:00,000
+internal file explorer to find the
+
+295
+00:10:00,000 --> 00:10:02,000
+folder you want and add the videos to
+
+296
+00:10:02,000 --> 00:10:04,000
+your video category. None of these solve
+
+297
+00:10:04,000 --> 00:10:05,000
+the main issue and none of them even
+
+298
+00:10:05,000 --> 00:10:08,000
+expose the library feature to an average
+
+299
+00:10:08,000 --> 00:10:10,000
+user. Like, how are you supposed to go
+
+300
+00:10:10,000 --> 00:10:12,000
+to your library in the new VC design?
+
+301
+00:10:12,000 --> 00:10:14,000
+The back button, of course. What if we
+
+302
+00:10:14,000 --> 00:10:16,000
+use the current library design, but
+
+303
+00:10:16,000 --> 00:10:17,000
+cleaned it up? We have the videos,
+
+304
+00:10:17,000 --> 00:10:20,000
+music, network streams. Yes, VLC can
+
+305
+00:10:20,000 --> 00:10:21,000
+stream. We'll get to that in a bit. And
+
+306
+00:10:21,000 --> 00:10:23,000
+playlists. On this side, we'll have the
+
+307
+00:10:23,000 --> 00:10:25,000
+backward and forward buttons and an
+
+308
+00:10:25,000 --> 00:10:27,000
+address line that you can click on to go
+
+309
+00:10:27,000 --> 00:10:29,000
+up and down in folders. We also have
+
+310
+00:10:29,000 --> 00:10:31,000
+this view options icon that cycles
+
+311
+00:10:31,000 --> 00:10:34,000
+through grid list or detail views. But
+
+312
+00:10:34,000 --> 00:10:35,000
+what is this icon? What am I looking at?
+
+313
+00:10:35,000 --> 00:10:38,000
+Why doesn't it change? And is that it? A
+
+314
+00:10:38,000 --> 00:10:40,000
+search bar? Where are the sorting
+
+315
+00:10:40,000 --> 00:10:42,000
+options? Oh, okay. They're only in the
+
+316
+00:10:42,000 --> 00:10:43,000
+rightclick menu, and you're just
+
+317
+00:10:43,000 --> 00:10:44,000
+supposed to know that. Let's make some
+
+318
+00:10:44,000 --> 00:10:46,000
+standard sorting, view mode, and search
+
+319
+00:10:46,000 --> 00:10:48,000
+items here. I also want to add unwatched
+
+320
+00:10:48,000 --> 00:10:50,000
+or watched first options in the sorting
+
+321
+00:10:50,000 --> 00:10:52,000
+menu because they make your life easier.
+
+322
+00:10:52,000 --> 00:10:54,000
+Finally, we'll have an average menu with
+
+323
+00:10:54,000 --> 00:10:55,000
+different options you might need, like
+
+324
+00:10:55,000 --> 00:10:57,000
+adding a file or folder here. Let's try
+
+325
+00:10:57,000 --> 00:10:59,000
+that actually. All right, my folder was
+
+326
+00:10:59,000 --> 00:11:01,000
+added and I can finally watch the next
+
+327
+00:11:01,000 --> 00:11:03,000
+episode. But wait, how do we open the
+
+328
+00:11:03,000 --> 00:11:05,000
+library? I'm kind of thinking of
+
+329
+00:11:05,000 --> 00:11:07,000
+something up here perhaps, but what
+
+330
+00:11:07,000 --> 00:11:09,000
+could it be? Not a back icon, obviously.
+
+331
+00:11:09,000 --> 00:11:11,000
+How about a home button? No, we're not
+
+332
+00:11:11,000 --> 00:11:13,000
+going back home. A library. Okay, that
+
+333
+00:11:13,000 --> 00:11:15,000
+icon's too vague. You know, VC has a
+
+334
+00:11:15,000 --> 00:11:17,000
+superpower, which is having a billion
+
+335
+00:11:17,000 --> 00:11:19,000
+features and making sure no one finds
+
+336
+00:11:19,000 --> 00:11:21,000
+them. Okay, how do we help everyone find
+
+337
+00:11:21,000 --> 00:11:23,000
+the library easier? What was the most
+
+338
+00:11:23,000 --> 00:11:24,000
+familiar thing to someone watching
+
+339
+00:11:24,000 --> 00:11:26,000
+something? I got it. It's the show, like
+
+340
+00:11:26,000 --> 00:11:28,000
+the name of the folder. You'd
+
+341
+00:11:28,000 --> 00:11:30,000
+immediately recognize that. We could put
+
+342
+00:11:30,000 --> 00:11:31,000
+it right here on the top. But Jax, how
+
+343
+00:11:31,000 --> 00:11:33,000
+am I supposed to know I should click on
+
+344
+00:11:33,000 --> 00:11:35,000
+that to open the library? Exactly. So,
+
+345
+00:11:35,000 --> 00:11:37,000
+now that we have your attention, we can
+
+346
+00:11:37,000 --> 00:11:39,000
+add another icon, like a sidebar icon,
+
+347
+00:11:39,000 --> 00:11:41,000
+and have the library open here in
+
+348
+00:11:41,000 --> 00:11:43,000
+compact mode. This way, you'd never have
+
+349
+00:11:43,000 --> 00:11:45,000
+to leave the video. You just drag
+
+350
+00:11:45,000 --> 00:11:47,000
+whatever you want from the library to
+
+351
+00:11:47,000 --> 00:11:48,000
+the queue. Of course, you should still
+
+352
+00:11:48,000 --> 00:11:50,000
+be able to browse the library in full
+
+353
+00:11:50,000 --> 00:11:52,000
+screen if you want with a mini player
+
+354
+00:11:52,000 --> 00:11:53,000
+and a queue and everything that you
+
+355
+00:11:53,000 --> 00:11:55,000
+could drag around. But my idea with this
+
+356
+00:11:55,000 --> 00:11:57,000
+design is that you never have to leave
+
+357
+00:11:57,000 --> 00:11:58,000
+the video in the first place. But this
+
+358
+00:11:58,000 --> 00:12:01,000
+is just the videos. We also have music.
+
+359
+00:12:01,000 --> 00:12:03,000
+I already added some of my songs here.
+
+360
+00:12:03,000 --> 00:12:05,000
+Yes, I make my own music for my videos.
+
+361
+00:12:05,000 --> 00:12:06,000
+And if you like them, you should check
+
+362
+00:12:06,000 --> 00:12:07,000
+them out. They're all in this folder
+
+363
+00:12:07,000 --> 00:12:10,000
+called songs, but the actual music
+
+364
+00:12:10,000 --> 00:12:12,000
+section gets divided into songs, albums,
+
+365
+00:12:12,000 --> 00:12:14,000
+artists, and genres. So, you could
+
+366
+00:12:14,000 --> 00:12:16,000
+listen to all of my songs back to back
+
+367
+00:12:16,000 --> 00:12:17,000
+like this one. And as you can see, it
+
+368
+00:12:17,000 --> 00:12:19,000
+looks completely different from a video
+
+369
+00:12:19,000 --> 00:12:21,000
+with a massive cover art. And you have
+
+370
+00:12:21,000 --> 00:12:23,000
+the waveform seek bar if you want. Let's
+
+371
+00:12:23,000 --> 00:12:24,000
+try the network streams. By default,
+
+372
+00:12:24,000 --> 00:12:26,000
+there are a bunch of streams saved here,
+
+373
+00:12:26,000 --> 00:12:28,000
+but I have this button to add whatever
+
+374
+00:12:28,000 --> 00:12:30,000
+else we want. This normally opens a
+
+375
+00:12:30,000 --> 00:12:32,000
+dialogue like this. And this right here
+
+376
+00:12:32,000 --> 00:12:35,000
+is a lot. We have to talk about it right
+
+377
+00:12:35,000 --> 00:12:37,000
+now. This is an all-in-one media
+
+378
+00:12:37,000 --> 00:12:39,000
+factory. You have file, disk, network,
+
+379
+00:12:39,000 --> 00:12:41,000
+and capturing device. And not only you
+
+380
+00:12:41,000 --> 00:12:44,000
+can play them, but also ENQ them, stream
+
+381
+00:12:44,000 --> 00:12:46,000
+them from your device to another device
+
+382
+00:12:46,000 --> 00:12:48,000
+or convert them. This is too complex.
+
+383
+00:12:48,000 --> 00:12:50,000
+Who's coming here to select a file and
+
+384
+00:12:50,000 --> 00:12:52,000
+incue it when there is a Q right here.
+
+385
+00:12:52,000 --> 00:12:54,000
+Plus, these functions are extremely
+
+386
+00:12:54,000 --> 00:12:56,000
+important and they should be separate,
+
+387
+00:12:56,000 --> 00:12:58,000
+not hidden. Remember this menu up here?
+
+388
+00:12:58,000 --> 00:13:00,000
+It already has these options like open
+
+389
+00:13:00,000 --> 00:13:03,000
+file, open directory, network stream,
+
+390
+00:13:03,000 --> 00:13:05,000
+capturing device, clipboard, recent
+
+391
+00:13:05,000 --> 00:13:07,000
+media, convert, and stream to another
+
+392
+00:13:07,000 --> 00:13:08,000
+device. Let's clean them up. Now, each
+
+393
+00:13:08,000 --> 00:13:10,000
+of them can be a dialogue like this one.
+
+394
+00:13:10,000 --> 00:13:12,000
+And we get back to the part where we
+
+395
+00:13:12,000 --> 00:13:13,000
+wanted to stream off the internet.
+
+396
+00:13:13,000 --> 00:13:15,000
+There's actually this massive list of
+
+397
+00:13:15,000 --> 00:13:17,000
+public TV channels around the world on
+
+398
+00:13:17,000 --> 00:13:18,000
+GitHub. Let's copy the link and paste it
+
+399
+00:13:18,000 --> 00:13:20,000
+here. Now, it's an automatic playlist
+
+400
+00:13:20,000 --> 00:13:22,000
+with all the videos listed. Speaking of
+
+401
+00:13:22,000 --> 00:13:25,000
+playlists, that's our next stop. It's
+
+402
+00:13:25,000 --> 00:13:26,000
+really simple. Click on this button,
+
+403
+00:13:26,000 --> 00:13:28,000
+write a name for your playlist, and
+
+404
+00:13:28,000 --> 00:13:30,000
+select your files. That's it. Or if
+
+405
+00:13:30,000 --> 00:13:31,000
+you're somewhere else, you could select
+
+406
+00:13:31,000 --> 00:13:33,000
+a file and add it to a playlist. Right
+
+407
+00:13:33,000 --> 00:13:35,000
+now, the sidebar is hella long and
+
+408
+00:13:35,000 --> 00:13:38,000
+empty. But I have three more things to
+
+409
+00:13:38,000 --> 00:13:40,000
+add. What? Pin whatever you want here.
+
+410
+00:13:40,000 --> 00:13:42,000
+Your favorite playlists, your mostused
+
+411
+00:13:42,000 --> 00:13:44,000
+folders, anything you want. Two, a
+
+412
+00:13:44,000 --> 00:13:46,000
+recent files tab. And three, a homepage.
+
+413
+00:13:46,000 --> 00:13:48,000
+Duh. It would have all the latest files
+
+414
+00:13:48,000 --> 00:13:50,000
+and playlists and streams. Instead of
+
+415
+00:13:50,000 --> 00:13:53,000
+this blank cone, now you come back to VC
+
+416
+00:13:53,000 --> 00:13:55,000
+and see a full media library ready to
+
+417
+00:13:55,000 --> 00:13:57,000
+continue wherever you left off. Let's
+
+418
+00:13:57,000 --> 00:14:00,000
+actually continue this. Uh, yes, I'd
+
+419
+00:14:00,000 --> 00:14:02,000
+like to continue. Why is it so far away?
+
+420
+00:14:02,000 --> 00:14:04,000
+I barely noticed it. Couldn't it be near
+
+421
+00:14:04,000 --> 00:14:06,000
+the other playback controls in the
+
+422
+00:14:06,000 --> 00:14:08,000
+center so I'd see it? Considering I have
+
+423
+00:14:08,000 --> 00:14:10,000
+like 5 seconds to respond. Okay,
+
+424
+00:14:10,000 --> 00:14:12,000
+continue. I looked everywhere, every
+
+425
+00:14:12,000 --> 00:14:15,000
+site and every app. Sign up after sign
+
+426
+00:14:15,000 --> 00:14:18,000
+up. It was exhausting. I just wanted to
+
+427
+00:14:18,000 --> 00:14:20,000
+see some examples. What was the best way
+
+428
+00:14:20,000 --> 00:14:23,000
+to design settings, video players, file
+
+429
+00:14:23,000 --> 00:14:25,000
+managers? I was tired of searching for
+
+430
+00:14:25,000 --> 00:14:27,000
+the best button examples on Google and
+
+431
+00:14:27,000 --> 00:14:30,000
+going website to website until I found
+
+432
+00:14:30,000 --> 00:14:33,000
+Mobin, today's sponsor. With Mobin, it
+
+433
+00:14:33,000 --> 00:14:35,000
+was as simple as typing and searching.
+
+434
+00:14:35,000 --> 00:14:38,000
+Thousands of the best curated examples
+
+435
+00:14:38,000 --> 00:14:40,000
+scrolled in front of my eyes, and I got
+
+436
+00:14:40,000 --> 00:14:42,000
+to pick and choose what I like and save
+
+437
+00:14:42,000 --> 00:14:44,000
+them all. No more of this when I only
+
+438
+00:14:44,000 --> 00:14:46,000
+need this one tab to do my research. If
+
+439
+00:14:46,000 --> 00:14:48,000
+you're watching this, you need to try
+
+440
+00:14:48,000 --> 00:14:50,000
+Mobin for free. And if you choose to
+
+441
+00:14:50,000 --> 00:14:53,000
+upgrade, use my link to get 20% off.
+
+442
+00:14:53,000 --> 00:14:55,000
+Wait, this is actually so cool. Let me
+
+443
+00:14:55,000 --> 00:14:57,000
+save it. Uh, how do I do that?
+
+444
+00:14:57,000 --> 00:14:59,000
+Bookmarks. This should be it. Are you
+
+445
+00:14:59,000 --> 00:15:00,000
+actually kidding me right now? I just
+
+446
+00:15:00,000 --> 00:15:02,000
+want to add a bookmark and move on with
+
+447
+00:15:02,000 --> 00:15:04,000
+my life. This is an Excel. A keyboard
+
+448
+00:15:04,000 --> 00:15:05,000
+shortcut like Ctrl +B should create a
+
+449
+00:15:05,000 --> 00:15:08,000
+bookmark quickly, but B just opens this.
+
+450
+00:15:08,000 --> 00:15:10,000
+If we brought the bookmark timeline out
+
+451
+00:15:10,000 --> 00:15:12,000
+on the sidebar, it would all be easier
+
+452
+00:15:12,000 --> 00:15:14,000
+to create bookmarks and see the full
+
+453
+00:15:14,000 --> 00:15:16,000
+list. I feel like movie chapters would
+
+454
+00:15:16,000 --> 00:15:18,000
+also fit perfectly here. Anyway, let's
+
+455
+00:15:18,000 --> 00:15:20,000
+uh wait, what what just happened? What
+
+456
+00:15:20,000 --> 00:15:23,000
+did I press? Maybe this. Oh god, no.
+
+457
+00:15:23,000 --> 00:15:25,000
+Well, what the am I supposed to do now?
+
+458
+00:15:25,000 --> 00:15:26,000
+Wish this message also showed the
+
+459
+00:15:26,000 --> 00:15:28,000
+keyboard shortcut that was just pressed
+
+460
+00:15:28,000 --> 00:15:30,000
+and not just the action. Let's see if
+
+461
+00:15:30,000 --> 00:15:32,000
+that settings exists already. Oh, here
+
+462
+00:15:32,000 --> 00:15:35,000
+we go.
+
+463
+00:15:35,000 --> 00:15:38,000
+The settings screen in VC is genuinely
+
+464
+00:15:38,000 --> 00:15:39,000
+an airplane cockpit. Like, this is
+
+465
+00:15:39,000 --> 00:15:41,000
+actually rocket science. There are two
+
+466
+00:15:41,000 --> 00:15:43,000
+setting modes, simple and all. The
+
+467
+00:15:43,000 --> 00:15:45,000
+simple ones aren't so simple and the
+
+468
+00:15:45,000 --> 00:15:47,000
+advanced ones are not all advanced.
+
+469
+00:15:47,000 --> 00:15:49,000
+There's interface, audio, video,
+
+470
+00:15:49,000 --> 00:15:51,000
+subtitles, input and codecs, and hotkeys
+
+471
+00:15:51,000 --> 00:15:53,000
+here. I realize most of us use keyboard
+
+472
+00:15:53,000 --> 00:15:55,000
+shortcuts, but also many of us don't
+
+473
+00:15:55,000 --> 00:15:57,000
+ever dig that deep in settings. So, I
+
+474
+00:15:57,000 --> 00:15:59,000
+want to bring the hotkeys out in their
+
+475
+00:15:59,000 --> 00:16:01,000
+own dialogue and add a fresh coat of
+
+476
+00:16:01,000 --> 00:16:03,000
+paint and create a direct button for it
+
+477
+00:16:03,000 --> 00:16:05,000
+in the menu. Now, the rest of this, I
+
+478
+00:16:05,000 --> 00:16:06,000
+know I said many of us don't use the
+
+479
+00:16:06,000 --> 00:16:07,000
+settings, but it's not because it's
+
+480
+00:16:07,000 --> 00:16:11,000
+useless. It's because the design is so
+
+481
+00:16:11,000 --> 00:16:13,000
+right now. You go to settings, find the
+
+482
+00:16:13,000 --> 00:16:15,000
+interface section, look for what you
+
+483
+00:16:15,000 --> 00:16:18,000
+need. Did you find it? Yes. Good. No.
+
+484
+00:16:18,000 --> 00:16:20,000
+You got to go to advanced settings, find
+
+485
+00:16:20,000 --> 00:16:22,000
+interface again, and find what you're
+
+486
+00:16:22,000 --> 00:16:23,000
+looking for from a million different
+
+487
+00:16:23,000 --> 00:16:26,000
+settings. What you really want is go to
+
+488
+00:16:26,000 --> 00:16:28,000
+settings, find interface, look through
+
+489
+00:16:28,000 --> 00:16:30,000
+all the basic settings, scroll down, and
+
+490
+00:16:30,000 --> 00:16:31,000
+you have the advanced settings. Now, I
+
+491
+00:16:31,000 --> 00:16:33,000
+know what you're thinking. This is too
+
+492
+00:16:33,000 --> 00:16:35,000
+theoretical. In practice, advanced
+
+493
+00:16:35,000 --> 00:16:37,000
+settings go on forever, right? Well,
+
+494
+00:16:37,000 --> 00:16:39,000
+that's why I went through every single
+
+495
+00:16:39,000 --> 00:16:42,000
+setting in here and listed them one by
+
+496
+00:16:42,000 --> 00:16:44,000
+one. It was brutal. There are settings
+
+497
+00:16:44,000 --> 00:16:46,000
+that repeat five times. The same word is
+
+498
+00:16:46,000 --> 00:16:48,000
+written differently in different places.
+
+499
+00:16:48,000 --> 00:16:50,000
+The same setting is worded completely
+
+500
+00:16:50,000 --> 00:16:52,000
+differently in simple and advanced
+
+501
+00:16:52,000 --> 00:16:54,000
+settings. Some are subcategories, but
+
+502
+00:16:54,000 --> 00:16:56,000
+literally have one singular setting
+
+503
+00:16:56,000 --> 00:16:58,000
+inside them. Parametric equalizer is
+
+504
+00:16:58,000 --> 00:17:00,000
+pathetic. The settings have
+
+505
+00:17:00,000 --> 00:17:02,000
+explanations, but they are hidden and
+
+506
+00:17:02,000 --> 00:17:03,000
+only show if you leave your mouse on
+
+507
+00:17:03,000 --> 00:17:05,000
+them long enough. And the dumbest one
+
+508
+00:17:05,000 --> 00:17:07,000
+yet is how autodetecting subtitles in a
+
+509
+00:17:07,000 --> 00:17:09,000
+folder uses different degrees of
+
+510
+00:17:09,000 --> 00:17:12,000
+precision using numbers. Seriously, VC,
+
+511
+00:17:12,000 --> 00:17:13,000
+what the hell does that even mean? Well,
+
+512
+00:17:13,000 --> 00:17:15,000
+if you hover over here, you'll see it
+
+513
+00:17:15,000 --> 00:17:17,000
+says match movie file name to no
+
+514
+00:17:17,000 --> 00:17:20,000
+subfile, any subfile, subfiles
+
+515
+00:17:20,000 --> 00:17:22,000
+containing the movie name, movie name
+
+516
+00:17:22,000 --> 00:17:24,000
+and additional characters, or matching
+
+517
+00:17:24,000 --> 00:17:26,000
+exactly the movie name. Okay, cool. I
+
+518
+00:17:26,000 --> 00:17:29,000
+see. So, why are we using numbers? We
+
+519
+00:17:29,000 --> 00:17:31,000
+are not computers. Literally, just put
+
+520
+00:17:31,000 --> 00:17:33,000
+them in human words in a drop down. Use
+
+521
+00:17:33,000 --> 00:17:35,000
+your words, VC. Use your words. After
+
+522
+00:17:35,000 --> 00:17:37,000
+going through every setting, I divided
+
+523
+00:17:37,000 --> 00:17:40,000
+them all into 10 or more categories.
+
+524
+00:17:40,000 --> 00:17:41,000
+General for general app settings,
+
+525
+00:17:41,000 --> 00:17:43,000
+including theme selection for both light
+
+526
+00:17:43,000 --> 00:17:45,000
+mode and dark mode. I also want to add
+
+527
+00:17:45,000 --> 00:17:47,000
+an accent color settings, so you could
+
+528
+00:17:47,000 --> 00:17:49,000
+change the orange to whatever color you
+
+529
+00:17:49,000 --> 00:17:51,000
+like. Then we have interface settings
+
+530
+00:17:51,000 --> 00:17:54,000
+for how VC behaves. Privacy for what VC
+
+531
+00:17:54,000 --> 00:17:56,000
+needs to remember about history or
+
+532
+00:17:56,000 --> 00:17:58,000
+network. Controls for all the keyboard
+
+533
+00:17:58,000 --> 00:18:00,000
+and mouse settings. Playback for all the
+
+534
+00:18:00,000 --> 00:18:01,000
+settings related to when a file is
+
+535
+00:18:01,000 --> 00:18:04,000
+playing. Video for video and picture
+
+536
+00:18:04,000 --> 00:18:06,000
+related settings like all the filters.
+
+537
+00:18:06,000 --> 00:18:07,000
+Audio for audio filters like the
+
+538
+00:18:07,000 --> 00:18:09,000
+equalizer and so on. Subtitle for all
+
+539
+00:18:09,000 --> 00:18:12,000
+the subtitles and on-screen display
+
+540
+00:18:12,000 --> 00:18:13,000
+messages like showing the keyboard
+
+541
+00:18:13,000 --> 00:18:16,000
+shortcuts as we press them. Library for
+
+542
+00:18:16,000 --> 00:18:18,000
+playlists, folders and so on. Network
+
+543
+00:18:18,000 --> 00:18:20,000
+for all the connection options.
+
+544
+00:18:20,000 --> 00:18:22,000
+Performance for all the decoding and CPU
+
+545
+00:18:22,000 --> 00:18:24,000
+usage settings. Recording for streaming
+
+546
+00:18:24,000 --> 00:18:26,000
+or casting to another device. And
+
+547
+00:18:26,000 --> 00:18:28,000
+finally, extensions for a list of all of
+
+548
+00:18:28,000 --> 00:18:30,000
+them. Extensions in VLC right now are a
+
+549
+00:18:30,000 --> 00:18:33,000
+mashup of add-ons, extensions, and
+
+550
+00:18:33,000 --> 00:18:35,000
+plugins. I know they sound like
+
+551
+00:18:35,000 --> 00:18:37,000
+synonyms, but add-ons are like
+
+552
+00:18:37,000 --> 00:18:39,000
+extensions, skins, and everything
+
+553
+00:18:39,000 --> 00:18:42,000
+installable. But plugins are just VC's
+
+554
+00:18:42,000 --> 00:18:44,000
+internal functions. You're not really
+
+555
+00:18:44,000 --> 00:18:46,000
+supposed to edit them here. So, they
+
+556
+00:18:46,000 --> 00:18:48,000
+also go in the advanced settings part,
+
+557
+00:18:48,000 --> 00:18:49,000
+and that's settings for you. Everything
+
+558
+00:18:49,000 --> 00:18:52,000
+is clean, and every setting has an info
+
+559
+00:18:52,000 --> 00:18:53,000
+icon that shows more information about
+
+560
+00:18:53,000 --> 00:18:58,000
+it. But there's one big part of it left.
+
+561
+00:18:58,000 --> 00:19:00,000
+I wouldn't make customization a part of
+
+562
+00:19:00,000 --> 00:19:02,000
+this redesign because that would just be
+
+563
+00:19:02,000 --> 00:19:04,000
+your redesign, right? But since VC has a
+
+564
+00:19:04,000 --> 00:19:06,000
+screen for it and it's not very good, we
+
+565
+00:19:06,000 --> 00:19:08,000
+have to do this. The customization
+
+566
+00:19:08,000 --> 00:19:10,000
+dialogue right now is just very hard to
+
+567
+00:19:10,000 --> 00:19:12,000
+use and it doesn't have to be like this.
+
+568
+00:19:12,000 --> 00:19:15,000
+We can simply have one big frame in the
+
+569
+00:19:15,000 --> 00:19:17,000
+center of VC filled with buttons and
+
+570
+00:19:17,000 --> 00:19:20,000
+icons and outlines showing you that you
+
+571
+00:19:20,000 --> 00:19:21,000
+can move things. And that's it. We just
+
+572
+00:19:21,000 --> 00:19:23,000
+got to drag whatever we want around.
+
+573
+00:19:23,000 --> 00:19:25,000
+Bring them in, take them out, and make
+
+574
+00:19:25,000 --> 00:19:27,000
+something that's completely yours. For
+
+575
+00:19:27,000 --> 00:19:29,000
+example, this is an alternate layout
+
+576
+00:19:29,000 --> 00:19:30,000
+that I thought of. I also think that you
+
+577
+00:19:30,000 --> 00:19:32,000
+should be able to save different layouts
+
+578
+00:19:32,000 --> 00:19:35,000
+under different VC profiles. So, all
+
+579
+00:19:35,000 --> 00:19:37,000
+your settings change with every profile.
+
+580
+00:19:37,000 --> 00:19:39,000
+But here's the thing. I asked you guys
+
+581
+00:19:39,000 --> 00:19:40,000
+how far you would go to customize your
+
+582
+00:19:40,000 --> 00:19:42,000
+media player. And even though most of
+
+583
+00:19:42,000 --> 00:19:45,000
+you want to customize, about half of you
+
+584
+00:19:45,000 --> 00:19:46,000
+chose to keep customization to a
+
+585
+00:19:46,000 --> 00:19:48,000
+minimum. A simple solution is an
+
+586
+00:19:48,000 --> 00:19:50,000
+onboarding screen with theme options and
+
+587
+00:19:50,000 --> 00:19:52,000
+a shortcut screen to introduce the basic
+
+588
+00:19:52,000 --> 00:19:54,000
+shortcuts to you would be really
+
+589
+00:19:54,000 --> 00:19:56,000
+helpful. If you like the redesign and
+
+590
+00:19:56,000 --> 00:19:58,000
+you want to contribute to VC in any way,
+
+591
+00:19:58,000 --> 00:20:00,000
+this redesign will be open source and
+
+592
+00:20:00,000 --> 00:20:02,000
+free to use. And if you like the VC
+
+593
+00:20:02,000 --> 00:20:04,000
+project and you want and can consider
+
+594
+00:20:04,000 --> 00:20:07,000
+donating to VC. The links are all in the
+
+595
+00:20:07,000 --> 00:20:10,000
+description. Putting this all together,
+
+596
+00:20:10,000 --> 00:20:12,000
+the all-time favorite media player is
+
+597
+00:20:12,000 --> 00:20:14,000
+back with a brand new UI. A refreshed
+
+598
+00:20:14,000 --> 00:20:17,000
+library for a refreshed experience.
+
+599
+00:20:17,000 --> 00:20:21,000
+Videos, music, streaming, playlists are
+
+600
+00:20:21,000 --> 00:20:23,000
+right next to you. Drag everything you
+
+601
+00:20:23,000 --> 00:20:25,000
+want to the queue and play. Seek through
+
+602
+00:20:25,000 --> 00:20:28,000
+the video with ease. More is less. Do
+
+603
+00:20:28,000 --> 00:20:30,000
+more with less effort. Settings
+
+604
+00:20:30,000 --> 00:20:33,000
+reimagined. From syncing your subtitles
+
+605
+00:20:33,000 --> 00:20:35,000
+with an easy subtitle timeline to
+
+606
+00:20:35,000 --> 00:20:37,000
+creating audio and video filters and
+
+607
+00:20:37,000 --> 00:20:39,000
+choosing your own color, everything is
+
+608
+00:20:39,000 --> 00:20:42,000
+customizable. Yep, even that. Just drag
+
+609
+00:20:42,000 --> 00:20:46,000
+and drop your player, your VC. Well,
+
+610
+00:20:46,000 --> 00:20:48,000
+that's all for this video. If you liked
+
+611
+00:20:48,000 --> 00:20:49,000
+it, make sure you do your magic down
+
+612
+00:20:49,000 --> 00:20:51,000
+below and see you on the next one.
+

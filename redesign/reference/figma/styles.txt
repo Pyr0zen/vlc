@@ -1,0 +1,88 @@
+VLC Redesign (Figma, by Juxtopposed) - exact style values
+Source: read directly from the Figma file's style data.
+Primary theme: Dark. Note: Light/FG/1 and Light/FG/2 equal the Dark values in the original file, likely a mistake in the design. Ask Tony before relying on them.
+
+COLOR STYLES: Dark (all 100% opacity unless noted)
+Dark/FG/1                 #EAEAEA
+Dark/FG/2                 #C6C6C6
+Dark/FG/A1                #969696
+Dark/FG/A2                #8F8F8F
+Dark/FG/A3                #6B6B6B
+Dark/FG/A4                #404040
+Dark/FG/B1                #161616
+Dark/Accent/Main          #D37918
+Dark/Accent/Bright        #FC9729
+Dark/Accent/Logo          #D37918
+Dark/Accent/DIm           #AB6314
+Dark/BG/Accent Bright     #371F06
+Dark/BG/Accent Dark       #1A1611
+Dark/BG/A1                #222222
+Dark/BG/A2                #1F1F1F
+Dark/BG/A3                #1B1B1B
+Dark/BG/A4                #191919
+Dark/BG/A5                #151515
+Dark/BG/B1                #0E0E0E
+Dark/BG/B2                #090909
+Dark/BG/A3 Transparent    #191919  95%
+Dark/BG/B1 Transparent    #0E0E0E  95%
+Dark/BG/B2 Transparent    #000000  80%
+Dark/Divider/Bright       #373737
+Dark/Divider/Dim          #222222
+
+COLOR STYLES: Light (all 100% opacity unless noted)
+Light/FG/1                #EAEAEA
+Light/FG/2                #C6C6C6
+Light/FG/A1               #3C3C3C
+Light/FG/A2               #2E2E2E
+Light/FG/A3               #6B6B6B
+Light/FG/A4               #3B3B3B
+Light/FG/B1               #161616
+Light/Accent/Main         #E8851A
+Light/Accent/Bright       #FFA13B
+Light/Accent/Logo         #C2711A
+Light/Accent/DIm          #965916
+Light/BG/Accent Bright    #D8BA9A
+Light/BG/Accent Dark      #C6AB89
+Light/BG/A1               #EDEDED
+Light/BG/A2               #DDDDDD
+Light/BG/A3               #D5D5D5
+Light/BG/A4               #B3B3B3
+Light/BG/A5               #888888
+Light/BG/B1               #E7E7E7
+Light/BG/B2               #DEDEDE
+Light/BG/A3 Transparent   #D5D5D5  75%
+Light/BG/B1 Transparent   #E7E7E7  80%
+Light/Divider/Bright      #9B9B9B
+Light/Divider/Dim         #ACACAC
+
+EFFECT STYLES
+bg blur
+  Background blur, normal, radius 50
+bg blur + shadow
+  1) Background blur, normal, radius 50
+  2) Drop shadow: color #000000 at 46%, x 0, y 8, blur 15, spread 0, blend Normal, "show behind" off
+
+VARIABLES
+1 collection: "Variable collection", 1 mode: "Mode 1", 0 variables (empty)
+
+OTHER STYLES
+Text styles: 0
+Grid styles: 0
+
+FIGMA EXPORT CONTENTS
+105 top-level layers from 1 page ("Page 1"), 2x PNG:
+- 68 frames: the screens (names starting "Player", "On...", "Ad...", "Se...", "Ke...", "Op..." etc.)
+- 35 component sets (sidebar, EQ, playlist, Dropdown etc.)
+- 2 text labels ("Designs", "Components")
+
+ACCENT COLOR OPTIONS (Tony Decision 15; from the Figma Onboarding color dots, in display order)
+Accent/Option/Orange      #D37918   (default, = Dark/Accent/Main)
+Accent/Option/Red         #E15032
+Accent/Option/Olive       #C49E23
+Accent/Option/Green       #19A234
+Accent/Option/Teal        #18AAD3
+Accent/Option/Blue        #185DD3
+Accent/Option/Purple      #8E42FF
+Accent/Option/Pink        #F052B3
+Accent/Option/Gray        #AFAFAF
+Derived shades for non-orange accents (Bright, DIm, BG/Accent Bright, BG/Accent Dark) are not in the file; compute them with the same ratios as the orange set and record the method under "Decisions (Claude)" in VIDEO_INDEX.md.
