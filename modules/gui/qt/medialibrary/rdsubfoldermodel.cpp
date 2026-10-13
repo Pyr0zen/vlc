@@ -132,9 +132,9 @@ RdSubfolderModel::Loader::Loader(const RdSubfolderModel& model)
     : MLOp(model)
 {
     for (const QString& mrl : model.m_categoryMrls)
-        m_mine.insert(RdLibraryItems::normalizedMrl(mrl));
+        m_mine.insert(RdLibraryItems::mrlKey(mrl));
     for (const QString& mrl : model.m_otherMrls)
-        m_others.insert(RdLibraryItems::normalizedMrl(mrl));
+        m_others.insert(RdLibraryItems::mrlKey(mrl));
 }
 
 std::vector<const vlc_ml_folder_t*>
@@ -163,8 +163,8 @@ RdSubfolderModel::Loader::folders(vlc_medialibrary_t* ml, ml_unique_ptr<vlc_ml_f
             continue;
         if (roots)
         {
-            const QString mrl = RdLibraryItems::normalizedMrl(qfu(folder.psz_mrl));
-            if (!m_mine.contains(mrl) && m_others.contains(mrl))
+            const QString key = RdLibraryItems::mrlKey(qfu(folder.psz_mrl));
+            if (!m_mine.contains(key) && m_others.contains(key))
                 continue;
         }
         if (!pattern.isEmpty() && !qfu(folder.psz_name).contains(pattern, Qt::CaseInsensitive))

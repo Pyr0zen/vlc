@@ -183,7 +183,7 @@ FocusScope {
                                 playing: home.isPlaying(item.mrl)
                                 dragUrls: home.dragUrlsOf(item)
                                 onClicked: home.activate(item)
-                                onMoreClicked: (button) => itemMenu.openForItem(item, button, item.isVideo ? "video" : "music")
+                                onMoreClicked: (button) => itemMenu.openForItem(item, button, home.categoryOf(item))
                             }
                         }
                     }
@@ -213,7 +213,7 @@ FocusScope {
                                 playing: home.isPlaying(item.mrl)
                                 dragUrls: home.dragUrlsOf(item)
                                 onClicked: home.activate(item)
-                                onMoreClicked: (button) => itemMenu.openForItem(item, button, item.isVideo ? "video" : "music")
+                                onMoreClicked: (button) => itemMenu.openForItem(item, button, home.categoryOf(item))
                             }
                         }
                     }
@@ -292,6 +292,32 @@ FocusScope {
         return (item.kind === "media" || item.kind === "stream") && item.mrl ? [item.mrl] : []
     }
 
+    function _mrlKey(mrl) {
+        let key = String(mrl)
+        try {
+            key = decodeURIComponent(key)
+        } catch (e) {
+            // not percent-encoded: compare as it is
+        }
+        return key.replace(/\/+$/, "")
+    }
+
+    function _inside(roots, mrl) {
+        const key = _mrlKey(mrl)
+        return roots.some((root) => {
+            const rootKey = _mrlKey(root)
+            return key === rootKey || key.startsWith(rootKey + "/")
+        })
+    }
+
+    // the category of a Home row: media by their type, folders by the category they were added to
+    function categoryOf(item) {
+        if (item.kind === "folder")
+            return _inside(RdLibraryStore.musicFolders, item.mrl) && !_inside(RdLibraryStore.videoFolders, item.mrl)
+                   ? "music" : "video"
+        return item.isVideo ? "video" : "music"
+    }
+
     // a frequent folder opens with its whole address line
     function activate(item) {
         if (item.kind === "folder") {
@@ -299,7 +325,7 @@ FocusScope {
             RdLibraryStore.resolveFolder(item.mrl, (result) => RdLibraryNav.openFolderPath(result))
             return
         }
-        RdLibraryActions.activate(item, item.isVideo ? "video" : "music")
+        RdLibraryActions.activate(item, home.categoryOf(item))
     }
 
     RdLibraryItemMenu {

@@ -39,6 +39,7 @@
 #include <vlc_input_item.h>
 #include <vlc_media_library.h>
 #include <vlc_media_source.h>
+#include <vlc_url.h>
 
 #include "medialib.hpp"
 #include "mlhelper.hpp"
@@ -56,7 +57,37 @@ constexpr int FREQUENT_COUNT = 10;
 // `mrl` is `root` or inside it
 bool isInside(const QString& root, const QString& mrl)
 {
-    return mrl == root || (mrl.startsWith(root) && mrl.at(root.size()) == QLatin1Char('/'));
+    const QString rootKey = RdLibraryItems::mrlKey(root);
+    const QString key = RdLibraryItems::mrlKey(mrl);
+    return key == rootKey || (key.startsWith(rootKey) && key.at(rootKey.size()) == QLatin1Char('/'));
+}
+
+void removeMrl(QStringList& list, const QString& mrl)
+{
+    const QString key = RdLibraryItems::mrlKey(mrl);
+    list.removeIf([&key](const QString& entry) { return RdLibraryItems::mrlKey(entry) == key; });
+}
+
+// the forms a file's MRL may have in the media library: as given, as Qt encodes it, as VLC does
+QStringList mrlCandidates(const QString& mrl)
+{
+    QStringList candidates { mrl };
+    const QUrl url(mrl);
+    const QString qtEncoded = url.toString(QUrl::FullyEncoded);
+    if (!candidates.contains(qtEncoded))
+        candidates.append(qtEncoded);
+    if (url.isLocalFile())
+    {
+        char* uri = vlc_path2uri(qtu(QDir::toNativeSeparators(url.toLocalFile())), "file");
+        if (uri)
+        {
+            const QString vlcEncoded = qfu(uri);
+            free(uri);
+            if (!candidates.contains(vlcEncoded))
+                candidates.append(vlcEncoded);
+        }
+    }
+    return candidates;
 }
 
 // the media library stores folder MRLs with a trailing slash
@@ -176,7 +207,7 @@ void RdLibraryStore::addFolder(const QString& category, const QUrl& url)
                 if (!root.psz_mrl)
                     continue;
                 const QString rootMrl = RdLibraryItems::normalizedMrl(qfu(root.psz_mrl));
-                if (rootMrl == mrl)
+                if (RdLibraryItems::mrlKey(rootMrl) == RdLibraryItems::mrlKey(mrl))
                     ctx.isRoot = true;
                 else if (isInside(rootMrl, mrl))
                     ctx.insideRoot = true;
@@ -187,7 +218,7 @@ void RdLibraryStore::addFolder(const QString& category, const QUrl& url)
     },
     [this, category, mrl, &mine](quint64, Ctx& ctx) {
         // a library folder already shown in the other category joins this one too
-        if (!ctx.insideRoot && !mine.contains(mrl))
+        if (!ctx.insideRoot && !RdLibraryItems::containsMrl(mine, mrl))
         {
             mine.append(mrl);
             save(RD_LIBRARY_KEY("videoFolders"), m_videoFolders);
@@ -206,10 +237,12 @@ void RdLibraryStore::removeFolder(const QString& category, const QString& mrl)
 
     // a folder in no list (added before the redesign) shows in both categories: removing it
     // from one keeps it in the other
-    const bool shownInOther = other.contains(normalized) || !mine.contains(normalized);
-    if (!other.contains(normalized) && !mine.contains(normalized))
+    const bool inOther = RdLibraryItems::containsMrl(other, normalized);
+    const bool inMine = RdLibraryItems::containsMrl(mine, normalized);
+    const bool shownInOther = inOther || !inMine;
+    if (!inOther && !inMine)
         other.append(normalized);
-    mine.removeAll(normalized);
+    removeMrl(mine, normalized);
     save(RD_LIBRARY_KEY("videoFolders"), m_videoFolders);
     save(RD_LIBRARY_KEY("musicFolders"), m_musicFolders);
     emit foldersChanged();
@@ -248,14 +281,19 @@ void RdLibraryStore::resolveFolder(const QString& mrl, QJSValue callback)
     };
 
     const QString target = RdLibraryItems::normalizedMrl(mrl);
+    const QStringList candidates = mrlCandidates(target);
     m_mediaLib->runOnMLThread<Ctx>(this,
-    [target](vlc_medialibrary_t* ml, Ctx& ctx) {
+    [target, candidates](vlc_medialibrary_t* ml, Ctx& ctx) {
         QString folderMrl = target;
-        ml_unique_ptr<vlc_ml_media_t> media(vlc_ml_get_media_by_mrl(ml, qtu(target)));
-        if (media)
+        for (const QString& candidate : candidates)
         {
-            ctx.audio = media->i_type == VLC_ML_MEDIA_TYPE_AUDIO;
-            folderMrl = parentMrl(target);
+            ml_unique_ptr<vlc_ml_media_t> media(vlc_ml_get_media_by_mrl(ml, qtu(candidate)));
+            if (media)
+            {
+                ctx.audio = media->i_type == VLC_ML_MEDIA_TYPE_AUDIO;
+                folderMrl = parentMrl(target);
+                break;
+            }
         }
 
         ml_unique_ptr<vlc_ml_folder_list_t> roots(vlc_ml_list_entry_points(ml, nullptr));
@@ -278,7 +316,7 @@ void RdLibraryStore::resolveFolder(const QString& mrl, QJSValue callback)
         }
 
         // walk down the subfolders to the folder itself
-        while (current != 0 && currentMrl != folderMrl)
+        while (current != 0 && RdLibraryItems::mrlKey(currentMrl) != RdLibraryItems::mrlKey(folderMrl))
         {
             vlc_ml_folder_list_t* list = nullptr;
             if (vlc_ml_list(ml, VLC_ML_LIST_SUBFOLDERS, nullptr, current, &list) != VLC_SUCCESS || !list)
@@ -313,9 +351,9 @@ void RdLibraryStore::resolveFolder(const QString& mrl, QJSValue callback)
 
         const QString root = ctx.crumbs.front().mrl;
         QString category;
-        if (m_musicFolders.contains(root))
+        if (RdLibraryItems::containsMrl(m_musicFolders, root))
             category = QStringLiteral("music");
-        else if (m_videoFolders.contains(root))
+        else if (RdLibraryItems::containsMrl(m_videoFolders, root))
             category = QStringLiteral("video");
         else
             category = ctx.audio ? QStringLiteral("music") : QStringLiteral("video");

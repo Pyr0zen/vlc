@@ -174,6 +174,19 @@ QString RdLibraryItems::normalizedMrl(const QString& mrl)
     return result;
 }
 
+QString RdLibraryItems::mrlKey(const QString& mrl)
+{
+    return normalizedMrl(QUrl::fromPercentEncoding(mrl.toUtf8()));
+}
+
+bool RdLibraryItems::containsMrl(const QStringList& list, const QString& mrl)
+{
+    const QString key = mrlKey(mrl);
+    return std::any_of(list.cbegin(), list.cend(), [&key](const QString& entry) {
+        return mrlKey(entry) == key;
+    });
+}
+
 // RdLibraryModel
 
 RdLibraryModel::RdLibraryModel(QObject* parent)
