@@ -268,10 +268,11 @@ Rectangle {
                 radius: VLCStyle.rd_radius_small
                 color: !button.showLabel && button._hot ? VLCStyle.palette.rdHoverOverlay : "transparent"
 
-                Image {
+                Widgets.ImageExt {
                     anchors.centerIn: parent
                     width: VLCStyle.rd_iconSize
                     height: VLCStyle.rd_iconSize
+                    radius: VLCStyle.rd_radius_small
                     visible: button.image.toString() !== "" && status === Image.Ready
                     source: button.image
                     asynchronous: true

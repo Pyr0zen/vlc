@@ -51,13 +51,14 @@ Item {
         visible: root.boxed
         radius: root.radius
         color: VLCStyle.palette.rdBgA1
-        clip: true
 
-        Image {
+        // VLC's rounded image (corner shader); decoded off the UI thread at twice the shown size
+        Widgets.ImageExt {
             id: picture
 
             anchors.fill: parent
             source: root.source
+            radius: root.radius
             asynchronous: true
             cache: true
             fillMode: Image.PreserveAspectCrop
@@ -68,6 +69,7 @@ Item {
         Rectangle {
             anchors.fill: parent
             visible: root.playing
+            radius: root.radius
             color: VLCStyle.palette.rdBgB2Transparent
         }
     }

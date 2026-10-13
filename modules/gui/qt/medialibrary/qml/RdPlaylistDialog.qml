@@ -139,11 +139,11 @@ RdLibraryDialog {
                 color: VLCStyle.palette.rdBgB2
                 border.width: VLCStyle.dp(2)
                 border.color: thumbnailPicker.hovered ? VLCStyle.palette.rdDividerBright : VLCStyle.palette.rdBgA4
-                clip: true
 
-                Image {
+                Widgets.ImageExt {
                     anchors.fill: parent
                     anchors.margins: parent.border.width
+                    radius: VLCStyle.rd_radius_small
                     source: dialog.cover
                     asynchronous: true
                     fillMode: Image.PreserveAspectCrop
