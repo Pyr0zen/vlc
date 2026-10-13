@@ -290,6 +290,8 @@ libqt_plugin_la_SOURCES = \
 	player/input_models.cpp player/input_models.hpp \
 	player/delay_estimator.cpp \
 	player/delay_estimator.hpp \
+	player/rd_effects.cpp \
+	player/rd_effects.hpp \
 	player/player_controller.cpp player/player_controller.hpp player/player_controller_p.hpp \
 	player/player_controlbar_model.cpp player/player_controlbar_model.hpp \
 	player/control_list_model.cpp player/control_list_model.hpp \
@@ -491,6 +493,7 @@ nodist_libqt_plugin_la_SOURCES = \
 	style/systempalette.moc.cpp \
 	style/vlcicons.moc.cpp \
 	player/delay_estimator.moc.cpp \
+	player/rd_effects.moc.cpp \
 	player/input_models.moc.cpp \
 	player/player_controller.moc.cpp \
 	player/player_controlbar_model.moc.cpp \
@@ -1328,6 +1331,7 @@ libqml_module_medialibrary_a_QML = \
 	medialibrary/qml/MusicAlbumSectionDelegate.qml \
 	medialibrary/qml/MLGlobalShortcuts.qml \
 	medialibrary/qml/Bookmarks.qml \
+	medialibrary/qml/RdBookmarkList.qml \
 	medialibrary/qml/MLContextMenu.qml \
 	medialibrary/qml/MLDragItem.qml \
 	medialibrary/qml/MLTableColumns.qml \
@@ -1394,6 +1398,14 @@ libqml_module_player_a_QML = \
 	player/qml/TopBar.qml \
 	player/qml/TracksMenu.qml \
 	player/qml/TracksPopup.qml \
+	player/qml/RdSidePanel.qml \
+	player/qml/RdSidePanelPage.qml \
+	player/qml/SettingsSidebar.qml \
+	player/qml/QueueSidebar.qml \
+	player/qml/PlaybackSettingsPage.qml \
+	player/qml/VideoSettingsPage.qml \
+	player/qml/AudioSettingsPage.qml \
+	player/qml/SubtitleSettingsPage.qml \
 	player/qml/TracksPage.qml \
 	player/qml/TracksPageAudio.qml \
 	player/qml/TracksPageSpeed.qml \
@@ -1620,7 +1632,14 @@ libqml_module_widgets_a_QML = \
 	widgets/qml/RdSectionHeader.qml \
 	widgets/qml/RdPanel.qml \
 	widgets/qml/RdTooltip.qml \
-	widgets/qml/RdIcon.qml
+	widgets/qml/RdIcon.qml \
+	widgets/qml/RdValueBox.qml \
+	widgets/qml/RdSettingRow.qml \
+	widgets/qml/RdSettingsSection.qml \
+	widgets/qml/RdParamSlider.qml \
+	widgets/qml/RdChoiceDropdown.qml \
+	widgets/qml/RdEqCurve.qml \
+	widgets/qml/RdListRow.qml
 libqml_module_widgets_a_Singleton_QML =
 libqml_module_widgets_a_SOURCES = $(QML_MODULE_widgets_SRC)
 nodist_libqml_module_widgets_a_SOURCES = widgets/qmlassets.cpp $(QML_MODULE_widgets_NODIST_EXTRA)
