@@ -109,7 +109,7 @@ ColumnLayout {
         visible: root.hasAdvanced && (!root.filtering || root.advancedMatchCount > 0)
         Layout.fillWidth: true
         expanded: root.advancedShown
-        onClicked: root.advancedExpanded = !root.advancedExpanded
+        onClicked: root.advancedExpanded = !root.advancedShown
     }
 
     ColumnLayout {

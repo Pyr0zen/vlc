@@ -143,6 +143,11 @@ ColumnLayout {
             onClicked: popover.toggle()
 
             // a popover stays with its row: close it when the row, the page or the dialog hides
+            onActiveFocusChanged: {
+                if (!activeFocus && popover.opened)
+                    popover.hide()
+            }
+
             onVisibleChanged: {
                 if (!visible)
                     popover.hide()
