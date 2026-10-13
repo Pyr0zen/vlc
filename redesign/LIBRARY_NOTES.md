@@ -14,7 +14,8 @@ Branch `redesign-library`, branched from `redesign` (merge base 67ec8e0347). Bui
 
 **Data layer (C++, `modules/gui/qt/medialibrary/`, all new files)**
 - `RdLibraryStore` (singleton): the library's own settings in VLC's QSettings (`RdLibrary/...`): folders per category (Videos / Music), pins, stream lists, playlist covers, view modes, sort keys per page. Folder pick / add / remove / rescan (`vlc_ml_add_folder`, `vlc_ml_remove_folder`, `vlc_ml_reload_folder`), resolve a file to its folder path (folder chip), create / append / rename / delete / export (M3U8) playlists, playlist cover images (copied to the user data dir), Mark as Watched (`vlc_ml_media_set_played`), Favorite, Show in File Explorer, Clear Recent.
-- `RdSubfolderModel` (an `MLBaseModel`, paged): the folder levels of Videos and Music (entry points of the category at the root, `VLC_ML_LIST_SUBFOLDERS` below).
+- `RdSubfolderModel` (an `MLBaseModel`, paged): the folder levels of Videos and Music (at the root: the category's library folders plus its folders that sit inside a library folder of the other category; below: `VLC_ML_LIST_SUBFOLDERS`).
+- `RdConcatModel`: a folder page's subfolders followed by its media as one list (both paged models stay paged: every row is read from its source when the view asks for it).
 - `RdCollectionModel` (Home sections, capped): Continue Watching, Listen Again, Frequent Folders, Frequent Playlists, Frequent Artists, Latest Streams.
 - `RdLibraryModel`: the shared base of the capped Home models (ML thread loading, debounced reload on ML events, thumbnails requested on demand).
 - Minimal edits to VLC files: `mlvideomodel.cpp` and `mlaudiomodel.cpp` accept the `filename` sort and `MLAudioModel` lists the songs of a folder (`VLC_ML_PARENT_FOLDER`); `mainui.cpp` registers the four new types.
@@ -59,6 +60,8 @@ Status column: **built** = coded on this branch, needs the PC test; **PC** = the
 
 One line each, for the PC session to copy under "Decisions (Claude)" at the merge:
 - Videos and Music categories are folder based: each category keeps its own folder list in QSettings on top of VLC's media library entry points; a folder added before the redesign (in no list) shows in both.
+- A folder added to a category that is inside a library folder of the other category (a Music folder inside a Videos folder) is listed at the root of its category and opens there; it is not scanned twice. Removing the outer library folder makes it a library folder of its own (rescanned).
+- A folder page lists its subfolders first, then its media, in the same view: rows in list view, cards with the folder icon in grid view (the video never shows both on one page).
 - Unwatched First / Watched First sort by the media library's play count; inside each group the order is the media library's own.
 - Sort options differ per page, from her menu (Title A-Z / Z-A, Unwatched First, Watched First, Newest / Oldest First, URI) plus what VLC's models support on music pages (artist, album, track and disc number); each page remembers its sort.
 - Compact library and full library keep separate view modes: compact defaults to list, full to grid (as in the video).
@@ -87,10 +90,11 @@ One line each, for the PC session to copy under "Decisions (Claude)" at the merg
 - Home has no sort (the video shows none); the Playlists page sorts by name and date only (what `MLPlaylistListModel` supports).
 - The video's IB-01 transitional library mock is intentionally not built.
 - Background blur is not used (performance rule); see section 9.
+- VLC's media library module ignores offset and limit for subfolders (`VLC_ML_LIST_SUBFOLDERS` in `modules/misc/medialibrary/medialibrary.cpp` returns them all): each page of a folder level is cut from one full query on the media library thread, only the rows of the page become items and delegates. Paging that SQL query too would be a small core change (pass the query parameters to `Folder::subfolders()` and use `items(nb, offset)`), its own build per CLAUDE.md; only worth it if a folder with thousands of subfolders measures slow.
 
 ## 7. Files
 
-New C++: `medialibrary/rdlibrarymodel.{hpp,cpp}`, `rdcollectionmodel.{hpp,cpp}`, `rdsubfoldermodel.{hpp,cpp}`, `rdlibrarystore.{hpp,cpp}`.
+New C++: `medialibrary/rdlibrarymodel.{hpp,cpp}`, `rdcollectionmodel.{hpp,cpp}`, `rdsubfoldermodel.{hpp,cpp}`, `rdconcatmodel.{hpp,cpp}`, `rdlibrarystore.{hpp,cpp}`.
 New QML (VLC.MediaLibrary): `RdAddToPlaylistMenu`, `RdBreadcrumb`, `RdDashedBorder`, `RdFolderInfoPopup`, `RdLibraryActions` (singleton), `RdLibraryCard`, `RdLibraryContent`, `RdLibraryDialog`, `RdLibraryHeader`, `RdLibraryHome`, `RdLibraryIconButton`, `RdLibraryItemMenu`, `RdLibraryMenu`, `RdLibraryNav` (singleton), `RdLibraryPage`, `RdLibraryRail`, `RdLibraryRow`, `RdLibrarySidebar`, `RdLibraryThumb`, `RdLibraryView`, `RdPlaylistDialog`, `RdStreamDialog`. VLC.Player: `RdMiniPlayer`, `RdMiniQueue`. VLC.Playlist: `RdQueueDropArea`.
 Changed VLC files: `maininterface/qml/MainDisplay.qml` (Phase 5 file, rewritten), `maininterface/mainui.cpp` (type registration), `medialibrary/mlvideomodel.cpp`, `medialibrary/mlaudiomodel.cpp`, `Makefile.am`, `meson.build` (every new file registered in both).
 Not touched: Player.qml, the palette, MainCtx, the sidebar files, VLCStyle.
@@ -123,18 +127,20 @@ QML:
 - Home folders get their real category (their menu added folders to Music before).
 - Restored from the old MainDisplay: Ctrl+F focuses the library search, Escape goes back, pinch changes the interface scale.
 
+Follow-up (Sticky, 2026-10-13), both built:
+- A folder with hundreds of subfolders loads its rows lazily: subfolders and media are one paged list (`RdConcatModel`), the header Repeater is gone.
+- A folder added to Music shows on the Music page even when it is inside a Videos folder (and the same the other way round).
+
 Not changed, with reasons:
 - Auto-switch to the player when a video starts: VLC's own MainDisplay does exactly this (`onHasVideoOutputChanged`), so it stays.
-- Subfolders of a folder are rows in the grid header (a Repeater), so a folder level creates all its subfolder rows at once. A GridView cannot mix full-width folder rows with media cards lazily. The rows are light (no picture, no ghost until dragged). Measure with a folder of 500+ subfolders; if it is slow, the fix is a separate lazy ListView section above the grid.
 - `widgets/qml/RdMenuPanel.qml` (PC session file): its `_connected` array keeps a null for each destroyed menu row, a few per menu open. Fix for the PC session: drop nulls at the start of `onChildrenChanged` (`_connected = _connected.filter((c) => !!c)`).
-- A subfolder of a folder that is in the other category, added to this category, opens but is not listed at the category root (the root lists media library folders only). Tell Sticky if this case matters.
 
 ## 9. Performance (Sticky, 2026-10-13: the app must feel at least as snappy as stock VLC)
 
 How Phase 5 is built for speed:
 - Every unbounded list uses VLC's paged `MLBaseModel` models (rows load on demand on the media library thread, the view only creates visible delegates):
   - folder media: `MLVideoModel` / `MLAudioModel` with the folder as `parentId` (videos only in Videos, songs only in Music);
-  - folder levels: `RdSubfolderModel` (new, an `MLBaseModel`);
+  - folder levels: `RdSubfolderModel` (new, an `MLBaseModel`); a folder page shows its subfolders and media as one paged list (`RdConcatModel`), never all subfolders at once;
   - albums `MLAlbumModel`, artists `MLArtistModel`, genres `MLGenreModel`, tracks of an album / artist / genre `MLAudioModel`, playlists `MLPlaylistListModel`, playlist content `MLPlaylistModel`, Recent `MLRecentMediaModel`, Latest Streams page `MLUrlModel`, network stream lists and services `NetworkMediaModel` / `NetworkDeviceModel`.
 - Sorting is done by the media library (SQL), never in the UI.
 - `RdCollectionModel` (Home sections only) loads a few rows on the media library thread, capped at 100 rows (3 per section next to the video, one row of cards in the full library).
@@ -144,7 +150,7 @@ How Phase 5 is built for speed:
 
 To measure first after merging (most sensitive first):
 1. Scrolling a 10,000-item Songs / Albums / Artists list in grid and list view, both compact and full.
-2. Opening a folder with 1,000+ videos (thumbnail generation load while scrolling).
+2. Opening a folder with 1,000+ videos (thumbnail generation load while scrolling), and a folder with 500+ subfolders (each page of subfolders is cut from one full media library query, see section 6).
 3. Home with a large history (6 section queries at once on start; the frequent-artists query ranks the last 200 songs played).
 4. Media library scan of a large folder while the library is open: every ML event restarts the 300 ms reload debounce of the visible Home sections.
 5. Page crossfade (180 ms) between heavy pages.
