@@ -177,8 +177,19 @@ Rectangle {
         const url = RdLibraryStore.pickFolder(qsTr("Pin a Folder"))
         if (url.toString() === "")
             return
-        _folderToPin = url.toString().replace(/\/+$/, "")
+        _folderToPin = url.toString()
         RdLibraryStore.addFolder("video", url)
+    }
+
+    // MRLs are percent-encoded differently by Qt and the media library: compare them decoded
+    function _mrlKey(mrl) {
+        let key = mrl
+        try {
+            key = decodeURIComponent(mrl)
+        } catch (e) {
+            // a stray "%": compare the text as it is
+        }
+        return key.replace(/\/+$/, "")
     }
 
     Connections {
@@ -201,7 +212,7 @@ Rectangle {
                 return
             const crumbs = result.crumbs
             const last = crumbs[crumbs.length - 1]
-            if (last.mrl.replace(/\/+$/, "") !== mrl)
+            if (rail._mrlKey(last.mrl) !== rail._mrlKey(mrl))
                 return
             rail._folderToPin = ""
             const categoryRoot = result.category === "music"

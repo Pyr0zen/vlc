@@ -76,6 +76,10 @@ RdLibraryItem fromPlaylist(const struct vlc_ml_playlist_t& playlist);
 RdLibraryItem fromArtist(const struct vlc_ml_artist_t& artist);
 // folder MRLs compare without their trailing slash
 QString normalizedMrl(const QString& mrl);
+// key to compare MRLs: the media library, VLC and Qt percent-encode differently, so MRLs are
+// compared fully decoded, without a trailing slash
+QString mrlKey(const QString& mrl);
+bool containsMrl(const QStringList& list, const QString& mrl);
 }
 
 class RdLibraryModel : public QAbstractListModel
