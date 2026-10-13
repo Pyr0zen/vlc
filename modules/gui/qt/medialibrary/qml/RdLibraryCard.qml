@@ -139,24 +139,29 @@ T.AbstractButton {
         Drag.keys: ["text/uri-list"]
         readonly property var rdDragUrls: card.dragUrls
 
-        Row {
+        // created only while dragging: the rows do not load their picture twice
+        Loader {
             anchors.fill: parent
-            spacing: VLCStyle.dp(10)
+            active: dragHandler.active
 
-            RdLibraryThumb {
-                width: VLCStyle.dp(32)
-                height: VLCStyle.dp(32)
-                anchors.verticalCenter: parent.verticalCenter
-                source: card.thumbnail
-                iconName: card.iconName
-            }
+            sourceComponent: Row {
+                spacing: VLCStyle.dp(10)
 
-            Text {
-                anchors.verticalCenter: parent.verticalCenter
-                text: card.title
-                font.family: VLCStyle.rd_fontFamily
-                font.pixelSize: VLCStyle.rd_fontSize_label
-                color: VLCStyle.palette.rdFg1
+                RdLibraryThumb {
+                    width: VLCStyle.dp(32)
+                    height: VLCStyle.dp(32)
+                    anchors.verticalCenter: parent.verticalCenter
+                    source: card.thumbnail
+                    iconName: card.iconName
+                }
+
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: card.title
+                    font.family: VLCStyle.rd_fontFamily
+                    font.pixelSize: VLCStyle.rd_fontSize_label
+                    color: VLCStyle.palette.rdFg1
+                }
             }
         }
     }

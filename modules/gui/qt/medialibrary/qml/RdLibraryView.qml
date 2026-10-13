@@ -32,8 +32,10 @@ FocusScope {
     Accessible.role: Accessible.Pane
     Accessible.name: qsTr("Library")
 
-    // space kept free at the bottom right for the mini player
+    // space kept free at the bottom for the mini player
     property real bottomInset: 0
+    // the header and its divider, which the mini player keeps clear of
+    readonly property real headerHeight: main.y + divider.y + divider.height
 
     // the mini player's folder chip: the folder of the playing file
     function revealMrl(mrl) {
@@ -52,6 +54,11 @@ FocusScope {
 
     function goForward() {
         RdLibraryNav.goForward()
+    }
+
+    // Ctrl+F
+    function focusSearch() {
+        header.focusSearch()
     }
 
     Rectangle {

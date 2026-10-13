@@ -651,38 +651,60 @@ FocusScope {
             width: grid.cellWidth
             height: grid.cellHeight
 
-            RdLibraryRow {
-                visible: page.listMode
-                width: cell.width - (page._columns > 1 ? page._gap : 0)
-                title: page.titleOf(cell.item)
-                iconName: page.iconOf(cell.item)
-                thumbnail: page.listMode ? page.thumbnailOf(cell.item) : ""
-                boxed: cell.item.kind === "media" || cell.item.kind === "stream" || cell.item.kind === "album"
-                       || cell.item.kind === "playlist" && page.thumbnailOf(cell.item) !== ""
-                progress: cell.item.progress ?? -1
-                watched: cell.item.watched ?? false
-                playing: page.isPlaying(cell.item.mrl)
-                secondary: cell.item.kind !== "media" && cell.item.kind !== "stream"
-                dragUrls: page.dragUrlsOf(cell.item)
-                onClicked: page.activate(cell.item)
-                onMoreClicked: (button) => itemMenu.openForItem(cell.item, button, page.category)
+            // the row or the card, never both
+            Loader {
+                id: cellLoader
+
+                sourceComponent: page.listMode ? rowComponent : cardComponent
             }
 
-            RdLibraryCard {
-                visible: !page.listMode
-                width: cell.width - page._gap
-                title: cell.item.title
-                subtitle: (cell.item.kind === "media" && !cell.item.isVideo) || cell.item.kind === "album"
-                          ? (cell.item.subtitle ?? "") : ""
-                iconName: page.iconOf(cell.item) || "videos"
-                thumbnail: page.listMode ? "" : page.thumbnailOf(cell.item)
-                wide: page.wideCards
-                progress: cell.item.progress ?? -1
-                watched: cell.item.watched ?? false
-                playing: page.isPlaying(cell.item.mrl)
-                dragUrls: page.dragUrlsOf(cell.item)
-                onClicked: page.activate(cell.item)
-                onMoreClicked: (button) => itemMenu.openForItem(cell.item, button, page.category)
+            // keyboard focus moves the view along (GridView scrolls to its current item)
+            Connections {
+                target: cellLoader.item
+                function onActiveFocusChanged() {
+                    if (cellLoader.item.activeFocus)
+                        grid.currentIndex = cell.index
+                }
+            }
+
+            Component {
+                id: rowComponent
+
+                RdLibraryRow {
+                    width: cell.width - (page._columns > 1 ? page._gap : 0)
+                    title: page.titleOf(cell.item)
+                    iconName: page.iconOf(cell.item)
+                    thumbnail: page.thumbnailOf(cell.item)
+                    boxed: cell.item.kind === "media" || cell.item.kind === "stream" || cell.item.kind === "album"
+                           || cell.item.kind === "playlist" && page.thumbnailOf(cell.item) !== ""
+                    progress: cell.item.progress ?? -1
+                    watched: cell.item.watched ?? false
+                    playing: page.isPlaying(cell.item.mrl)
+                    secondary: cell.item.kind !== "media" && cell.item.kind !== "stream"
+                    dragUrls: page.dragUrlsOf(cell.item)
+                    onClicked: page.activate(cell.item)
+                    onMoreClicked: (button) => itemMenu.openForItem(cell.item, button, page.category)
+                }
+            }
+
+            Component {
+                id: cardComponent
+
+                RdLibraryCard {
+                    width: cell.width - page._gap
+                    title: cell.item.title
+                    subtitle: (cell.item.kind === "media" && !cell.item.isVideo) || cell.item.kind === "album"
+                              ? (cell.item.subtitle ?? "") : ""
+                    iconName: page.iconOf(cell.item) || "videos"
+                    thumbnail: page.thumbnailOf(cell.item)
+                    wide: page.wideCards
+                    progress: cell.item.progress ?? -1
+                    watched: cell.item.watched ?? false
+                    playing: page.isPlaying(cell.item.mrl)
+                    dragUrls: page.dragUrlsOf(cell.item)
+                    onClicked: page.activate(cell.item)
+                    onMoreClicked: (button) => itemMenu.openForItem(cell.item, button, page.category)
+                }
             }
         }
 

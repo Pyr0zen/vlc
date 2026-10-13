@@ -129,25 +129,30 @@ T.AbstractButton {
         // read by the drop areas of the queue (RdQueueDropArea)
         readonly property var rdDragUrls: row.dragUrls
 
-        Row {
+        // created only while dragging: the rows do not load their picture twice
+        Loader {
             anchors.fill: parent
-            spacing: VLCStyle.dp(10)
+            active: dragHandler.active
 
-            RdLibraryThumb {
-                width: VLCStyle.dp(32)
-                height: VLCStyle.dp(32)
-                anchors.verticalCenter: parent.verticalCenter
-                source: row.thumbnail
-                iconName: row.iconName
-                boxed: row.boxed
-            }
+            sourceComponent: Row {
+                spacing: VLCStyle.dp(10)
 
-            Text {
-                anchors.verticalCenter: parent.verticalCenter
-                text: row.title
-                font.family: VLCStyle.rd_fontFamily
-                font.pixelSize: VLCStyle.rd_fontSize_label
-                color: VLCStyle.palette.rdFg1
+                RdLibraryThumb {
+                    width: VLCStyle.dp(32)
+                    height: VLCStyle.dp(32)
+                    anchors.verticalCenter: parent.verticalCenter
+                    source: row.thumbnail
+                    iconName: row.iconName
+                    boxed: row.boxed
+                }
+
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: row.title
+                    font.family: VLCStyle.rd_fontFamily
+                    font.pixelSize: VLCStyle.rd_fontSize_label
+                    color: VLCStyle.palette.rdFg1
+                }
             }
         }
     }

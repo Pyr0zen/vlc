@@ -27,7 +27,7 @@ import VLC.MainInterface
 import VLC.Style
 import VLC.MediaLibrary
 
-Item {
+FocusScope {
     id: content
 
     property bool compact: true
@@ -63,7 +63,11 @@ Item {
             fadeIn.target = next
             fade.start()
         }
-        if (next.focus !== undefined && content.activeFocus)
+        // the new page takes the focus inside the library (keyboard use goes on after opening a
+        // folder, Back or a crumb)
+        const hadFocus = content.activeFocus
+        next.focus = true
+        if (hadFocus)
             next.forceActiveFocus()
     }
 

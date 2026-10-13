@@ -37,6 +37,8 @@ Item {
 
     // the area the card moves in (corners)
     property real margin: VLCStyle.dp(20)
+    // kept free at the top (the library header stays usable when the card is in a top corner)
+    property real topInset: 0
     property bool queueOpen: false
     // corner: "bottomRight" (default), "bottomLeft", "topRight", "topLeft"
     property string corner: "bottomRight"
@@ -48,14 +50,14 @@ Item {
     readonly property real playerHeight: VLCStyle.dp(339)
     readonly property real queueHeight: VLCStyle.dp(351)
 
-    readonly property bool _top: corner === "topRight" || corner === "topLeft"
+    readonly property bool atTop: corner === "topRight" || corner === "topLeft"
     readonly property bool _left: corner === "bottomLeft" || corner === "topLeft"
 
     width: cardWidth
     height: playerHeight + (queueOpen ? queueHeight : 0)
 
     x: _left ? margin : (parent ? parent.width - width - margin : 0)
-    y: _top ? margin : (parent ? parent.height - height - margin : 0)
+    y: atTop ? topInset + margin : (parent ? parent.height - height - margin : 0)
 
     // Figma "Miniplayer" smart animate: 300 ms
     readonly property int _snapDuration: 300
@@ -104,7 +106,7 @@ Item {
             active: root.queueOpen
             anchors.left: parent.left
             anchors.right: parent.right
-            y: root._top ? root.playerHeight : 0
+            y: root.atTop ? root.playerHeight : 0
             height: root.queueHeight
 
             sourceComponent: RdMiniQueue { }
@@ -115,7 +117,7 @@ Item {
 
             anchors.left: parent.left
             anchors.right: parent.right
-            y: root._top || !root.queueOpen ? 0 : root.queueHeight
+            y: root.atTop || !root.queueOpen ? 0 : root.queueHeight
             height: root.playerHeight
 
             Rectangle {
@@ -131,11 +133,15 @@ Item {
                 border.color: VLCStyle.palette.rdBgB2
                 clip: true
 
-                VideoSurface {
+                // only where VLC can show the video outside the player (as VLC's own PIP player)
+                Loader {
                     anchors.fill: parent
                     anchors.margins: parent.border.width
-                    visible: Player.hasVideoOutput && MainCtx.hasEmbededVideo
-                    videoSurfaceProvider: MainCtx.videoSurfaceProvider
+                    active: MainCtx.canShowVideoPIP && Player.hasVideoOutput && MainCtx.hasEmbededVideo
+
+                    sourceComponent: VideoSurface {
+                        videoSurfaceProvider: MainCtx.videoSurfaceProvider
+                    }
                 }
 
                 // songs show their cover
@@ -168,7 +174,7 @@ Item {
                         root.corner = (top ? "top" : "bottom") + (left ? "Left" : "Right")
                         // back to the corner bindings, animated by the Behaviors
                         root.x = Qt.binding(() => root._left ? root.margin : root.parent.width - root.width - root.margin)
-                        root.y = Qt.binding(() => root._top ? root.margin : root.parent.height - root.height - root.margin)
+                        root.y = Qt.binding(() => root.atTop ? root.topInset + root.margin : root.parent.height - root.height - root.margin)
                     }
                 }
 
