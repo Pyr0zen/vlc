@@ -1158,7 +1158,18 @@ FocusScope {
 
         focus: false
 
-        active: MainCtx.playqueuePanel.docked
+        // redesign: the list button opens the queue sidebar instead of this pane, so the pane (and
+        // its own play queue model) is only created the first time it is shown (VLC's play queue
+        // hotkey, a docked queue left open in the library), then kept for its retract animation
+        property bool _requested: false
+
+        active: MainCtx.playqueuePanel.docked && _requested
+
+        Binding on _requested {
+            when: playlistVisibility.isPlaylistVisible
+            value: true
+            restoreMode: Binding.RestoreNone
+        }
 
         //initial state value is "", using a binding avoid animation on startup
         Binding on state {
