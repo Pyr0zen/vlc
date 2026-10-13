@@ -55,7 +55,8 @@ T.Popup {
             window.requestActivate()
         }
 
-        if (opened) {
+        // already open or opening (opened only turns true after the enter transition)
+        if (visible && !(root.exit && root.exit.running)) {
             urlArea.forceActiveFocus(Qt.PopupFocusReason)
             return
         }
@@ -99,7 +100,9 @@ T.Popup {
     focus: true
     closePolicy: T.Popup.CloseOnEscape
 
-    // while open, keys go to the dialog instead of VLC's hotkeys (RdPanels.modalCount)
+    // while open, keys go to the dialog instead of VLC's hotkeys (RdPanels.modalCount). The count
+    // and the focus change hands when the dialog starts to show / hide, not when its fade ends,
+    // so no key is lost during the 200 ms transitions.
     property bool _holdsModal: false
 
     onAboutToShow: {
@@ -107,6 +110,16 @@ T.Popup {
             RdPanels.acquireModal()
             root._holdsModal = true
         }
+        urlArea.forceActiveFocus(Qt.PopupFocusReason)
+    }
+
+    onAboutToHide: {
+        if (root._holdsModal) {
+            RdPanels.releaseModal()
+            root._holdsModal = false
+        }
+        if (_restoreFocusItem)
+            _restoreFocusItem.forceActiveFocus(Qt.PopupFocusReason)
     }
 
     Component.onDestruction: {
@@ -114,14 +127,16 @@ T.Popup {
             RdPanels.releaseModal()
     }
 
-    onOpened: urlArea.forceActiveFocus(Qt.PopupFocusReason)
+    onOpened: {
+        if (!urlArea.activeFocus)
+            urlArea.forceActiveFocus(Qt.PopupFocusReason)
+    }
 
+    // the end of the exit transition may move the focus again
     onClosed: {
-        if (root._holdsModal) {
-            RdPanels.releaseModal()
-            root._holdsModal = false
-        }
-        if (_restoreFocusItem)
+        const window = MainCtx.intfMainWindow
+        if (_restoreFocusItem && _restoreFocusItem.visible
+                && (!window || window.activeFocusItem !== _restoreFocusItem))
             _restoreFocusItem.forceActiveFocus(Qt.PopupFocusReason)
         _restoreFocusItem = null
     }

@@ -166,15 +166,24 @@ T.Popup {
         hotkeysModel.searchField = 0
         hotkeysModel.reload()
         list.positionViewAtBeginning()
+        // focus from the first frame, not after the enter fade
+        searchInput.forceActiveFocus(Qt.PopupFocusReason)
     }
 
-    onOpened: searchInput.forceActiveFocus(Qt.PopupFocusReason)
+    onOpened: {
+        if (!searchInput.activeFocus)
+            searchInput.forceActiveFocus(Qt.PopupFocusReason)
+    }
 
-    onClosed: {
+    // keys go back to the player as soon as the dialog starts to close, not after its fade
+    onAboutToHide: {
         if (_holdsModal) {
             RdPanels.releaseModal()
             _holdsModal = false
         }
+    }
+
+    onClosed: {
         cancelCapture()
         conflictPopup.close()
         fieldMenu.close()

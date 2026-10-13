@@ -210,6 +210,15 @@ T.Popup {
             RdPanels.acquireModal()
             root._holdsModal = true
         }
+        // keys reach the menu from the first frame of its fade in
+        menuScope.forceActiveFocus()
+    }
+
+    onAboutToHide: {
+        if (root._holdsModal) {
+            RdPanels.releaseModal()
+            root._holdsModal = false
+        }
     }
 
     Component.onDestruction: {
@@ -226,10 +235,6 @@ T.Popup {
 
     // the panels go away once the click that closed the menu is handled
     onClosed: {
-        if (root._holdsModal) {
-            RdPanels.releaseModal()
-            root._holdsModal = false
-        }
         if (root._opener && root._opener.visible)
             root._opener.forceActiveFocus(root._keyboard ? Qt.TabFocusReason : Qt.PopupFocusReason)
         root._opener = null

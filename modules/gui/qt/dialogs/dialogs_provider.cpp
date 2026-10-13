@@ -717,16 +717,18 @@ void DialogsProvider::openNetworkStreams( const QString& links, const QString& p
 {
     /* one link per line; like Open URL, a link without a scheme is a local path */
     QStringList mrls;
+    qsizetype total = 0;
     const QStringList lines = links.split( QLatin1Char( '\n' ), Qt::SkipEmptyParts );
     for( const QString& line : lines )
     {
         const QString link = line.trimmed();
         if( link.isEmpty() )
             continue;
+        total++;
 
         char *uri = link.contains( QLatin1String( "://" ) )
                   ? vlc_uri_fixup( qtu( link ) )
-                  : vlc_path2uri( qtu( link ), NULL );
+                  : vlc_path2uri( qtu( toNativeSeparators( link ) ), NULL );
         if( uri == NULL )
         {
             msg_Warn( p_intf, "invalid network link: %s", qtu( link ) );
@@ -737,7 +739,13 @@ void DialogsProvider::openNetworkStreams( const QString& links, const QString& p
     }
 
     if( mrls.isEmpty() )
+    {
+        /* the dialog has closed already: tell the user nothing could be opened */
+        messageDialog( qtr( "None of the links could be opened." ),
+                       qtr( "Open Network Stream" ), QMessageBox::Ok, QMessageBox::Ok,
+                       QMessageBox::Warning );
         return;
+    }
 
     const QString name = playlistName.trimmed();
     MainCtx *mainCtx = p_intf->p_mi;
@@ -782,10 +790,12 @@ void DialogsProvider::openNetworkStreams( const QString& links, const QString& p
                                             mediaIds.size() ) == VLC_SUCCESS;
         if( ctx.saved )
             ctx.added = static_cast<qsizetype>( mediaIds.size() );
+        else /* do not leave an empty playlist behind */
+            vlc_ml_playlist_delete( ml, playlist->i_id );
         vlc_ml_playlist_release( playlist );
     },
     //UI thread
-    [this, name, total = mrls.size()]( quint64, const Ctx& ctx )
+    [this, name, total]( quint64, const Ctx& ctx )
     {
         if( !ctx.saved )
         {
