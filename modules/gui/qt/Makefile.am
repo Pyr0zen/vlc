@@ -287,6 +287,7 @@ libqt_plugin_la_SOURCES = \
 	style/systempalette.hpp \
 	style/vlcicons.cpp 	style/vlcicons.hpp \
 	style/rdfonts.cpp style/rdfonts.hpp \
+	style/rdwidgetstyle.cpp style/rdwidgetstyle.hpp \
 	style/defaultthemeproviders.hpp \
 	style/systempalettethemeprovider.cpp \
 	player/input_models.cpp player/input_models.hpp \
@@ -1258,6 +1259,7 @@ libqml_module_dialogs_a_QML = \
 	dialogs/dialogs/qml/Dialogs.qml \
 	dialogs/dialogs/qml/ModalDialog.qml \
 	dialogs/dialogs/qml/WindowDialog.qml \
+	dialogs/redesign/OpenNetworkStreamDialog.qml \
 	dialogs/toolbar/qml/EditorDNDDelegate.qml \
 	dialogs/toolbar/qml/EditorDNDView.qml\
 	dialogs/toolbar/qml/EditorDummyButton.qml \
