@@ -669,7 +669,7 @@ void DialogsProvider::openNetDialog()
 
 void DialogsProvider::openNetworkStreams( const QString& links, const QString& playlistName )
 {
-    /* one link per line, same rules as the Network source of the Open Media dialog */
+    /* one link per line; like Open URL, a link without a scheme is a local path */
     QStringList mrls;
     const QStringList lines = links.split( QLatin1Char( '\n' ), Qt::SkipEmptyParts );
     for( const QString& line : lines )
@@ -678,15 +678,14 @@ void DialogsProvider::openNetworkStreams( const QString& links, const QString& p
         if( link.isEmpty() )
             continue;
 
-        if( !link.contains( QLatin1String( "://" ) ) )
+        char *uri = link.contains( QLatin1String( "://" ) )
+                  ? vlc_uri_fixup( qtu( link ) )
+                  : vlc_path2uri( qtu( link ), NULL );
+        if( uri == NULL )
         {
-            mrls << link;
+            msg_Warn( p_intf, "invalid network link: %s", qtu( link ) );
             continue;
         }
-
-        char *uri = vlc_uri_fixup( qtu( link ) );
-        if( uri == NULL )
-            continue;
         mrls << qfu( uri );
         free( uri );
     }
@@ -706,14 +705,17 @@ void DialogsProvider::openNetworkStreams( const QString& links, const QString& p
     }
 
     /* with a name, the links are saved as a media library playlist (video 13:17-13:20) */
-    mainCtx->getMediaLibrary()->runOnMLThread( this,
-    //ML thread
-    [name, mrls]( vlc_medialibrary_t* ml )
-    {
-        vlc_ml_playlist_t *playlist = vlc_ml_playlist_create( ml, qtu( name ) );
-        if( playlist == NULL )
-            return;
+    struct Ctx {
+        bool saved = false;
+        qsizetype added = 0;
+    };
 
+    mainCtx->getMediaLibrary()->runOnMLThread<Ctx>( this,
+    //ML thread
+    [name, mrls]( vlc_medialibrary_t* ml, Ctx& ctx )
+    {
+        std::vector<int64_t> mediaIds;
+        mediaIds.reserve( mrls.size() );
         for( const QString& mrl : mrls )
         {
             vlc_ml_media_t *media = vlc_ml_get_media_by_mrl( ml, qtu( mrl ) );
@@ -721,10 +723,41 @@ void DialogsProvider::openNetworkStreams( const QString& links, const QString& p
                 media = vlc_ml_new_stream( ml, qtu( mrl ) );
             if( media == NULL )
                 continue;
-            vlc_ml_playlist_append( ml, playlist->i_id, &media->i_id, 1 );
+            mediaIds.push_back( media->i_id );
             vlc_ml_media_release( media );
         }
+        if( mediaIds.empty() )
+            return;
+
+        vlc_ml_playlist_t *playlist = vlc_ml_playlist_create( ml, qtu( name ) );
+        if( playlist == NULL )
+            return;
+        ctx.saved = vlc_ml_playlist_append( ml, playlist->i_id, mediaIds.data(),
+                                            mediaIds.size() ) == VLC_SUCCESS;
+        if( ctx.saved )
+            ctx.added = static_cast<qsizetype>( mediaIds.size() );
         vlc_ml_playlist_release( playlist );
+    },
+    //UI thread
+    [this, name, total = mrls.size()]( quint64, const Ctx& ctx )
+    {
+        if( !ctx.saved )
+        {
+            msg_Err( p_intf, "could not save the network playlist \"%s\"", qtu( name ) );
+            messageDialog( qtr( "The playlist \"%1\" could not be saved." ).arg( name ),
+                           qtr( "Open Network Stream" ), QMessageBox::Ok, QMessageBox::Ok,
+                           QMessageBox::Warning );
+        }
+        else if( ctx.added < total )
+        {
+            msg_Warn( p_intf, "%lld of %lld links not added to \"%s\"",
+                      static_cast<long long>( total - ctx.added ),
+                      static_cast<long long>( total ), qtu( name ) );
+            messageDialog( qtr( "%1 of %2 links could not be added to the playlist \"%3\"." )
+                               .arg( total - ctx.added ).arg( total ).arg( name ),
+                           qtr( "Open Network Stream" ), QMessageBox::Ok, QMessageBox::Ok,
+                           QMessageBox::Warning );
+        }
     } );
 }
 void DialogsProvider::openCaptureDialog()
