@@ -238,6 +238,14 @@ libqt_plugin_la_SOURCES = \
 	medialibrary/mlvideo.hpp \
 	medialibrary/mlvideofoldersmodel.cpp \
 	medialibrary/mlvideofoldersmodel.hpp \
+	medialibrary/rdlibrarymodel.cpp \
+	medialibrary/rdlibrarymodel.hpp \
+	medialibrary/rdfoldermodel.cpp \
+	medialibrary/rdfoldermodel.hpp \
+	medialibrary/rdcollectionmodel.cpp \
+	medialibrary/rdcollectionmodel.hpp \
+	medialibrary/rdlibrarystore.cpp \
+	medialibrary/rdlibrarystore.hpp \
 	medialibrary/mlvideogroupsmodel.cpp \
 	medialibrary/mlvideogroupsmodel.hpp \
 	medialibrary/mlmediamodel.cpp \
@@ -477,6 +485,10 @@ nodist_libqt_plugin_la_SOURCES = \
 	medialibrary/mlplaylistlistmodel.moc.cpp \
 	medialibrary/mlplaylistmodel.moc.cpp \
 	medialibrary/mlvideofoldersmodel.moc.cpp \
+	medialibrary/rdlibrarymodel.moc.cpp \
+	medialibrary/rdfoldermodel.moc.cpp \
+	medialibrary/rdcollectionmodel.moc.cpp \
+	medialibrary/rdlibrarystore.moc.cpp \
 	medialibrary/mlvideogroupsmodel.moc.cpp \
 	medialibrary/thumbnailcollector.moc.cpp \
 	menus/custom_menus.moc.cpp \
