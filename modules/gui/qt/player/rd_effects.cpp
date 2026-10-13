@@ -244,6 +244,18 @@ QVariantMap RdEffects::optionRange(const QString& name) const
     return {};
 }
 
+QString RdEffects::optionDescription(const QString& name) const
+{
+    const module_config_t* config = config_FindConfig(qtu(name));
+    if (!config)
+        return {};
+    if (config->psz_longtext && *config->psz_longtext)
+        return qfut(config->psz_longtext);
+    if (config->psz_text && *config->psz_text)
+        return qfut(config->psz_text);
+    return {};
+}
+
 /* audio */
 
 bool RdEffects::audioFilterEnabled(const QString& module) const

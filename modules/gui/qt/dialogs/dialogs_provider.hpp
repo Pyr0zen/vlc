@@ -216,6 +216,11 @@ public slots:
                                               const QMessageBox::StandardButton defaultButton = QMessageBox::NoButton,
                                               const QMessageBox::Icon icon = QMessageBox::NoIcon);
     void prefsDialog();
+    // redesign: the Settings dialog, optionally on one category ("general", "audio", ...);
+    // VLC's own preferences when the main interface cannot show it
+    void settingsDialog( const QString& category = QString() );
+    // VLC's complete preferences (every module option)
+    void legacyPrefsDialog();
     void firstRunDialog();
     void extendedDialog();
     void synchroDialog();
@@ -288,6 +293,7 @@ public:
 signals:
     void releaseMouseEvents();
     void showToolbarEditorDialog();
+    void showSettingsDialog( const QString& category );
 
     //visiblity signal
     void openDialogVisibleChanged();

@@ -68,6 +68,8 @@
 #include <QInputDialog>
 #include <QPointer>
 #include <QMessageBox>
+#include <QMetaMethod>
+#include <QWindow>
 
 #define I_OP_DIR_WINTITLE I_DIR_OR_FOLDER( N_("Open Directory"), \
                                            N_("Open Folder") )
@@ -288,6 +290,25 @@ const QEvent::Type DialogEvent::DialogEvent_Type =
         (QEvent::Type)QEvent::registerEventType();
 
 void DialogsProvider::prefsDialog()
+{
+    settingsDialog();
+}
+
+void DialogsProvider::settingsDialog( const QString& category )
+{
+    /* redesign: the main interface hosts the Settings dialog (it listens to
+     * showSettingsDialog); without it, or while its window is hidden or
+     * minimized, VLC's preferences open instead */
+    const QWindow* window = p_intf->p_mi ? p_intf->p_mi->intfMainWindow() : nullptr;
+    const bool shown = window && window->visibility() != QWindow::Hidden
+                              && window->visibility() != QWindow::Minimized;
+    if( shown && isSignalConnected( QMetaMethod::fromSignal( &DialogsProvider::showSettingsDialog ) ) )
+        emit showSettingsDialog( category );
+    else
+        legacyPrefsDialog();
+}
+
+void DialogsProvider::legacyPrefsDialog()
 {
     if (Q_LIKELY(!m_prefsDialog))
     {
