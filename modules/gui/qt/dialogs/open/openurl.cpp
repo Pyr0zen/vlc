@@ -26,6 +26,7 @@
 
 #include "dialogs/open/openurl.hpp"
 #include "util/validators.hpp"
+#include "style/rdwidgetstyle.hpp"
 
 #include <QPushButton>
 #include <QDialogButtonBox>
@@ -44,6 +45,9 @@ OpenUrlDialog::OpenUrlDialog( qt_intf_t *_p_intf,
 {
     setWindowTitle( qtr( "Open URL" ) );
     setWindowRole( "vlc-open-url" );
+
+    /* redesign (W6.4): Figma dialog colors, fonts and radii, following the theme */
+    RdWidgetStyle::apply( this, p_intf );
 
     /* Buttons */
     QPushButton *but;

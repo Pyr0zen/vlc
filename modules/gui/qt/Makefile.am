@@ -285,6 +285,7 @@ libqt_plugin_la_SOURCES = \
 	style/systempalette.hpp \
 	style/vlcicons.cpp 	style/vlcicons.hpp \
 	style/rdfonts.cpp style/rdfonts.hpp \
+	style/rdwidgetstyle.cpp style/rdwidgetstyle.hpp \
 	style/defaultthemeproviders.hpp \
 	style/systempalettethemeprovider.cpp \
 	player/input_models.cpp player/input_models.hpp \
