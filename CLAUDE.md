@@ -130,6 +130,7 @@ General rule for anything not listed (updated by Tony 2026-10-13): the final UIs
 29. Postponed: reverse playback. Profiles may need a restart for some settings; show a notice when that happens.
 30. (2026-10-13, updated) Windowed: both bars float over the video, appear whenever the mouse moves over the window and fade out about 3 s after it stops (with the cursor), like modern players. Fullscreen: each bar appears when the mouse is near its edge and fades out smoothly when it leaves. VLC's own "pin video controls" option still pins both bars in a window.
 31. (2026-10-13) The final UIs are in the Figma file; the video shows iterations on the way. Look: Figma. Functionality and relations: the video and its transcript.
+32. (2026-10-13) Dialogs open and close instantly, like the Figma prototype and the Settings dialog, so all dialogs behave the same (Open Network Stream, Settings, Keyboard Shortcuts and later ones); the video's dialog fades are editing dissolves. Menus keep the 120 ms fade in measured from her unedited demo (5:08).
 
 ## Report format (use for every progress report to Tony; plain text, no em dashes)
 PROGRESS REPORT
