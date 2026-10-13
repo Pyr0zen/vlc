@@ -46,12 +46,13 @@ class RdLibraryStore : public QObject
     Q_PROPERTY(QVariantList pins READ pins NOTIFY pinsChanged FINAL)
     // [{ name, url }]
     Q_PROPERTY(QVariantList streamLists READ streamLists NOTIFY streamListsChanged FINAL)
-    // playlist id (as a string) -> thumbnail url
+    // playlist id (as a string) -> thumbnail url; read it with playlistCover()
     Q_PROPERTY(QVariantMap playlistCovers READ playlistCovers NOTIFY playlistCoversChanged FINAL)
     Q_PROPERTY(QVariantList frequentFolderIds READ frequentFolderIds NOTIFY visitsChanged FINAL)
     Q_PROPERTY(QVariantList frequentPlaylistIds READ frequentPlaylistIds NOTIFY visitsChanged FINAL)
-    // "grid" or "list"
+    // "grid" or "list", for the full library and for the compact library next to the video
     Q_PROPERTY(QString viewMode READ viewMode WRITE setViewMode NOTIFY viewModeChanged FINAL)
+    Q_PROPERTY(QString compactViewMode READ compactViewMode WRITE setCompactViewMode NOTIFY viewModeChanged FINAL)
 
 public:
     RdLibraryStore(qt_intf_t* intf, MediaLib* mediaLib, QObject* parent = nullptr);
@@ -65,6 +66,8 @@ public:
     QVariantList frequentPlaylistIds() const { return frequentIds(QStringLiteral("playlist")); }
     QString viewMode() const { return m_viewMode; }
     void setViewMode(const QString& mode);
+    QString compactViewMode() const { return m_compactViewMode; }
+    void setCompactViewMode(const QString& mode);
 
     // file pickers (native dialogs); empty when cancelled
     Q_INVOKABLE QUrl pickFolder(const QString& title) const;
@@ -102,12 +105,16 @@ public:
     Q_INVOKABLE void renamePlaylist(const MLItemId& playlistId, const QString& name);
     Q_INVOKABLE void deletePlaylist(const MLItemId& playlistId);
     Q_INVOKABLE void setPlaylistCover(const MLItemId& playlistId, const QUrl& image);
+    // the playlist's own thumbnail, an empty URL when it has none
+    Q_INVOKABLE QUrl playlistCover(const MLItemId& playlistId) const;
     Q_INVOKABLE void exportPlaylist(const MLItemId& playlistId, const QString& name);
 
     // media and containers
     Q_INVOKABLE void setWatched(const QVariantList& mediaIds, bool watched);
     Q_INVOKABLE void setFavorite(const MLItemId& id, const QString& mrl, bool favorite);
     Q_INVOKABLE void showInFileExplorer(const QString& mrl) const;
+    // Recent: forget what was played
+    Q_INVOKABLE void clearHistory();
 
     // sort order of a library page kind ("folder", "music", "playlist" ...)
     Q_INVOKABLE QString sortKey(const QString& page, const QString& fallback) const;
@@ -142,6 +149,7 @@ private:
     QVariantMap m_visits;
     QVariantMap m_sortKeys;
     QString m_viewMode;
+    QString m_compactViewMode;
 };
 
 #endif // RDLIBRARYSTORE_HPP

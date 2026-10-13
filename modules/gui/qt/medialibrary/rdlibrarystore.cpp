@@ -81,6 +81,7 @@ RdLibraryStore::RdLibraryStore(qt_intf_t* intf, MediaLib* mediaLib, QObject* par
     m_visits = settings->value(RD_LIBRARY_KEY("visits")).toMap();
     m_sortKeys = settings->value(RD_LIBRARY_KEY("sortKeys")).toMap();
     m_viewMode = settings->value(RD_LIBRARY_KEY("viewMode"), QStringLiteral("grid")).toString();
+    m_compactViewMode = settings->value(RD_LIBRARY_KEY("compactViewMode"), QStringLiteral("list")).toString();
 }
 
 void RdLibraryStore::save(const char* key, const QVariant& value)
@@ -94,6 +95,15 @@ void RdLibraryStore::setViewMode(const QString& mode)
         return;
     m_viewMode = mode;
     save(RD_LIBRARY_KEY("viewMode"), m_viewMode);
+    emit viewModeChanged();
+}
+
+void RdLibraryStore::setCompactViewMode(const QString& mode)
+{
+    if (m_compactViewMode == mode)
+        return;
+    m_compactViewMode = mode;
+    save(RD_LIBRARY_KEY("compactViewMode"), m_compactViewMode);
     emit viewModeChanged();
 }
 
@@ -552,6 +562,11 @@ void RdLibraryStore::setPlaylistCover(const MLItemId& playlistId, const QUrl& im
     emit playlistCoversChanged();
 }
 
+QUrl RdLibraryStore::playlistCover(const MLItemId& playlistId) const
+{
+    return m_playlistCovers.value(QString::number(playlistId.id)).toUrl();
+}
+
 void RdLibraryStore::exportPlaylist(const MLItemId& playlistId, const QString& name)
 {
     if (!m_mediaLib || !playlistId.isValid())
@@ -652,6 +667,15 @@ void RdLibraryStore::showInFileExplorer(const QString& mrl) const
 #else
     QDesktopServices::openUrl(QUrl::fromLocalFile(QFileInfo(url.toLocalFile()).absolutePath()));
 #endif
+}
+
+void RdLibraryStore::clearHistory()
+{
+    if (!m_mediaLib)
+        return;
+    m_mediaLib->runOnMLThread(this, [](vlc_medialibrary_t* ml) {
+        vlc_ml_clear_history(ml, VLC_ML_HISTORY_TYPE_GLOBAL);
+    });
 }
 
 /* sorting */

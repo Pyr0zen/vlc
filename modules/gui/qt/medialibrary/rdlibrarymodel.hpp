@@ -19,11 +19,11 @@
 #ifndef RDLIBRARYMODEL_HPP
 #define RDLIBRARYMODEL_HPP
 
-// redesign: base of the library models of the redesigned library (video 9:35-13:55, BUILD_PLAN
-// W5.x). A model loads every row of one library page on the media library thread, then sorts
-// and filters them on the UI thread. Library pages are small (a folder, a history section), so
-// unlike MLBaseModel nothing is paged; this is what makes the "Unwatched First" and "Watched
-// First" sort orders possible (the media library cannot sort by watched state).
+// redesign: base of the Home section models of the redesigned library (video 13:44-13:55).
+// A Home section is a short list built from several media library queries (a filtered
+// history, visited folders, ranked artists), which no MLBaseModel provides. The model loads its
+// few rows on the media library thread (never on the UI thread) and is capped (see
+// RdCollectionModel); every unbounded library list uses VLC's paged MLBaseModel models.
 
 #include <QAbstractListModel>
 #include <QSet>
@@ -83,11 +83,8 @@ class RdLibraryModel : public QAbstractListModel
     Q_OBJECT
 
     Q_PROPERTY(MediaLib* ml READ ml WRITE setMl NOTIFY mlChanged FINAL)
-    // "" keeps the loading order; see sortItems() for the other keys
-    Q_PROPERTY(QString sortKey READ sortKey WRITE setSortKey NOTIFY sortKeyChanged FINAL)
     Q_PROPERTY(QString searchPattern READ searchPattern WRITE setSearchPattern NOTIFY searchPatternChanged FINAL)
     Q_PROPERTY(int count READ count NOTIFY countChanged FINAL)
-    Q_PROPERTY(int mediaCount READ mediaCount NOTIFY countChanged FINAL)
     Q_PROPERTY(bool loading READ loading NOTIFY loadingChanged FINAL)
 
 public:
@@ -119,27 +116,17 @@ public:
     MediaLib* ml() const { return m_mediaLib; }
     void setMl(MediaLib* ml);
 
-    QString sortKey() const { return m_sortKey; }
-    void setSortKey(const QString& key);
-
     QString searchPattern() const { return m_searchPattern; }
     void setSearchPattern(const QString& pattern);
 
     int count() const { return static_cast<int>(m_items.size()); }
-    int mediaCount() const;
     bool loading() const { return m_loading; }
-
-    // the row's data as a JS object (menus, drag and drop, the mini player)
-    Q_INVOKABLE QVariantMap get(int row) const;
-    // the media rows from `row` on, in display order (play a folder from a file on)
-    Q_INVOKABLE QVariantList mediaIdsFrom(int row) const;
 
 public slots:
     void reload();
 
 signals:
     void mlChanged();
-    void sortKeyChanged();
     void searchPatternChanged();
     void countChanged();
     void loadingChanged();
@@ -161,7 +148,6 @@ private:
     static void onMlEvent(void* data, const vlc_ml_event_t* event);
     void applyItems(RdLibraryItemList&& items);
     void rebuild();
-    void sortItems(RdLibraryItemList& items) const;
     void requestThumbnails();
 
     MediaLib* m_mediaLib = nullptr;
@@ -170,7 +156,6 @@ private:
     quint64 m_taskId = 0;
     bool m_loading = false;
 
-    QString m_sortKey;
     QString m_searchPattern;
 
     RdLibraryItemList m_all;
