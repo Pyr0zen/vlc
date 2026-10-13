@@ -67,7 +67,7 @@ Decided by Sticky on 2026-10-12. General rule for anything not listed: her final
 27. Core changes approved wherever a feature truly needs them, minimal and isolated. Examples: OSD showing the pressed shortcut, subtitle timeline (external files first, embedded later if feasible).
 28. Accepted limit: subtitle outline uses VLC's existing outline sizes.
 29. Postponed: reverse playback. Profiles may need a restart for some settings; show a notice when that happens.
-30. (2026-10-13) Windowed: the top bar and control bar are always visible, the video sits between them. Fullscreen only: each bar appears when the mouse is near its edge and fades out smoothly when it leaves (overrides Decision 4 for windowed mode; the instant on/off felt clunky).
+30. (2026-10-13, updated) Windowed: both bars float over the video, appear whenever the mouse moves over the window and fade out about 3 s after it stops (with the cursor), like modern players. Fullscreen: each bar appears when the mouse is near its edge and fades out smoothly when it leaves. VLC's own "pin video controls" option still pins both bars in a window.
 31. (2026-10-13) The final UIs are in the Figma file; the video shows iterations on the way. Look: Figma. Functionality and relations: the video and its transcript.
 
 ## Decisions (Claude)

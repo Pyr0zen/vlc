@@ -60,11 +60,13 @@ FSM {
     // redesign: per-bar hover zones need to know why the toolbars are visible
     property alias isLocked: fsmLocked.active
     property bool keyboardShown: false
-    // redesign: bars pinned (windowed, Decision 30): never time out or hide
+    // redesign: bars pinned (VLC's "pin video controls" in a window): never time out or hide
     property bool pinned: false
+    // redesign: time without mouse movement before the bars hide (Decision 30)
+    property int hideDelay: MainCtx.mouseHideTimeout
 
     property int lockCount: 0 // Track the number of locks
-    property int timeoutDuration: MainCtx.mouseHideTimeout
+    property int timeoutDuration: hideDelay
 
     initialState: ((Player.isInteractive && MainCtx.hasEmbededVideo))
                   ? fsmHidden : fsmVisible
@@ -137,14 +139,14 @@ FSM {
                     mouseMove: {
                         guard: () => !Player.isInteractive,
                         action: () => { 
-                            fsm.timeoutDuration = MainCtx.mouseHideTimeout; fsm.keyboardShown = false;
+                            fsm.timeoutDuration = fsm.hideDelay; fsm.keyboardShown = false;
                         },
                         target: fsmVideoMode
                     },
                     keyboardMove: {
                         guard: () => !Player.isInteractive,
                         action: () => { 
-                            fsm.timeoutDuration = MainCtx.mouseHideTimeout * 2; fsm.keyboardShown = true
+                            fsm.timeoutDuration = fsm.hideDelay * 2; fsm.keyboardShown = true
                         },
                         target: fsmVideoMode
                     }
@@ -184,14 +186,14 @@ FSM {
             mouseMove: {
                 guard: () => !Player.isInteractive,
                 action: () => {
-                    fsm.timeoutDuration = MainCtx.mouseHideTimeout; fsm.keyboardShown = false
+                    fsm.timeoutDuration = fsm.hideDelay; fsm.keyboardShown = false
                 },
                 target: fsmVisible
             },
             keyboardMove: {
                 guard: () => !Player.isInteractive,
                 action: () => {
-                    fsm.timeoutDuration = MainCtx.mouseHideTimeout * 2; fsm.keyboardShown = true
+                    fsm.timeoutDuration = fsm.hideDelay * 2; fsm.keyboardShown = true
                 },
                 target: fsmVisible
             },

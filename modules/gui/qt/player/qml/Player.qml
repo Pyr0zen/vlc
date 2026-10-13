@@ -57,27 +57,32 @@ FocusScope {
 
     // Private
 
-    // redesign: in a window both bars always show and the video sits between them (VLC's pinned
-    // layout); only fullscreen hides the bars (Decision 30)
-    property bool _controlsUnderVideo: MainCtx.intfMainWindow.visibility !== Window.FullScreen
+    property bool _controlsUnderVideo: (MainCtx.pinVideoControls
+                                        &&
+                                        (MainCtx.intfMainWindow.visibility !== Window.FullScreen))
+
+    readonly property bool _windowed: MainCtx.intfMainWindow.visibility !== Window.FullScreen
 
     property bool _keyPressed: false
 
-    // redesign: in fullscreen each bar shows while the mouse is near it and fades out when it
-    // leaves (video 3:46-3:55, Decisions 4 and 30). Menus, the queue, keyboard use and audio mode
-    // show both bars (except the far one while the mouse is in the other bar's zone).
+    // redesign (Decision 30): in a window both bars show while the mouse moves over the player and
+    // fade out a few seconds after it stops; in fullscreen each bar shows while the mouse is near
+    // it (video 3:46-3:55). Menus, panels, keyboard use and audio mode show both bars (in
+    // fullscreen except the far one while the mouse is in the other bar's zone).
     readonly property real _barHoverZone: VLCStyle.dp(40, VLCStyle.scale)
-    readonly property bool _mouseNearTop: _cursorY >= 0 && _cursorY <= topBar.height + _barHoverZone
-    readonly property bool _mouseNearBottom: _cursorY >= 0 && _cursorY >= height - controlBar.height - _barHoverZone
+    readonly property bool _mouseNearTop: !_windowed && _cursorY >= 0 && _cursorY <= topBar.height + _barHoverZone
+    readonly property bool _mouseNearBottom: !_windowed && _cursorY >= 0
+                                             && _cursorY >= height - controlBar.height - _barHoverZone
     readonly property bool _showBothBars: playerToolbarVisibilityFSM.isVisible
-                                          && (!MainCtx.hasEmbededVideo || playerToolbarVisibilityFSM.keyboardShown)
+                                          && (_windowed || !MainCtx.hasEmbededVideo
+                                              || playerToolbarVisibilityFSM.keyboardShown)
     readonly property bool _topBarVisible: _controlsUnderVideo || _showBothBars || _mouseNearTop
                                            || (playerToolbarVisibilityFSM.isLocked && !_mouseNearBottom)
     readonly property bool _controlBarVisible: _controlsUnderVideo || _showBothBars || _mouseNearBottom
                                                || (playerToolbarVisibilityFSM.isLocked && !_mouseNearTop)
 
-    // cursor height inside the player, -1 outside. Hover events do not reach Qt Quick while the
-    // cursor is over the native video, so in fullscreen the cursor is read ten times a second.
+    // cursor height inside the player, -1 outside. Hover and mouse move events do not reach Qt
+    // Quick while the cursor is over the native video, so the cursor is read ten times a second.
     property real _cursorY: -1
 
     Timer {
@@ -188,6 +193,7 @@ FocusScope {
         id: playerToolbarVisibilityFSM
 
         pinned: rootPlayer._controlsUnderVideo
+        hideDelay: VLCStyle.rd_barsHideDelay
 
         onForceUnlock:{
             controlBar.forceUnlock()
