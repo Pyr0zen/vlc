@@ -1400,6 +1400,7 @@ libqml_module_player_a_QML = \
 	player/qml/TracksPopup.qml \
 	player/qml/RdSidePanel.qml \
 	player/qml/RdSidePanelPage.qml \
+	player/qml/RdSidePanelPageLoader.qml \
 	player/qml/SettingsSidebar.qml \
 	player/qml/QueueSidebar.qml \
 	player/qml/PlaybackSettingsPage.qml \
