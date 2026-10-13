@@ -32,11 +32,17 @@ RdSidePanelPage {
 
     key: "subtitleSettings"
 
-    // reading "revision" makes the bindings follow every change made through RdEffects
-    readonly property real _durationFactor: (RdEffects.revision, RdEffects.subtitleDurationFactor())
+    // values may have changed elsewhere (VLC's effects dialog, hotkeys) while the page was hidden
+    onActiveChanged: {
+        if (active)
+            RdEffects.refresh()
+    }
+
+    // a binding reading RdEffects.values[key] follows only that value
+    readonly property real _durationFactor: RdEffects.values.subtitleDurationFactor
 
     function opt(name) {
-        return (RdEffects.revision, RdEffects.option(name))
+        return RdEffects.values[RdEffects.optionKey(name)]
     }
 
     function colorText(value) {
@@ -207,7 +213,7 @@ RdSidePanelPage {
             text: qsTr("Subtitle Offset")
 
             Widgets.RdValueBox {
-                text: qsTr("%1px").arg((RdEffects.revision, Number(RdEffects.videoValue("sub-margin")) || 0))
+                text: qsTr("%1px").arg(Number(RdEffects.values[RdEffects.videoKey("sub-margin")]) || 0)
                 Accessible.name: qsTr("Subtitle Offset")
                 onEdited: (value) => {
                     const px = Math.round(root.parseNumber(value))
@@ -225,7 +231,7 @@ RdSidePanelPage {
             from: 25
             to: 300
             stepSize: 25
-            value: (RdEffects.revision, RdEffects.subtitleTextScale())
+            value: RdEffects.values.subtitleTextScale
             onMoved: (v) => RdEffects.setSubtitleTextScale(v)
         }
 
