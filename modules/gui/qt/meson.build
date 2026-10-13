@@ -108,6 +108,7 @@ moc_headers = files(
     'menus/custom_menus.hpp',
     'menus/qml_menu_wrapper.hpp',
     'menus/menus.hpp',
+    'menus/rd_menu_model.hpp',
     'network/addonsmodel.hpp',
     'network/devicesourceprovider.hpp',
     'network/networkbasemodel.hpp',
@@ -386,6 +387,8 @@ qt_plugin_sources = files(
     'menus/qml_menu_wrapper.hpp',
     'menus/menus.cpp',
     'menus/menus.hpp',
+    'menus/rd_menu_model.cpp',
+    'menus/rd_menu_model.hpp',
     'network/addonsmodel.cpp',
     'network/addonsmodel.hpp',
     'network/mediatreelistener.cpp',
@@ -707,7 +710,9 @@ qml_modules += {
     'sources': files(
         'menus/qml/GlobalShortcuts.qml',
         'menus/qml/Menubar.qml',
-        'menus/qml/ShortcutExt.qml'
+        'menus/qml/ShortcutExt.qml',
+        'menus/qml/RdCascadeMenu.qml',
+        'menus/qml/RdMainMenu.qml'
     ),
 }
 
@@ -769,6 +774,7 @@ qml_modules += {
        'player/qml/ControlLayout.qml',
        'player/qml/ControlRepeater.qml',
        'player/qml/NavigationBox.qml',
+       'player/qml/RdPlayerMenu.qml',
    ),
    'singletons' : files(
        'player/qml/PlayerControlbarControls.qml',

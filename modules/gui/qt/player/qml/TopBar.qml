@@ -158,19 +158,18 @@ FocusScope{
                 AccessibleCompat.id: "topBarMenuButton"
 
                 focus: true
-                checked: contextMenu.shown
+                checked: contextMenu.visible
 
                 Navigation.parentItem: root
                 Navigation.rightItem: sidebarButton
 
-                onClicked: contextMenu.popup(this.mapToGlobal(0, height))
+                onClicked: contextMenu.popupBelow(menuSelector, visualFocus)
 
                 onHoveredChanged: root.requestLockUnlockAutoHide(hovered)
 
-                Menus.QmlGlobalMenu {
+                // redesign: the main menu in the Figma style (W4.9)
+                Menus.RdMainMenu {
                     id: contextMenu
-
-                    ctx: MainCtx
 
                     onAboutToShow: root.requestLockUnlockAutoHide(true)
                     onAboutToHide: root.requestLockUnlockAutoHide(false)
