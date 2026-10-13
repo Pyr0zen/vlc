@@ -1051,15 +1051,16 @@ FocusScope {
     // (video 9:29 / 11:41 zoomed: ~6 px frame on the sides and bottom, ~8 px inner radius; with the
     // bars hidden a thin frame stays all around, video 3:50 and 5:28). Drawn above the video, below
     // the bars (W3.7).
-    // Qt is built without Canvas and Shapes, so the frame is the thick border of a rounded
-    // rectangle: its inner edge is the rounded video opening, its outer edge lies outside the window.
+    // Qt is built without Canvas and Shapes, so the frame is four plain rectangles around the
+    // opening plus a small shader for each rounded inner corner. While the bars fade only the
+    // corner positions and the two band heights change: no rounded geometry is rebuilt per frame
+    // and nothing needs a clip.
     Item {
         id: videoFrame
 
         anchors.fill: parent
         visible: MainCtx.hasEmbededVideo && (MainCtx.intfMainWindow.visibility !== Window.FullScreen)
         enabled: false
-        clip: true
 
         readonly property real inset: VLCStyle.dp(6, VLCStyle.scale)
         readonly property real innerRadius: VLCStyle.dp(8, VLCStyle.scale)
@@ -1068,24 +1069,64 @@ FocusScope {
         readonly property real topEdge: inset + (topBar.height - inset) * (topBar.visible ? topBar.opacity : 0)
         readonly property real bottomEdge: height - inset
                                            - (controlBar.height - inset) * (controlBar.visible ? controlBar.opacity : 0)
+        // smaller corners when the opening is too small for them
+        readonly property real cornerRadius: Math.max(0, Math.min(innerRadius, (width - 2 * inset) / 2,
+                                                                  (bottomEdge - topEdge) / 2))
+        readonly property color color: VLCStyle.palette.rdBgA3
+
+        // top band
+        Rectangle {
+            width: videoFrame.width
+            height: videoFrame.topEdge
+            color: videoFrame.color
+            antialiasing: true
+        }
+
+        // bottom band
+        Rectangle {
+            y: videoFrame.bottomEdge
+            width: videoFrame.width
+            height: videoFrame.height - videoFrame.bottomEdge
+            color: videoFrame.color
+            antialiasing: true
+        }
+
+        // left and right sides
+        Rectangle {
+            width: videoFrame.inset
+            height: videoFrame.height
+            color: videoFrame.color
+            antialiasing: true
+        }
 
         Rectangle {
-            // wide enough that the outer rounded corners stay outside the window
-            readonly property real frameWidth: 2 * Math.max(videoFrame.topEdge, videoFrame.height - videoFrame.bottomEdge)
-                                               + 2 * videoFrame.innerRadius + VLCStyle.dp(10, VLCStyle.scale)
-            readonly property real openingWidth: Math.max(0, videoFrame.width - 2 * videoFrame.inset)
-            readonly property real openingHeight: Math.max(0, videoFrame.bottomEdge - videoFrame.topEdge)
-
-            x: videoFrame.inset - frameWidth
-            y: videoFrame.topEdge - frameWidth
-            width: openingWidth + 2 * frameWidth
-            height: openingHeight + 2 * frameWidth
-
-            color: "transparent"
-            border.width: frameWidth
-            border.color: VLCStyle.palette.rdBgA3
-            radius: frameWidth + Math.min(videoFrame.innerRadius, openingWidth / 2, openingHeight / 2)
+            x: videoFrame.width - width
+            width: videoFrame.inset
+            height: videoFrame.height
+            color: videoFrame.color
             antialiasing: true
+        }
+
+        // rounded corners of the opening, clockwise from the top left one
+        Repeater {
+            model: 4
+
+            delegate: ShaderEffect {
+                required property int index
+
+                readonly property bool atRight: index === 1 || index === 2
+                readonly property bool atBottom: index >= 2
+                readonly property color color: videoFrame.color
+
+                x: atRight ? videoFrame.width - videoFrame.inset - width : videoFrame.inset
+                y: atBottom ? videoFrame.bottomEdge - height : videoFrame.topEdge
+                width: videoFrame.cornerRadius
+                height: videoFrame.cornerRadius
+                rotation: index * 90
+
+                blending: true
+                fragmentShader: "qrc:///shaders/VideoFrameCorner.frag.qsb"
+            }
         }
     }
 
