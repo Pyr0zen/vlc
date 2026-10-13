@@ -365,6 +365,10 @@ QtObject {
     readonly property int rd_menuRowHeight: MainCtx.dp(48, scale)
     readonly property int rd_menuWidth: MainCtx.dp(265, scale)
     readonly property int rd_mainMenuWidth: MainCtx.dp(375, scale)
+    readonly property int rd_contextMenuWidth: MainCtx.dp(292, scale)   // Figma "right-click menu"
+    readonly property int rd_menuMaxWidth: MainCtx.dp(480, scale)       // submenus grow with long entries
+    readonly property int rd_submenuGap: MainCtx.dp(11, scale)          // Figma "Profiles": menu to submenu
+    readonly property int rd_menuPadding: MainCtx.dp(4, scale)          // Figma menus: padding 4
     readonly property int rd_rowHeight: MainCtx.dp(32, scale)
     readonly property real rd_blurRadius: 50                              // effect "bg blur"
 

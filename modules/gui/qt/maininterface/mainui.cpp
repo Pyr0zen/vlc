@@ -74,6 +74,7 @@
 #include "network/standardpathmodel.hpp"
 
 #include "menus/qml_menu_wrapper.hpp"
+#include "menus/rd_menu_model.hpp"
 
 #include "widgets/native/csdthemeimage.hpp"
 #include "widgets/native/navigation_attached.hpp"
@@ -298,6 +299,8 @@ void MainUI::registerQMLTypes()
         qmlRegisterType<SortMenuAlbums>( uri, versionMajor, versionMinor, "SortMenuAlbums" );
         qmlRegisterType<QmlGlobalMenu>( uri, versionMajor, versionMinor, "QmlGlobalMenu" );
         qmlRegisterType<QmlMenuBar>( uri, versionMajor, versionMinor, "QmlMenuBar" );
+        // redesign: VLC's menus drawn by the QML main menu and right-click menu
+        qmlRegisterType<RdMenuModel>( uri, versionMajor, versionMinor, "RdMenuModel" );
 
         qmlRegisterModule(uri, versionMajor, versionMinor);
         qmlProtectModule(uri, versionMajor);
