@@ -31,6 +31,9 @@
 #include <QUrl>
 #include <QVariant>
 
+#include <functional>
+#include <memory>
+
 #include "qt.hpp"
 #include "mlqmltypes.hpp"
 
@@ -56,6 +59,7 @@ class RdLibraryStore : public QObject
 
 public:
     RdLibraryStore(qt_intf_t* intf, MediaLib* mediaLib, QObject* parent = nullptr);
+    ~RdLibraryStore() override;
 
     QStringList videoFolders() const { return m_videoFolders; }
     QStringList musicFolders() const { return m_musicFolders; }
@@ -131,8 +135,11 @@ signals:
     // a folder was added to a category; the library opens it once the media library has it
     void folderAdded(const QString& category, const QString& mrl);
     void playlistCreated(const MLItemId& playlistId);
+    // the media library found or scanned folders (a folder being added may now be listed)
+    void foldersScanned();
 
 private:
+    static void onMlEvent(void* data, const struct vlc_ml_event_t* event);
     QVariantList frequentIds(const QString& kind) const;
     void save(const char* key, const QVariant& value);
     QString coverDirectory() const;
@@ -140,6 +147,7 @@ private:
 
     qt_intf_t* p_intf;
     MediaLib* m_mediaLib;
+    std::unique_ptr<struct vlc_ml_event_callback_t, std::function<void(struct vlc_ml_event_callback_t*)>> m_eventCallback;
 
     QStringList m_videoFolders;
     QStringList m_musicFolders;

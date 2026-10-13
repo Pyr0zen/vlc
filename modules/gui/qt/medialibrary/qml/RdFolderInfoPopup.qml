@@ -1,0 +1,87 @@
+/*****************************************************************************
+ * Copyright (C) 2026 VLC authors and VideoLAN
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * ( at your option ) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ *****************************************************************************/
+
+// redesign: "Info" of the folder menu (video 10:52-10:57, P5-15): the folder's name and where it
+// is on disk, in the style of the info popovers (Decision 26, RdTooltip look).
+import QtQuick
+import QtQuick.Templates as T
+
+import VLC.MainInterface
+import VLC.Style
+import VLC.Widgets as Widgets
+
+T.Popup {
+    id: popup
+
+    property string folderTitle: ""
+    property string location: ""
+
+    function show(item) {
+        folderTitle = item.title ?? ""
+        const url = item.mrl ?? ""
+        location = url.startsWith("file://") ? decodeURIComponent(url.replace(/^file:\/\/\/?/, "")) : url
+        open()
+    }
+
+    parent: T.Overlay.overlay
+    anchors.centerIn: parent
+    width: Math.min(VLCStyle.dp(420), parent ? parent.width - VLCStyle.dp(40) : VLCStyle.dp(420))
+    padding: VLCStyle.dp(16)
+    modal: false
+    focus: true
+    closePolicy: T.Popup.CloseOnEscape | T.Popup.CloseOnPressOutside
+
+    background: Rectangle {
+        radius: VLCStyle.rd_radius_panel
+        color: VLCStyle.palette.rdBgB1Transparent
+
+        Widgets.RdShadow { }
+    }
+
+    contentItem: Column {
+        spacing: VLCStyle.dp(8)
+
+        Row {
+            spacing: VLCStyle.dp(10)
+
+            Widgets.RdIcon {
+                anchors.verticalCenter: parent.verticalCenter
+                name: "folder"
+            }
+
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                width: popup.availableWidth - VLCStyle.rd_iconSize - VLCStyle.dp(10)
+                elide: Text.ElideRight
+                text: popup.folderTitle
+                font.family: VLCStyle.rd_fontFamily
+                font.pixelSize: VLCStyle.rd_fontSize_header
+                color: VLCStyle.palette.rdFg2
+            }
+        }
+
+        Text {
+            width: popup.availableWidth
+            wrapMode: Text.WrapAnywhere
+            text: popup.location
+            font.family: VLCStyle.rd_fontFamily
+            font.pixelSize: VLCStyle.rd_fontSize_label
+            color: VLCStyle.palette.rdFgA3
+        }
+    }
+}
