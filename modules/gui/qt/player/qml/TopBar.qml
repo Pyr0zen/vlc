@@ -72,9 +72,6 @@ FocusScope{
         return parts.length >= 2 ? parts[parts.length - 2] : ""
     }
 
-    // the resume prompt is now a toast above the control bar (Player.qml)
-    property bool resumeVisible: false
-
     // Signals
 
     signal togglePlaylistVisibility()
@@ -133,14 +130,16 @@ FocusScope{
 
             spacing: VLCStyle.dp(7, VLCStyle.scale)
 
-            // cone (Figma "Frame 8", 38x28 cell, 24 px icon, accent colored: Decision 9 live accent)
+            // cone (Figma "Frame 8", 38x28 cell, Figma "vlc" icon, accent colored so it follows
+            // the live accent: video 17:46)
             Item {
                 width: VLCStyle.dp(38, VLCStyle.scale)
                 height: VLCStyle.dp(28, VLCStyle.scale)
 
-                Widgets.BannerCone {
+                Widgets.RdIcon {
                     anchors.centerIn: parent
-                    color: theme.accent
+                    name: "vlc"
+                    accentColor: theme.accent
                 }
             }
 
@@ -222,7 +221,7 @@ FocusScope{
             T.AbstractButton {
                 id: folderChip
 
-                visible: root.folderName !== "" && !root.resumeVisible
+                visible: root.folderName !== ""
                 anchors.verticalCenter: parent.verticalCenter
 
                 implicitHeight: VLCStyle.dp(28, VLCStyle.scale)
@@ -276,7 +275,7 @@ FocusScope{
             anchors.centerIn: parent
             width: Math.min(implicitWidth, _maxWidth)
 
-            visible: !root.resumeVisible && width > 0
+            visible: width > 0
 
             text: root.title
             color: VLCStyle.palette.rdFgA2

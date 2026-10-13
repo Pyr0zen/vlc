@@ -114,6 +114,18 @@ T.Pane {
         }
     }
 
+    // redesign: seek row (time, thick seek bar, duration) shown inside the controls row. It has no
+    // visual parent of its own: PlayerControlLayout places it in its middle slot.
+    readonly property Item inlineSeekRow: RowLayout {
+        visible: root.textPosition === ControlBar.TimeTextPosition.Inline
+        spacing: VLCStyle.dp(8, VLCStyle.scale)
+        anchors.verticalCenter: parent ? parent.verticalCenter : undefined
+        width: parent ? parent.width : 0
+        height: VLCStyle.rd_seekBarHeight
+
+        children: (root.textPosition === ControlBar.TimeTextPosition.Inline) ? [mediaTime, trackPositionSlider, mediaRemainingTime] : []
+    }
+
     background: Rectangle {
         color: root.textPosition === ControlBar.TimeTextPosition.Inline ? VLCStyle.palette.rdBgA3Transparent
                                                                          : theme.bg.primary
@@ -149,7 +161,8 @@ T.Pane {
 
                 text: {
                     const length = Player.length
-                    return Player.time.formatHMS(length.isSubSecond() ? VLCTick.SubSecondFormattedAsMS : 0)
+                    const hours = (textPosition === ControlBar.TimeTextPosition.Inline) ? VLCTick.AlwaysShowHours : 0
+                    return Player.time.formatHMS((length.isSubSecond() ? VLCTick.SubSecondFormattedAsMS : 0) | hours)
                 }
                 color: mediaTime.editing ? "transparent"
                        : (textPosition === ControlBar.TimeTextPosition.Inline) ? VLCStyle.palette.rdFgA2 : theme.fg.primary
@@ -249,8 +262,9 @@ T.Pane {
                 readonly property bool showRemainingTime: (MainCtx.showRemainingTime && Player.remainingTime.valid())
 
                 text: showRemainingTime
-                      ? "-" + Player.remainingTime.formatHMS()
-                      : Player.length.formatHMS()
+                      ? "-" + Player.remainingTime.formatHMS(VLCTick.SubSecondFormattedAsMS | _hoursFlag)
+                      : Player.length.formatHMS(VLCTick.SubSecondFormattedAsMS | _hoursFlag)
+                readonly property int _hoursFlag: (textPosition === ControlBar.TimeTextPosition.Inline) ? VLCTick.AlwaysShowHours : 0
                 color: mediaTime.color
                 font: timeTextMetrics.font
                 horizontalAlignment: Text.AlignHCenter
@@ -407,19 +421,6 @@ T.Pane {
                                                                                               : 0
 
             Layout.rightMargin: Layout.leftMargin
-        }
-
-        // redesign: seek row (time, thick seek bar, duration) shown inside the controls row
-        RowLayout {
-            id: inlineSeekRow
-
-            visible: textPosition === ControlBar.TimeTextPosition.Inline
-            spacing: VLCStyle.dp(8, VLCStyle.scale)
-            anchors.verticalCenter: parent ? parent.verticalCenter : undefined
-            width: parent ? parent.width : 0
-            height: VLCStyle.rd_seekBarHeight
-
-            children: (textPosition === ControlBar.TimeTextPosition.Inline) ? [mediaTime, trackPositionSlider, mediaRemainingTime] : []
         }
 
         PlayerControlLayout {

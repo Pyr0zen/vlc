@@ -56,15 +56,15 @@ FocusScope {
 
     // Private
 
-    property bool _controlsUnderVideo: (MainCtx.pinVideoControls
-                                        &&
-                                        (MainCtx.intfMainWindow.visibility !== Window.FullScreen))
+    // redesign: in a window both bars always show and the video sits between them (VLC's pinned
+    // layout); only fullscreen hides the bars (Decision 30)
+    property bool _controlsUnderVideo: MainCtx.intfMainWindow.visibility !== Window.FullScreen
 
     property bool _keyPressed: false
 
-    // redesign: each bar shows only while the mouse is near it and hides instantly when it leaves
-    // (video 3:46-3:55, Decision 4). Menus, the queue, keyboard use and audio mode show both bars
-    // (except the far one while the mouse is in the other bar's zone).
+    // redesign: in fullscreen each bar shows while the mouse is near it and fades out when it
+    // leaves (video 3:46-3:55, Decisions 4 and 30). Menus, the queue, keyboard use and audio mode
+    // show both bars (except the far one while the mouse is in the other bar's zone).
     readonly property real _barHoverZone: VLCStyle.dp(40, VLCStyle.scale)
     readonly property bool _mouseNearTop: barZoneHover.hovered
                                           && barZoneHover.point.position.y <= topBar.height + _barHoverZone
@@ -1006,14 +1006,6 @@ FocusScope {
                  ? rootPlayer.width - playlistpopup.width
                  : rootPlayer.width
 
-        // NOTE: With pinned controls, the top controls are hidden when switching to
-        //       fullScreen. Except when resume is visible
-        visible: (MainCtx.pinVideoControls === false
-                  ||
-                  MainCtx.intfMainWindow.visibility !== Window.FullScreen
-                  ||
-                  resumeVisible)
-
         focus: true
         title: Player.title
 
@@ -1064,7 +1056,6 @@ FocusScope {
 
         FadeControllerStateGroup {
             target: topBar
-            animated: false
         }
 
         // TODO: Make TopBar a Control and use background
@@ -1076,7 +1067,7 @@ FocusScope {
             anchors.fill: parent
 
             opacity: {
-                if (MainCtx.hasEmbededVideo && !MainCtx.pinVideoControls && !rootPlayer.displayFadeRectangles) {
+                if (MainCtx.hasEmbededVideo && !rootPlayer._controlsUnderVideo && !rootPlayer.displayFadeRectangles) {
                     return 0.6
                 } else if (MainCtx.intfMainWindow.visibility === Window.FullScreen && MainCtx.hasEmbededVideo) {
                     return MainCtx.pinOpacity
@@ -1087,7 +1078,7 @@ FocusScope {
 
             tintColor: windowTheme.bg.primary
 
-            visible: MainCtx.pinVideoControls || (MainCtx.hasEmbededVideo && !rootPlayer.displayFadeRectangles)
+            visible: rootPlayer._controlsUnderVideo || (MainCtx.hasEmbededVideo && !rootPlayer.displayFadeRectangles)
         }
     }
 
@@ -1428,7 +1419,6 @@ FocusScope {
 
         FadeControllerStateGroup {
             target: controlBar
-            animated: false
         }
     }
 

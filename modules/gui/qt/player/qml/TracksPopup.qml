@@ -113,15 +113,15 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
 
-        implicitHeight: content.implicitHeight + VLCStyle.dp(20, VLCStyle.scale)
+        implicitHeight: Math.max(content.implicitHeight + VLCStyle.dp(20, VLCStyle.scale),
+                                 VLCStyle.dp(524, VLCStyle.scale) - tabs.height)
         height: implicitHeight
 
         ColumnLayout {
             id: content
 
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.top: parent.top
+            anchors.fill: parent
+            anchors.bottomMargin: VLCStyle.dp(20, VLCStyle.scale)
             spacing: 0
 
             SectionLabel {
@@ -164,11 +164,13 @@ Item {
 
             TrackList {
                 visible: root.tab === "audio"
+                tracks: false
                 model: Player.audioDevices
             }
 
+            // the panel keeps the Figma height (400x524 with the tabs); Show Preferences sits at the bottom
             Item {
-                Layout.preferredHeight: VLCStyle.dp(20, VLCStyle.scale)
+                Layout.fillHeight: true
             }
 
             Widgets.RdButton {
@@ -228,61 +230,98 @@ Item {
         }
     }
 
-    // track / device rows: accent check on the left, label FG/2 (selected) or FG/A1, 32 px rows, gap 12
+    // one selectable row: accent check on the left, label FG/2 (selected or hovered) or FG/A1, 32 px
+    component TrackRow: T.AbstractButton {
+        id: row
+
+        property bool selected: false
+        property string label: ""
+
+        Layout.fillWidth: true
+        implicitHeight: VLCStyle.rd_rowHeight
+
+        Accessible.role: Accessible.RadioButton
+        Accessible.name: label
+        Accessible.checked: selected
+
+        background: Rectangle {
+            radius: VLCStyle.rd_radius_small
+            color: row.hovered ? VLCStyle.palette.rdBgA2 : "transparent"
+        }
+
+        contentItem: Item {
+            Widgets.RdIcon {
+                x: VLCStyle.dp(4, VLCStyle.scale)
+                anchors.verticalCenter: parent.verticalCenter
+                visible: row.selected
+                name: "check_state-active"
+            }
+
+            Text {
+                x: VLCStyle.dp(36, VLCStyle.scale)
+                width: parent.width - x
+                anchors.verticalCenter: parent.verticalCenter
+                elide: Text.ElideRight
+                text: row.label
+                font.family: VLCStyle.rd_fontFamily
+                font.pixelSize: VLCStyle.rd_fontSize_label
+                color: (row.selected || row.hovered) ? VLCStyle.palette.rdFg2 : VLCStyle.palette.rdFgA1
+            }
+        }
+    }
+
+    // track or device list, 12 px between rows, 20 px below the last row (video 4:44).
+    // Track lists start with "None" (video 4:35-4:48), which is checked when no track is selected
+    // and unselects the current one; VLC names tracks "Track 1 - [English]", the design shows
+    // "Track 1 - English".
     component TrackList: ColumnLayout {
         id: list
 
         property var model
+        property bool tracks: true
+
+        readonly property bool _anySelected: {
+            for (let i = 0; i < rows.count; ++i) {
+                const item = rows.itemAt(i)
+                if (item && item.selected)
+                    return true
+            }
+            return false
+        }
 
         Layout.fillWidth: true
         Layout.leftMargin: VLCStyle.dp(20, VLCStyle.scale)
         Layout.rightMargin: VLCStyle.dp(20, VLCStyle.scale)
+        Layout.bottomMargin: VLCStyle.dp(20, VLCStyle.scale)
         spacing: VLCStyle.dp(12, VLCStyle.scale)
 
+        TrackRow {
+            visible: list.tracks
+            label: qsTr("None")
+            selected: !list._anySelected
+
+            onClicked: {
+                for (let i = 0; i < rows.count; ++i) {
+                    const item = rows.itemAt(i)
+                    if (item && item.selected)
+                        item.model.checked = false
+                }
+            }
+        }
+
         Repeater {
+            id: rows
+
             model: list.model
 
-            delegate: T.AbstractButton {
-                id: row
-
+            delegate: TrackRow {
                 required property var model
                 required property int index
 
-                Layout.fillWidth: true
-                implicitHeight: VLCStyle.rd_rowHeight
+                selected: !!model.checked
+                label: list.tracks ? String(model.display).replace(/ - \[(.*)\]$/, " - $1") : model.display
 
-                Accessible.role: Accessible.RadioButton
-                Accessible.name: row.model.display
-                Accessible.checked: row.model.checked
-
-                onClicked: row.model.checked = true
-
-                background: Rectangle {
-                    radius: VLCStyle.rd_radius_small
-                    color: row.hovered ? VLCStyle.palette.rdBgA2 : "transparent"
-                }
-
-                contentItem: Item {
-                    Widgets.RdIcon {
-                        id: check
-
-                        x: VLCStyle.dp(4, VLCStyle.scale)
-                        anchors.verticalCenter: parent.verticalCenter
-                        visible: !!row.model.checked
-                        name: "check_state-active"
-                    }
-
-                    Text {
-                        x: VLCStyle.dp(36, VLCStyle.scale)
-                        width: parent.width - x
-                        anchors.verticalCenter: parent.verticalCenter
-                        elide: Text.ElideRight
-                        text: row.model.display
-                        font.family: VLCStyle.rd_fontFamily
-                        font.pixelSize: VLCStyle.rd_fontSize_label
-                        color: (row.model.checked || row.hovered) ? VLCStyle.palette.rdFg2 : VLCStyle.palette.rdFgA1
-                    }
-                }
+                onClicked: model.checked = true
             }
         }
     }

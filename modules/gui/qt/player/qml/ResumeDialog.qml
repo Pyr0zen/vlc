@@ -123,8 +123,12 @@ FocusScope {
             font.family: VLCStyle.rd_fontFamily
             font.pixelSize: VLCStyle.rd_fontSize_header
 
-            text: Player.restoreTime.valid()
-                  ? qsTr("You already watched till %1").arg("<b>" + Player.restoreTime.formatHMS() + "</b>")
+            // the saved progress times the file length (known once playback starts)
+            readonly property bool _hasRestoreTime: Player.restoreProgress > 0 && Player.length.valid()
+
+            text: _hasRestoreTime
+                  ? qsTr("You already watched till %1")
+                        .arg("<b>" + Player.length.scale(Player.restoreProgress).formatHMS(VLCTick.AlwaysShowHours) + "</b>")
                   : qsTr("Do you want to restart the playback where you left off?")
         }
 
