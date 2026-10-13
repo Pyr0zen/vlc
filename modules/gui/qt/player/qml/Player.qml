@@ -1006,8 +1006,11 @@ FocusScope {
 
         readonly property real inset: VLCStyle.dp(6, VLCStyle.scale)
         readonly property real innerRadius: VLCStyle.dp(8, VLCStyle.scale)
-        readonly property real topEdge: topBar.visible ? topBar.height : inset
-        readonly property real bottomEdge: height - (controlBar.visible ? controlBar.height : inset)
+        // the opening follows the bars' fade, so it grows and shrinks with them instead of
+        // jumping once a bar has faded out (bars auto-hide over the video, Decision 30)
+        readonly property real topEdge: inset + (topBar.height - inset) * (topBar.visible ? topBar.opacity : 0)
+        readonly property real bottomEdge: height - inset
+                                           - (controlBar.height - inset) * (controlBar.visible ? controlBar.opacity : 0)
 
         Rectangle {
             // wide enough that the outer rounded corners stay outside the window
