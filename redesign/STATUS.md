@@ -1,36 +1,32 @@
 # STATUS
 
-- Updated: 2026-10-13 03:02 Central Europe Daylight Time
-- Current work package: Verification round 4 (build run 38329239416 pending test)
+- Updated: 2026-10-13 14:28 Central Europe Daylight Time
+- Current work package: Sidebar build round: rebuild run 38397378193 building, test next
 
 ## Last 10 commits
 ```
-b7aaf8443a redesign: record where verification stopped (round 4 build pending)
-990258263f qt: fix review findings on the fullscreen bars and resume prompt
-0028f1bbbe qt: fix fullscreen bars, seek bar colors, title and resume prompt
-e1d9d04c7d redesign: 5 work packages per build, core changes in their own build
-55a8c746d3 redesign: build rounds, clean stop rule, round 2 test notes
-3f091bf287 qt: volume tooltip matches the Figma "audio value" box
-d66fc95454 qt: fix the player differences found on the first on-PC test
-ff8922846b redesign: require side-by-side comparisons with the video for every element
-f74b83911e qt: draw the volume cone and video frame without Canvas
-c64aded988 qt: fix review findings in the redesign icons, Escape and fonts
+26eb8d70bc qt: windowed bars: second review pass
+bf51a3e00d qt: windowed bars: review fixes
+aec4d75266 qt: section header root is an Item (Text's implicitHeight is read-only)
+77b6271d05 qt: video frame opening follows the bars' fade
+e655c1737e qt: windowed bars show on mouse movement and hide after 3 s (Decision 30 update)
+b82a0a9df4 redesign: Figma holds the final UIs; slider thumb and sidebar button follow it
+5c5bd1203d qt: fix review findings in the sidebars and the effects bridge
+2c36288b60 redesign: log the sidebar decisions and the Figma cross-check rule
+3915ff52be qt: add the settings sidebar and the queue sidebar to the player
+c0eb4b085d qt: extend the redesign component kit for the sidebars
 ```
 
 ## Latest report
 ```
-PROGRESS REPORT (stop for the day, 2026-10-13)
-- Phase and status: Step 1, verification of the already-coded UI work. 3 test rounds ran on Sticky's PC; round 4 build (run 38329239416, commit 990258263f) was building at the stop and is NOT tested yet.
-- What was built since the last report: Figma icon set (206 SVGs, accent-colorable) used across the player; Inter font bundled (OFL); play/pause pill; palette tokens switch with light/dark; volume cone and video frame redrawn without Canvas (VLC's Qt has no Canvas); Decision 30 (windowed: both bars always visible; fullscreen: per-edge bars that fade); HH:MM:SS times; resume toast "You already watched till ..." and no prompt in the last 20 s; tracks popup with None row, Figma height, cleaned labels; fullscreen edge detection by cursor polling; RESIDUAL_AUDIT.md (380 elements).
-- Latest green build: run 38325488867 (artifact vlc-redesign-win64). Click path: github.com/Pyr0zen/vlc > Actions > build-windows > run 38325488867 > Artifacts > vlc-redesign-win64. Run 38329239416 has the newest fixes.
-- VIDEO_INDEX.md: rows not yet marked done; marking waits for round 4 to pass.
-- Decisions (Claude) added: light FG/1 and FG/2 proposal (#111111, #222222, needs Sticky's OK); accent shades derived per theme; Inter as 5 static weights; window buttons and muted icon notes; checked buttons use the filled state-active icons; Record label Shift+R and onboarding shortcuts use VLC keys.
-- Remaining differences from the video: seek hover thumbnail not built (W3.3b, shows VLC's time tooltip); top bar folder chip icon should switch to "Videos" style when opened from the library (14:05); library sidebar (11:41) not built; title shows the file name with extension where she shows a clean title.
-- Core changes so far: none (all changes in modules/gui/qt).
-- Warnings: one QML warning found and fixed in round 3; round 4 log still to check.
-- Review findings fixed: 2 independent reviews in this stretch (13 and 10 findings), all bugs fixed (HiDPI icon size, icon alpha, Escape vs control bar cancel, stale length in resume prompt, popup overflow, FSM lock in windowed mode, others).
-- Edge cases tested: 125% Windows scaling at 2560x1440, file path with spaces, video reaching the end, Escape with popup open, second instance while the first holds the media library.
-- Regression checklist result: partly (play/pause, seek, volume, tracks, fullscreen in/out, close cleanly); full checklist in round 4.
-- Known bugs remaining: VLC once ignored the first close request (recheck); the earlier test runs wrote into Sticky's real %APPDATA%\vlc (fixed by portable mode, no backup of the old files).
+PROGRESS REPORT (2026-10-13, sidebar round rebuild)
+- Phase and status: Step 1. Round 4 passed earlier (run 38329239416). The sidebar round (settings sidebar W4.3a, W4.4, W4.5, W4.6 and queue sidebar W4.8) built as run 38390848560 but failed on this PC: VLC refused Player.qml, so the player page showed only the video. Cause: RdSectionHeader assigned the read-only implicitHeight of a Text root. Fixed. Rebuild run 38397378193 (commit 26eb8d70bc) is building; the sidebar test round with Figma side-by-sides follows.
+- New since the last report: redesign/tools/qmlcheck.py compiles every QML file with Qt 6.8.3 (VLC's Qt version) against stubs of VLC's C++ types and flags Qt features VLC lacks; it reproduces the failure exactly and the whole tree passes after the fix. CLAUDE.md requires it before every push.
+- Also in the rebuild: Decision 30 update (Sticky): in a window both bars appear on mouse movement and fade 3 s after it stops; fullscreen keeps the per-edge bars. Video frame opening follows the bars' fade. Slider thumb and "Open Advanced Settings" follow Figma (Decision 31: Figma holds the final UIs).
+- Review findings fixed: 2 review passes on the windowed bars (inactive window kept the cursor hidden, audio-only top bar background, window moves counted as mouse moves, unpin did not restart the hide timeout, F while pinned ended keyboard mode, poll ran while hidden, scaled-coordinate rounding).
+- Decisions (Claude) added: the 3 s bar delay replaces VLC's mouse-hide-timeout preference for bars and cursor.
+- Next: test run 38397378193 on this PC (portable mode, test videos, 2400x1350 at 125%): every sidebar tab and state side by side with Figma crops and the video's final frames, windowed bars behavior, QML warnings in the log, regression checklist. Then mark VIDEO_INDEX rows and continue with the next 5 work packages.
+- Proposals waiting for Sticky: Light FG/1 #111111 and FG/2 #222222; pixel subtitle size and live subtitle style need core changes (Decision 27).
+- Core changes so far: none.
 - Blocked on: nothing.
 ```
