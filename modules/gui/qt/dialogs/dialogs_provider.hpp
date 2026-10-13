@@ -242,6 +242,8 @@ public slots:
     void podcastConfigureDialog();
     void pluginDialog();
     void epgDialog();
+    // redesign: the Keyboard Shortcuts dialog (video 15:57-16:03), shown by Dialogs.qml
+    void keyboardShortcutsDialog();
     void setPopupMenu();
     void destroyPopupMenu();
 
@@ -302,6 +304,7 @@ signals:
     /* redesign: shows the QML Open Network Stream dialog (MainInterface.qml) */
     void showOpenNetworkStreamDialog();
     void showSettingsDialog( const QString& category );
+    void showKeyboardShortcutsDialog();
 
     //visiblity signal
     void openDialogVisibleChanged();

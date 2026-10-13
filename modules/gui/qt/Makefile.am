@@ -151,6 +151,8 @@ libqt_plugin_la_SOURCES = \
 	dialogs/preferences/preferences_widgets.hpp \
 	dialogs/preferences/simple_preferences.cpp \
 	dialogs/preferences/simple_preferences.hpp \
+	dialogs/redesign/hotkeys_model.cpp \
+	dialogs/redesign/hotkeys_model.hpp \
 	dialogs/sout/convert.cpp dialogs/sout/convert.hpp \
 	dialogs/sout/profile_selector.cpp \
 	dialogs/sout/profile_selector.hpp \
@@ -441,6 +443,7 @@ nodist_libqt_plugin_la_SOURCES = \
 	dialogs/preferences/preferences.moc.cpp \
 	dialogs/preferences/preferences_widgets.moc.cpp \
 	dialogs/preferences/simple_preferences.moc.cpp \
+	dialogs/redesign/hotkeys_model.moc.cpp \
 	dialogs/sout/convert.moc.cpp \
 	dialogs/sout/profile_selector.moc.cpp \
 	dialogs/sout/sout.moc.cpp \
@@ -1260,6 +1263,8 @@ libqml_module_dialogs_a_QML = \
 	dialogs/dialogs/qml/ModalDialog.qml \
 	dialogs/dialogs/qml/WindowDialog.qml \
 	dialogs/redesign/OpenNetworkStreamDialog.qml \
+	dialogs/redesign/HotkeyField.qml \
+	dialogs/redesign/KeyboardShortcutsDialog.qml \
 	dialogs/toolbar/qml/EditorDNDDelegate.qml \
 	dialogs/toolbar/qml/EditorDNDView.qml\
 	dialogs/toolbar/qml/EditorDummyButton.qml \

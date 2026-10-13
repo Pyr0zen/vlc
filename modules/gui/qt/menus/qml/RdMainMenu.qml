@@ -48,8 +48,7 @@ RdCascadeMenu {
 
         onRequested: (id) => {
             if (id === "keyboardShortcuts") {
-                // VLC keeps its hotkeys in the preferences (Keyboard Shortcuts dialog: W6.3)
-                DialogsProvider.prefsDialog()
+                DialogsProvider.keyboardShortcutsDialog()
             } else if (id === "customizePlayer") {
                 // VLC's toolbar editor (Customize Player screen: W8.1)
                 DialogsProvider.showToolbarEditorDialog()
