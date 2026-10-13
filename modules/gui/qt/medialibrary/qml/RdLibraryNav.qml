@@ -37,6 +37,8 @@ pragma Singleton
 
 import QtQml
 
+import VLC.MediaLibrary
+
 QtObject {
     id: root
 

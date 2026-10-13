@@ -43,6 +43,16 @@ Item {
 
     implicitHeight: compact ? VLCStyle.dp(68) : VLCStyle.dp(32)
 
+    // Ctrl+F
+    function focusSearch() {
+        if (compact) {
+            searchOpen = true
+            searchField.focusInput()
+        } else {
+            fullSearch.focusInput()
+        }
+    }
+
     function _countText() {
         if (!page)
             return ""
@@ -51,7 +61,10 @@ Item {
 
     // closing the search clears it
     onSearchOpenChanged: {
-        if (!searchOpen && page)
+        if (searchOpen)
+            return
+        searchField.text = ""
+        if (page)
             page.searchText = ""
     }
 
@@ -243,6 +256,18 @@ Item {
 
         spacing: VLCStyle.dp(12)
 
+        // the button whose menu is open: a second click on it closes the menu
+        property Item _menuOwner: null
+
+        function _toggleMenu(button) {
+            if (menu.opened && _menuOwner === button) {
+                menu.close()
+                return false
+            }
+            _menuOwner = button
+            return true
+        }
+
         function openSortMenu(button) {
             const page = tools.page
             menu.entries = page.sortOptions.map((option) => ({
@@ -262,7 +287,10 @@ Item {
             visible: !!tools.page && tools.page.sortOptions.length > 0
             iconName: tools.page && tools.page.sortKey !== tools.page.defaultSortKey ? "sort_state-active" : "sort"
             description: qsTr("Sort")
-            onClicked: tools.openSortMenu(sortButton)
+            onClicked: {
+                if (tools._toggleMenu(sortButton))
+                    tools.openSortMenu(sortButton)
+            }
         }
 
         RdLibraryIconButton {
@@ -272,6 +300,8 @@ Item {
             iconName: tools.page && tools.page.viewMode === "grid" ? "grid" : "list"
             description: qsTr("View")
             onClicked: {
+                if (!tools._toggleMenu(viewButton))
+                    return
                 const page = tools.page
                 tools.menu.entries = [
                     { text: qsTr("Grid View"), icon: "grid", selected: page.viewMode === "grid",

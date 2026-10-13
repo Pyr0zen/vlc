@@ -50,10 +50,71 @@ FocusScope {
             MainPlaylistController.stop()
     }
 
+    // Escape goes back in the library
+    Navigation.cancelAction: function() {
+        if (library.item && library.item.goBack)
+            library.item.goBack()
+    }
+
     Keys.onPressed: (event) => {
+        if (KeyHelper.matchSearch(event) && library.item && library.item.focusSearch) {
+            library.item.focusSearch()
+            event.accepted = true
+        }
         //unhandled keys are forwarded as hotkeys
         if (!event.accepted)
             MainCtx.sendHotkey(event.key, event.modifiers)
+    }
+
+    // pinch to change the interface scale (VLC's)
+    PinchHandler {
+        id: interfaceScalePinchHandler
+
+        acceptedDevices: PointerDevice.TouchScreen | PointerDevice.TouchPad
+
+        minimumPointCount: 2
+        maximumPointCount: 2
+
+        target: null
+
+        // Qt version check in disguise, only available starting with 6.5:
+        enabled: !!scaleAxis?.activeValueChanged
+
+        // Default in QPlatformTheme::defaultThemeHint is 10
+        dragThreshold: ((Application.styleHints?.startDragDistance ?? 10) * 4)
+
+        property double accumulatedDelta: 0.0
+
+        function adjustScaleFactor() {
+            // We don't want too fine change, since changing it requires reloading
+            // all images from disk:
+            if (accumulatedDelta >= 0.5) {
+                MainCtx.setIntfUserScaleFactor(+((MainCtx.getIntfUserScaleFactor() * accumulatedDelta).toFixed(2)))
+                accumulatedDelta = 0.0
+            }
+        }
+
+        Component.onCompleted: {
+            if (interfaceScalePinchHandler?.scaleAxis?.activeValueChanged) {
+                scaleAxis.activeValueChanged.connect(interfaceScalePinchHandler, onScaleAxisActiveValueChanged)
+            }
+        }
+
+        function onScaleAxisActiveValueChanged(delta) {
+            if (delta < 0.25)
+                return
+
+            accumulatedDelta += delta
+
+            // Naive compression:
+            Qt.callLater(interfaceScalePinchHandler.adjustScaleFactor)
+        }
+
+        onActiveChanged: {
+            if (!active) {
+                accumulatedDelta = 0.0
+            }
+        }
     }
 
     ColorContext {
@@ -234,11 +295,20 @@ FocusScope {
         parent: library
         z: 4
         visible: Player.isStarted
+        topInset: library.item && library.item.headerHeight !== undefined ? library.item.headerHeight : 0
 
         onFolderClicked: {
             if (library.item && library.item.revealMrl)
                 library.item.revealMrl(Player.url.toString())
         }
+    }
+
+    // the last rows scroll out from under the mini player in a bottom corner
+    Binding {
+        target: library.item
+        property: "bottomInset"
+        when: !!library.item && library.item.bottomInset !== undefined
+        value: miniPlayer.visible && !miniPlayer.atTop ? miniPlayer.height + miniPlayer.margin : 0
     }
 
     Loader {

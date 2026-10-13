@@ -34,8 +34,10 @@ Item {
 
     readonly property real _step: dash + gap
 
+    // the dashes exist only while the border is shown (the closed dialog follows window resizes)
+
     Repeater {
-        model: Math.max(0, Math.floor(root.width / root._step))
+        model: root.visible ? Math.max(0, Math.floor(root.width / root._step)) : 0
 
         delegate: Item {
             required property int index
@@ -58,7 +60,7 @@ Item {
     }
 
     Repeater {
-        model: Math.max(0, Math.floor(root.height / root._step))
+        model: root.visible ? Math.max(0, Math.floor(root.height / root._step)) : 0
 
         delegate: Item {
             required property int index

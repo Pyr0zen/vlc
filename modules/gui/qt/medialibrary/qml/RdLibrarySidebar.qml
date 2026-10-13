@@ -48,6 +48,11 @@ FocusScope {
         })
     }
 
+    // Ctrl+F
+    function focusSearch() {
+        header.focusSearch()
+    }
+
     RdLibraryRail {
         id: rail
 

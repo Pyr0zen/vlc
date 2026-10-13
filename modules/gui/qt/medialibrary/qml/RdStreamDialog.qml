@@ -46,7 +46,12 @@ RdLibraryDialog {
     // "https://iptv-org.github.io/iptv/index.m3u" -> "Index"
     function _nameFromUrl(url) {
         const path = url.split(/[?#]/)[0]
-        const file = decodeURIComponent(path.substring(path.lastIndexOf("/") + 1))
+        let file = path.substring(path.lastIndexOf("/") + 1)
+        try {
+            file = decodeURIComponent(file)
+        } catch (e) {
+            // a stray "%" while typing: keep the text as it is
+        }
         const dot = file.lastIndexOf(".")
         const base = dot > 0 ? file.substring(0, dot) : file
         return base.length > 0 ? base.charAt(0).toUpperCase() + base.substring(1) : ""
