@@ -38,6 +38,7 @@
 #include "util/qt_dirs.hpp"
 #include "util/vlchotkeyconverter.hpp"
 #include "maininterface/mainctx.hpp"
+#include "medialibrary/medialib.hpp"
 
 /* The dialogs */
 #include "dialogs/bookmarks/bookmarks.hpp"
@@ -68,6 +69,10 @@
 #include <QInputDialog>
 #include <QPointer>
 #include <QMessageBox>
+#include <QMetaMethod>
+#include <QWindow>
+
+#include <vector>
 
 #define I_OP_DIR_WINTITLE I_DIR_OR_FOLDER( N_("Open Directory"), \
                                            N_("Open Folder") )
@@ -637,7 +642,8 @@ void DialogsProvider::openFileGenericDialog( intf_dialog_args_t *p_arg )
 void DialogsProvider::openDialog( OpenDialog::OpenTab i_tab )
 {
     ensureDialog(m_openDialog);
-    m_openDialog->showTab( i_tab, OpenDialog::OPEN_AND_PLAY );
+    /* redesign (W6.4): each open entry is its own dialog, without the other sources */
+    m_openDialog->showTab( i_tab, OpenDialog::OPEN_AND_PLAY, true );
 }
 void DialogsProvider::openDialog()
 {
@@ -653,7 +659,112 @@ void DialogsProvider::openDiscDialog()
 }
 void DialogsProvider::openNetDialog()
 {
-    openDialog( OpenDialog::OPEN_NETWORK_TAB );
+    /* redesign (W6.4): the QML Open Network Stream dialog when the QML interface
+     * listens for it and its window can show it, the Network source of the Open
+     * Media dialog otherwise (dialogs provider mode, window hidden or minimized) */
+    const QWindow *mainWindow = p_intf->p_mi ? p_intf->p_mi->intfMainWindow() : nullptr;
+    const bool mainWindowShown = mainWindow
+            && mainWindow->visibility() != QWindow::Hidden
+            && mainWindow->visibility() != QWindow::Minimized;
+    if( mainWindowShown
+        && isSignalConnected( QMetaMethod::fromSignal( &DialogsProvider::showOpenNetworkStreamDialog ) ) )
+        emit showOpenNetworkStreamDialog();
+    else
+        openDialog( OpenDialog::OPEN_NETWORK_TAB );
+}
+
+void DialogsProvider::openNetworkStreams( const QString& links, const QString& playlistName )
+{
+    /* one link per line; like Open URL, a link without a scheme is a local path */
+    QStringList mrls;
+    const QStringList lines = links.split( QLatin1Char( '\n' ), Qt::SkipEmptyParts );
+    for( const QString& line : lines )
+    {
+        const QString link = line.trimmed();
+        if( link.isEmpty() )
+            continue;
+
+        char *uri = link.contains( QLatin1String( "://" ) )
+                  ? vlc_uri_fixup( qtu( link ) )
+                  : vlc_path2uri( qtu( link ), NULL );
+        if( uri == NULL )
+        {
+            msg_Warn( p_intf, "invalid network link: %s", qtu( link ) );
+            continue;
+        }
+        mrls << qfu( uri );
+        free( uri );
+    }
+
+    if( mrls.isEmpty() )
+        return;
+
+    const QString name = playlistName.trimmed();
+    MainCtx *mainCtx = p_intf->p_mi;
+    if( name.isEmpty() || !mainCtx || !mainCtx->hasMediaLibrary() )
+    {
+        QVector<vlc::playlist::Media> medias;
+        for( const QString& mrl : mrls )
+            medias.push_back( vlc::playlist::Media{ mrl, QString {} } );
+        THEMPL->append( medias, true );
+        return;
+    }
+
+    /* with a name, the links are saved as a media library playlist (video 13:17-13:20) */
+    struct Ctx {
+        bool saved = false;
+        qsizetype added = 0;
+    };
+
+    mainCtx->getMediaLibrary()->runOnMLThread<Ctx>( this,
+    //ML thread
+    [name, mrls]( vlc_medialibrary_t* ml, Ctx& ctx )
+    {
+        std::vector<int64_t> mediaIds;
+        mediaIds.reserve( mrls.size() );
+        for( const QString& mrl : mrls )
+        {
+            vlc_ml_media_t *media = vlc_ml_get_media_by_mrl( ml, qtu( mrl ) );
+            if( media == NULL )
+                media = vlc_ml_new_stream( ml, qtu( mrl ) );
+            if( media == NULL )
+                continue;
+            mediaIds.push_back( media->i_id );
+            vlc_ml_media_release( media );
+        }
+        if( mediaIds.empty() )
+            return;
+
+        vlc_ml_playlist_t *playlist = vlc_ml_playlist_create( ml, qtu( name ) );
+        if( playlist == NULL )
+            return;
+        ctx.saved = vlc_ml_playlist_append( ml, playlist->i_id, mediaIds.data(),
+                                            mediaIds.size() ) == VLC_SUCCESS;
+        if( ctx.saved )
+            ctx.added = static_cast<qsizetype>( mediaIds.size() );
+        vlc_ml_playlist_release( playlist );
+    },
+    //UI thread
+    [this, name, total = mrls.size()]( quint64, const Ctx& ctx )
+    {
+        if( !ctx.saved )
+        {
+            msg_Err( p_intf, "could not save the network playlist \"%s\"", qtu( name ) );
+            messageDialog( qtr( "The playlist \"%1\" could not be saved." ).arg( name ),
+                           qtr( "Open Network Stream" ), QMessageBox::Ok, QMessageBox::Ok,
+                           QMessageBox::Warning );
+        }
+        else if( ctx.added < total )
+        {
+            msg_Warn( p_intf, "%lld of %lld links not added to \"%s\"",
+                      static_cast<long long>( total - ctx.added ),
+                      static_cast<long long>( total ), qtu( name ) );
+            messageDialog( qtr( "%1 of %2 links could not be added to the playlist \"%3\"." )
+                               .arg( total - ctx.added ).arg( total ).arg( name ),
+                           qtr( "Open Network Stream" ), QMessageBox::Ok, QMessageBox::Ok,
+                           QMessageBox::Warning );
+        }
+    } );
 }
 void DialogsProvider::openCaptureDialog()
 {

@@ -18,7 +18,8 @@
 
 // Redesign text button (Figma "Frame 140/141", 100x32, radius 6, Inter 600 14):
 // - Standard: BG/A3 + FG/A2 (Cancel, Back, Browse)
-// - Save: BG/Accent Bright + Accent/Main (dialog Save, Test); disabled at 50% opacity
+// - Save: BG/Accent Bright + Accent/Main (dialog Save, Test); disabled is gray (BG/A1 + FG/A2)
+//   at 50% opacity, as the Figma "Open network stream" export and the video (13:10) show it
 // - Primary: Accent/Main + FG/B1 (Next, Finish, Continue Watching)
 // - Bar: full-width BG/B2 + FG/A3, regular weight (Show Preferences, Open Advanced Settings)
 import QtQuick
@@ -54,7 +55,7 @@ T.Button {
 
     readonly property color _bg: {
         switch (style) {
-        case RdButton.Style.Save: return rdPalette.rdBgAccentBright
+        case RdButton.Style.Save: return enabled ? rdPalette.rdBgAccentBright : rdPalette.rdBgA1
         case RdButton.Style.Primary: return hovered ? rdPalette.rdAccentBright : rdPalette.rdAccentMain
         case RdButton.Style.Bar: return hovered ? rdPalette.rdBgA4 : rdPalette.rdBgB2
         default: return hovered ? rdPalette.rdBgA1 : rdPalette.rdBgA3
@@ -62,7 +63,7 @@ T.Button {
     }
     readonly property color _fg: {
         switch (style) {
-        case RdButton.Style.Save: return rdPalette.rdAccentMain
+        case RdButton.Style.Save: return enabled ? rdPalette.rdAccentMain : rdPalette.rdFgA2
         case RdButton.Style.Primary: return rdPalette.rdFgB1
         case RdButton.Style.Bar: return hovered ? rdPalette.rdFgA2 : rdPalette.rdFgA3
         default: return rdPalette.rdFgA2
