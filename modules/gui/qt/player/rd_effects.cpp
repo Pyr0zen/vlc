@@ -170,6 +170,12 @@ void RdEffects::bump()
     m_saveTimer.start();
 }
 
+void RdEffects::refresh()
+{
+    ++m_revision;
+    emit changed();
+}
+
 QVariant RdEffects::option(const QString& name) const
 {
     return readConfig(qtu(name));
@@ -241,6 +247,18 @@ QVariantMap RdEffects::optionRange(const QString& name) const
                  { QStringLiteral("max"), static_cast<double>(config->max.f) },
                  { QStringLiteral("default"), static_cast<double>(config->orig.f) } };
     }
+    return {};
+}
+
+QString RdEffects::optionDescription(const QString& name) const
+{
+    const module_config_t* config = config_FindConfig(qtu(name));
+    if (!config)
+        return {};
+    if (config->psz_longtext && *config->psz_longtext)
+        return qfut(config->psz_longtext);
+    if (config->psz_text && *config->psz_text)
+        return qfut(config->psz_text);
     return {};
 }
 

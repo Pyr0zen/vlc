@@ -300,17 +300,41 @@ const QEvent::Type DialogEvent::DialogEvent_Type =
 
 void DialogsProvider::prefsDialog()
 {
-    if (Q_LIKELY(!m_prefsDialog))
+    settingsDialog();
+}
+
+void DialogsProvider::settingsDialog( const QString& category )
+{
+    /* redesign: the main interface hosts the Settings dialog (it listens to
+     * showSettingsDialog); its window is raised first, as it may be hidden,
+     * minimized or behind the video window. Without it, VLC's preferences
+     * toggle as before. */
+    MainCtx* const mainCtx = p_intf->p_mi;
+    if( mainCtx && mainCtx->intfMainWindow()
+     && isSignalConnected( QMetaMethod::fromSignal( &DialogsProvider::showSettingsDialog ) ) )
     {
-        m_prefsDialog = new PrefsDialog( nullptr, p_intf );
-        m_prefsDialog->setAttribute(Qt::WA_DeleteOnClose);
-        m_prefsDialog->installEventFilter(this);
-        m_prefsDialog->open();
+        mainCtx->emitRaise();
+        emit showSettingsDialog( category );
     }
-    else
-    {
+    else if( m_prefsDialog )
         m_prefsDialog->reject();
+    else
+        legacyPrefsDialog();
+}
+
+void DialogsProvider::legacyPrefsDialog()
+{
+    if( m_prefsDialog )
+    {
+        m_prefsDialog->raise();
+        m_prefsDialog->activateWindow();
+        return;
     }
+
+    m_prefsDialog = new PrefsDialog( nullptr, p_intf );
+    m_prefsDialog->setAttribute(Qt::WA_DeleteOnClose);
+    m_prefsDialog->installEventFilter(this);
+    m_prefsDialog->open();
 }
 
 void DialogsProvider::firstRunDialog()

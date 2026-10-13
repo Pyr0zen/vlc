@@ -349,6 +349,30 @@ Item {
             }
         }
 
+        // redesign: the Settings dialog, over every view; while nothing listens to
+        // showSettingsDialog, DialogsProvider opens VLC's preferences instead
+        Loader {
+            id: settingsDialogLoader
+
+            anchors.fill: parent
+            active: false
+            sourceComponent: Component {
+                SettingsDialog { }
+            }
+
+            Connections {
+                target: DialogsProvider
+
+                function onShowSettingsDialog(category) {
+                    settingsDialogLoader.active = true
+                    if (settingsDialogLoader.item)
+                        settingsDialogLoader.item.toggle(category)
+                    else
+                        DialogsProvider.legacyPrefsDialog()
+                }
+            }
+        }
+
         Loader {
             active: {
                 const windowVisibility = MainCtx.intfMainWindow.visibility

@@ -1266,7 +1266,28 @@ libqml_module_dialogs_a_QML = \
 	dialogs/toolbar/qml/EditorTabButton.qml \
 	dialogs/toolbar/qml/ToolbarEditor.qml \
 	dialogs/toolbar/qml/ToolbarEditorDialog.qml \
-	dialogs/toolbar/qml/ToolbarEditorButtonList.qml
+	dialogs/toolbar/qml/ToolbarEditorButtonList.qml \
+	dialogs/redesign/settings/SettingsAdvancedBar.qml \
+	dialogs/redesign/settings/SettingsCategoryButton.qml \
+	dialogs/redesign/settings/SettingsDialog.qml \
+	dialogs/redesign/settings/SettingsPage.qml \
+	dialogs/redesign/settings/SettingsPlaceholder.qml \
+	dialogs/redesign/settings/SettingsRow.qml \
+	dialogs/redesign/settings/SettingsSearchField.qml \
+	dialogs/redesign/settings/SettingsSection.qml \
+	dialogs/redesign/settings/pages/SettingsGeneralPage.qml \
+	dialogs/redesign/settings/pages/SettingsInterfacePage.qml \
+	dialogs/redesign/settings/pages/SettingsPrivacyPage.qml \
+	dialogs/redesign/settings/pages/SettingsControlsPage.qml \
+	dialogs/redesign/settings/pages/SettingsPlaybackPage.qml \
+	dialogs/redesign/settings/pages/SettingsVideoPage.qml \
+	dialogs/redesign/settings/pages/SettingsAudioPage.qml \
+	dialogs/redesign/settings/pages/SettingsSubtitlesPage.qml \
+	dialogs/redesign/settings/pages/SettingsLibraryPage.qml \
+	dialogs/redesign/settings/pages/SettingsNetworkPage.qml \
+	dialogs/redesign/settings/pages/SettingsPerformancePage.qml \
+	dialogs/redesign/settings/pages/SettingsRecordingPage.qml \
+	dialogs/redesign/settings/pages/SettingsExtensionsPage.qml
 libqml_module_dialogs_a_Singleton_QML =
 libqml_module_dialogs_a_SOURCES = $(QML_MODULE_dialogs_SRC)
 nodist_libqml_module_dialogs_a_SOURCES = dialogs/qmlassets.cpp $(QML_MODULE_dialogs_NODIST_EXTRA)

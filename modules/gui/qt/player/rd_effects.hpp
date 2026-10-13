@@ -50,6 +50,10 @@ public:
 
     int revision() const { return m_revision; }
 
+    // makes the bindings re-read every value (after another window, e.g. VLC's preferences,
+    // changed the configuration); nothing is written
+    Q_INVOKABLE void refresh();
+
     // options of the configuration (most apply to the next file)
     Q_INVOKABLE QVariant option(const QString& name) const;
     Q_INVOKABLE void setOption(const QString& name, const QVariant& value);
@@ -57,6 +61,8 @@ public:
     Q_INVOKABLE QVariantList optionChoices(const QString& name) const;
     // the range VLC declares for a numeric option: { min, max, default }
     Q_INVOKABLE QVariantMap optionRange(const QString& name) const;
+    // VLC's explanation of an option (its long text, else its label), translated; empty if unknown
+    Q_INVOKABLE QString optionDescription(const QString& name) const;
 
     // audio filters: live on the audio output, kept in "audio-filter"
     Q_INVOKABLE bool audioFilterEnabled(const QString& module) const;
