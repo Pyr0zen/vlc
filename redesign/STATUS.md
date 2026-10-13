@@ -1,31 +1,30 @@
 # STATUS
 
-- Updated: 2026-10-13 19:06 Central Europe Daylight Time
-- Current work package: Build round menus and dialogs: run 38435859498 building; performance pass in progress
+- Updated: 2026-10-13 19:46 Central Europe Daylight Time
+- Current work package: Paused until Sunday: final build pushed, see Current phase in CLAUDE.md
 
 ## Last 10 commits
 ```
+a5f3c22804 qt: toolbar editor: resolve the Controls types again (Customize Player)
+450f6b27db Merge performance: RdEffects per-key cache, coalesced applies, background save, async resume lookup
+ab35ba4497 redesign: Decision 32: instant dialogs, menus keep the measured 120 ms fade
+ed081a02f9 qt: dialogs open and close instantly (Decision 32)
+4bd46e40c3 redesign: compile shaders locally with Qt 6.8.3 qsb before pushing
+f15f455af6 redesign: current phase for the menus and dialogs build
+889e920d76 redesign: status and current phase for the menus and dialogs build
 f8c464b632 redesign: notes for the menus and dialogs build round
 824a6f3456 qt: Keyboard Shortcuts dialog hosted over every view, opens within a frame
-4f96770867 qt: menus: second review fixes
-9a9f2e1331 qt: Settings dialog: second review fixes
-4474d467e5 qt: popups hand keys over when they start to show / hide
-4c1d88ec4c Merge W6.3: Keyboard Shortcuts dialog
-abb861faf1 Merge W6.1: redesigned Settings dialog shell
-4b63fcef2b Merge W6.4: open dialogs split and restyled, Open Network Stream dialog
-8678f8f991 qt: Settings dialog review fixes
-870bfd93ce qt: raise the main window for the Settings dialog, keep VLC's preferences open
+84fa462232 redesign: BUILD_NOTES: RdEffects cache and the resume lookup
 ```
 
 ## Latest report
 ```
-PROGRESS REPORT (2026-10-13 evening)
-- Phase and status: Step 1. Build round "menus and dialogs" pushed: run 38435859498 (commit f8c464b632) with W4.9 main menu, W4.10 right-click menu + Hide UI, W6.1 Settings dialog shell, W6.3 Keyboard Shortcuts dialog, W6.4 open dialogs, plus the sidebar Figma fixes and the icon audit. Next: test it on this PC (portable mode, test videos) with Figma side-by-sides and the regression checklist.
-- How it was built: four worktree agents coded the five packages in parallel; each branch got an independent review, fixes by its author, a merge by the coordinator and a second review after the merge. Shared fixes: one modal counter so popups get Escape/arrows/Space in the player view; popups hand keys over at the start of show/hide; one RdTextField placeholder; Keyboard Shortcuts dialog hosted over every view and preloaded.
-- Sticky's new rules (2026-10-13), in CLAUDE.md: performance first (at least as snappy as stock VLC, hard targets, PERF.md every round, regressions stop everything) and the motion check (measure animations frame by frame; the video is edited, Figma prototype timings are primary).
-- Performance pass: static audit done; three worktree agents: lazy sidebars/pages + lazy queue list (running), event-driven cursor instead of the 100 ms poll (running), RdEffects per-key cache + coalesced applies + background config save + async resume lookup (done, in independent review). These go into the next build. Measurement harness redesign/tools/perf (startup, open, CPU/RAM/GPU, Desktop Duplication motion captures, 4K dropped frames, 520-item queue) ready; the first stock-vs-redesign round waits for a quiet machine (agents load the CPU).
-- Parallel session: the web session builds Phase 5 on branch redesign-library; figma_file.json and frames_library/ (490 frames at 2 fps) are pushed for it.
-- Decisions waiting for Sticky: Open Network Stream opens with a 200 ms fade (Figma: instant; video fade looks like an edit); Hide UI 300 ms (Figma) vs the 150-200 ms cap; Light FG/1 #111111 and FG/2 #222222; pixel subtitle size / live subtitle style need core changes (Decision 27); DM Mono font for the shortcut fields (Consolas used until approved); Figma API rate-limited for about 4 days (starter plan).
-- Core changes so far: none.
-- Blocked on: nothing.
+PROGRESS REPORT (2026-10-13, paused until Sunday)
+- Verified on this PC (run 38435859498, focused test): main menu, right-click menu, Hide UI / Show UI, Settings dialog, Keyboard Shortcuts, Open Network Stream, restyled Open Disc, settings and queue sidebars, play/pause, seek, volume, mute, fullscreen, clean exit. One bug found and fixed: Customize Player (VLC's toolbar editor) did not load (upstream missing Controls import). Not yet done for this round: Figma/video side-by-sides.
+- Merged but not tested yet (final build pushed this evening, newest run on redesign): instant dialogs (Decision 32), RdEffects performance branch (per-key cache, one apply per frame, background config save, async resume lookup) with two review fixes, popup key handover fixes, Keyboard Shortcuts hosted over every view and preloaded, toolbar editor fix.
+- Unmerged, for Sunday: event-driven cursor branch (review not clean: would break the right-click menu, hover over the video not tracked; known fixes, needs a PC test); lazy panels + lazy queue branch (finished, review stopped at the wrap-up). Phase 5 branch redesign-library (web session, draft PR #1) not merged or built.
+- For Sticky: launcher "Test VLC Redesign.bat" on the Desktop (downloads and starts the newest successful build in portable mode), guide redesign/TESTING.md, bug report template on GitHub Issues (now enabled). A Windows firewall prompt may appear for the test vlc.exe: Cancel is fine.
+- Sunday order: (1) open GitHub issues labeled bug: fix and close; (2) test the final build incl. side-by-sides; (3) first performance round (stock vs redesign) into PERF.md; (4) review, merge, build and test redesign-library (shared-file changes from its LIBRARY_NOTES.md section 5); (5) the two unmerged performance branches; (6) continue Step 1 (W6.2, W8.1a, W8.3, W8.4).
+- Decisions waiting for Sticky: Hide UI 300 ms (Figma) vs the 150-200 ms cap; Light FG/1 #111111 and FG/2 #222222; pixel subtitle size / live subtitle style need core changes; DM Mono font for the shortcut fields.
+- Core changes so far: none. Blocked on: nothing.
 ```
