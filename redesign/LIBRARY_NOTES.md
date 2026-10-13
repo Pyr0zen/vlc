@@ -130,6 +130,7 @@ QML:
 Follow-up (Tony, 2026-10-13), both built:
 - A folder with hundreds of subfolders loads its rows lazily: subfolders and media are one paged list (`RdConcatModel`), the header Repeater is gone.
 - A folder added to Music shows on the Music page even when it is inside a Videos folder (and the same the other way round).
+- Their independent review found 4 issues, all fixed: a folder level on an unplugged drive counted rows it never loaded (endless reloads); a folder just added now opens in the category it was added to; Home and the library store now agree on a folder's category when it is in both lists (music wins a tie); a Music folder inside a Videos folder that is also in Music shows once, not twice.
 
 Not changed, with reasons:
 - Auto-switch to the player when a video starts: VLC's own MainDisplay does exactly this (`onHasVideoOutputChanged`), so it stays.
