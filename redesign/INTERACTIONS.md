@@ -49,3 +49,9 @@ The seek bar has several looks that can combine: thick bar (default), chapter se
 
 ## 9. Fonts and text
 - Inter everywhere (`VLCStyle.rd_fontFamily`), bundled with the app. Long file names elide.
+
+## 10. Menus (W4.9, W4.10)
+- The main "..." menu and the right-click menu are QML (`menus/qml/RdCascadeMenu.qml`) drawing VLC's own QMenus through `RdMenuModel` (`menus/rd_menu_model.cpp`). New entries go into the C++ builders so they keep VLC's actions; entries that need QML (Hide UI, Show Queue, Keyboard Shortcuts, Customize Player) are emitted as `requested(id)` and handled in `RdMainMenu.qml` / `RdPlayerMenu.qml`.
+- Later packages hook in there: W6.3 points "keyboardShortcuts" at its dialog, W8.1 points "customizePlayer" at the Customize Player screen, W8.2 adds the "Profile (name)" submenu after the divider below Open Recent, W6.1 changes what Settings (prefsDialog) opens. The library top bar (Phase 5) should use `Menus.RdMainMenu` too.
+- An open menu keeps the bars visible (lock) and releases them when it closes. While the player is shown, `DialogsProvider.rdPopupMenu` routes VLC's right-click and Menu key requests to the QML menu.
+- Hide UI state lives in `RdPanels.uiHidden`; any new bar or panel must hide with it.
