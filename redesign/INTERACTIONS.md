@@ -19,6 +19,7 @@ The user can switch Dark / Light / System and pick one of 9 accent colors at any
 - Fullscreen: same bars and zones; window buttons hidden; video frame (W3.7) not drawn; the fullscreen button in the top bar shows the exit icon.
 - Side panels and the compact library dock inside the inset video area (IA-28, IA-43, P5-23); the video frame, panels, toast and seek thumbnail must not overlap each other badly at small window sizes.
 - Pinned controls (VLC's existing option) keep working: bars always visible, video between them.
+- The Settings dialog is a modal panel over the whole window (hosted by MainInterface.qml, not by the player page): it does not lock the bars, so in a window they may fade while it is open; Escape closes the top-most popup first (dropdown list or info popover, then a non-empty search text, then the dialog).
 
 ## 3. Customize Player and profiles (video 19:12-19:36; W8.1, W8.2)
 - Every control bar and top bar element must be a self-contained control that works wherever the user drags it (left, center, right, top bar, bottom bar), at any order, with any neighbours. No control may assume its position or look up siblings by position.
@@ -31,6 +32,8 @@ The same option can be changed in several places: the right sidebar tabs, the Se
 - All of them read and write the same VLC option / player property and update live when it changes elsewhere (e.g. subtitle delay from the sidebar slider, from G/H hotkeys, from a preset).
 - Presets (Decision 18) apply to every tab at once; the sidebar must show the active preset's values right after it is applied.
 - Options that only apply on the next file or vout must say so (Decision 29 notice) instead of silently doing nothing.
+- The Settings dialog pages (W6.1/W6.2) read and write options through RdEffects like the sidebar, so a value changed in one shows in the other right away; a page binds to `RdEffects.revision`, never caches a value.
+- VLC's complete preferences ("All VLC Settings") write the same options; the redesigned dialog closes before they open, and reopening it re-reads every value.
 
 ## 5. Seek bar modes
 The seek bar has several looks that can combine: thick bar (default), chapter segments (IB-46), subtitle timeline (P3-16, zoomed window with asterisk times), waveform (P6-06, music and the "Show Waveform" option), hover thumbnail (Decision 6), bookmarks marks. Build the seek bar so these are layers / modes of one component, not separate copies.
