@@ -60,7 +60,6 @@
 #include "dialogs/help/help.hpp"
 
 #include <QKeyEvent>
-#include <QCursor>
 
 #include <QUrl>
 #include <QDate>
@@ -1140,13 +1139,6 @@ MainCtx::MainInterfaceMode MainCtx::getEffectiveMainInterfaceMode() const {
         return MAININTERFACE_MODE_MAINDISPLAY;
     else
         return MAININTERFACE_MODE_INVALID;
-}
-
-QPointF MainCtx::cursorPosition(const QQuickItem* item)
-{
-    if (!item)
-        return QPointF(-1, -1);
-    return item->mapFromGlobal(QCursor::pos());
 }
 
 double MainCtx::dp(const double px, const double scale)

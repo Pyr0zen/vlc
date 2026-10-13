@@ -81,46 +81,70 @@ FocusScope {
     readonly property bool _controlBarVisible: _controlsUnderVideo || _showBothBars || _mouseNearBottom
                                                || (playerToolbarVisibilityFSM.isLocked && !_mouseNearTop)
 
-    // cursor height inside the player, -1 outside. Hover and mouse move events do not reach Qt
-    // Quick while the cursor is over the native video, so the cursor is read ten times a second.
+    // cursor height inside the player, -1 outside, from mouse events (no polling): the hover
+    // handler below sees every move over the player (video, bars, panels), the video surface
+    // reports the moves over the video as in upstream VLC. Hover events reach Qt Quick while
+    // another app is active, so a window also shows its bars then.
     property real _cursorY: -1
 
-    Timer {
-        interval: 100
-        repeat: true
-        triggeredOnStart: true
-        // a window also shows its bars when the mouse moves over it while another app is active
-        running: !rootPlayer._controlsUnderVideo && rootPlayer.visible && MainCtx.hasEmbededVideo
-                 && MainCtx.intfMainWindow.visible && MainCtx.intfMainWindow.visibility !== Window.Minimized
-                 && (rootPlayer._windowed || Qt.application.state === Qt.ApplicationActive)
+    HoverHandler {
+        // only the video player hides its bars and cursor
+        enabled: MainCtx.hasEmbededVideo
 
-        // last cursor position in screen coordinates (window moves and fullscreen switches are
-        // not mouse moves); invalid until the first poll after a start
-        property point _last
-        property bool _primed: false
-
-        onTriggered: {
-            const p = MainCtx.cursorPosition(rootPlayer)
-            const inside = p.x >= 0 && p.y >= 0 && p.x <= rootPlayer.width && p.y <= rootPlayer.height
-            rootPlayer._cursorY = inside ? p.y : -1
-
-            // mouse moves over the native video do not reach the toolbar FSM either: report them
-            // (ends the keyboard "show both bars" mode and shows the auto-hidden cursor again)
-            const g = rootPlayer.mapToGlobal(p.x, p.y)
-            // (with a tolerance: the round trip through the window's scaled coordinates is not exact)
-            if (_primed && inside && (Math.abs(g.x - _last.x) > 0.5 || Math.abs(g.y - _last.y) > 0.5)) {
-                if (Player.isInteractive)
-                    interactiveAutoHideTimer.restart()
-                else
-                    playerToolbarVisibilityFSM.mouseMove()
-            }
-            _last = g
-            _primed = true
+        onPointChanged: {
+            if (hovered)
+                cursorTracker.track(point.scenePosition.x, point.scenePosition.y)
         }
-        onRunningChanged: {
-            _primed = false
-            if (!running)
+        onHoveredChanged: {
+            if (!hovered)
                 rootPlayer._cursorY = -1
+        }
+    }
+
+    QtObject {
+        id: cursorTracker
+
+        // last cursor position in scene and in screen coordinates
+        property bool valid: false
+        property real sceneX: 0
+        property real sceneY: 0
+        property real globalX: 0
+        property real globalY: 0
+
+        // Window moves, resizes and fullscreen switches move the player under a still cursor and
+        // cause hover events without a mouse move: they do not count as moves (they would end the
+        // keyboard mode and show the bars).
+        function track(x, y) {
+            const tolerance = 0.01
+            let p
+            if (valid && Math.abs(x - sceneX) < tolerance && Math.abs(y - sceneY) < tolerance) {
+                // same position in the window (Qt's hover check after the scene changed): the
+                // cursor is still where it was on the screen
+                p = rootPlayer.mapFromGlobal(globalX, globalY)
+            } else {
+                p = rootPlayer.mapFromItem(null, x, y)
+                const g = rootPlayer.mapToGlobal(p.x, p.y)
+                // the window moved under a still cursor if only the position in the window changed
+                const moved = !valid || Math.abs(g.x - globalX) >= tolerance
+                                     || Math.abs(g.y - globalY) >= tolerance
+                valid = true
+                sceneX = x
+                sceneY = y
+                globalX = g.x
+                globalY = g.y
+                // (ends the keyboard "show both bars" mode and shows the auto-hidden cursor again)
+                if (moved && inside(p)) {
+                    if (Player.isInteractive)
+                        interactiveAutoHideTimer.restart()
+                    else
+                        playerToolbarVisibilityFSM.mouseMove()
+                }
+            }
+            rootPlayer._cursorY = inside(p) ? p.y : -1
+        }
+
+        function inside(p) {
+            return p.x >= 0 && p.y >= 0 && p.x <= rootPlayer.width && p.y <= rootPlayer.height
         }
     }
 
@@ -367,8 +391,17 @@ FocusScope {
                             playerToolbarVisibilityFSM.mouseMove();
                     }
 
+                    // redesign: moves go through the player's cursor tracking, which tells mouse
+                    // moves from window moves and also gives the cursor height for the
+                    // fullscreen bar zones; the surface reports device pixels
+                    function onMouseMove(x, y) {
+                        const dpr = MainCtx.effectiveDevicePixelRatio(Window.window) || 1.0
+                        const p = videoSurface.mapToItem(null, x / dpr, y / dpr)
+                        cursorTracker.track(p.x, p.y)
+                    }
+
                     Component.onCompleted: {
-                        mouseMoved.connect(videoSurface.onMouseEvent)
+                        mouseMoved.connect(videoSurface.onMouseMove)
                         mousePressed.connect(videoSurface.onMouseEvent)
                         mouseReleased.connect(videoSurface.onMouseEvent)
                         mouseDblClicked.connect(videoSurface.onMouseEvent)
