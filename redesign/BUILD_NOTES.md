@@ -33,3 +33,12 @@ Log of every CI problem and fix (newest last). Workflow: `.github/workflows/buil
 
 ## 2026-10-13 first run of the redesign build on this PC (run 38319216444)
 - The player page did not load: `Player.qml:958:5: Canvas is not a type`. VLC's contrib Qt is built with `-DFEATURE_quick_canvas=OFF` and `-DFEATURE_quick_path=OFF` (contrib/src/qtdeclarative/rules.mak), so Canvas, Shapes and Path do not exist. VLC fell back to a bare video window. Fix: the volume cone is a fragment shader (shaders/VolumeCone.frag, built by VLC's qsb pipeline), the video frame is the thick border of a rounded Rectangle. Rule added to INTERACTIONS.md: never use Canvas, Shapes, Path, AnimatedImage, Flipable, Sprite or particles.
+
+## 2026-10-13 second on-PC test (run 38321852725) and test setup fixes
+- Test isolation: VLC on Windows ignores %APPDATA% (it asks Windows for the Roaming folder), so the first test runs wrote into the real %APPDATA%lc of Sticky's installed VLC (vlcrc, vlc-qt-interface.ini, a new ml folder). The saved "System" color scheme there made the build start in the light theme. Fix: the test helper now creates a `portable` folder next to vlc.exe (VLC's portable mode), so settings and the media library stay inside the build folder.
+- This PC runs 2560x1440 at 125% Windows scaling: screenshots are compared at design scale (ours / 1.25). Measured: play pill 67 px = 54 design px, exact.
+- The test window was covered by other windows: the helper now brings VLC to the front (attached input thread, topmost) and refuses to click or type unless VLC is the foreground window.
+- Found and fixed: time labels "00:05" instead of "00:00:05"; resume toast showed the fallback text (media library duration not known yet); top bar title hidden while the toast shows (it stays visible at 14:05); top bar cone was VLC's banner cone, not the Figma icon; tracks popup had no "None" row, showed "[English]" brackets, too little space above dividers, and was not the Figma height; QML warning "anchors on an item managed by a layout" (ControlBar inline seek row); volume button showed VLC's "Mute" tooltip over the volume tooltip, which was narrower than the Figma 121 px.
+- Sticky's feedback: bars felt clunky in a window. Decision 30: windowed = both bars always visible, video between them; fullscreen = per-edge show with a smooth fade.
+- To recheck on the next build: VLC once ignored the first close request (second one closed it); a second instance started while the first held the media library came up without the library.
+
