@@ -22,7 +22,6 @@
 
 #include "rdlibrarymodel.hpp"
 
-#include <QCollator>
 #include <QUrl>
 
 #include <algorithm>
@@ -280,15 +279,6 @@ void RdLibraryModel::setMl(MediaLib* ml)
     scheduleReload();
 }
 
-void RdLibraryModel::setSortKey(const QString& key)
-{
-    if (m_sortKey == key)
-        return;
-    m_sortKey = key;
-    emit sortKeyChanged();
-    rebuild();
-}
-
 void RdLibraryModel::setSearchPattern(const QString& pattern)
 {
     if (m_searchPattern == pattern)
@@ -296,39 +286,6 @@ void RdLibraryModel::setSearchPattern(const QString& pattern)
     m_searchPattern = pattern;
     emit searchPatternChanged();
     rebuild();
-}
-
-int RdLibraryModel::mediaCount() const
-{
-    return static_cast<int>(std::count_if(m_items.cbegin(), m_items.cend(), [](const RdLibraryItem& item) {
-        return item.kind == RdLibraryItem::Media || item.kind == RdLibraryItem::Stream;
-    }));
-}
-
-QVariantMap RdLibraryModel::get(int row) const
-{
-    QVariantMap map;
-    if (row < 0 || row >= count())
-        return map;
-
-    const QModelIndex idx = index(row);
-    const QHash<int, QByteArray> roles = roleNames();
-    for (auto it = roles.cbegin(); it != roles.cend(); ++it)
-        map.insert(QString::fromLatin1(it.value()), data(idx, it.key()));
-    map.insert(QStringLiteral("index"), row);
-    return map;
-}
-
-QVariantList RdLibraryModel::mediaIdsFrom(int row) const
-{
-    QVariantList ids;
-    for (int i = std::max(row, 0); i < count(); ++i)
-    {
-        const RdLibraryItem& item = m_items[static_cast<size_t>(i)];
-        if (item.kind == RdLibraryItem::Media || item.kind == RdLibraryItem::Stream)
-            ids.append(QVariant::fromValue(item.id));
-    }
-    return ids;
 }
 
 bool RdLibraryModel::isRelevantEvent(int eventType) const
@@ -415,8 +372,6 @@ void RdLibraryModel::rebuild()
             || item.subtitle.contains(m_searchPattern, Qt::CaseInsensitive))
             items.push_back(item);
     }
-    sortItems(items);
-
     // same rows in the same order: refresh them in place, so views keep their scroll position
     const bool sameRows = items.size() == m_items.size()
                           && std::equal(items.cbegin(), items.cend(), m_items.cbegin(),
@@ -435,66 +390,6 @@ void RdLibraryModel::rebuild()
     m_items = std::move(items);
     endResetModel();
     emit countChanged();
-}
-
-void RdLibraryModel::sortItems(RdLibraryItemList& items) const
-{
-    if (m_sortKey.isEmpty())
-        return;
-
-    QCollator collator;
-    collator.setNumericMode(true);
-    collator.setCaseSensitivity(Qt::CaseInsensitive);
-
-    const QString key = m_sortKey;
-    const bool descending = key.endsWith(QLatin1String("Desc"));
-
-    auto byTitle = [&collator](const RdLibraryItem& a, const RdLibraryItem& b) {
-        return collator.compare(a.title, b.title) < 0;
-    };
-
-    // containers (folders, albums ...) always come first, sorted by title
-    auto isContainer = [](const RdLibraryItem& item) {
-        return item.kind != RdLibraryItem::Media && item.kind != RdLibraryItem::Stream;
-    };
-
-    std::stable_sort(items.begin(), items.end(), [&](const RdLibraryItem& a, const RdLibraryItem& b) {
-        if (isContainer(a) != isContainer(b))
-            return isContainer(a);
-        if (isContainer(a))
-            return descending && key.startsWith(QLatin1String("title")) ? byTitle(b, a) : byTitle(a, b);
-
-        if (key == QLatin1String("unwatched") || key == QLatin1String("watched"))
-        {
-            if (a.watched != b.watched)
-                return key == QLatin1String("unwatched") ? !a.watched : a.watched;
-            return byTitle(a, b);
-        }
-        if (key == QLatin1String("newest") || key == QLatin1String("oldest"))
-        {
-            if (a.modified != b.modified)
-                return key == QLatin1String("newest") ? a.modified > b.modified : a.modified < b.modified;
-            return byTitle(a, b);
-        }
-
-        int cmp = 0;
-        if (key.startsWith(QLatin1String("title")))
-            cmp = collator.compare(a.title, b.title);
-        else if (key.startsWith(QLatin1String("artist")))
-            cmp = collator.compare(a.artist, b.artist);
-        else if (key.startsWith(QLatin1String("album")))
-            cmp = collator.compare(a.album, b.album);
-        else if (key.startsWith(QLatin1String("track")))
-            cmp = a.trackNumber - b.trackNumber;
-        else if (key.startsWith(QLatin1String("disc")))
-            cmp = (a.discNumber != b.discNumber) ? a.discNumber - b.discNumber : a.trackNumber - b.trackNumber;
-        else if (key.startsWith(QLatin1String("uri")))
-            cmp = collator.compare(a.mrl, b.mrl);
-
-        if (cmp == 0)
-            return byTitle(a, b);
-        return descending ? cmp > 0 : cmp < 0;
-    });
 }
 
 void RdLibraryModel::requestThumbnails()

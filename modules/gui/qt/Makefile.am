@@ -240,8 +240,8 @@ libqt_plugin_la_SOURCES = \
 	medialibrary/mlvideofoldersmodel.hpp \
 	medialibrary/rdlibrarymodel.cpp \
 	medialibrary/rdlibrarymodel.hpp \
-	medialibrary/rdfoldermodel.cpp \
-	medialibrary/rdfoldermodel.hpp \
+	medialibrary/rdsubfoldermodel.cpp \
+	medialibrary/rdsubfoldermodel.hpp \
 	medialibrary/rdcollectionmodel.cpp \
 	medialibrary/rdcollectionmodel.hpp \
 	medialibrary/rdlibrarystore.cpp \
@@ -486,7 +486,7 @@ nodist_libqt_plugin_la_SOURCES = \
 	medialibrary/mlplaylistmodel.moc.cpp \
 	medialibrary/mlvideofoldersmodel.moc.cpp \
 	medialibrary/rdlibrarymodel.moc.cpp \
-	medialibrary/rdfoldermodel.moc.cpp \
+	medialibrary/rdsubfoldermodel.moc.cpp \
 	medialibrary/rdcollectionmodel.moc.cpp \
 	medialibrary/rdlibrarystore.moc.cpp \
 	medialibrary/mlvideogroupsmodel.moc.cpp \

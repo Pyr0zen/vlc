@@ -85,6 +85,8 @@ vlc_ml_sorting_criteria_t MLAudioModel::nameToCriteria(QByteArray name) const
         {QByteArrayLiteral("main_artist"), VLC_ML_SORTING_ARTIST},
         {QByteArrayLiteral("duration"), VLC_ML_SORTING_DURATION},
         {QByteArrayLiteral("insertion"), VLC_ML_SORTING_INSERTIONDATE},
+        // redesign: library sort "URI Ascending / Descending" (Figma "Sorting Options")
+        {QByteArrayLiteral("filename"), VLC_ML_SORTING_FILENAME},
     }.value(name, VLC_ML_SORTING_DEFAULT);
 }
 
@@ -138,6 +140,9 @@ size_t MLAudioModel::Loader::count(vlc_medialibrary_t* ml, const vlc_ml_query_pa
 {
     if ( m_parent.id <= 0 )
         return vlc_ml_count_audio_media(ml, queryParams);
+    // redesign: a folder of the Music category lists its songs only
+    if ( m_parent.type == VLC_ML_PARENT_FOLDER )
+        return vlc_ml_count_audio_of(ml, queryParams, m_parent.type, m_parent.id );
     return vlc_ml_count_media_of(ml, queryParams, m_parent.type, m_parent.id );
 }
 
@@ -148,6 +153,8 @@ MLAudioModel::Loader::load(vlc_medialibrary_t* ml, const vlc_ml_query_params_t* 
 
     if ( m_parent.id <= 0 )
         media_list.reset( vlc_ml_list_audio_media(ml, queryParams) );
+    else if ( m_parent.type == VLC_ML_PARENT_FOLDER )
+        media_list.reset( vlc_ml_list_audio_of(ml, queryParams, m_parent.type, m_parent.id ) );
     else
         media_list.reset( vlc_ml_list_media_of(ml, queryParams, m_parent.type, m_parent.id ) );
     if ( media_list == nullptr )

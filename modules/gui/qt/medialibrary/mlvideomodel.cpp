@@ -104,6 +104,8 @@ vlc_ml_sorting_criteria_t MLVideoModel::nameToCriteria(QByteArray name) const
         {QByteArrayLiteral("duration"), VLC_ML_SORTING_DURATION},
         {QByteArrayLiteral("playcount"), VLC_ML_SORTING_PLAYCOUNT},
         {QByteArrayLiteral("insertion"), VLC_ML_SORTING_INSERTIONDATE},
+        // redesign: library sort "URI Ascending / Descending" (Figma "Sorting Options")
+        {QByteArrayLiteral("filename"), VLC_ML_SORTING_FILENAME},
     }.value(name, VLC_ML_SORTING_DEFAULT);
 }
 
