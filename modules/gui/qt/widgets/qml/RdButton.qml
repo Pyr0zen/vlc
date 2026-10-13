@@ -18,7 +18,8 @@
 
 // Redesign text button (Figma "Frame 140/141", 100x32, radius 6, Inter 600 14):
 // - Standard: BG/A3 + FG/A2 (Cancel, Back, Browse)
-// - Save: BG/Accent Bright + Accent/Main (dialog Save, Test); disabled at 50% opacity
+// - Save: BG/Accent Bright + Accent/Main (dialog Save, Test); disabled: 50% opacity with the
+//   Figma "luminosity" blend, i.e. the same colors turned gray
 // - Primary: Accent/Main + FG/B1 (Next, Finish, Continue Watching)
 // - Bar: full-width BG/B2 + FG/A3, regular weight (Show Preferences, Open Advanced Settings)
 import QtQuick
@@ -52,9 +53,15 @@ T.Button {
 
     opacity: (!enabled && style === RdButton.Style.Save) ? 0.5 : 1.0
 
+    // gray of the same luminance (Figma blend mode "luminosity" of the disabled Save button)
+    function _luminosity(c: color) : color {
+        const l = 0.3 * c.r + 0.59 * c.g + 0.11 * c.b
+        return Qt.rgba(l, l, l, c.a)
+    }
+
     readonly property color _bg: {
         switch (style) {
-        case RdButton.Style.Save: return rdPalette.rdBgAccentBright
+        case RdButton.Style.Save: return enabled ? rdPalette.rdBgAccentBright : _luminosity(rdPalette.rdBgAccentBright)
         case RdButton.Style.Primary: return hovered ? rdPalette.rdAccentBright : rdPalette.rdAccentMain
         case RdButton.Style.Bar: return hovered ? rdPalette.rdBgA4 : rdPalette.rdBgB2
         default: return hovered ? rdPalette.rdBgA1 : rdPalette.rdBgA3
@@ -62,7 +69,7 @@ T.Button {
     }
     readonly property color _fg: {
         switch (style) {
-        case RdButton.Style.Save: return rdPalette.rdAccentMain
+        case RdButton.Style.Save: return enabled ? rdPalette.rdAccentMain : _luminosity(rdPalette.rdAccentMain)
         case RdButton.Style.Primary: return rdPalette.rdFgB1
         case RdButton.Style.Bar: return hovered ? rdPalette.rdFgA2 : rdPalette.rdFgA3
         default: return rdPalette.rdFgA2
