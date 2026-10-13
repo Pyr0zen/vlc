@@ -548,6 +548,11 @@ void DialogsProvider::epgDialog()
     toggleDialogVisible(m_egpDialog);
 }
 
+void DialogsProvider::keyboardShortcutsDialog()
+{
+    emit showKeyboardShortcutsDialog();
+}
+
 void DialogsProvider::setPopupMenu()
 {
     popupMenu.reset(VLCMenuBar::PopupMenu( p_intf, true ));

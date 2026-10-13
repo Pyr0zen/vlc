@@ -233,6 +233,8 @@ public slots:
     void podcastConfigureDialog();
     void pluginDialog();
     void epgDialog();
+    // redesign: the Keyboard Shortcuts dialog (video 15:57-16:03), shown by Dialogs.qml
+    void keyboardShortcutsDialog();
     void setPopupMenu();
     void destroyPopupMenu();
 
@@ -288,6 +290,7 @@ public:
 signals:
     void releaseMouseEvents();
     void showToolbarEditorDialog();
+    void showKeyboardShortcutsDialog();
 
     //visiblity signal
     void openDialogVisibleChanged();
