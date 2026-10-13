@@ -58,8 +58,11 @@ FocusScope {
 
     Connections {
         target: Player
+        // only the "cleared" emissions (media change, stop) reset the length: the positive
+        // answer can come from the media library thread after lengthChanged
         function onPlaybackRestoreQueried() {
-            resumePanel._lengthKnown = false
+            if (!Player.canRestorePlayback)
+                resumePanel._lengthKnown = false
         }
         function onLengthChanged() {
             resumePanel._lengthKnown = Player.length.valid()

@@ -33,8 +33,8 @@ import VLC.Dialogs
 SettingsPage {
     id: root
 
-    // reading "revision" makes the bindings follow every change made through RdEffects
-    readonly property bool _autodetect: (RdEffects.revision, RdEffects.option("sub-autodetect-file") === true)
+    // a binding reading RdEffects.values[key] follows only that value
+    readonly property bool _autodetect: RdEffects.values[RdEffects.optionKey("sub-autodetect-file")] === true
 
     SettingsSection {
         title: qsTr("Loading Subtitles")
@@ -61,7 +61,7 @@ SettingsPage {
 
             Widgets.RdDropdown {
                 // sub-autodetect-fuzzy: 0 to 4, in the video's words (17:03-17:33)
-                readonly property int fuzziness: (RdEffects.revision, Number(RdEffects.option("sub-autodetect-fuzzy")))
+                readonly property int fuzziness: Number(RdEffects.values[RdEffects.optionKey("sub-autodetect-fuzzy")])
 
                 implicitWidth: VLCStyle.dp(320)
                 implicitHeight: VLCStyle.dp(36)
@@ -87,7 +87,7 @@ SettingsPage {
                 available: root._autodetect
 
                 Widgets.RdTextField {
-                    readonly property string paths: (RdEffects.revision, String(RdEffects.option("sub-autodetect-path")))
+                    readonly property string paths: String(RdEffects.values[RdEffects.optionKey("sub-autodetect-path")])
 
                     implicitWidth: VLCStyle.dp(320)
                     implicitHeight: VLCStyle.dp(36)
