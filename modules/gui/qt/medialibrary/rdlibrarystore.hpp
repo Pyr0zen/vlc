@@ -82,8 +82,9 @@ public:
     Q_INVOKABLE void removeFolder(const QString& category, const QString& mrl);
     Q_INVOKABLE void reloadFolder(const QString& mrl);
     // the library location of a folder or a file: callback({ category, crumbs: [{ id, title }] }),
-    // or callback(null) when it is not inside a library folder
-    Q_INVOKABLE void resolveFolder(const QString& mrl, QJSValue callback);
+    // or callback(null) when it is not inside a library folder. `category` ("video" or "music")
+    // is preferred when the folder is shown in both (a folder just added to it)
+    Q_INVOKABLE void resolveFolder(const QString& mrl, QJSValue callback, const QString& category = {});
 
     // pins of the library rail; `location` is the library page to open
     Q_INVOKABLE void addPin(const QString& kind, const QString& title, const QString& image,
