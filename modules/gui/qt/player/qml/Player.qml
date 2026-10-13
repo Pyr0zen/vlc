@@ -91,7 +91,7 @@ FocusScope {
         triggeredOnStart: true
         // a window also shows its bars when the mouse moves over it while another app is active
         running: !rootPlayer._controlsUnderVideo && rootPlayer.visible && MainCtx.hasEmbededVideo
-                 && MainCtx.intfMainWindow.visibility !== Window.Minimized
+                 && MainCtx.intfMainWindow.visible && MainCtx.intfMainWindow.visibility !== Window.Minimized
                  && (rootPlayer._windowed || Qt.application.state === Qt.ApplicationActive)
 
         // last cursor position in screen coordinates (window moves and fullscreen switches are
@@ -107,7 +107,8 @@ FocusScope {
             // mouse moves over the native video do not reach the toolbar FSM either: report them
             // (ends the keyboard "show both bars" mode and shows the auto-hidden cursor again)
             const g = rootPlayer.mapToGlobal(p.x, p.y)
-            if (_primed && inside && (g.x !== _last.x || g.y !== _last.y)) {
+            // (with a tolerance: the round trip through the window's scaled coordinates is not exact)
+            if (_primed && inside && (Math.abs(g.x - _last.x) > 0.5 || Math.abs(g.y - _last.y) > 0.5)) {
                 if (Player.isInteractive)
                     interactiveAutoHideTimer.restart()
                 else
@@ -163,9 +164,14 @@ FocusScope {
     on_ControlsUnderVideoChanged: {
         if (_controlsUnderVideo && !playerToolbarVisibilityFSM.isVisible)
             playerToolbarVisibilityFSM.askShow()
-        // the hide timeout was blocked while pinned: start it again
-        else if (!_controlsUnderVideo && playerToolbarVisibilityFSM.isVisible && !Player.isInteractive)
-            playerToolbarVisibilityFSM.mouseMove()
+        // the hide timeout was blocked while pinned: start it again, keeping the keyboard mode
+        // (pressing F while pinned keeps both bars up as long as after any key)
+        else if (!_controlsUnderVideo && playerToolbarVisibilityFSM.isVisible && !Player.isInteractive) {
+            if (playerToolbarVisibilityFSM.keyboardShown)
+                playerToolbarVisibilityFSM.keyboardMove()
+            else
+                playerToolbarVisibilityFSM.mouseMove()
+        }
     }
 
     // Functions
@@ -1125,8 +1131,7 @@ FocusScope {
 
             tintColor: Qt.alpha(VLCStyle.palette.rdBgA3Transparent, 1.0)
 
-            visible: rootPlayer._controlsUnderVideo || rootPlayer._windowed
-                     || (MainCtx.hasEmbededVideo && !rootPlayer.displayFadeRectangles)
+            visible: rootPlayer._windowed || !MainCtx.hasEmbededVideo || !rootPlayer.displayFadeRectangles
         }
     }
 
