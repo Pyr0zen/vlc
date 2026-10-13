@@ -126,14 +126,14 @@ T.Slider {
         }
     }
 
-    // thumb 8x24, radius 4; the video shows it in the accent color (Figma: Accent/DIm)
+    // Figma "thumb": 8x24, radius 4, Accent/DIm (accent while hovered or pressed)
     handle: Rectangle {
         x: control.leftPadding + control._inset + control.visualPosition * (control.availableWidth - 2 * control._inset - width)
         y: 0
         width: VLCStyle.dp(8)
         height: VLCStyle.dp(24)
         radius: VLCStyle.rd_radius_small
-        color: (control.pressed || control.hovered || control.visualFocus) ? control.rdPalette.rdAccentBright
-                                                                           : control.rdPalette.rdAccentMain
+        color: (control.pressed || control.hovered || control.visualFocus) ? control.rdPalette.rdAccentMain
+                                                                           : control.rdPalette.rdAccentDim
     }
 }

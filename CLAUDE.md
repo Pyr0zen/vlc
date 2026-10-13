@@ -24,10 +24,12 @@
 - `redesign/BUILD_PLAN.md` architecture map, work packages (Step 1 UI only, then Step 2 new features), Phase 1 workflow, test loop, risks.
 - `redesign/RESIDUAL_AUDIT.md` every element of VLC's current interface marked KEEP / MOVE / NOT IN VIDEO. Remove nothing until Tony decides.
 - `redesign/STATUS.md` latest status (see Status file rule).
-- `figma/` 105 PNG exports from her Figma file (68 screen frames, 35 component sets, 2 labels). Source of truth for how things LOOK.
+- `figma/` 105 PNG exports from her Figma file (68 screen frames, 35 component sets, 2 labels). Source of truth for how things LOOK (the final UIs).
 - `figma/styles.txt` exact color and effect values. Always use these, never sample colors from PNGs.
 
-The video is the primary source for everything. Tony wants the real app to look and work exactly like what she shows. Watch it carefully, not loosely.
+The video is the primary source for what to build and how it works. Tony wants the real app to look and work exactly like what she shows. Watch it carefully, not loosely.
+
+Figma holds every FINAL UI (Tony, 2026-10-13): the final look of every screen, component and state is in the Figma file; the video shows iterations on the way there (old VLC, rejected ideas, intermediate versions), so never copy a look from a video frame when Figma has it. The video plus its transcript is the key to understanding functionality, behavior and how features relate to each other: she explains all of it there. Tony's numbered decisions below still win over both (e.g. Decision 11: the video's wording).
 
 First task in this project, before Phase 1 code: a full careful watch-through.
 - Extract frames from the WHOLE video at 1 frame per second into `redesign/reference/frames_work/full/` and go through all of them alongside the full transcript, start to finish.
@@ -58,8 +60,8 @@ READY TO BUILD. Next session: read CLAUDE.md, VIDEO_INDEX.md, FIGMA_FLOWS.md and
 - **Plan:** `redesign/BUILD_PLAN.md` holds the architecture map, the work packages (W1.1 to W9.1) in dependency order with parallel lanes, the Phase 1 workflow, the test loop and the risks. Follow it; record deviations under "Decisions (Claude)" in VIDEO_INDEX.md.
 - **Continuity rule:** keep VIDEO_INDEX.md Status (`todo` / `in progress` / `done (<commit>)` / `blocked (<reason>)`) and the "Current phase" section above updated after every item, so any new session can resume from the files alone.
 - **Stop rule:** only stop if truly blocked or something only Tony can do is needed (login, payment, an API key like OpenSubtitles). Otherwise keep going to the next work package. Publishing a public GitHub Release (W9.1) needs Tony's go first.
-- **Decisions:** Tony's decisions below are final. Anything not covered: her final version in the video wins, the Figma prototype fills what the video does not show. Every extra decision goes under "Decisions (Claude)" in VIDEO_INDEX.md, one line each.
-- **Verification:** screenshot every state of every built element and compare with the video frames at the matching timestamps and the Figma PNGs before marking it done (BUILD_PLAN.md section 5). The video is the main guide: look at its frames BEFORE building each element, and always crop and zoom into the detail (icons, edges, spacing, text) instead of judging full frames. Always read the transcript lines at the same timestamps with the frames: many frames show how something USED to look (old VLC, rejected options, intermediate states) before she redesigns it later; only her final version is built. For every element, after each build, take screenshots of our build and make side-by-side images of our crop next to BOTH the matching Figma frame (figma/ PNGs or a crop of the component in Controls.png) and the matching video frame (her final version), same scale, zoomed in; only mark it done when they match; list remaining differences (where Figma and the video disagree, the video wins).
+- **Decisions:** Tony's decisions below are final. Anything not covered: the look comes from the final UIs in the Figma file, the functionality and relations from the video and its transcript; where the video shows something Figma does not have, build it from the video in the Figma style (Decision 21). Every extra decision goes under "Decisions (Claude)" in VIDEO_INDEX.md, one line each.
+- **Verification:** screenshot every state of every built element and compare with the video frames at the matching timestamps and the Figma PNGs before marking it done (BUILD_PLAN.md section 5). The video is the main guide: look at its frames BEFORE building each element, and always crop and zoom into the detail (icons, edges, spacing, text) instead of judging full frames. Always read the transcript lines at the same timestamps with the frames: many frames show how something USED to look (old VLC, rejected options, intermediate states) before she redesigns it later; only her final version is built. For every element, after each build, take screenshots of our build and make side-by-side images of our crop next to BOTH the matching Figma frame (figma/ PNGs or a crop of the component in Controls.png) and the matching video frame (her final version), same scale, zoomed in; only mark it done when they match; list remaining differences (for the look, the Figma final UI wins over a video frame, which may be an iteration; for behavior, the video and transcript).
 - **Build rounds (Tony, 2026-10-13):** bundle 5 work packages per build: code them, run the independent review on all of them, then push once and do one full test round covering all of them. Do not push after every small fix. Only exception: any change to VLC's core (anything outside modules/gui/qt) goes in its own build, never mixed with other changes. If a build breaks at runtime, look for the cause in the riskiest change of the batch first (shared files such as Player.qml, the palette, MainCtx). Doc-only pushes stay as they are (they do not trigger a build).
 - **Clean stop:** when Tony writes "stopping for today": finish the edit in progress, commit everything, push so a build runs while he is away, update and push STATUS.md with exactly where you are and what is next, then stop. When he writes "Read CLAUDE.md and continue": first test the build that ran while he was away, then continue.
 - **Status file (permanent):** keep `redesign/STATUS.md` updated and push it after every finished work package, every phase, and whenever you stop or get blocked. It holds, at the top, the date and time, the current work package and the last 10 commits (hash + message), then the latest PROGRESS REPORT. Overwrite it each time.
@@ -77,7 +79,7 @@ READY TO BUILD. Next session: read CLAUDE.md, VIDEO_INDEX.md, FIGMA_FLOWS.md and
 - **Bug log:** log every bug found and fixed in `redesign/BUILD_NOTES.md`.
 
 ## Decisions (Tony, 2026-10-12)
-General rule for anything not listed: her final version in the video wins, the Figma prototype fills what the video does not show.
+General rule for anything not listed (updated by Tony 2026-10-13): the final UIs are in the Figma file; the video and transcript explain functionality and relations; the video's iterations are not the final look.
 1. Fullscreen button in the top bar. Picture-in-Picture skipped for now.
 2. Main "..." menu: her last version, matching Figma menu.png.
 3. Queue: tabbed sidebar with Queue / Bookmarks / Chapters, everywhere.
@@ -108,6 +110,7 @@ General rule for anything not listed: her final version in the video wins, the F
 28. Accepted limit: subtitle outline uses VLC's existing outline sizes.
 29. Postponed: reverse playback. Profiles may need a restart for some settings; show a notice when that happens.
 30. (2026-10-13) Windowed: the top bar and control bar are always visible, the video sits between them. Fullscreen only: each bar appears when the mouse is near its edge and fades out smoothly when it leaves (overrides Decision 4 for windowed mode; the instant on/off felt clunky).
+31. (2026-10-13) The final UIs are in the Figma file; the video shows iterations on the way. Look: Figma. Functionality and relations: the video and its transcript.
 
 ## Report format (use for every progress report to Tony; plain text, no em dashes)
 PROGRESS REPORT

@@ -44,10 +44,10 @@ RdSidePanel {
     AudioSettingsPage { }
     SubtitleSettingsPage { }
 
-    // video 8:45: centered gray link with a gear, no button fill
+    // Figma "Button": 360x32, BG/B2, 20 px gear, FG/A3 text
     footer: Widgets.RdButton {
         width: root.width - 2 * VLCStyle.dp(20)
-        style: Widgets.RdButton.Style.Link
+        style: Widgets.RdButton.Style.Bar
         rdIcon: "settings"
         text: qsTr("Open Advanced Settings")
         onClicked: {
