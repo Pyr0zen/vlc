@@ -151,9 +151,15 @@ T.Popup {
     property bool _holdsModal: false
 
     Component.onDestruction: {
-        if (_holdsModal)
+        if (_holdsModal) {
             RdPanels.releaseModal()
+            _holdsModal = false
+        }
     }
+
+    // built in the background after startup (MainInterface.qml): read the actions now, so the
+    // first open finds the rows ready
+    Component.onCompleted: hotkeysModel.reload()
 
     onAboutToShow: {
         if (!_holdsModal) {
@@ -236,14 +242,19 @@ T.Popup {
         // keys nobody in the dialog handled never reach the player behind it; Escape goes on
         // to the popup, which closes
         Keys.onPressed: (event) => {
-            // Tab goes back into the dialog after a click on empty space
+            // Tab goes back into the dialog after a click on empty space, to the first / last
+            // row on screen (the list does not jump)
             if (event.key === Qt.Key_Tab) {
-                root.focusFirstField(Qt.TabFocusReason)
+                const first = list.indexAt(list.width / 2, list.contentY + 1)
+                if (first < 0 || !root.focusField(first, false))
+                    root.focusFirstField(Qt.TabFocusReason)
                 event.accepted = true
                 return
             }
             if (event.key === Qt.Key_Backtab) {
-                root.focusLastField(Qt.BacktabFocusReason)
+                const last = list.indexAt(list.width / 2, list.contentY + list.height - 2)
+                if (last < 0 || !root.focusField(last, true))
+                    root.focusLastField(Qt.BacktabFocusReason)
                 event.accepted = true
                 return
             }
