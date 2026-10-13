@@ -20,7 +20,7 @@
 - `vlc_redesign.mp4` the designer's full video. LOCAL ONLY, excluded from git, never commit it.
 - `vlc_redesign.en.srt` its transcript, with her reasoning for every change.
 - `frames/` scene-change frames already extracted.
-- `figma/figma_file.json` full Figma file from the API (LOCAL ONLY, git-excluded); `redesign/FIGMA_FLOWS.md` summarizes its prototype interactions and exact specs.
+- `figma/figma_file.json` full Figma file from the API (committed 2026-10-13 at Sticky's request so other sessions have the exact specs; the Figma file is a public Community file); `redesign/FIGMA_FLOWS.md` summarizes its prototype interactions and exact specs.
 - `redesign/BUILD_PLAN.md` architecture map, work packages (Step 1 UI only, then Step 2 new features), Phase 1 workflow, test loop, risks.
 - `redesign/RESIDUAL_AUDIT.md` every element of VLC's current interface marked KEEP / MOVE / NOT IN VIDEO. Remove nothing until Sticky decides.
 - `redesign/STATUS.md` latest status (see Status file rule).
