@@ -59,6 +59,8 @@ READY TO BUILD. Next session: read CLAUDE.md, VIDEO_INDEX.md, FIGMA_FLOWS.md and
 - **Stop rule:** only stop if truly blocked or something only Tony can do is needed (login, payment, an API key like OpenSubtitles). Otherwise keep going to the next work package. Publishing a public GitHub Release (W9.1) needs Tony's go first.
 - **Decisions:** Tony's decisions below are final. Anything not covered: her final version in the video wins, the Figma prototype fills what the video does not show. Every extra decision goes under "Decisions (Claude)" in VIDEO_INDEX.md, one line each.
 - **Verification:** screenshot every state of every built element and compare with the video frames at the matching timestamps and the Figma PNGs before marking it done (BUILD_PLAN.md section 5). The video is the main guide: look at its frames BEFORE building each element, and always crop and zoom into the detail (icons, edges, spacing, text) instead of judging full frames. Always read the transcript lines at the same timestamps with the frames: many frames show how something USED to look (old VLC, rejected options, intermediate states) before she redesigns it later; only her final version is built. For every element make a side-by-side image (our screenshot crop next to the matching video frame crop, same scale, zoomed in) and only mark it done when they match; list remaining differences.
+- **Build rounds (Tony, 2026-10-13):** fewer builds. Code 2 to 3 related work packages, run the independent review on them, then push once and do one build and one full test round covering all of them. Do not push after every small fix. Doc-only pushes stay as they are (they do not trigger a build).
+- **Clean stop:** when Tony writes "stopping for today": finish the edit in progress, commit everything, push so a build runs while he is away, update and push STATUS.md with exactly where you are and what is next, then stop. When he writes "Read CLAUDE.md and continue": first test the build that ran while he was away, then continue.
 - **Status file (permanent):** keep `redesign/STATUS.md` updated and push it after every finished work package, every phase, and whenever you stop or get blocked. It holds, at the top, the date and time, the current work package and the last 10 commits (hash + message), then the latest PROGRESS REPORT. Overwrite it each time.
 
 ## Quality rules (mandatory for every work package; a package is NOT done until all pass)
@@ -70,7 +72,7 @@ READY TO BUILD. Next session: read CLAUDE.md, VIDEO_INDEX.md, FIGMA_FLOWS.md and
 - **Regression checklist after every package:** open file, play, pause, seek, volume, mute, next/previous, fullscreen in and out, subtitle on/off and track switching, audio track switching, queue add/remove, drag and drop a file, keyboard shortcuts, settings survive a restart, app closes cleanly.
 - **Visual check:** crop and zoom against the video frames and the Figma PNGs.
 - **Crashes:** any crash or freeze stops everything until fixed.
-- **Small commits:** one logical change each. Never more than one work package unverified at a time.
+- **Small commits:** one logical change each. Never more than one build round (see Build rounds) unverified at a time.
 - **Bug log:** log every bug found and fixed in `redesign/BUILD_NOTES.md`.
 
 ## Decisions (Tony, 2026-10-12)
