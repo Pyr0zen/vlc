@@ -350,6 +350,23 @@ QString HotkeysModel::getFirstGroup() const
 
 void HotkeysModel::reload()
 {
+    /* later opens: re-read the keys in place, so the view keeps its delegates (a reset
+     * would destroy and rebuild every visible row on each open) */
+    if (!m_entries.isEmpty())
+    {
+        for (Entry& entry : m_entries)
+        {
+            entry.keys = entry.savedKeys = configKeys(qtu(entry.configName));
+            if (!entry.globalConfigName.isEmpty())
+                entry.globalKeys = entry.savedGlobalKeys = configKeys(qtu(entry.globalConfigName));
+        }
+        updateFilter();
+        if (rowCount() > 0)
+            emit dataChanged(index(0), index(rowCount() - 1));
+        updateDirty();
+        return;
+    }
+
     beginResetModel();
 
     m_entries.clear();

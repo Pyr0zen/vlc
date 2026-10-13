@@ -608,32 +608,4 @@ Item {
             }
         }
     }
-
-    // redesign: Keyboard Shortcuts dialog (video 15:57-16:03), created when first opened
-    Loader {
-        id: keyboardShortcutsDialogLoader
-
-        active: false
-
-        sourceComponent: Component {
-            Item {
-                readonly property alias dialog: keyboardShortcutsDialog
-
-                KeyboardShortcutsDialog {
-                    id: keyboardShortcutsDialog
-
-                    onAboutToHide: root.restoreFocus()
-                }
-            }
-        }
-
-        Connections {
-            target: DialogsProvider
-
-            function onShowKeyboardShortcutsDialog() {
-                keyboardShortcutsDialogLoader.active = true
-                keyboardShortcutsDialogLoader.item.dialog.open()
-            }
-        }
-    }
 }

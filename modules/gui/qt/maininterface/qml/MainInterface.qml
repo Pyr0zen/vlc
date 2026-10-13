@@ -373,6 +373,45 @@ Item {
             }
         }
 
+        // redesign: the Keyboard Shortcuts dialog (video 15:57-16:03), over every view, so a
+        // view switch (the video ends) does not destroy it with unsaved edits. It is built in
+        // the background shortly after startup, so opening it starts within one frame; an
+        // early open finishes the build synchronously.
+        Loader {
+            id: keyboardShortcutsDialogLoader
+
+            active: false
+            asynchronous: true
+            sourceComponent: Component {
+                Item {
+                    readonly property alias dialog: keyboardShortcutsDialog
+
+                    KeyboardShortcutsDialog {
+                        id: keyboardShortcutsDialog
+                    }
+                }
+            }
+
+            Timer {
+                interval: 2000
+                running: true
+                onTriggered: keyboardShortcutsDialogLoader.active = true
+            }
+
+            Connections {
+                target: DialogsProvider
+
+                function onShowKeyboardShortcutsDialog() {
+                    keyboardShortcutsDialogLoader.asynchronous = false
+                    keyboardShortcutsDialogLoader.active = true
+                    if (keyboardShortcutsDialogLoader.item)
+                        keyboardShortcutsDialogLoader.item.dialog.open()
+                    else
+                        DialogsProvider.legacyPrefsDialog()
+                }
+            }
+        }
+
         Loader {
             active: {
                 const windowVisibility = MainCtx.intfMainWindow.visibility
