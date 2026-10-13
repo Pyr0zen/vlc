@@ -20,8 +20,7 @@
 // - Standard: BG/A3 + FG/A2 (Cancel, Back, Browse)
 // - Save: BG/Accent Bright + Accent/Main (dialog Save, Test); disabled at 50% opacity
 // - Primary: Accent/Main + FG/B1 (Next, Finish, Continue Watching)
-// - Bar: full-width BG/B2 + FG/A3, regular weight (Show Preferences)
-// - Link: no fill, FG/A3, regular weight (sidebar "Open Advanced Settings", video 8:45)
+// - Bar: full-width BG/B2 + FG/A3, regular weight (Show Preferences, Open Advanced Settings)
 import QtQuick
 import QtQuick.Templates as T
 
@@ -31,7 +30,7 @@ import VLC.Style
 T.Button {
     id: control
 
-    enum Style { Standard, Save, Primary, Bar, Link }
+    enum Style { Standard, Save, Primary, Bar }
 
     property int style: RdButton.Style.Standard
     property string rdIcon: ""            // optional Figma icon (Widgets.RdIcon) shown before the text
@@ -58,7 +57,6 @@ T.Button {
         case RdButton.Style.Save: return rdPalette.rdBgAccentBright
         case RdButton.Style.Primary: return hovered ? rdPalette.rdAccentBright : rdPalette.rdAccentMain
         case RdButton.Style.Bar: return hovered ? rdPalette.rdBgA4 : rdPalette.rdBgB2
-        case RdButton.Style.Link: return "transparent"
         default: return hovered ? rdPalette.rdBgA1 : rdPalette.rdBgA3
         }
     }
@@ -66,8 +64,7 @@ T.Button {
         switch (style) {
         case RdButton.Style.Save: return rdPalette.rdAccentMain
         case RdButton.Style.Primary: return rdPalette.rdFgB1
-        case RdButton.Style.Bar:
-        case RdButton.Style.Link: return hovered ? rdPalette.rdFgA2 : rdPalette.rdFgA3
+        case RdButton.Style.Bar: return hovered ? rdPalette.rdFgA2 : rdPalette.rdFgA3
         default: return rdPalette.rdFgA2
         }
     }
@@ -99,7 +96,7 @@ T.Button {
                 text: control.text
                 font.family: VLCStyle.rd_fontFamily
                 font.pixelSize: VLCStyle.rd_fontSize_label
-                font.weight: (control.style === RdButton.Style.Bar || control.style === RdButton.Style.Link) ? Font.Normal : Font.DemiBold
+                font.weight: control.style === RdButton.Style.Bar ? Font.Normal : Font.DemiBold
                 color: control._fg
             }
         }
