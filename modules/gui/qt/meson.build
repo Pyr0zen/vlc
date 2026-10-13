@@ -711,7 +711,8 @@ qml_modules += {
         'menus/qml/GlobalShortcuts.qml',
         'menus/qml/Menubar.qml',
         'menus/qml/ShortcutExt.qml',
-        'menus/qml/RdCascadeMenu.qml'
+        'menus/qml/RdCascadeMenu.qml',
+        'menus/qml/RdMainMenu.qml'
     ),
 }
 

@@ -1352,7 +1352,8 @@ libqml_module_menus_a_QML = \
 	menus/qml/GlobalShortcuts.qml \
 	menus/qml/Menubar.qml \
 	menus/qml/ShortcutExt.qml \
-	menus/qml/RdCascadeMenu.qml
+	menus/qml/RdCascadeMenu.qml \
+	menus/qml/RdMainMenu.qml
 libqml_module_menus_a_Singleton_QML =
 libqml_module_menus_a_SOURCES = $(QML_MODULE_menus_SRC)
 nodist_libqml_module_menus_a_SOURCES = menus/qmlassets.cpp $(QML_MODULE_menus_NODIST_EXTRA)
