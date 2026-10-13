@@ -1464,6 +1464,34 @@ FocusScope {
         z: 2
     }
 
+    // settings sidebar (gear) and queue sidebar (list button): inside the video area at the right,
+    // from under the top bar to over the control bar (video 7:12, 9:29; Figma 400 wide)
+    SettingsSidebar {
+        visible: RdPanels.settingsOpen
+
+        anchors.right: parent.right
+        anchors.rightMargin: VLCStyle.dp(20, VLCStyle.scale)
+        anchors.top: topBar.bottom
+        anchors.topMargin: VLCStyle.dp(10, VLCStyle.scale)
+        anchors.bottom: controlBar.top
+        anchors.bottomMargin: VLCStyle.dp(12, VLCStyle.scale)
+        width: VLCStyle.rd_sidePanelWidth
+        z: 2
+    }
+
+    QueueSidebar {
+        visible: RdPanels.queueOpen
+
+        anchors.right: parent.right
+        anchors.rightMargin: VLCStyle.dp(20, VLCStyle.scale)
+        anchors.top: topBar.bottom
+        anchors.topMargin: VLCStyle.dp(10, VLCStyle.scale)
+        anchors.bottom: controlBar.top
+        anchors.bottomMargin: VLCStyle.dp(12, VLCStyle.scale)
+        width: VLCStyle.rd_sidePanelWidth
+        z: 2
+    }
+
     property bool _panelLocked: false
 
     Connections {

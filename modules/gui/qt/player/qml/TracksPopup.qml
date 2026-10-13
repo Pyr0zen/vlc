@@ -79,7 +79,7 @@ Item {
 
                         Widgets.RdIcon {
                             anchors.verticalCenter: parent.verticalCenter
-                            name: tabButton.active ? tabButton.modelData.icon + "_state-active" : tabButton.modelData.icon
+                            name: tabButton.active ? tabButton.modelData.icon + "_two-tone-yes" : tabButton.modelData.icon
                             size: VLCStyle.dp(20, VLCStyle.scale)
                             color: root.rdPalette.rdFgA3
                         }
@@ -196,13 +196,12 @@ Item {
                     Layout.rightMargin: VLCStyle.dp(20, VLCStyle.scale)
 
                     style: Widgets.RdButton.Style.Bar
+                    rdIcon: "settings"
                     text: qsTr("Show Preferences")
 
-                    // until the settings sidebar tabs exist (W4.3-W4.6) this opens VLC's effects dialog
-                    onClicked: {
-                        RdPanels.close()
-                        DialogsProvider.extendedDialog()
-                    }
+                    // opens the settings sidebar on the matching tab (Figma F-07)
+                    onClicked: RdPanels.open(root.tab === "video" ? "videoSettings"
+                                             : root.tab === "audio" ? "audioSettings" : "subtitleSettings")
                 }
             }
         }

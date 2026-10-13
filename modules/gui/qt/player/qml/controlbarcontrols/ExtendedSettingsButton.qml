@@ -18,9 +18,11 @@
 import QtQuick
 
 
+import VLC.MainInterface
 import VLC.Widgets as Widgets
 import VLC.Style
 import VLC.Dialogs
+import VLC.Player
 import VLC.Util
 
 Widgets.IconToolButton {
@@ -28,10 +30,19 @@ Widgets.IconToolButton {
 
     text: VLCIcons.effect_filter
     rdIcon: "playback-settings"
+    rdIconChecked: "playback-settings_state-active"
 
     description: qsTr("Extended settings")
 
     AccessibleCompat.id: "extendedSettingsButton"
 
-    onClicked: DialogsProvider.extendedDialog()
+    // redesign: in the player the gear opens the settings sidebar on Playback (Decision 5)
+    checked: MainCtx.playerView && RdPanels.settingsOpen
+
+    onClicked: {
+        if (MainCtx.playerView)
+            RdPanels.toggle("playback")
+        else
+            DialogsProvider.extendedDialog()
+    }
 }

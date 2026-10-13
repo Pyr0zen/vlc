@@ -1,0 +1,329 @@
+/*****************************************************************************
+ * Copyright (C) 2026 VLC authors and VideoLAN
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * ( at your option ) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ *****************************************************************************/
+
+// redesign: settings sidebar, Audio tab (video 8:41-8:56 final version; Figma "audio
+// settings", "Audio - Equalizer", "Audio - Compressor Settings", "Audio - Spatializer Settings",
+// "Audio - Stereo Widener"). Delay, stereo mode and the filters apply live (VLC's audio effects);
+// the default track and language are used from the next file. Parameter names, ranges and units
+// are VLC's (dialogs/extended/extended_panels.cpp).
+import QtQuick
+import QtQuick.Layouts
+
+import VLC.MainInterface
+import VLC.Style
+import VLC.Player
+import VLC.Widgets as Widgets
+
+RdSidePanelPage {
+    id: root
+
+    key: "audioSettings"
+
+    function opt(name) {
+        return (RdEffects.revision, RdEffects.option(name))
+    }
+
+    function parseNumber(text) {
+        return parseFloat(String(text).replace(",", ".").replace(/[^0-9.+-]/g, ""))
+    }
+
+    readonly property int _eqPreset: (RdEffects.revision, RdEffects.equalizerPreset())
+    readonly property var _eqBands: (RdEffects.revision, RdEffects.equalizerBands())
+    readonly property real _eqPreamp: (RdEffects.revision, RdEffects.audioValue("equalizer-preamp"))
+
+    Widgets.RdSettingsSection {
+        title: qsTr("Defaults")
+        showDivider: false
+        note: qsTr("Track and language apply from the next file")
+
+        Widgets.RdSettingRow {
+            text: qsTr("Audio Track")
+
+            Widgets.RdValueBox {
+                readonly property int track: root.opt("audio-track")
+
+                text: track < 0 ? qsTr("Auto") : String(track + 1)
+                Accessible.name: qsTr("Audio Track")
+                onEdited: (value) => {
+                    const n = parseInt(value)
+                    RdEffects.setOption("audio-track", isNaN(n) || n < 1 ? -1 : n - 1)
+                }
+            }
+        }
+
+        Widgets.RdSettingRow {
+            text: qsTr("Audio Language")
+
+            Widgets.RdValueBox {
+                readonly property string language: root.opt("audio-language")
+
+                text: language === "" ? qsTr("Auto") : language
+                Accessible.name: qsTr("Audio Language")
+                onEdited: (value) => RdEffects.setOption("audio-language", value === qsTr("Auto") ? "" : value.trim())
+            }
+        }
+
+        Widgets.RdSettingRow {
+            text: qsTr("Stereo Mode")
+
+            below: Widgets.RdChoiceDropdown {
+                width: parent.width
+                choices: Player.audioStereoMode
+                Accessible.name: qsTr("Stereo Mode")
+            }
+        }
+    }
+
+    Widgets.RdSettingsSection {
+        title: qsTr("Synchronization")
+
+        Widgets.RdParamSlider {
+            text: qsTr("Audio Track Delay")
+            valueBox: true
+            valueText: (Player.audioDelayMS / 1000).toFixed(3) + " s"
+            from: -10
+            to: 10
+            stepSize: 0.05
+            bipolar: true
+            showTicks: false
+            labels: [qsTr("-10 s"), qsTr("0 s"), qsTr("+10 s")]
+            value: Player.audioDelayMS / 1000
+            onMoved: (v) => Player.audioDelayMS = Math.round(v * 1000)
+            onEdited: (text) => {
+                const s = root.parseNumber(text)
+                if (!isNaN(s))
+                    Player.audioDelayMS = Math.round(s * 1000)
+            }
+        }
+    }
+
+    Widgets.RdSettingsSection {
+        title: qsTr("Filters")
+
+        // "Equalizer" sub-label, then the preset list (None = equalizer off)
+        Text {
+            Layout.fillWidth: true
+            Layout.preferredHeight: VLCStyle.dp(37)
+            leftPadding: VLCStyle.dp(4)
+            verticalAlignment: Text.AlignVCenter
+            text: qsTr("Equalizer")
+            font.family: VLCStyle.rd_fontFamily
+            font.pixelSize: VLCStyle.rd_fontSize_label
+            color: VLCStyle.palette.rdFgA3
+        }
+
+        Widgets.RdDropdown {
+            id: eqPresets
+
+            Layout.fillWidth: true
+            model: [qsTr("None")].concat(RdEffects.equalizerPresetNames())
+            currentIndex: root._eqPreset + 1
+            Accessible.name: qsTr("Equalizer")
+            onActivated: (index) => RdEffects.setEqualizerPreset(index - 1)
+
+            delegate: Widgets.RdOptionRow {
+                required property int index
+                required property var modelData
+
+                width: ListView.view ? ListView.view.width : implicitWidth
+                height: VLCStyle.dp(44)
+                text: modelData
+                selected: eqPresets.currentIndex === index
+                highlighted: eqPresets.highlightedIndex === index
+                leading: index > 0 ? curve : null
+
+                readonly property Component curve: Component {
+                    Widgets.RdEqCurve {
+                        bands: RdEffects.equalizerPresetBands(index - 1)
+                    }
+                }
+            }
+        }
+
+        Widgets.RdExpander {
+            Layout.fillWidth: true
+
+            ColumnLayout {
+                width: parent.width
+                spacing: VLCStyle.dp(5)
+
+                Widgets.RdParamSlider {
+                    text: qsTr("Preamp")
+                    valueBox: true
+                    valueText: root._eqPreamp.toFixed(1) + " " + qsTr("dB")
+                    from: -20
+                    to: 20
+                    stepSize: 0.1
+                    showTicks: false
+                    value: root._eqPreamp
+                    onMoved: (v) => RdEffects.setAudioValue("equalizer-preamp", v)
+                    onEdited: (text) => {
+                        const v = root.parseNumber(text)
+                        if (!isNaN(v))
+                            RdEffects.setAudioValue("equalizer-preamp", Math.max(-20, Math.min(20, v)))
+                    }
+                }
+
+                Repeater {
+                    model: RdEffects.equalizerBandNames()
+
+                    delegate: Widgets.RdParamSlider {
+                        required property int index
+                        required property var modelData
+
+                        readonly property real gain: Number(root._eqBands[index] ?? 0)
+
+                        text: modelData
+                        valueBox: true
+                        valueText: gain.toFixed(1) + " " + qsTr("dB")
+                        from: -20
+                        to: 20
+                        stepSize: 0.1
+                        showTicks: false
+                        value: gain
+                        onMoved: (v) => RdEffects.setEqualizerBand(index, v)
+                        onEdited: (text) => {
+                            const v = root.parseNumber(text)
+                            if (!isNaN(v))
+                                RdEffects.setEqualizerBand(index, Math.max(-20, Math.min(20, v)))
+                        }
+                    }
+                }
+            }
+        }
+
+        Widgets.RdSettingRow {
+            text: qsTr("2 Pass")
+
+            Widgets.RdToggle {
+                checked: (RdEffects.revision, RdEffects.audioFlag("equalizer-2pass"))
+                Accessible.name: qsTr("2 Pass")
+                onToggled: RdEffects.setAudioFlag("equalizer-2pass", checked)
+            }
+        }
+    }
+
+    FilterSection {
+        title: qsTr("Compressor")
+        module: "compressor"
+        params: [
+            { name: "compressor-rms-peak", label: qsTr("RMS / Peak"), unit: "", from: 0, to: 1, step: 0.001, scale: 1 },
+            { name: "compressor-attack", label: qsTr("Attack"), unit: qsTr("ms"), from: 1.5, to: 400, step: 0.1, scale: 1 },
+            { name: "compressor-release", label: qsTr("Release"), unit: qsTr("ms"), from: 2, to: 800, step: 0.1, scale: 1 },
+            { name: "compressor-threshold", label: qsTr("Threshold"), unit: qsTr("dB"), from: -30, to: 0, step: 0.01, scale: 1 },
+            { name: "compressor-ratio", label: qsTr("Ratio"), unit: ": 1", from: 1, to: 20, step: 0.01, scale: 1 },
+            { name: "compressor-knee", label: qsTr("Knee Radius"), unit: qsTr("dB"), from: 1, to: 10, step: 0.01, scale: 1 },
+            { name: "compressor-makeup-gain", label: qsTr("Makeup Gain"), unit: qsTr("dB"), from: 0, to: 24, step: 0.01, scale: 1 }
+        ]
+    }
+
+    FilterSection {
+        title: qsTr("Spatializer")
+        module: "spatializer"
+        params: [
+            { name: "spatializer-roomsize", label: qsTr("Size"), unit: "", from: 0, to: 1.1, step: 0.1, scale: 10 },
+            { name: "spatializer-width", label: qsTr("Width"), unit: "", from: 0, to: 1, step: 0.1, scale: 10 },
+            { name: "spatializer-wet", label: qsTr("Wet"), unit: "", from: 0, to: 1, step: 0.1, scale: 10 },
+            { name: "spatializer-dry", label: qsTr("Dry"), unit: "", from: 0, to: 1, step: 0.1, scale: 10 },
+            { name: "spatializer-damp", label: qsTr("Damp"), unit: "", from: 0, to: 1, step: 0.1, scale: 10 }
+        ]
+    }
+
+    FilterSection {
+        title: qsTr("Stereo Widener")
+        module: "stereo_widen"
+        params: [
+            { name: "stereowiden-delay", label: qsTr("Delay Time"), unit: qsTr("ms"), from: 1, to: 100, step: 1, scale: 1 },
+            { name: "stereowiden-feedback", label: qsTr("Feedback Gain"), unit: "%", from: 0, to: 0.9, step: 0.1, scale: 1 },
+            { name: "stereowiden-crossfeed", label: qsTr("Crossfeed"), unit: "%", from: 0, to: 0.8, step: 0.1, scale: 1 },
+            { name: "stereowiden-dry-mix", label: qsTr("Dry Mix"), unit: "%", from: 0, to: 1, step: 0.1, scale: 1 }
+        ]
+    }
+
+    // pitch shifter ("scaletempo_pitch"): on while the pitch is not 0
+    Widgets.RdSettingsSection {
+        id: pitchSection
+
+        readonly property real pitch: (RdEffects.revision, RdEffects.audioFilterEnabled("scaletempo_pitch")
+                                       ? RdEffects.audioValue("pitch-shift") : 0)
+
+        Widgets.RdParamSlider {
+            text: qsTr("Adjust Pitch")
+            valueText: pitchSection.pitch.toFixed(1) + " " + qsTr("semitones")
+            from: -12
+            to: 12
+            stepSize: 0.25
+            bipolar: true
+            showTicks: false
+            value: pitchSection.pitch
+            onMoved: (v) => {
+                RdEffects.setAudioValue("pitch-shift", v)
+                if ((v !== 0) !== RdEffects.audioFilterEnabled("scaletempo_pitch"))
+                    RdEffects.setAudioFilterEnabled("scaletempo_pitch", v !== 0)
+            }
+        }
+    }
+
+    // one audio filter: on/off toggle, then its parameters in an "Expand Settings" card
+    component FilterSection: Widgets.RdSettingsSection {
+        id: filter
+
+        property string module
+        property var params: []
+
+        readonly property bool filterEnabled: (RdEffects.revision, RdEffects.audioFilterEnabled(module))
+
+        Widgets.RdSettingRow {
+            text: filter.title
+
+            Widgets.RdToggle {
+                checked: filter.filterEnabled
+                Accessible.name: filter.title
+                onToggled: RdEffects.setAudioFilterEnabled(filter.module, checked)
+            }
+        }
+
+        Widgets.RdExpander {
+            Layout.fillWidth: true
+
+            ColumnLayout {
+                width: parent.width
+                spacing: VLCStyle.dp(5)
+
+                Repeater {
+                    model: filter.params
+
+                    delegate: Widgets.RdParamSlider {
+                        required property var modelData
+
+                        readonly property real current: (RdEffects.revision, RdEffects.audioValue(modelData.name))
+
+                        text: modelData.label
+                        valueText: (current * modelData.scale).toFixed(1) + (modelData.unit !== "" ? " " + modelData.unit : "")
+                        from: modelData.from
+                        to: modelData.to
+                        stepSize: modelData.step
+                        showTicks: false
+                        value: current
+                        onMoved: (v) => RdEffects.setAudioValue(modelData.name, v)
+                    }
+                }
+            }
+        }
+    }
+}
