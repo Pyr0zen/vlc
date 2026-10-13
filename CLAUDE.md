@@ -47,6 +47,12 @@ For every element, every time:
 - Never commit build outputs, the mp4, or frames_work/.
 - figma/, frames/, the srt and styles.txt may be committed (small files, useful for contributors).
 
+## Parallel work (Tony, 2026-10-13)
+- **Phase 5 belongs to the web session:** a second Claude Code session on the web builds Phase 5 (library shell, music, playlists, network streams, home, recent, pins, mini player, drag to queue: W5.1-W5.9, Step 1 and Step 2 parts), fully wired to VLC's real data, on branch `redesign-library`. The local session does not touch Phase 5 files (modules/gui/qt/medialibrary/qml, network/qml, maininterface/qml/MainDisplay.qml, LocalTopbar.qml, MainViewLoader.qml, NoMedialibHome.qml, playlist/qml/PlaylistDetachedWindow.qml, player/qml/MiniPlayer.qml / PIPPlayer.qml). Shared files (Player.qml, palette, MainCtx, meson.build, Makefile.am, widgets) are edited by both only where needed and merged carefully.
+- **Merging redesign-library:** when Tony says it pushed: independent review of the whole branch diff, `redesign/tools/qmlcheck.py`, merge into `redesign`, one build, full test round on this PC against the video like everything else.
+- **Web session notes:** it has the transcript (`reference/vlc_redesign.en.srt`), the 97 key frames (`reference/frames/`), the Figma PNGs and `figma/figma_file.json`, VIDEO_INDEX.md and FIGMA_FLOWS.md; it does not have the mp4 or `frames_work/`. CI builds only `redesign`, so it verifies with qmlcheck; the on-PC test happens after the merge.
+- **Local session:** while a build is tested, subagents code the next independent work packages in separate git worktrees (one package or tightly coupled pair per agent, never two agents on the same files), each following every rule in this file; then independent review, qmlcheck, merge into `redesign` as the next batch. The 5-packages-per-build rule and the full test loop stay.
+
 ## Current phase
 READY TO BUILD. Next session: read CLAUDE.md, VIDEO_INDEX.md, FIGMA_FLOWS.md and BUILD_PLAN.md, then run the build from Phase 1 through all phases continuously, following the test loop, without stopping unless truly blocked.
 
