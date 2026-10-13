@@ -21,6 +21,7 @@
 // Expanded: a lighter card whose header collapses it again; content goes inside the card.
 // The expand is instant (no animation seen in the video).
 import QtQuick
+import QtQuick.Templates as T
 
 import VLC.MainInterface
 import VLC.Style
@@ -43,40 +44,55 @@ Item {
 
         width: parent.width
         height: header.height + (root.expanded ? inner.childrenRect.height + VLCStyle.dp(16) : 0)
-        radius: VLCStyle.rd_radius_small
+        radius: VLCStyle.rd_radius_normal
         color: root.expanded ? root.rdPalette.rdBgA2 : root.rdPalette.rdBgB2
 
-        Item {
+        // Figma "Video - Essential" bar: 360x48, radius 6, padding 0,10,0,16
+        T.AbstractButton {
             id: header
 
             width: parent.width
-            height: VLCStyle.dp(32)
+            height: VLCStyle.dp(48)
 
-            Text {
-                anchors.left: parent.left
-                anchors.leftMargin: VLCStyle.dp(12)
-                anchors.verticalCenter: parent.verticalCenter
-                text: root.expanded ? root.collapseText : root.expandText
-                font.family: VLCStyle.rd_fontFamily
-                font.pixelSize: VLCStyle.rd_fontSize_label
-                color: headerMouse.containsMouse ? root.rdPalette.rdFgA2 : root.rdPalette.rdFgA3
-            }
+            focusPolicy: Qt.StrongFocus
+            hoverEnabled: true
+            Accessible.role: Accessible.Button
+            Accessible.name: root.expanded ? root.collapseText : root.expandText
 
-            RdIcon {
-                anchors.right: parent.right
-                anchors.rightMargin: VLCStyle.dp(12)
-                anchors.verticalCenter: parent.verticalCenter
-                name: root.expanded ? "chevron_direction-down" : "chevron_direction-right"
-                color: root.rdPalette.rdFgA3
-            }
+            Keys.priority: Keys.AfterItem
+            Keys.onPressed: (event) => Navigation.defaultKeyAction(event)
 
-            MouseArea {
-                id: headerMouse
+            onClicked: root.expanded = !root.expanded
 
-                anchors.fill: parent
-                hoverEnabled: true
+            HoverHandler {
                 cursorShape: Qt.PointingHandCursor
-                onClicked: root.expanded = !root.expanded
+            }
+
+            background: Rectangle {
+                radius: VLCStyle.rd_radius_normal
+                color: "transparent"
+                border.width: header.visualFocus ? VLCStyle.dp(1) : 0
+                border.color: root.rdPalette.rdFgA3
+            }
+
+            contentItem: Item {
+                Text {
+                    anchors.left: parent.left
+                    anchors.leftMargin: VLCStyle.dp(16)
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: header.Accessible.name
+                    font.family: VLCStyle.rd_fontFamily
+                    font.pixelSize: VLCStyle.rd_fontSize_label
+                    color: header.hovered ? root.rdPalette.rdFgA2 : root.rdPalette.rdFgA3
+                }
+
+                RdIcon {
+                    anchors.right: parent.right
+                    anchors.rightMargin: VLCStyle.dp(10)
+                    anchors.verticalCenter: parent.verticalCenter
+                    name: root.expanded ? "chevron_direction-down" : "chevron_direction-right"
+                    color: root.rdPalette.rdFgA3
+                }
             }
         }
 

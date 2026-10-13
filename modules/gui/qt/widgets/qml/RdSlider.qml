@@ -34,45 +34,49 @@ T.Slider {
     property bool bipolar: false
     property real zeroValue: 0
     property bool showTicks: stepSize > 0 && (to - from) / stepSize <= 40
+    // labels under the track, spread from the left end to the right end (Figma "Frame 205")
     property var labels: []
 
     readonly property SystemPalette rdPalette: VLCStyle.palette
 
+    // Figma "wrapper": 24 px slider zone, then 10 px and a 15 px label row
     implicitWidth: VLCStyle.dp(360)
-    implicitHeight: labelRow.visible ? VLCStyle.dp(40) : VLCStyle.dp(24)
+    implicitHeight: labelRow.visible ? VLCStyle.dp(49) : VLCStyle.dp(24)
 
     focusPolicy: Qt.StrongFocus
 
     Keys.priority: Keys.AfterItem
     Keys.onPressed: (event) => Navigation.defaultKeyAction(event)
 
-    readonly property real _trackY: VLCStyle.dp(12) - track.height / 2
+    readonly property real _inset: VLCStyle.dp(2)
 
     function _pos(v) {
         return (to === from) ? 0 : (v - from) / (to - from)
     }
 
     background: Item {
+        // Figma "range": 16 px, radius 6, BG/B2, 2 px padding around a 12 px fill (radius 4)
         Rectangle {
             id: track
 
-            x: 0
-            y: control._trackY
+            y: VLCStyle.dp(4)
             width: control.availableWidth
-            height: VLCStyle.dp(10)
-            radius: height / 2
+            height: VLCStyle.dp(16)
+            radius: VLCStyle.rd_radius_normal
             color: control.rdPalette.rdBgB2
 
             Rectangle {
                 id: fill
 
-                readonly property real zeroX: control.bipolar ? control._pos(control.zeroValue) * track.width : 0
-                readonly property real thumbX: control.visualPosition * track.width
+                readonly property real span: track.width - 2 * control._inset
+                readonly property real zeroX: control.bipolar ? control._pos(control.zeroValue) * span : 0
+                readonly property real thumbX: control.visualPosition * span
 
-                x: Math.min(zeroX, thumbX)
-                width: Math.abs(thumbX - zeroX)
-                height: parent.height
-                radius: parent.radius
+                x: control._inset + Math.min(zeroX, thumbX)
+                y: control._inset
+                width: Math.max(control.bipolar ? 0 : VLCStyle.dp(8), Math.abs(thumbX - zeroX))
+                height: track.height - 2 * control._inset
+                radius: VLCStyle.rd_radius_small
                 color: control.rdPalette.rdBgAccentBright
             }
 
@@ -83,22 +87,23 @@ T.Slider {
                     required property int index
                     readonly property int count: Math.round((control.to - control.from) / control.stepSize)
 
-                    x: count > 0 ? index * (track.width - width) / count : 0
+                    x: control._inset + (count > 0 ? index * (fill.span - width) / count : 0)
                     anchors.verticalCenter: parent.verticalCenter
                     width: VLCStyle.dp(1)
-                    height: VLCStyle.dp(4)
-                    color: x < fill.x + fill.width && x >= fill.x ? control.rdPalette.rdAccentDim
-                                                                   : control.rdPalette.rdFgA4
+                    height: VLCStyle.dp(6)
+                    color: (x >= fill.x && x < fill.x + fill.width) ? control.rdPalette.rdAccentDim
+                                                                     : control.rdPalette.rdFgA4
                 }
             }
         }
 
-        Row {
+        Item {
             id: labelRow
 
             visible: control.labels.length > 0
-            y: VLCStyle.dp(24)
+            y: VLCStyle.dp(34)
             width: control.availableWidth
+            height: VLCStyle.dp(15)
 
             Repeater {
                 model: control.labels
@@ -107,9 +112,11 @@ T.Slider {
                     required property int index
                     required property var modelData
 
-                    width: labelRow.width / Math.max(1, control.labels.length)
-                    horizontalAlignment: index === 0 ? Text.AlignLeft
-                                        : (index === control.labels.length - 1 ? Text.AlignRight : Text.AlignHCenter)
+                    readonly property real center: control.labels.length > 1
+                                                   ? index * labelRow.width / (control.labels.length - 1)
+                                                   : labelRow.width / 2
+
+                    x: Math.max(0, Math.min(labelRow.width - width, center - width / 2))
                     text: modelData
                     font.family: VLCStyle.rd_fontFamily
                     font.pixelSize: VLCStyle.rd_fontSize_toggle
@@ -119,12 +126,14 @@ T.Slider {
         }
     }
 
+    // thumb 8x24, radius 4; the video shows it in the accent color (Figma: Accent/DIm)
     handle: Rectangle {
-        x: control.leftPadding + control.visualPosition * (control.availableWidth - width)
-        y: VLCStyle.dp(12) - height / 2
+        x: control.leftPadding + control._inset + control.visualPosition * (control.availableWidth - 2 * control._inset - width)
+        y: 0
         width: VLCStyle.dp(8)
-        height: VLCStyle.dp(18)
+        height: VLCStyle.dp(24)
         radius: VLCStyle.rd_radius_small
-        color: control.pressed ? control.rdPalette.rdAccentBright : control.rdPalette.rdAccentMain
+        color: (control.pressed || control.hovered || control.visualFocus) ? control.rdPalette.rdAccentBright
+                                                                           : control.rdPalette.rdAccentMain
     }
 }

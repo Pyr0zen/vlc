@@ -32,6 +32,7 @@ T.ItemDelegate {
     property bool hasSubmenu: false
     property bool selected: false           // orange check at the right
     property bool dimmed: false             // e.g. "+ New Custom Preset"
+    property Component leading: null        // optional item before the text (equalizer curve)
 
     readonly property SystemPalette rdPalette: VLCStyle.palette
 
@@ -63,6 +64,13 @@ T.ItemDelegate {
             anchors.verticalCenter: parent.verticalCenter
             name: control.rdIcon
             color: control.rdPalette.rdFgA2
+        }
+
+        Loader {
+            active: !!control.leading
+            visible: active
+            anchors.verticalCenter: parent.verticalCenter
+            sourceComponent: control.leading
         }
 
         Text {
