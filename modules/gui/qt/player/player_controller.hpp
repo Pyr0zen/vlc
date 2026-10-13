@@ -152,7 +152,7 @@ public:
 
     Q_PROPERTY(bool canRestorePlayback READ canRestorePlayback NOTIFY playbackRestoreQueried FINAL)
     // redesign: where playback would resume (resume toast "You already watched till ...")
-    Q_PROPERTY(VLCDuration restoreTime READ getRestoreTime NOTIFY playbackRestoreQueried FINAL)
+    Q_PROPERTY(double restoreProgress READ getRestoreProgress NOTIFY playbackRestoreQueried FINAL)
 
     // meta
     Q_PROPERTY(QString title READ getTitle NOTIFY currentMetaChanged FINAL)
@@ -333,7 +333,7 @@ public slots:
     void updatePositionFromTimer();
     void updateTimeFromTimer();
     bool canRestorePlayback() const;
-    VLCDuration getRestoreTime() const;
+    double getRestoreProgress() const;
     void restorePlaybackPos();
     void openVLsub();
     void acknowledgeRestoreCallback();

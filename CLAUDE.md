@@ -104,6 +104,7 @@ General rule for anything not listed: her final version in the video wins, the F
 27. Core changes approved wherever a feature truly needs them, minimal and isolated. Examples: OSD showing the pressed shortcut, subtitle timeline (external files first, embedded later if feasible).
 28. Accepted limit: subtitle outline uses VLC's existing outline sizes.
 29. Postponed: reverse playback. Profiles may need a restart for some settings; show a notice when that happens.
+30. (2026-10-13) Windowed: the top bar and control bar are always visible, the video sits between them. Fullscreen only: each bar appears when the mouse is near its edge and fades out smoothly when it leaves (overrides Decision 4 for windowed mode; the instant on/off felt clunky).
 
 ## Report format (use for every progress report to Sticky; plain text, no em dashes)
 PROGRESS REPORT
