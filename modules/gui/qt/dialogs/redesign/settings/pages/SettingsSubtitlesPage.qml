@@ -57,7 +57,7 @@ SettingsPage {
             text: qsTr("File name matching")
             description: qsTr("How closely the name of a subtitle file has to match the name of the video for the subtitles to load automatically.")
             keywords: "sub-autodetect-fuzzy fuzziness"
-            enabled: root._autodetect
+            available: root._autodetect
 
             Widgets.RdDropdown {
                 // sub-autodetect-fuzzy: 0 to 4, in the video's words (17:03-17:33)
@@ -84,7 +84,7 @@ SettingsPage {
                 text: qsTr("Also look for subtitles in")
                 description: RdEffects.optionDescription("sub-autodetect-path")
                 keywords: "sub-autodetect-path folders paths"
-                enabled: root._autodetect
+                available: root._autodetect
 
                 Widgets.RdTextField {
                     readonly property string paths: (RdEffects.revision, String(RdEffects.option("sub-autodetect-path")))

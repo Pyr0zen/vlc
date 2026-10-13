@@ -22,9 +22,12 @@
 // - left column 216 px: grouped categories App / Media / System in a BG/A3 95% card
 //   (padding 6, 8 px apart), and "All VLC Settings", which opens VLC's complete preferences;
 // - right: the category's page, scrolling under the fixed header (padding 20,24,100,24).
-// Pages are loaded when first shown, or all at once while searching, so the search can hide
-// the categories and rows that do not match. Switching pages cross-fades (video 18:05); on
-// opening, the page fades in just after the panel (video 17:39-17:40, P8-40).
+// Pages are loaded when first shown (only the open category's page on opening), or all at once
+// on the first search, so the search can hide the categories and rows that do not match.
+// Motion: opening, closing and switching categories are instant, as the Figma prototype wires
+// them ("open overlay" / "swap overlay", instant); the fades seen in the video at 17:40 and
+// 18:05 are cuts and dissolves of the edit (redesign/VIDEO_INDEX.md, Decisions (Claude)).
+// Closing gives the keyboard focus back to where it was before.
 // DialogsProvider.settingsDialog(category) opens it through MainInterface.qml.
 import QtQuick
 import QtQuick.Templates as T
@@ -32,6 +35,7 @@ import QtQuick.Window
 
 import VLC.MainInterface
 import VLC.Style
+import VLC.Player
 import VLC.Widgets as Widgets
 
 Item {
@@ -93,11 +97,16 @@ Item {
         return false
     }
 
+    // the item that had the keyboard focus before opening, given back on closing
+    property Item _focusBeforeOpen: null
+
     // opens the dialog on a category ("general" when empty or unknown)
     function open(category) {
         const index = _indexOf(category)
         currentKey = categories[index >= 0 ? index : 0].key
         searchField.clear()
+        // values may have changed elsewhere (VLC's preferences, the sidebar, hotkeys)
+        RdEffects.refresh()
         const view = pageViews.itemAt(_currentIndex)
         if (view)
             view.contentY = 0
@@ -268,21 +277,31 @@ Item {
         focus: true
         closePolicy: T.Popup.CloseOnEscape
 
-        // the player behind stays visible, slightly darker (video 17:39)
+        // the player behind stays visible, slightly darker (video 17:39: about 11 to 18 % darker)
         T.Overlay.modal: Rectangle {
             color: VLCStyle.palette.rdShadow
             opacity: 0.3
         }
 
-        enter: Transition {
-            NumberAnimation { property: "opacity"; from: 0.0; to: 1.0; duration: VLCStyle.duration_short }
+        onAboutToShow: {
+            // remember the focused item, unless it is inside another popup (a menu that opened us)
+            const window = root.Window.window
+            let item = window ? window.activeFocusItem : null
+            for (let p = item; p; p = p.parent) {
+                if (p === T.Overlay.overlay) {
+                    item = null
+                    break
+                }
+            }
+            root._focusBeforeOpen = item
         }
-        exit: Transition {
-            NumberAnimation { property: "opacity"; from: 1.0; to: 0.0; duration: VLCStyle.duration_short }
-        }
-
-        onAboutToShow: pageFadeIn.restart()
         onOpened: searchField.forceActiveFocus(Qt.PopupFocusReason)
+        onClosed: {
+            const item = root._focusBeforeOpen
+            root._focusBeforeOpen = null
+            if (item && item.visible)
+                item.forceActiveFocus(Qt.PopupFocusReason)
+        }
 
         background: Rectangle {
             radius: VLCStyle.rd_radius_large
@@ -473,20 +492,6 @@ Item {
                 width: parent.width - x
                 height: parent.height - y
 
-                SequentialAnimation {
-                    id: pageFadeIn
-
-                    PropertyAction { target: pagesArea; property: "opacity"; value: 0.0 }
-                    PauseAnimation { duration: VLCStyle.duration_short }
-                    NumberAnimation {
-                        target: pagesArea
-                        property: "opacity"
-                        to: 1.0
-                        duration: VLCStyle.duration_long
-                        easing.type: Easing.InOutSine
-                    }
-                }
-
                 Repeater {
                     id: pageViews
 
@@ -509,23 +514,17 @@ Item {
 
                         anchors.fill: parent
 
-                        opacity: current && root._anyMatch ? 1.0 : 0.0
-                        visible: opacity > 0
-                        enabled: current
-
-                        Behavior on opacity {
-                            NumberAnimation {
-                                duration: VLCStyle.duration_long
-                                easing.type: Easing.InOutSine
-                            }
-                        }
+                        visible: current && root._anyMatch
 
                         clip: true
                         boundsBehavior: Flickable.StopAtBounds
                         contentWidth: width
                         contentHeight: pageLoader.height + VLCStyle.dp(20) + VLCStyle.dp(100)
 
-                        T.ScrollBar.vertical: Widgets.ScrollBarExt { }
+                        // the popup is outside the window's color context: give the scroll bar the palette
+                        T.ScrollBar.vertical: Widgets.ScrollBarExt {
+                            colorContext.palette: VLCStyle.palette
+                        }
 
                         onCurrentChanged: {
                             if (current) {
