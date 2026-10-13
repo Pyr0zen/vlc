@@ -57,6 +57,12 @@ public:
     Q_INVOKABLE QString formatHMS(int formatFlags = SubSecondFormattedAsMS) const;
 
     /**
+     * @brief formatHHMMSS
+     * @return time as HH:MM:SS, hours included even under one hour (redesign time labels)
+     */
+    Q_INVOKABLE QString formatHHMMSS() const;
+
+    /**
      * @brief formatLong
      * @param formatFlags flags to specialize formatting, default is SubSecondFormattedAsMS for legacy reasons
      * @return time in literal form

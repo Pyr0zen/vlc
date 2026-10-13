@@ -48,8 +48,20 @@ FocusScope {
 
     signal hidden()
 
+    // a file watched to its last 20 seconds starts over without asking (Tony, 2026-10-13); the
+    // length is often only known once playback has started
+    readonly property bool _watchedToEnd: Player.restoreProgress > 0 && Player.length.valid()
+                                          && (1 - Player.restoreProgress) * Player.length.toSeconds() < 20
+
+    on_WatchedToEndChanged: {
+        if (_watchedToEnd && visible)
+            hideResumePanel()
+    }
+
     function showResumePanel ()
     {
+        if (_watchedToEnd)
+            return
         resumePanel.visible = true
         continueBtn.forceActiveFocus()
         resumeTimeout.start()
@@ -128,7 +140,7 @@ FocusScope {
 
             text: _hasRestoreTime
                   ? qsTr("You already watched till %1")
-                        .arg("<b>" + Player.length.scale(Player.restoreProgress).formatHMS(VLCTick.AlwaysShowHours) + "</b>")
+                        .arg("<b>" + Player.length.scale(Player.restoreProgress).formatHHMMSS() + "</b>")
                   : qsTr("Do you want to restart the playback where you left off?")
         }
 
