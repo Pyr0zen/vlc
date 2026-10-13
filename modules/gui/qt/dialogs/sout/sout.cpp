@@ -33,6 +33,7 @@
 #include "util/colorizedsvgicon.hpp"
 #include "style/rdwidgetstyle.hpp"
 
+#include <QAbstractButton>
 #include <QString>
 
 #include <cassert>
@@ -100,6 +101,8 @@ SoutDialog::SoutDialog( QWindow *parent, qt_intf_t *_p_intf, const QString& inpu
     setButtonText( QWizard::CancelButton, qtr("Cancel") );
     setButtonText( QWizard::NextButton, qtr("Next") );
     setButtonText( QWizard::FinishButton, qtr("Stream") );
+    RdWidgetStyle::setPrimary( button( QWizard::NextButton ) );
+    RdWidgetStyle::setPrimary( button( QWizard::FinishButton ) );
 }
 
 void SoutDialog::closeTab( int i )

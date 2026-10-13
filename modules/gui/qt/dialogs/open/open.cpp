@@ -88,6 +88,8 @@ OpenDialog::OpenDialog(qt_intf_t *_p_intf, QWindow* parent )
      * Stream / Convert drop-down; enqueue is the queue's job, Stream and Convert have
      * their own entries (Ctrl+S, Ctrl+R) */
     playButton->setPopupMode( QToolButton::DelayedPopup );
+    RdWidgetStyle::setPrimary( playButton );
+    RdWidgetStyle::setPrimary( selectButton );
 
     /* Add the three Buttons */
     ui.buttonsBox->addButton( selectButton, QDialogButtonBox::AcceptRole );

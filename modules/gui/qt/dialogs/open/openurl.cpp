@@ -55,6 +55,7 @@ OpenUrlDialog::OpenUrlDialog( qt_intf_t *_p_intf,
     QDialogButtonBox *box = new QDialogButtonBox( this );
     but = box->addButton( qtr( "&Play" ), QDialogButtonBox::AcceptRole );
     connect( but, &QPushButton::clicked, this, &OpenUrlDialog::play );
+    RdWidgetStyle::setPrimary( but );
 
     but = box->addButton( qtr( "&Enqueue" ), QDialogButtonBox::AcceptRole );
     connect( but, &QPushButton::clicked, this, &OpenUrlDialog::enqueue );

@@ -24,6 +24,7 @@
 #include "maininterface/mainctx.hpp"
 #include "util/color_scheme_model.hpp"
 
+#include <QStyle>
 #include <QWidget>
 
 #include <cassert>
@@ -162,15 +163,15 @@ QPushButton:focus, QToolButton:focus {
 QPushButton:disabled, QToolButton:disabled {
     color: {fgA4};
 }
-QPushButton:default, QToolButton#playButton {
+QPushButton[rdPrimary="true"], QToolButton[rdPrimary="true"] {
     background-color: {bgAccentBright};
     color: {accentMain};
 }
-QPushButton:default:hover, QToolButton#playButton:hover {
+QPushButton[rdPrimary="true"]:hover, QToolButton[rdPrimary="true"]:hover {
     background-color: {accentMain};
     color: {fgB1};
 }
-QPushButton:default:disabled, QToolButton#playButton:disabled {
+QPushButton[rdPrimary="true"]:disabled, QToolButton[rdPrimary="true"]:disabled {
     background-color: {saveDisabledBg};
     color: {saveDisabledFg};
 }
@@ -318,4 +319,14 @@ void RdWidgetStyle::apply( QWidget* widget, qt_intf_t* p_intf )
     };
     QObject::connect( palette, &SystemPalette::paletteChanged, widget, update );
     update();
+}
+
+void RdWidgetStyle::setPrimary( QWidget* button )
+{
+    assert( button );
+
+    button->setProperty( "rdPrimary", true );
+    /* property selectors are only evaluated when the widget is polished */
+    button->style()->unpolish( button );
+    button->style()->polish( button );
 }
