@@ -59,6 +59,12 @@ bool isInside(const QString& root, const QString& mrl)
     return mrl == root || (mrl.startsWith(root) && mrl.at(root.size()) == QLatin1Char('/'));
 }
 
+// the media library stores folder MRLs with a trailing slash
+QString withTrailingSlash(const QString& mrl)
+{
+    return mrl.endsWith(QLatin1Char('/')) ? mrl : mrl + QLatin1Char('/');
+}
+
 QString parentMrl(const QString& mrl)
 {
     const int slash = mrl.lastIndexOf(QLatin1Char('/'));
@@ -156,6 +162,7 @@ void RdLibraryStore::addFolder(const QString& category, const QUrl& url)
     QStringList& mine = (category == QLatin1String("music")) ? m_musicFolders : m_videoFolders;
 
     struct Ctx {
+        bool isRoot = false;
         bool insideRoot = false;
     };
     m_mediaLib->runOnMLThread<Ctx>(this,
@@ -166,14 +173,20 @@ void RdLibraryStore::addFolder(const QString& category, const QUrl& url)
         {
             for (const vlc_ml_folder_t& root : ml_range_iterate<vlc_ml_folder_t>(roots))
             {
-                if (root.psz_mrl && isInside(RdLibraryItems::normalizedMrl(qfu(root.psz_mrl)), mrl))
+                if (!root.psz_mrl)
+                    continue;
+                const QString rootMrl = RdLibraryItems::normalizedMrl(qfu(root.psz_mrl));
+                if (rootMrl == mrl)
+                    ctx.isRoot = true;
+                else if (isInside(rootMrl, mrl))
                     ctx.insideRoot = true;
             }
         }
-        if (!ctx.insideRoot)
+        if (!ctx.isRoot && !ctx.insideRoot)
             vlc_ml_add_folder(ml, qtu(mrl));
     },
     [this, category, mrl, &mine](quint64, Ctx& ctx) {
+        // a library folder already shown in the other category joins this one too
         if (!ctx.insideRoot && !mine.contains(mrl))
         {
             mine.append(mrl);
@@ -189,18 +202,23 @@ void RdLibraryStore::removeFolder(const QString& category, const QString& mrl)
 {
     const QString normalized = RdLibraryItems::normalizedMrl(mrl);
     QStringList& mine = (category == QLatin1String("music")) ? m_musicFolders : m_videoFolders;
-    const QStringList& other = (category == QLatin1String("music")) ? m_videoFolders : m_musicFolders;
+    QStringList& other = (category == QLatin1String("music")) ? m_videoFolders : m_musicFolders;
 
+    // a folder in no list (added before the redesign) shows in both categories: removing it
+    // from one keeps it in the other
+    const bool shownInOther = other.contains(normalized) || !mine.contains(normalized);
+    if (!other.contains(normalized) && !mine.contains(normalized))
+        other.append(normalized);
     mine.removeAll(normalized);
     save(RD_LIBRARY_KEY("videoFolders"), m_videoFolders);
     save(RD_LIBRARY_KEY("musicFolders"), m_musicFolders);
     emit foldersChanged();
 
     // the folder leaves the media library once no category shows it
-    if (!other.contains(normalized) && m_mediaLib)
+    if (!shownInOther && m_mediaLib)
     {
         m_mediaLib->runOnMLThread(this, [normalized](vlc_medialibrary_t* ml) {
-            vlc_ml_remove_folder(ml, qtu(normalized));
+            vlc_ml_remove_folder(ml, qtu(withTrailingSlash(normalized)));
         });
     }
 }
@@ -210,7 +228,7 @@ void RdLibraryStore::reloadFolder(const QString& mrl)
     if (!m_mediaLib)
         return;
     m_mediaLib->runOnMLThread(this, [mrl](vlc_medialibrary_t* ml) {
-        vlc_ml_reload_folder(ml, mrl.isEmpty() ? nullptr : qtu(mrl));
+        vlc_ml_reload_folder(ml, mrl.isEmpty() ? nullptr : qtu(withTrailingSlash(mrl)));
     });
 }
 
@@ -539,18 +557,28 @@ void RdLibraryStore::deletePlaylist(const MLItemId& playlistId)
 {
     if (!m_mediaLib || !playlistId.isValid())
         return;
+    struct Ctx {
+        bool deleted = false;
+    };
     const int64_t id = playlistId.id;
-    m_mediaLib->runOnMLThread(this, [id](vlc_medialibrary_t* ml) {
-        vlc_ml_playlist_delete(ml, id);
+    m_mediaLib->runOnMLThread<Ctx>(this,
+    [id](vlc_medialibrary_t* ml, Ctx& ctx) {
+        ctx.deleted = vlc_ml_playlist_delete(ml, id) == VLC_SUCCESS;
+    },
+    [this, id](quint64, Ctx& ctx) {
+        if (!ctx.deleted)
+        {
+            msg_Warn(p_intf, "could not delete playlist %" PRId64, id);
+            return;
+        }
+        const QString key = QString::number(id);
+        const QString cover = m_playlistCovers.value(key).toUrl().toLocalFile();
+        if (!cover.isEmpty())
+            QFile::remove(cover);
+        m_playlistCovers.remove(key);
+        save(RD_LIBRARY_KEY("playlistCovers"), m_playlistCovers);
+        emit playlistCoversChanged();
     });
-
-    const QString key = QString::number(id);
-    const QString cover = m_playlistCovers.value(key).toUrl().toLocalFile();
-    if (!cover.isEmpty())
-        QFile::remove(cover);
-    m_playlistCovers.remove(key);
-    save(RD_LIBRARY_KEY("playlistCovers"), m_playlistCovers);
-    emit playlistCoversChanged();
 }
 
 QString RdLibraryStore::coverDirectory() const
@@ -560,7 +588,11 @@ QString RdLibraryStore::coverDirectory() const
         return {};
     const QString path = QDir(qfu(dir)).filePath(QStringLiteral("playlist-covers"));
     free(dir);
-    QDir().mkpath(path);
+    if (!QDir().mkpath(path))
+    {
+        msg_Warn(p_intf, "could not create %s", qtu(path));
+        return {};
+    }
     return path;
 }
 
@@ -580,7 +612,10 @@ void RdLibraryStore::setPlaylistCover(const MLItemId& playlistId, const QUrl& im
                                   .arg(QDateTime::currentMSecsSinceEpoch())
                                   .arg(QFileInfo(image.toLocalFile()).suffix().toLower()));
     if (!QFile::copy(image.toLocalFile(), target))
+    {
+        msg_Warn(p_intf, "could not copy the playlist cover to %s", qtu(target));
         return;
+    }
     if (!previous.isEmpty())
         QFile::remove(previous);
 
@@ -620,13 +655,17 @@ void RdLibraryStore::exportPlaylist(const MLItemId& playlistId, const QString& n
                 continue;
             ctx.lines.append(QStringLiteral("#EXTINF:%1,%2").arg(m.i_duration / 1000).arg(qfu(m.psz_title)));
             const QUrl url(qfu(m.p_files->p_items[0].psz_mrl));
-            ctx.lines.append(url.isLocalFile() ? QDir::toNativeSeparators(url.toLocalFile()) : url.toString());
+            ctx.lines.append(url.isLocalFile() ? QDir::toNativeSeparators(url.toLocalFile())
+                                               : qfu(m.p_files->p_items[0].psz_mrl));
         }
     },
-    [file](quint64, Ctx& ctx) {
+    [this, file](quint64, Ctx& ctx) {
         QFile out(file);
         if (!out.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text))
+        {
+            msg_Warn(p_intf, "could not write the playlist to %s", qtu(file));
             return;
+        }
         QTextStream stream(&out);
         stream << "#EXTM3U\n";
         for (const QString& line : std::as_const(ctx.lines))
@@ -657,12 +696,11 @@ void RdLibraryStore::setFavorite(const MLItemId& id, const QString& mrl, bool fa
     if (!m_mediaLib || !id.isValid())
         return;
     const MLItemId item = id;
-    const QString folderMrl = mrl;
-    m_mediaLib->runOnMLThread(this, [item, folderMrl, favorite](vlc_medialibrary_t* ml) {
+    m_mediaLib->runOnMLThread(this, [item, mrl, favorite](vlc_medialibrary_t* ml) {
         switch (item.type)
         {
         case VLC_ML_PARENT_FOLDER:
-            vlc_ml_folder_set_favorite(ml, qtu(folderMrl), favorite);
+            vlc_ml_folder_set_favorite(ml, qtu(withTrailingSlash(mrl)), favorite);
             break;
         case VLC_ML_PARENT_PLAYLIST:
             vlc_ml_playlist_set_favorite(ml, item.id, favorite);
@@ -690,7 +728,8 @@ void RdLibraryStore::showInFileExplorer(const QString& mrl) const
         return;
     const QString path = QDir::toNativeSeparators(url.toLocalFile());
 #ifdef _WIN32
-    QProcess::startDetached(QStringLiteral("explorer.exe"), { QStringLiteral("/select,") + path });
+    // "/select," and the path as separate arguments: explorer does not parse a quoted pair
+    QProcess::startDetached(QStringLiteral("explorer.exe"), { QStringLiteral("/select,"), path });
 #else
     QDesktopServices::openUrl(QUrl::fromLocalFile(QFileInfo(url.toLocalFile()).absolutePath()));
 #endif

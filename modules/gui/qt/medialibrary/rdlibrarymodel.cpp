@@ -288,7 +288,7 @@ void RdLibraryModel::setSearchPattern(const QString& pattern)
     rebuild();
 }
 
-bool RdLibraryModel::isRelevantEvent(int eventType) const
+bool RdLibraryModel::isRelevantEvent(int eventType)
 {
     switch (eventType)
     {
@@ -309,7 +309,7 @@ void RdLibraryModel::onMlEvent(void* data, const vlc_ml_event_t* event)
 {
     // media library thread
     auto* self = static_cast<RdLibraryModel*>(data);
-    if (!self->isRelevantEvent(event->i_type))
+    if (!isRelevantEvent(event->i_type))
         return;
     QMetaObject::invokeMethod(self, &RdLibraryModel::scheduleReload, Qt::QueuedConnection);
 }

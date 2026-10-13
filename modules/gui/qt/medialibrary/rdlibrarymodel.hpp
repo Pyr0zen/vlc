@@ -137,8 +137,9 @@ protected:
     // captured, never `this`
     using Loader = std::function<RdLibraryItemList(vlc_medialibrary_t* ml)>;
     virtual Loader createLoader() const = 0;
-    // media library events that change the page (any change by default)
-    virtual bool isRelevantEvent(int eventType) const;
+    // media library events that change the page; called on the media library thread, so it
+    // touches no object state
+    static bool isRelevantEvent(int eventType);
     // the model may only load once its parameters are set
     virtual bool canLoad() const { return true; }
 
