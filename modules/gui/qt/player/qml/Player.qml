@@ -59,7 +59,8 @@ FocusScope {
 
     property bool _controlsUnderVideo: (MainCtx.pinVideoControls
                                         &&
-                                        (MainCtx.intfMainWindow.visibility !== Window.FullScreen))
+                                        (MainCtx.intfMainWindow.visibility !== Window.FullScreen)
+                                        && !RdPanels.uiHidden)
 
     readonly property bool _windowed: MainCtx.intfMainWindow.visibility !== Window.FullScreen
 
@@ -76,10 +77,13 @@ FocusScope {
     readonly property bool _showBothBars: playerToolbarVisibilityFSM.isVisible
                                           && (_windowed || !MainCtx.hasEmbededVideo
                                               || playerToolbarVisibilityFSM.keyboardShown)
-    readonly property bool _topBarVisible: _controlsUnderVideo || _showBothBars || _mouseNearTop
-                                           || (playerToolbarVisibilityFSM.isLocked && !_mouseNearBottom)
-    readonly property bool _controlBarVisible: _controlsUnderVideo || _showBothBars || _mouseNearBottom
-                                               || (playerToolbarVisibilityFSM.isLocked && !_mouseNearTop)
+    // Hide UI (W4.10, Ctrl + \) hides both bars whatever the mouse does
+    readonly property bool _topBarVisible: !RdPanels.uiHidden
+                                           && (_controlsUnderVideo || _showBothBars || _mouseNearTop
+                                               || (playerToolbarVisibilityFSM.isLocked && !_mouseNearBottom))
+    readonly property bool _controlBarVisible: !RdPanels.uiHidden
+                                               && (_controlsUnderVideo || _showBothBars || _mouseNearBottom
+                                                   || (playerToolbarVisibilityFSM.isLocked && !_mouseNearTop))
 
     // cursor height inside the player, -1 outside. Hover and mouse move events do not reach Qt
     // Quick while the cursor is over the native video, so the cursor is read ten times a second.
@@ -141,6 +145,7 @@ FocusScope {
     Component.onDestruction: {
         MainCtx.preferHotkeys = false
         RdPanels.close()
+        RdPanels.uiHidden = false
     }
 
     Keys.priority: Keys.AfterItem
@@ -1573,10 +1578,17 @@ FocusScope {
         onVisibleChanged: rootPlayer.lockUnlockAutoHide(visible)
     }
 
-    QmlAudioContextMenu {
-        id: audioContextMenu
+    // redesign: right-click menu and Hide UI (W4.10); the video's right click arrives through
+    // DialogsProvider, the audio view's here
+    RdPlayerMenu {
+        id: playerMenu
 
-        ctx: MainCtx
+        // a hidden toolbar FSM ignores lock(): show it first so lock and unlock stay balanced
+        onShownChanged: {
+            if (shown && !playerToolbarVisibilityFSM.isVisible)
+                playerToolbarVisibilityFSM.askShow()
+            rootPlayer.lockUnlockAutoHide(shown)
+        }
     }
 
     TapHandler {
@@ -1585,7 +1597,7 @@ FocusScope {
 
         onTapped: (eventPoint, button) => {
             if (button & Qt.RightButton) {
-                audioContextMenu.popup(eventPoint.globalPosition)
+                playerMenu.popupAtCursor()
             }
         }
     }

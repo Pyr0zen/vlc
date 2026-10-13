@@ -261,6 +261,8 @@ libqt_plugin_la_SOURCES = \
 	menus/qml_menu_wrapper.cpp \
 	menus/qml_menu_wrapper.hpp \
 	menus/menus.cpp menus/menus.hpp \
+	menus/rd_menu_model.cpp \
+	menus/rd_menu_model.hpp \
 	network/addonsmodel.cpp \
 	network/addonsmodel.hpp \
 	network/mediatreelistener.cpp \
@@ -482,6 +484,7 @@ nodist_libqt_plugin_la_SOURCES = \
 	menus/custom_menus.moc.cpp \
 	menus/qml_menu_wrapper.moc.cpp \
 	menus/menus.moc.cpp \
+	menus/rd_menu_model.moc.cpp \
 	network/addonsmodel.moc.cpp \
 	network/devicesourceprovider.moc.cpp \
 	network/networkdevicemodel.moc.cpp \
@@ -1348,7 +1351,9 @@ libqml_module_menus_a_CPPFLAGS = $(libqt_plugin_la_CPPFLAGS)
 libqml_module_menus_a_QML = \
 	menus/qml/GlobalShortcuts.qml \
 	menus/qml/Menubar.qml \
-	menus/qml/ShortcutExt.qml
+	menus/qml/ShortcutExt.qml \
+	menus/qml/RdCascadeMenu.qml \
+	menus/qml/RdMainMenu.qml
 libqml_module_menus_a_Singleton_QML =
 libqml_module_menus_a_SOURCES = $(QML_MODULE_menus_SRC)
 nodist_libqml_module_menus_a_SOURCES = menus/qmlassets.cpp $(QML_MODULE_menus_NODIST_EXTRA)
@@ -1413,7 +1418,8 @@ libqml_module_player_a_QML = \
 	player/qml/TracksListPage.qml \
 	player/qml/ControlLayout.qml \
 	player/qml/ControlRepeater.qml \
-	player/qml/NavigationBox.qml
+	player/qml/NavigationBox.qml \
+	player/qml/RdPlayerMenu.qml
 
 libqml_module_player_a_Singleton_QML = \
 	player/qml/PlayerControlbarControls.qml \

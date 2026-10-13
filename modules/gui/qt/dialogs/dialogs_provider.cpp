@@ -207,6 +207,12 @@ void DialogsProvider::customEvent( QEvent *event )
         {
            popupMenu.reset();
            bool show = (de->i_arg != 0);
+           if( m_rdPopupMenu )
+           {
+              // redesign: the player draws this menu in its own style (W4.10)
+              emit rdPopupMenuRequested( show );
+              break;
+           }
            if( show )
            {
               //popping a QMenu prevents mouse release events to be received,

@@ -122,6 +122,9 @@ public:
 #ifdef UPDATE_CHECK
     Q_PROPERTY(bool updateDialogVisible READ updateDialogVisible NOTIFY updateDialogVisibleChanged FINAL)
 #endif
+    // redesign: set while the player shows VLC's right-click menu in QML (W4.10); the requests
+    // then go to rdPopupMenuRequested() instead of the native popup menu
+    Q_PROPERTY(bool rdPopupMenu MEMBER m_rdPopupMenu NOTIFY rdPopupMenuChanged FINAL)
 
     static DialogsProvider *getInstance()
     {
@@ -193,6 +196,7 @@ private:
 
     QWidget* root;
     bool b_isDying;
+    bool m_rdPopupMenu = false;
 
     void openDialog( OpenDialog::OpenTab );
 
@@ -307,6 +311,10 @@ signals:
 #ifdef UPDATE_CHECK
     void updateDialogVisibleChanged();
 #endif
+
+    void rdPopupMenuChanged();
+    // show or hide the player's right-click menu (right click on the video, Menu key)
+    void rdPopupMenuRequested(bool show);
 };
 
 class DialogEvent : public QEvent

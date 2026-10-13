@@ -33,6 +33,9 @@ T.ItemDelegate {
     property bool selected: false           // orange check at the right
     property bool dimmed: false             // e.g. "+ New Custom Preset"
     property Component leading: null        // optional item before the text (equalizer curve)
+    property bool reserveIconSpace: false   // keep the icon column when the row has no icon (menus)
+    property bool active: false             // highlighted without hover, e.g. its submenu is open
+    property color iconColor: control.rdPalette.rdFgA2
 
     readonly property SystemPalette rdPalette: VLCStyle.palette
 
@@ -52,18 +55,20 @@ T.ItemDelegate {
 
     background: Rectangle {
         radius: VLCStyle.rd_radius_normal
-        color: (control.hovered || control.visualFocus || control.selected) ? control.rdPalette.rdBgA2
-                                                                             : "transparent"
+        color: (control.hovered || control.visualFocus || control.selected || control.active)
+               ? control.rdPalette.rdBgA2 : "transparent"
     }
 
     contentItem: Row {
         spacing: control.spacing
 
         RdIcon {
-            visible: control.rdIcon !== ""
+            visible: control.rdIcon !== "" || control.reserveIconSpace
             anchors.verticalCenter: parent.verticalCenter
             name: control.rdIcon
-            color: control.rdPalette.rdFgA2
+            color: control.enabled ? control.iconColor : control.rdPalette.rdFgA4
+            color2: control.enabled ? control.rdPalette.rdAccentDim : control.rdPalette.rdFgA4
+            accentColor: control.enabled ? control.rdPalette.rdAccentMain : control.rdPalette.rdFgA4
         }
 
         Loader {
@@ -80,7 +85,8 @@ T.ItemDelegate {
             text: control.text
             font.family: VLCStyle.rd_fontFamily
             font.pixelSize: VLCStyle.rd_fontSize_label
-            color: control.dimmed ? control.rdPalette.rdFgA3 : control.rdPalette.rdFgA2
+            color: !control.enabled ? control.rdPalette.rdFgA4
+                                    : control.dimmed ? control.rdPalette.rdFgA3 : control.rdPalette.rdFgA2
         }
 
         Item {
@@ -99,7 +105,7 @@ T.ItemDelegate {
                 text: control.shortcut
                 font.family: VLCStyle.rd_fontFamily
                 font.pixelSize: VLCStyle.rd_fontSize_label
-                color: control.rdPalette.rdFgA3
+                color: control.enabled ? control.rdPalette.rdFgA3 : control.rdPalette.rdFgA4
             }
 
             RdIcon {
@@ -107,7 +113,7 @@ T.ItemDelegate {
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
                 name: control.selected ? "check_state-active" : "chevron_direction-right"
-                color: control.rdPalette.rdFgA3
+                color: control.enabled ? control.rdPalette.rdFgA3 : control.rdPalette.rdFgA4
             }
         }
     }
