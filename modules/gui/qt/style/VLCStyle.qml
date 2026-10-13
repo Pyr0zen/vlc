@@ -366,6 +366,13 @@ QtObject {
     readonly property int rd_menuWidth: MainCtx.dp(265, scale)
     readonly property int rd_mainMenuWidth: MainCtx.dp(375, scale)
     readonly property int rd_rowHeight: MainCtx.dp(32, scale)
+    // Settings dialog (Figma "Settings - global" 1048x865: header 50, category column 216)
+    readonly property int rd_settingsDialogWidth: MainCtx.dp(1048, scale)
+    readonly property int rd_settingsDialogHeight: MainCtx.dp(865, scale)
+    readonly property int rd_settingsHeaderHeight: MainCtx.dp(50, scale)
+    readonly property int rd_settingsNavWidth: MainCtx.dp(216, scale)
+    readonly property int rd_settingsCategoryHeight: MainCtx.dp(40, scale)
+    readonly property real rd_disabledRowOpacity: 0.3                    // Figma "Settings - library" dependent rows
     readonly property real rd_blurRadius: 50                              // effect "bg blur"
 
     // Scroll bar (size means width or height, depending on the orientation):
