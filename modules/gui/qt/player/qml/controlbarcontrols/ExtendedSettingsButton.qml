@@ -40,9 +40,12 @@ Widgets.IconToolButton {
     checked: MainCtx.playerView && RdPanels.settingsOpen
 
     onClicked: {
-        if (MainCtx.playerView)
-            RdPanels.toggle("playback")
-        else
+        if (MainCtx.playerView) {
+            if (RdPanels.settingsOpen)
+                RdPanels.close()
+            else
+                RdPanels.open("playback")
+        } else
             DialogsProvider.extendedDialog()
     }
 }

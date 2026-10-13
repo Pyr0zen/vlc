@@ -77,7 +77,6 @@ Rectangle {
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     onClicked: {
-                        root.currentIndex = segment.index
                         root.activated(segment.index)
                     }
                 }

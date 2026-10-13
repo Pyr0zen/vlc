@@ -18,6 +18,7 @@
 #ifndef RD_EFFECTS_HPP
 #define RD_EFFECTS_HPP
 
+#include <QHash>
 #include <QObject>
 #include <QStringList>
 #include <QTimer>
@@ -79,6 +80,8 @@ public:
     Q_INVOKABLE void setVideoFilterEnabled(const QString& module, bool enabled);
     Q_INVOKABLE QVariant videoValue(const QString& name) const;
     Q_INVOKABLE void setVideoValue(const QString& name, const QVariant& value);
+    // re-applies a filter whose options are read when it starts (e.g. transform-type)
+    Q_INVOKABLE void restartVideoFilter(const QString& module);
 
     // subtitle text size in percent (live, "sub-text-scale")
     Q_INVOKABLE int subtitleTextScale() const;
@@ -99,6 +102,7 @@ private:
     qt_intf_t* m_intf = nullptr;
     PlayerController* m_player = nullptr;
     int m_revision = 0;
+    mutable QHash<QString, QString> m_filterTypes;
     QTimer m_saveTimer;
 };
 

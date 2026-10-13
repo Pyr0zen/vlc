@@ -66,6 +66,7 @@ T.Control {
 
             readOnly: !control.editable
             activeFocusOnPress: control.editable
+            activeFocusOnTab: control.editable
             clip: true
             selectByMouse: true
             validator: control.validator
@@ -86,6 +87,8 @@ T.Control {
             Binding on text {
                 when: !input.activeFocus
                 value: control.text
+                // keep the shown value when editing starts
+                restoreMode: Binding.RestoreNone
             }
 
             onActiveFocusChanged: {
@@ -96,6 +99,12 @@ T.Control {
             onAccepted: {
                 control.edited(text)
                 focus = false
+            }
+
+            // Escape cancels the edit before the player's Escape shortcut closes the panel
+            Keys.onShortcutOverride: (event) => {
+                if (event.key === Qt.Key_Escape)
+                    event.accepted = true
             }
 
             Keys.onEscapePressed: (event) => {

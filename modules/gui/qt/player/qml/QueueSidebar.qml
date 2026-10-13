@@ -26,6 +26,7 @@ import VLC.MainInterface
 import VLC.Style
 import VLC.Player
 import VLC.Playlist
+import VLC.Dialogs
 import VLC.Widgets as Widgets
 
 RdSidePanel {
@@ -70,10 +71,11 @@ RdSidePanel {
             HeaderButton {
                 rdIcon: "sort"
                 description: qsTr("Sort by title")
-                onClicked: MainPlaylistController.sort(PlaylistController.SORT_KEY_TITLE,
-                                                       MainPlaylistController.sortOrder === PlaylistController.SORT_ORDER_ASC
-                                                           ? PlaylistController.SORT_ORDER_DESC
-                                                           : PlaylistController.SORT_ORDER_ASC)
+                // sorting by the same key again reverses the order
+                onClicked: {
+                    queuePage.selectedIndex = -1
+                    MainPlaylistController.sort(PlaylistController.SORT_KEY_TITLE)
+                }
             }
 
             HeaderButton {
@@ -150,6 +152,8 @@ RdSidePanel {
                             target: null
                             xAxis.enabled: false
                             cursorShape: Qt.SizeVerCursor
+                            // keep the drag from the scrolling page
+                            grabPermissions: PointerHandler.CanTakeOverFromAnything
 
                             onActiveChanged: {
                                 if (active)
@@ -161,6 +165,7 @@ RdSidePanel {
                                     queueModel.moveItemsPre([queueRow.index], target)
                                 else if (target > queueRow.index)
                                     queueModel.moveItemsPost([queueRow.index], target)
+                                queuePage.selectedIndex = -1
                             }
                         }
                     }
@@ -181,13 +186,13 @@ RdSidePanel {
             // both buttons open VLC's bookmark editor
             HeaderButton {
                 rdIcon: "remove"
-                description: qsTr("Edit bookmarks")
+                description: qsTr("Remove a bookmark")
                 onClicked: DialogsProvider.bookmarksDialog()
             }
 
             HeaderButton {
                 rdIcon: "add"
-                description: qsTr("Edit bookmarks")
+                description: qsTr("Add a bookmark")
                 onClicked: DialogsProvider.bookmarksDialog()
             }
         }

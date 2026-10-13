@@ -65,10 +65,14 @@ RdSidePanelPage {
                 onActivated: (index) => {
                     if (index === 0) {
                         RdEffects.setVideoFilterEnabled("transform", false)
-                    } else {
-                        RdEffects.setVideoValue("transform-type", index === 1 ? "hflip" : "vflip")
-                        RdEffects.setVideoFilterEnabled("transform", true)
+                        return
                     }
+                    RdEffects.setVideoValue("transform-type", index === 1 ? "hflip" : "vflip")
+                    // the transform filter reads its type when it starts
+                    if (RdEffects.videoFilterEnabled("transform"))
+                        RdEffects.restartVideoFilter("transform")
+                    else
+                        RdEffects.setVideoFilterEnabled("transform", true)
                 }
             }
         }
@@ -241,14 +245,14 @@ RdSidePanelPage {
                 { kind: "color", module: "extract", name: "extract-component", label: qsTr("Color") },
                 { kind: "toggle", module: "colorthres", label: qsTr("Color Threshold") },
                 { kind: "color", module: "colorthres", name: "colorthres-color", label: qsTr("Color") },
-                { kind: "slider", module: "colorthres", name: "colorthres-saturationthres", label: qsTr("Saturation"), decimals: 0 },
-                { kind: "slider", module: "colorthres", name: "colorthres-similaritythres", label: qsTr("Similarity"), decimals: 0 },
+                { kind: "slider", module: "colorthres", name: "colorthres-saturationthres", label: qsTr("Saturation"), decimals: 0, from: 0, to: 100 },
+                { kind: "slider", module: "colorthres", name: "colorthres-similaritythres", label: qsTr("Similarity"), decimals: 0, from: 0, to: 100 },
                 { kind: "toggle", module: "invert", label: qsTr("Negate Colors") },
                 { kind: "toggle", module: "posterize", label: qsTr("Posterize") },
                 { kind: "slider", module: "posterize", name: "posterize-level", label: qsTr("Posterize Level"), decimals: 0 },
                 { kind: "toggle", module: "gradient", label: qsTr("Gradient") },
                 { kind: "choice", module: "gradient", name: "gradient-mode", label: qsTr("Gradient") },
-                { kind: "flag", module: "gradient", name: "gradient-type", label: qsTr("Color") },
+                { kind: "flag", module: "gradient", name: "gradient-color", label: qsTr("Color") },
                 { kind: "flag", module: "gradient", name: "gradient-cartoon", label: qsTr("Cartoon") },
                 { kind: "toggle", module: "sepia", label: qsTr("Sepia") },
                 { kind: "slider", module: "sepia", name: "sepia-intensity", label: qsTr("Sepia Intensity"), decimals: 0 }
@@ -332,6 +336,15 @@ RdSidePanelPage {
         property alias text: groupLabel.text
         property var entries: []
 
+        // (inline components cannot use the page's functions)
+        function parseNumber(text) {
+            return parseFloat(String(text).replace(",", ".").replace(/[^0-9.+-]/g, ""))
+        }
+
+        function colorText(value) {
+            return "#" + ("000000" + Number(value).toString(16)).slice(-6).toUpperCase()
+        }
+
         Layout.fillWidth: true
         spacing: VLCStyle.dp(5)
 
@@ -402,8 +415,8 @@ RdSidePanelPage {
 
                             text: entry.label
                             valueText: current.toFixed(entry.decimals ?? 1) + (entry.unit ?? "")
-                            from: range.min ?? 0
-                            to: range.max ?? 1
+                            from: entry.from ?? range.min ?? 0
+                            to: entry.to ?? range.max ?? 1
                             stepSize: (entry.decimals ?? 1) === 0 ? 1 : Math.pow(10, -(entry.decimals ?? 1))
                             showTicks: false
                             value: current
@@ -422,7 +435,7 @@ RdSidePanelPage {
                             text: entry.label
 
                             Widgets.RdValueBox {
-                                readonly property string hex: root.colorText((RdEffects.revision, RdEffects.videoValue(entry.name)))
+                                readonly property string hex: group.colorText((RdEffects.revision, RdEffects.videoValue(entry.name)))
 
                                 text: hex
                                 showSwatch: true
@@ -497,7 +510,7 @@ RdSidePanelPage {
                                 text: (RdEffects.revision, String(RdEffects.videoValue(entry.name)))
                                 Accessible.name: entry.label
                                 onEdited: (value) => {
-                                    const n = Math.round(root.parseNumber(value))
+                                    const n = Math.round(group.parseNumber(value))
                                     if (!isNaN(n))
                                         RdEffects.setVideoValue(entry.name, n)
                                 }
@@ -512,10 +525,10 @@ RdSidePanelPage {
                             text: entry.label
 
                             Widgets.RdValueBox {
-                                text: (RdEffects.revision, Number(RdEffects.videoValue(entry.name))) + " px"
+                                text: qsTr("%1 px").arg((RdEffects.revision, Number(RdEffects.videoValue(entry.name)) || 0))
                                 Accessible.name: entry.label
                                 onEdited: (value) => {
-                                    const n = Math.round(root.parseNumber(value))
+                                    const n = Math.round(group.parseNumber(value))
                                     if (!isNaN(n))
                                         RdEffects.setVideoValue(entry.name, Math.max(0, n))
                                 }
