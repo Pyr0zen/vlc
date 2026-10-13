@@ -78,11 +78,19 @@ Item {
           icon: "plugins", page: extensionsPage }
     ]
 
-    property string currentKey: "general"
+    // set by open(); empty before, so no page is built for a category nobody opened
+    property string currentKey: ""
 
     readonly property bool opened: popup.opened
     readonly property string searchText: searchField.text
     readonly property bool filtering: _words.length > 0
+    // once searched, all pages stay loaded: clearing and typing again must not destroy and
+    // rebuild them on every keystroke
+    property bool _searched: false
+    onFilteringChanged: {
+        if (filtering)
+            _searched = true
+    }
     readonly property var _words: searchText.toLowerCase().split(/\s+/).filter((w) => w !== "")
 
     readonly property int _currentIndex: _indexOf(currentKey)
@@ -119,8 +127,13 @@ Item {
 
     // Ctrl+P and the menus toggle the dialog like they toggled VLC's preferences
     function toggle(category) {
-        if (popup.opened && !category)
+        // close only when the user is in the dialog's window; from another window (the main
+        // window is raised first) it comes to the front instead
+        const window = root.Window.window
+        if (popup.opened && !category && window && window.active)
             popup.close()
+        else if (popup.opened && !category)
+            return
         else
             open(category)
     }
@@ -568,7 +581,7 @@ Item {
                             width: pageView.width - 2 * VLCStyle.dp(24)
                             height: item ? item.implicitHeight : 0
 
-                            active: pageView.current || pageView.visited || root.filtering
+                            active: pageView.current || pageView.visited || root._searched
                             sourceComponent: pageView.modelData.page
 
                             onLoaded: item.settingsDialog = root
