@@ -226,11 +226,15 @@ T.Popup {
             RdPanels.releaseModal()
     }
 
+    // a keyboard-opened menu highlights its first row, unless a key already moved the focus
+    // during the fade in
     onOpened: {
-        if (root._keyboard)
-            root._focusRow(0, 0, 1)
-        else
+        if (root._keyboard) {
+            if (menuScope.activeFocus)
+                root._focusRow(0, 0, 1)
+        } else if (!root.activeFocus && !menuScope.activeFocus) {
             menuScope.forceActiveFocus()
+        }
     }
 
     // the panels go away once the click that closed the menu is handled
@@ -453,8 +457,14 @@ T.Popup {
                             Accessible.checked: entry.checked
 
                             onHoveredChanged: {
-                                if (!hovered)
+                                if (!hovered) {
+                                    // moving onto a disabled row (no hover events) must not
+                                    // open this row's submenu 200 ms later
+                                    if (root._pendingLevel === panel.index
+                                            && root._pendingRow === entry.index)
+                                        hoverTimer.stop()
                                     return
+                                }
                                 // the mouse takes over from the keyboard highlight
                                 forceActiveFocus(Qt.MouseFocusReason)
                                 root._hover(panel.index, entry.index)
@@ -476,7 +486,9 @@ T.Popup {
                                 if (panel.index > 0)
                                     root._back(panel.index)
                             }
-                            Navigation.cancelAction: () => root._back(panel.index)
+                            // Escape closes the deepest open level first, like native menus
+                            Navigation.cancelAction: () => root._back(Math.max(panel.index,
+                                                                               root._models.length - 1))
                         }
                     }
                 }

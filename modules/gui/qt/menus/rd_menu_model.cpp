@@ -145,6 +145,11 @@ RdMenuModel::~RdMenuModel()
     for (const QPointer<QMenu>& submenu : std::as_const(m_watchedSubmenus))
         if (submenu)
             submenu->removeEventFilter(this);
+
+    // members die in reverse order: m_submenus would be gone while the owned menu deletes its
+    // submenus, whose destroyed() handlers use it; empty it, then delete the menu first
+    m_submenus.clear();
+    m_ownedMenu.reset();
 }
 
 void RdMenuModel::setCtx(MainCtx* ctx)
