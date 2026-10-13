@@ -19,6 +19,7 @@ The user can switch Dark / Light / System and pick one of 9 accent colors at any
 - Fullscreen: same bars and zones; window buttons hidden; video frame (W3.7) not drawn; the fullscreen button in the top bar shows the exit icon.
 - Side panels and the compact library dock inside the inset video area (IA-28, IA-43, P5-23); the video frame, panels, toast and seek thumbnail must not overlap each other badly at small window sizes.
 - Pinned controls (VLC's existing option) keep working: bars always visible, video between them.
+- In-window modal dialogs (Open Network Stream, W6.4) dim the whole window, bars included; the bars may fade underneath and come back on the next mouse move. Closing a dialog (Save, Cancel, X, Escape) gives the keyboard focus back to the item that had it.
 
 ## 3. Customize Player and profiles (video 19:12-19:36; W8.1, W8.2)
 - Every control bar and top bar element must be a self-contained control that works wherever the user drags it (left, center, right, top bar, bottom bar), at any order, with any neighbours. No control may assume its position or look up siblings by position.
