@@ -36,6 +36,12 @@ RdSidePanelPage {
 
     key: "videoSettings"
 
+    // values may have changed elsewhere (VLC's effects dialog, hotkeys) while the page was hidden
+    onActiveChanged: {
+        if (active)
+            RdEffects.refresh()
+    }
+
     function parseNumber(text) {
         return parseFloat(String(text).replace(",", ".").replace(/[^0-9.+-]/g, ""))
     }
@@ -44,10 +50,11 @@ RdSidePanelPage {
         return "#" + ("000000" + Number(value).toString(16)).slice(-6).toUpperCase()
     }
 
-    readonly property string _flip: (RdEffects.revision, RdEffects.videoFilterEnabled("transform")
-                                     ? String(RdEffects.videoValue("transform-type")) : "")
-    readonly property real _rotation: (RdEffects.revision, RdEffects.videoFilterEnabled("rotate")
-                                       ? Number(RdEffects.videoValue("rotate-angle")) : 0)
+    // a binding reading RdEffects.values[key] follows only that value
+    readonly property string _flip: RdEffects.values[RdEffects.videoFilterKey("transform")]
+                                    ? String(RdEffects.values[RdEffects.videoKey("transform-type")]) : ""
+    readonly property real _rotation: RdEffects.values[RdEffects.videoFilterKey("rotate")]
+                                      ? Number(RdEffects.values[RdEffects.videoKey("rotate-angle")]) : 0
 
     Widgets.RdSettingsSection {
         title: qsTr("Defaults")
@@ -322,7 +329,7 @@ RdSidePanelPage {
         property string option
 
         readonly property var _choices: RdEffects.optionChoices(option)
-        readonly property var _current: (RdEffects.revision, RdEffects.option(option))
+        readonly property var _current: RdEffects.values[RdEffects.optionKey(option)]
 
         implicitWidth: VLCStyle.dp(220)
         model: _choices.map((c) => c.text)
@@ -399,7 +406,7 @@ RdSidePanelPage {
                             text: entry.label
 
                             Widgets.RdToggle {
-                                checked: (RdEffects.revision, RdEffects.videoFilterEnabled(entry.module))
+                                checked: RdEffects.values[RdEffects.videoFilterKey(entry.module)]
                                 Accessible.name: entry.label
                                 onToggled: RdEffects.setVideoFilterEnabled(entry.module, checked)
                             }
@@ -412,7 +419,7 @@ RdSidePanelPage {
 
                         Widgets.RdParamSlider {
                             readonly property var range: RdEffects.optionRange(entry.name)
-                            readonly property real current: (RdEffects.revision, Number(RdEffects.videoValue(entry.name)))
+                            readonly property real current: Number(RdEffects.values[RdEffects.videoKey(entry.name)])
 
                             text: entry.label
                             valueText: current.toFixed(entry.decimals ?? 1) + (entry.unit ?? "")
@@ -436,7 +443,7 @@ RdSidePanelPage {
                             text: entry.label
 
                             Widgets.RdValueBox {
-                                readonly property string hex: group.colorText((RdEffects.revision, RdEffects.videoValue(entry.name)))
+                                readonly property string hex: group.colorText(RdEffects.values[RdEffects.videoKey(entry.name)])
 
                                 text: hex
                                 showSwatch: true
@@ -460,7 +467,7 @@ RdSidePanelPage {
 
                             Widgets.RdDropdown {
                                 readonly property var _choices: RdEffects.optionChoices(entry.name)
-                                readonly property var _current: (RdEffects.revision, RdEffects.videoValue(entry.name))
+                                readonly property var _current: RdEffects.values[RdEffects.videoKey(entry.name)]
 
                                 implicitWidth: VLCStyle.dp(180)
                                 model: _choices.map((c) => c.text)
@@ -479,7 +486,7 @@ RdSidePanelPage {
                             text: entry.label
 
                             Widgets.RdToggle {
-                                checked: !!Number((RdEffects.revision, RdEffects.videoValue(entry.name)))
+                                checked: !!Number(RdEffects.values[RdEffects.videoKey(entry.name)])
                                 Accessible.name: entry.label
                                 onToggled: RdEffects.setVideoValue(entry.name, checked ? 1 : 0)
                             }
@@ -494,7 +501,7 @@ RdSidePanelPage {
 
                             Widgets.RdValueBox {
                                 implicitWidth: VLCStyle.dp(200)
-                                text: (RdEffects.revision, String(RdEffects.videoValue(entry.name)))
+                                text: String(RdEffects.values[RdEffects.videoKey(entry.name)])
                                 Accessible.name: entry.label
                                 onEdited: (value) => RdEffects.setVideoValue(entry.name, value)
                             }
@@ -508,7 +515,7 @@ RdSidePanelPage {
                             text: entry.label
 
                             Widgets.RdValueBox {
-                                text: (RdEffects.revision, String(RdEffects.videoValue(entry.name)))
+                                text: String(RdEffects.values[RdEffects.videoKey(entry.name)])
                                 Accessible.name: entry.label
                                 onEdited: (value) => {
                                     const n = Math.round(group.parseNumber(value))
@@ -526,7 +533,7 @@ RdSidePanelPage {
                             text: entry.label
 
                             Widgets.RdValueBox {
-                                text: qsTr("%1 px").arg((RdEffects.revision, Number(RdEffects.videoValue(entry.name)) || 0))
+                                text: qsTr("%1 px").arg(Number(RdEffects.values[RdEffects.videoKey(entry.name)]) || 0)
                                 Accessible.name: entry.label
                                 onEdited: (value) => {
                                     const n = Math.round(group.parseNumber(value))
