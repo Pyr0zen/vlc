@@ -71,7 +71,13 @@ RdLibraryStore::RdLibraryStore(qt_intf_t* intf, MediaLib* mediaLib, QObject* par
     : QObject(parent)
     , p_intf(intf)
     , m_mediaLib(mediaLib)
+    , m_eventCallback(nullptr, [this](vlc_ml_event_callback_t* cb) {
+        m_mediaLib->unregisterEventListener(cb);
+    })
 {
+    if (m_mediaLib)
+        m_eventCallback.reset(m_mediaLib->registerEventListener(&RdLibraryStore::onMlEvent, this));
+
     QSettings* settings = getSettings();
     m_videoFolders = settings->value(RD_LIBRARY_KEY("videoFolders")).toStringList();
     m_musicFolders = settings->value(RD_LIBRARY_KEY("musicFolders")).toStringList();
@@ -82,6 +88,27 @@ RdLibraryStore::RdLibraryStore(qt_intf_t* intf, MediaLib* mediaLib, QObject* par
     m_sortKeys = settings->value(RD_LIBRARY_KEY("sortKeys")).toMap();
     m_viewMode = settings->value(RD_LIBRARY_KEY("viewMode"), QStringLiteral("grid")).toString();
     m_compactViewMode = settings->value(RD_LIBRARY_KEY("compactViewMode"), QStringLiteral("list")).toString();
+}
+
+RdLibraryStore::~RdLibraryStore()
+{
+    m_eventCallback.reset();
+}
+
+void RdLibraryStore::onMlEvent(void* data, const vlc_ml_event_t* event)
+{
+    // media library thread
+    switch (event->i_type)
+    {
+    case VLC_ML_EVENT_FOLDER_ADDED:
+    case VLC_ML_EVENT_ENTRY_POINT_ADDED:
+    case VLC_ML_EVENT_DISCOVERY_COMPLETED:
+        QMetaObject::invokeMethod(static_cast<RdLibraryStore*>(data), &RdLibraryStore::foldersScanned,
+                                  Qt::QueuedConnection);
+        break;
+    default:
+        break;
+    }
 }
 
 void RdLibraryStore::save(const char* key, const QVariant& value)

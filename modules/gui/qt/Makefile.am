@@ -1347,8 +1347,30 @@ libqml_module_medialibrary_a_QML = \
 	medialibrary/qml/MLContextMenu.qml \
 	medialibrary/qml/MLDragItem.qml \
 	medialibrary/qml/MLTableColumns.qml \
-	medialibrary/qml/ScanProgressBar.qml
-libqml_module_medialibrary_a_Singleton_QML =
+	medialibrary/qml/ScanProgressBar.qml \
+	medialibrary/qml/RdLibraryIconButton.qml \
+	medialibrary/qml/RdLibraryThumb.qml \
+	medialibrary/qml/RdLibraryRow.qml \
+	medialibrary/qml/RdLibraryCard.qml \
+	medialibrary/qml/RdLibraryMenu.qml \
+	medialibrary/qml/RdAddToPlaylistMenu.qml \
+	medialibrary/qml/RdLibraryItemMenu.qml \
+	medialibrary/qml/RdBreadcrumb.qml \
+	medialibrary/qml/RdLibraryHeader.qml \
+	medialibrary/qml/RdLibraryPage.qml \
+	medialibrary/qml/RdLibraryHome.qml \
+	medialibrary/qml/RdLibraryContent.qml \
+	medialibrary/qml/RdLibraryDialog.qml \
+	medialibrary/qml/RdDashedBorder.qml \
+	medialibrary/qml/RdPlaylistDialog.qml \
+	medialibrary/qml/RdStreamDialog.qml \
+	medialibrary/qml/RdFolderInfoPopup.qml \
+	medialibrary/qml/RdLibraryRail.qml \
+	medialibrary/qml/RdLibrarySidebar.qml \
+	medialibrary/qml/RdLibraryView.qml
+libqml_module_medialibrary_a_Singleton_QML = \
+	medialibrary/qml/RdLibraryNav.qml \
+	medialibrary/qml/RdLibraryActions.qml
 libqml_module_medialibrary_a_SOURCES = $(QML_MODULE_medialibrary_SRC)
 nodist_libqml_module_medialibrary_a_SOURCES = medialibrary/qmlassets.cpp $(QML_MODULE_medialibrary_NODIST_EXTRA)
 QML_MODULE_LIBS += libqml_module_medialibrary.a
