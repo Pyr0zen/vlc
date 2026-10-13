@@ -214,13 +214,7 @@ T.Popup {
         Widgets.RdShadow { }
     }
 
-    enter: Transition {
-        NumberAnimation { property: "opacity"; from: 0.0; to: 1.0; duration: VLCStyle.duration_short }
-    }
-
-    exit: Transition {
-        NumberAnimation { property: "opacity"; from: 1.0; to: 0.0; duration: VLCStyle.duration_short }
-    }
+    // opens and closes instantly, like every redesign dialog (Decision 32)
 
     contentItem: Item {
         id: content

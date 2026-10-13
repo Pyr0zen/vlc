@@ -141,31 +141,16 @@ T.Popup {
         _restoreFocusItem = null
     }
 
-    // Motion: the Figma prototype opens every overlay instantly (no transition) and has no
-    // link to this dialog; the video's fade at 13:09.2 (about 250 ms, ease-in, together
-    // with the dim, no scale) is most likely an editing dissolve. So the window dims and
-    // the dialog fades in place, together, in 200 ms with an ease-out: visible from the
-    // first frame (performance rule) and never lingering. Closing mirrors it.
+    // Motion (Decision 32): dialogs open and close instantly, like the Figma prototype and the
+    // Settings dialog (the video's fade at 13:09.2 is an editing dissolve)
 
-    // dimmed window behind the dialog (video 13:09); the popup drives its opacity
+    // dimmed window behind the dialog (video 13:09)
     T.Overlay.modal: Item {
-        Behavior on opacity {
-            NumberAnimation { duration: VLCStyle.duration_long; easing.type: Easing.OutQuad }
-        }
-
         Rectangle {
             anchors.fill: parent
             anchors.margins: MainCtx.windowExtendedMargin
             color: VLCStyle.palette.rdBgB2Transparent
         }
-    }
-
-    enter: Transition {
-        OpacityAnimator { from: 0.0; to: 1.0; duration: VLCStyle.duration_long; easing.type: Easing.OutQuad }
-    }
-
-    exit: Transition {
-        OpacityAnimator { from: 1.0; to: 0.0; duration: VLCStyle.duration_long; easing.type: Easing.OutQuad }
     }
 
     // Figma: Dark/BG/A3 Transparent, radius 14, effect "bg blur + shadow"
