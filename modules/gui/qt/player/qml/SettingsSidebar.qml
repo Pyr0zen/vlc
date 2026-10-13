@@ -50,9 +50,12 @@ RdSidePanel {
         style: Widgets.RdButton.Style.Bar
         rdIcon: "settings"
         text: qsTr("Open Advanced Settings")
+        // opens the Settings dialog on the matching category (Figma prototype, F-08)
         onClicked: {
+            const category = ({ playback: "playback", videoSettings: "video",
+                                audioSettings: "audio", subtitleSettings: "subtitles" })[root.currentKey]
             RdPanels.close()
-            DialogsProvider.prefsDialog()
+            DialogsProvider.settingsDialog(category || "")
         }
     }
 }
