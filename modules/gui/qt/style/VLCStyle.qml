@@ -329,6 +329,16 @@ QtObject {
 
     // redesign: sizes from the Figma file (redesign/FIGMA_FLOWS.md, "Exact specs"), 1x units scaled like the rest
     readonly property string rd_fontFamily: "Inter"
+    // key captions (Keyboard Shortcuts dialog): DM Mono, else the first installed monospace font
+    readonly property string rd_fontFamilyMono: {
+        const installed = Qt.fontFamilies()
+        const wanted = ["DM Mono", "Consolas", "Menlo", "DejaVu Sans Mono"]
+        for (let i = 0; i < wanted.length; ++i) {
+            if (installed.indexOf(wanted[i]) >= 0)
+                return wanted[i]
+        }
+        return "monospace"
+    }
     readonly property int rd_fontSize_label: MainCtx.dp(14, scale)      // Inter 400 14 / 16.9
     readonly property int rd_fontSize_time: MainCtx.dp(15, scale)       // time labels 400 15 / 18.2
     readonly property int rd_fontSize_header: MainCtx.dp(16, scale)     // section headers 500 16
@@ -367,6 +377,11 @@ QtObject {
     readonly property int rd_mainMenuWidth: MainCtx.dp(375, scale)
     readonly property int rd_rowHeight: MainCtx.dp(32, scale)
     readonly property real rd_blurRadius: 50                              // effect "bg blur"
+    // dialogs (Figma "Keyboard Shortcuts", "Add Subtitles"): 1048x800, header 96 (title + controls), footer 72
+    readonly property int rd_dialogWidth: MainCtx.dp(1048, scale)
+    readonly property int rd_dialogHeight: MainCtx.dp(800, scale)
+    readonly property int rd_dialogHeaderHeight: MainCtx.dp(96, scale)
+    readonly property int rd_dialogFooterHeight: MainCtx.dp(72, scale)
 
     // Scroll bar (size means width or height, depending on the orientation):
     readonly property real scrollBarInteractingSize: MainCtx.dp(8, scale)
