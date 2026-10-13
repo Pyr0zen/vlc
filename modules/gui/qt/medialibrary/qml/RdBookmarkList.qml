@@ -18,9 +18,9 @@
 
 // redesign: bookmarks of the current file in the queue sidebar's Bookmarks tab (video
 // 15:08-15:16). Part of the media library module: VLC keeps bookmarks in the media library, so
-// the sidebar loads this list only when the media library is available.
+// the sidebar loads this list only when the media library is available. The rows are created on
+// demand (RdListView).
 import QtQuick
-import QtQuick.Layouts
 
 import VLC.MainInterface
 import VLC.Style
@@ -28,32 +28,31 @@ import VLC.Player
 import VLC.MediaLibrary
 import VLC.Widgets as Widgets
 
-ColumnLayout {
+Widgets.RdListView {
     id: root
 
-    readonly property int count: bookmarks.count
-
-    spacing: VLCStyle.dp(12)
-
-    MLBookmarkModel {
+    model: MLBookmarkModel {
         id: bookmarkModel
 
         player: Player
         ml: MediaLib
     }
 
-    Repeater {
-        id: bookmarks
+    // Enter on the current row jumps to it
+    onActionAtIndex: (index) => bookmarkModel.select(bookmarkModel.index(index, 0))
 
-        model: bookmarkModel
+    delegate: Widgets.RdListRow {
+        required property int index
+        required property var model
 
-        delegate: Widgets.RdListRow {
-            required property int index
-            required property var model
+        width: root.contentWidth
 
-            title: model.name ?? ""
-            detail: model.time ?? ""
-            onClicked: bookmarkModel.select(bookmarkModel.index(index, 0))
-        }
+        title: model.name ?? ""
+        detail: model.time ?? ""
+
+        Navigation.upAction: function() { root.focusRow(index - 1) }
+        Navigation.downAction: function() { root.focusRow(index + 1) }
+
+        onClicked: bookmarkModel.select(bookmarkModel.index(index, 0))
     }
 }
