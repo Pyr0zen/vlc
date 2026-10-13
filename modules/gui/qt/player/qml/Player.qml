@@ -210,7 +210,9 @@ FocusScope {
         id: playerToolbarVisibilityFSM
 
         pinned: rootPlayer._controlsUnderVideo
-        hideDelay: VLCStyle.rd_barsHideDelay
+        // a window uses the redesign's 3 s; fullscreen keeps VLC's "hide cursor and fullscreen
+        // controller" preference (mouse-hide-timeout)
+        hideDelay: rootPlayer._windowed ? VLCStyle.rd_barsHideDelay : MainCtx.mouseHideTimeout
 
         onForceUnlock:{
             controlBar.forceUnlock()

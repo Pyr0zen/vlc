@@ -353,7 +353,7 @@ QtObject {
     readonly property int rd_iconButtonWidth: MainCtx.dp(30, scale)
     readonly property int rd_iconButtonHeight: MainCtx.dp(32, scale)
     readonly property int rd_playButtonWidth: MainCtx.dp(54, scale)
-    // bars hide this long after the last mouse movement (ms, Decision 30)
+    // in a window, the bars hide this long after the last mouse movement (ms, Decision 30)
     readonly property int rd_barsHideDelay: 3000
     readonly property int rd_playButtonHeight: MainCtx.dp(28, scale)
     readonly property int rd_timeLabelWidth: MainCtx.dp(76, scale)
