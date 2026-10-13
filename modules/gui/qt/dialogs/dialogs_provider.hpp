@@ -217,9 +217,9 @@ public slots:
                                               const QMessageBox::Icon icon = QMessageBox::NoIcon);
     void prefsDialog();
     // redesign: the Settings dialog, optionally on one category ("general", "audio", ...);
-    // VLC's own preferences when the main interface cannot show it
+    // VLC's own preferences (toggled) when the main interface cannot show it
     void settingsDialog( const QString& category = QString() );
-    // VLC's complete preferences (every module option)
+    // VLC's complete preferences (every module option), shown or raised
     void legacyPrefsDialog();
     void firstRunDialog();
     void extendedDialog();
