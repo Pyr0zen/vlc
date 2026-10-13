@@ -16,7 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
-// Redesign value box (Figma "text_input": 140x36, padding 10,18,10,12, radius 6, BG/B2, Inter 14
+// Redesign value box (Figma "text_input": 140x36, padding 10,18,10,12, radius 6, BG/B2 with a
+// 2 px BG/A4 inside stroke (accent while typing), Inter 14
 // FG/A2). Shows a value; when editable, clicking it lets the user type a new one (Enter applies,
 // Escape cancels). An optional color swatch (22x22, radius 2) sits at the right (Text Color).
 import QtQuick
@@ -51,8 +52,8 @@ T.Control {
     background: Rectangle {
         radius: VLCStyle.rd_radius_normal
         color: control.rdPalette.rdBgB2
-        border.width: control.editing ? VLCStyle.dp(1) : 0
-        border.color: control.rdPalette.rdAccentMain
+        border.width: VLCStyle.dp(2)
+        border.color: control.editing ? control.rdPalette.rdAccentMain : control.rdPalette.rdBgA4
     }
 
     contentItem: Item {
