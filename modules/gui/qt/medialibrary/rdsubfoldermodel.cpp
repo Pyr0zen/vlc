@@ -182,6 +182,7 @@ void RdSubfolderModel::Loader::addInnerFolders(vlc_medialibrary_t* ml, Folders& 
     {
         bool isRoot = false;
         int64_t containingRoot = 0;
+        bool containingRootShown = false;
         for (const vlc_ml_folder_t& root : ml_range_iterate<vlc_ml_folder_t>(result.list))
         {
             if (root.b_banned || !root.psz_mrl)
@@ -193,9 +194,19 @@ void RdSubfolderModel::Loader::addInnerFolders(vlc_medialibrary_t* ml, Folders& 
                 break;
             }
             if (keyInside(rootKey, key))
+            {
                 containingRoot = root.i_id;
+                // the library folder is in this category, or in none (shown in both)
+                containingRootShown = m_mine.contains(rootKey) || !m_others.contains(rootKey);
+            }
         }
         if (isRoot || containingRoot == 0)
+            continue;
+        // already shown in this category inside its library folder or a folder above it
+        const bool shownAbove = std::any_of(m_mine.cbegin(), m_mine.cend(), [&key](const QString& other) {
+            return other != key && keyInside(other, key);
+        });
+        if (shownAbove || containingRootShown)
             continue;
         ml_unique_ptr<vlc_ml_folder_t> folder = findFolder(ml, containingRoot, key);
         if (folder)
@@ -227,11 +238,11 @@ void RdSubfolderModel::Loader::folders(vlc_medialibrary_t* ml, Folders& result) 
 
     for (const vlc_ml_folder_t& folder : ml_range_iterate<vlc_ml_folder_t>(result.list))
     {
-        if (!folder.psz_mrl)
-            continue;
+        // below the library folders every row counts (VLC_ML_COUNT_SUBFOLDERS counts them all,
+        // a folder on an unplugged drive has no MRL)
         if (roots)
         {
-            if (folder.b_banned)
+            if (folder.b_banned || !folder.psz_mrl)
                 continue;
             const QString key = RdLibraryItems::mrlKey(qfu(folder.psz_mrl));
             if (!m_mine.contains(key) && m_others.contains(key))

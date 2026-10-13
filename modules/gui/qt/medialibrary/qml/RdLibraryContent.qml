@@ -128,6 +128,7 @@ FocusScope {
         target: RdLibraryStore
 
         function onFolderAdded(category, mrl) {
+            RdLibraryNav.pendingFolderCategory = category
             RdLibraryNav.pendingFolderMrl = mrl
             content._tryReveal()
         }
@@ -149,7 +150,7 @@ FocusScope {
                 return
             RdLibraryNav.pendingFolderMrl = ""
             RdLibraryNav.openFolderPath(result)
-        })
+        }, RdLibraryNav.pendingFolderCategory)
     }
 
     /* dialogs */

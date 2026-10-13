@@ -305,11 +305,12 @@ FocusScope {
     }
 
     // the category of a Home row: media by their type, folders by the deepest folder added to a
-    // category that holds them (as the library store resolves them)
+    // category that holds them, music on a tie (as RdLibraryStore.resolveFolder)
     function categoryOf(item) {
-        if (item.kind === "folder")
-            return _depthIn(RdLibraryStore.musicFolders, item.mrl) > _depthIn(RdLibraryStore.videoFolders, item.mrl)
-                   ? "music" : "video"
+        if (item.kind === "folder") {
+            const music = _depthIn(RdLibraryStore.musicFolders, item.mrl)
+            return music > 0 && music >= _depthIn(RdLibraryStore.videoFolders, item.mrl) ? "music" : "video"
+        }
         return item.isVideo ? "video" : "music"
     }
 

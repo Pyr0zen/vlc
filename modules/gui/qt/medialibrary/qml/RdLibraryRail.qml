@@ -213,7 +213,7 @@ Rectangle {
             const loc = path[path.length - 1]
             loc.crumbs = path
             RdLibraryStore.addPin("folder", loc.title, "", RdLibraryNav.pinLocation(loc))
-        })
+        }, "video")
     }
 
     RdLibraryMenu {

@@ -59,6 +59,8 @@ QtObject {
     // the library asks the views to show a location that does not exist yet (a folder being
     // added); the views retry when their content reloads
     property string pendingFolderMrl: ""
+    // the category it was added to
+    property string pendingFolderCategory: ""
 
     // dialogs and popups of the library, shown by the library view that is on screen
     //   params: { items } for a new playlist, { playlist } to edit one (Properties & Metadata)

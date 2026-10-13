@@ -324,7 +324,7 @@ void RdLibraryStore::reloadFolder(const QString& mrl)
     });
 }
 
-void RdLibraryStore::resolveFolder(const QString& mrl, QJSValue callback)
+void RdLibraryStore::resolveFolder(const QString& mrl, QJSValue callback, const QString& preferred)
 {
     if (!m_mediaLib || !callback.isCallable())
         return;
@@ -398,7 +398,7 @@ void RdLibraryStore::resolveFolder(const QString& mrl, QJSValue callback)
             current = next;
         }
     },
-    [this, callback](quint64, Ctx& ctx) mutable {
+    [this, callback, preferred](quint64, Ctx& ctx) mutable {
         QJSEngine* engine = qjsEngine(this);
         if (!engine)
             return;
@@ -409,19 +409,40 @@ void RdLibraryStore::resolveFolder(const QString& mrl, QJSValue callback)
         }
 
         // the deepest folder added to a category decides it, and the address line starts there
-        // (a Music folder inside a Videos folder is listed at the root of Music)
+        // (a Music folder inside a Videos folder is listed at the root of Music). A preferred
+        // category wins when the folder is shown there: below one of its folders, or below a
+        // library folder from before the redesign (in no list, shown in both)
+        const auto deepestIn = [&ctx](const QStringList& folders) -> int {
+            for (size_t i = ctx.crumbs.size(); i-- > 0;)
+            {
+                if (RdLibraryItems::containsMrl(folders, ctx.crumbs[i].mrl))
+                    return static_cast<int>(i);
+            }
+            return -1;
+        };
+        const int deepestMusic = deepestIn(m_musicFolders);
+        const int deepestVideo = deepestIn(m_videoFolders);
+
         QString category = ctx.audio ? QStringLiteral("music") : QStringLiteral("video");
         size_t first = 0;
-        for (size_t i = ctx.crumbs.size(); i-- > 0;)
+        const int preferredDepth = preferred == QLatin1String("music") ? deepestMusic
+                                 : preferred == QLatin1String("video") ? deepestVideo : -1;
+        const bool rootInNoList = deepestMusic < 0 && deepestVideo < 0;
+        if (preferredDepth >= 0)
         {
-            const QString& folder = ctx.crumbs[i].mrl;
-            const bool music = RdLibraryItems::containsMrl(m_musicFolders, folder);
-            if (music || RdLibraryItems::containsMrl(m_videoFolders, folder))
-            {
-                category = music ? QStringLiteral("music") : QStringLiteral("video");
-                first = i;
-                break;
-            }
+            category = preferred;
+            first = static_cast<size_t>(preferredDepth);
+        }
+        else if (!preferred.isEmpty() && rootInNoList)
+        {
+            category = preferred;
+        }
+        else if (deepestMusic >= 0 || deepestVideo >= 0)
+        {
+            // same depth (a folder in both lists): music, as Home does
+            const bool music = deepestMusic >= deepestVideo;
+            category = music ? QStringLiteral("music") : QStringLiteral("video");
+            first = static_cast<size_t>(music ? deepestMusic : deepestVideo);
         }
         ctx.crumbs.erase(ctx.crumbs.begin(), ctx.crumbs.begin() + first);
 
