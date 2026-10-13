@@ -43,6 +43,7 @@ everything, like a crash.
 | Main "..." menu open | video 5:08.15-5:08.40 (unedited prototype stretch), 60 fps | opacity fade, no slide, about 7 frames = ~115 ms (steps every 3-4 frames suggest a lower-fps capture) | 120 ms OutQuad fade in (`rd_menuFadeDuration`), close instant |
 | Submenu open | video 19:30.45-19:30.80 | instant (absent at frame 13, complete at 15) | instant |
 | Right-click menu | video 5:13-5:30 | no usable motion (meme cut, magic-wand edit effect) | same 120 ms fade as the main menu |
+| Dialogs (Open Network Stream, Settings, Keyboard Shortcuts) | Figma prototype: overlays open instantly; video fades are edits | instant | instant (Decision 32) |
 | Settings sidebar open | video 7:10-7:13 | editing only (dissolve of the old Effects window, then a camera zoom) | instant (no Figma transition) |
 | Library open | Figma prototype | smart animate "slow" 208 ms | (Phase 5) |
 | Hide UI | Figma prototype | smart animate ease-in-and-out 300 ms | to check against the perf cap with Sticky |
