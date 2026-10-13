@@ -74,7 +74,7 @@ One line each, for the PC session to copy under "Decisions (Claude)" at the merg
 
 1. **Player.qml (compact library, P5-23 / P5-25 / F-16):** add the compact library docked on the left between the top bar and the control bar, 427 px wide, the video area shifting right while it is open:
    `Loader { active: <libraryOpen>; source: "qrc:///qt/qml/VLC/MediaLibrary/RdLibrarySidebar.qml" }` (only when `MainCtx.mediaLibraryAvailable`). Open / close with the Figma "slow" 208 ms animation. The top bar's sidebar toggle opens and closes it; the folder chip opens it and calls `item.revealMrl(Player.url.toString())`. Lock both bars visible while it is open (Decision 30 bar logic). "Open the library in full" sets `MainCtx.playerView = false` (already done inside the sidebar).
-2. **Back / forward mouse buttons on the player page:** call `RdLibraryNav.goBack()` / `goForward()` while the compact library is open.
+2. **Keys and buttons on the player page while the compact library is open:** mouse back / forward call `RdLibraryNav.goBack()` / `goForward()`; Ctrl+F calls the sidebar's `focusSearch()`. In `MainInterface.qml` the swipe-back gesture still calls `History.previous()`, which no longer drives the library: point it to `RdLibraryNav.goBack()` when the library is shown.
 3. **QueueSidebar (W5.9 over the video):** inside the queue page add `RdQueueDropArea { anchors.fill: parent; view: <the queue ListView> }` (VLC.Playlist). It needs a ListView (it uses `indexAt` to insert where dropped); without one it appends.
 4. **Music player view (P6-04, IB-23) and music control bar (P6-05, IB-24), Player.qml / ControlBar:** VLC already shows the blurred cover behind audio. Changes: cover as `Widgets.ImageExt` with radius 12, caption "title - artist", 15 s back / forward skip buttons around play, waveform seek bar when on, no subtitle button for audio. Figma "Player - Music-1.png".
 5. **Style tokens (optional):** the library uses only existing `palette.rd*` / `VLCStyle.rd_*` tokens; durations without a token are named properties (crossfade 180 ms in RdLibraryContent, mini player snap 300 ms in RdMiniPlayer). Add `rd_duration_*` tokens if wanted.
@@ -97,7 +97,37 @@ Not touched: Player.qml, the palette, MainCtx, the sidebar files, VLCStyle.
 
 ## 8. Independent review
 
-REVIEW_PLACEHOLDER
+Two fresh subagents that did not write the code reviewed the whole branch diff (C++ and QML separately). Fixed:
+
+C++ (rdlibrarystore, rdlibrarymodel, rdsubfoldermodel):
+- A folder already in one category could not be added to the other: it now shows in both.
+- Removing a folder added before the redesign (in no list) removed it from both categories: it now stays in the other one.
+- Folder MRLs sent to the media library keep their trailing slash (remove, rescan, favorite).
+- Show in File Explorer: "/select," and the path are passed separately (paths with spaces opened the wrong folder).
+- Playlist delete, cover copy and export log a warning on failure; the cover file is only deleted once the playlist is.
+- The media library event filter is no longer a virtual call from the media library thread.
+
+QML and C++ (MRL encoding):
+- MRLs are compared fully decoded everywhere (`RdLibraryItems::mrlKey`): Qt, VLC and the media library percent-encode differently, so the folder chip, Go to Source and Pin a Folder failed for paths with spaces or accents. `resolveFolder` also looks a file up in Qt's and VLC's encoding.
+
+QML:
+- Keyboard focus survives library navigation (`RdLibraryContent` is a FocusScope, the new page takes the focus).
+- Each grid cell creates only its row or its card (one Loader), and drag ghosts are created only while dragging: no picture is loaded twice.
+- The grid scrolls to the row or card that has keyboard focus.
+- The mini player no longer covers the library: the content ends above it in a bottom corner, and in a top corner it stays below the library header.
+- The mini player creates its video surface only where VLC can show video outside the player (`MainCtx.canShowVideoPIP`, as VLC's PIP player).
+- `RdLibraryNav` imports VLC.MediaLibrary explicitly (pins).
+- Closing the compact search clears its text; a second click on the sort or view button closes its menu.
+- The stream dialog's name autofill survives a stray "%" in a typed URL.
+- The dashed drop zone border builds its dashes only while shown.
+- Home folders get their real category (their menu added folders to Music before).
+- Restored from the old MainDisplay: Ctrl+F focuses the library search, Escape goes back, pinch changes the interface scale.
+
+Not changed, with reasons:
+- Auto-switch to the player when a video starts: VLC's own MainDisplay does exactly this (`onHasVideoOutputChanged`), so it stays.
+- Subfolders of a folder are rows in the grid header (a Repeater), so a folder level creates all its subfolder rows at once. A GridView cannot mix full-width folder rows with media cards lazily. The rows are light (no picture, no ghost until dragged). Measure with a folder of 500+ subfolders; if it is slow, the fix is a separate lazy ListView section above the grid.
+- `widgets/qml/RdMenuPanel.qml` (PC session file): its `_connected` array keeps a null for each destroyed menu row, a few per menu open. Fix for the PC session: drop nulls at the start of `onChildrenChanged` (`_connected = _connected.filter((c) => !!c)`).
+- A subfolder of a folder that is in the other category, added to this category, opens but is not listed at the category root (the root lists media library folders only). Tell Tony if this case matters.
 
 ## 9. Performance (Tony, 2026-10-13: the app must feel at least as snappy as stock VLC)
 
