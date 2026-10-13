@@ -1578,7 +1578,12 @@ FocusScope {
     RdPlayerMenu {
         id: playerMenu
 
-        onShownChanged: rootPlayer.lockUnlockAutoHide(shown)
+        // a hidden toolbar FSM ignores lock(): show it first so lock and unlock stay balanced
+        onShownChanged: {
+            if (shown && !playerToolbarVisibilityFSM.isVisible)
+                playerToolbarVisibilityFSM.askShow()
+            rootPlayer.lockUnlockAutoHide(shown)
+        }
     }
 
     TapHandler {

@@ -46,6 +46,8 @@
 #include <QQmlEngine>
 #include <QWidgetAction>
 
+#include <algorithm>
+
 using namespace vlc::playlist;
 
 namespace {
@@ -140,6 +142,9 @@ RdMenuModel::~RdMenuModel()
     // the submenu models are children of this model
     if (m_menu)
         m_menu->removeEventFilter(this);
+    for (const QPointer<QMenu>& submenu : std::as_const(m_watchedSubmenus))
+        if (submenu)
+            submenu->removeEventFilter(this);
 }
 
 void RdMenuModel::setCtx(MainCtx* ctx)
@@ -274,6 +279,12 @@ RdMenuModel* RdMenuModel::submenu(int row)
         model = new RdMenuModel(menu, m_root, this);
         QQmlEngine::setObjectOwnership(model, QQmlEngine::CppOwnership);
         m_submenus.insert(menu, model);
+        // the key must not outlive its menu (a new menu may get the same address)
+        connect(menu, &QObject::destroyed, this, [this, menu]() {
+            RdMenuModel* stale = m_submenus.take(menu);
+            if (stale)
+                stale->deleteLater();
+        });
     }
     return model;
 }
@@ -286,7 +297,12 @@ void RdMenuModel::aboutToShow()
 
 bool RdMenuModel::eventFilter(QObject* watched, QEvent* event)
 {
-    if (watched == m_menu.data())
+    // the menu itself, or a row's submenu (its entries decide whether the row is enabled)
+    const bool isSubmenu = std::any_of(m_watchedSubmenus.cbegin(), m_watchedSubmenus.cend(),
+                                       [watched](const QPointer<QMenu>& submenu) {
+        return submenu.data() == watched;
+    });
+    if (watched == m_menu.data() || isSubmenu)
     {
         switch (event->type())
         {
@@ -356,13 +372,58 @@ void RdMenuModel::refresh()
     {
         if (!m_rows.isEmpty())
             emit dataChanged(index(0), index(m_rows.size() - 1));
+        watchSubmenus();
+        updateLabels();
         return;
     }
 
     beginResetModel();
     m_rows = rows;
+    m_separatorCount = 0;
+    for (const QPointer<QAction>& action : std::as_const(m_rows))
+        if (action->isSeparator())
+            ++m_separatorCount;
     endResetModel();
+    watchSubmenus();
+    updateLabels();
     emit countChanged();
+}
+
+void RdMenuModel::watchSubmenus()
+{
+    QVector<QPointer<QMenu>> submenus;
+    for (const QPointer<QAction>& action : std::as_const(m_rows))
+        if (action && action->menu())
+            submenus.append(action->menu());
+
+    for (const QPointer<QMenu>& submenu : std::as_const(m_watchedSubmenus))
+        if (submenu && !submenus.contains(submenu))
+            submenu->removeEventFilter(this);
+    for (const QPointer<QMenu>& submenu : std::as_const(submenus))
+        if (!m_watchedSubmenus.contains(submenu))
+            submenu->installEventFilter(this);
+    m_watchedSubmenus = submenus;
+}
+
+// the widest entries by length, so QML sizes a panel without creating every row
+void RdMenuModel::updateLabels()
+{
+    QString label;
+    QString shortcut;
+    for (int row = 0; row < m_rows.size(); ++row)
+    {
+        const QString text = data(index(row), LabelRole).toString();
+        if (text.size() > label.size())
+            label = text;
+        const QString keys = data(index(row), ShortcutRole).toString();
+        if (keys.size() > shortcut.size())
+            shortcut = keys;
+    }
+    if (label == m_longestLabel && shortcut == m_longestShortcut)
+        return;
+    m_longestLabel = label;
+    m_longestShortcut = shortcut;
+    emit labelsChanged();
 }
 
 QAction* RdMenuModel::addRequest(QMenu* menu, const QString& text, const char* icon,
