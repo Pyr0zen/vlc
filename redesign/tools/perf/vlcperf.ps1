@@ -67,12 +67,20 @@ $P = @{
 }[$Kind]
 
 $Results = [ordered]@{ kind = $Kind; build = $Build; date = (Get-Date -Format 'yyyy-MM-dd HH:mm') }
+
+# the machine must be quiet (no builds, agents or other heavy work), or the numbers mean nothing
+# total CPU of every process over 3 s (performance counters are not available on this PC)
+function Total-CpuSeconds { (Get-Process | ForEach-Object { try { $_.TotalProcessorTime.TotalSeconds } catch { 0 } } | Measure-Object -Sum).Sum }
+$c0 = Total-CpuSeconds; Start-Sleep 3; $c1 = Total-CpuSeconds
+$bg = [pscustomobject]@{ Average = ($c1 - $c0) / 3 / [Environment]::ProcessorCount * 100 }
+$Results.background_cpu_pct = [math]::Round($bg.Average, 1)
+if ($bg.Average -gt 15) { throw "the PC is busy ($([math]::Round($bg.Average, 1)) % CPU before starting); run again when it is quiet" }
 function Want($name) { return ($Only.Count -eq 0) -or ($Only -contains $name) }
 function Exe { return (Get-ChildItem $Build -Recurse -Filter vlc.exe | Select-Object -First 1) }
 function LogPath { return (Join-Path $Build 'vlc-perf-log.txt') }
 
 function Get-Win($proc) {
-    for ($i = 0; $i -lt 200; $i++) {
+    for ($i = 0; $i -lt 800; $i++) {
         $proc.Refresh()
         if ($proc.HasExited) { throw 'VLC exited' }
         $h = $proc.MainWindowHandle
@@ -148,26 +156,29 @@ function Wait-Video($v, [int]$timeoutMs = 20000) {
         return $null
     } finally { $g.Dispose(); $bmp.Dispose() }
 }
-function Move($x, $y) { [RdPerf]::SetCursorPos($x, $y) | Out-Null }
+function MouseTo($x, $y) { [RdPerf]::SetCursorPos($x, $y) | Out-Null }
 function Down { [RdPerf]::mouse_event(0x0002, 0, 0, 0, [IntPtr]::Zero) }
 function Up { [RdPerf]::mouse_event(0x0004, 0, 0, 0, [IntPtr]::Zero) }
-function Click($x, $y) { Move $x $y; Start-Sleep -Milliseconds 30; Down; Start-Sleep -Milliseconds 40; Up }
+function Click($x, $y) { MouseTo $x $y; Start-Sleep -Milliseconds 30; Down; Start-Sleep -Milliseconds 40; Up }
 function Wheel($n) { [RdPerf]::mouse_event(0x0800, 0, 0, $n, [IntPtr]::Zero) }
 function Key($k) { [System.Windows.Forms.SendKeys]::SendWait($k) }
 
+# CPU from the process times; GPU from nvidia-smi (whole GPU: 3D/compute load and the video
+# decoder), valid because the machine is quiet during a round
+function Gpu {
+    $o = & nvidia-smi --query-gpu=utilization.gpu,utilization.decoder --format=csv,noheader,nounits 2>$null
+    if (-not $o) { return $null }
+    $a = ($o | Select-Object -First 1).Split(',') | ForEach-Object { [double]$_.Trim() }
+    return $a
+}
 function Sample($v, [int]$seconds) {
     $p = $v.proc; $p.Refresh()
     $cpu0 = $p.TotalProcessorTime; $t0 = Get-Date
     $priv = @(); $ws = @(); $g3d = @(); $gvd = @()
-    $path = "\GPU Engine(pid_$($p.Id)_*)\Utilization Percentage"
     for ($i = 0; $i -lt $seconds; $i++) {
-        $c = $null
-        try { $c = Get-Counter -Counter $path -SampleInterval 1 -MaxSamples 1 -ErrorAction Stop } catch { Start-Sleep 1 }
-        if ($c) {
-            $s = $c.CounterSamples
-            $g3d += ($s | Where-Object { $_.InstanceName -like '*engtype_3d' } | Measure-Object CookedValue -Sum).Sum
-            $gvd += ($s | Where-Object { $_.InstanceName -like '*engtype_videodecode' } | Measure-Object CookedValue -Sum).Sum
-        }
+        Start-Sleep -Milliseconds 1000
+        $g = Gpu
+        if ($g) { $g3d += $g[0]; $gvd += $g[1] }
         $p.Refresh(); $priv += $p.PrivateMemorySize64 / 1MB; $ws += $p.WorkingSet64 / 1MB
     }
     $p.Refresh()
@@ -178,8 +189,8 @@ function Sample($v, [int]$seconds) {
         ram_private_mb = [math]::Round(($priv | Measure-Object -Average).Average, 0)
         ram_private_max_mb = [math]::Round(($priv | Measure-Object -Maximum).Maximum, 0)
         ram_ws_mb = [math]::Round(($ws | Measure-Object -Average).Average, 0)
-        gpu_3d_pct = if ($g3d.Count) { [math]::Round(($g3d | Measure-Object -Average).Average, 1) } else { $null }
-        gpu_videodecode_pct = if ($gvd.Count) { [math]::Round(($gvd | Measure-Object -Average).Average, 1) } else { $null }
+        gpu_pct = if ($g3d.Count) { [math]::Round(($g3d | Measure-Object -Average).Average, 1) } else { $null }
+        gpu_decoder_pct = if ($gvd.Count) { [math]::Round(($gvd | Measure-Object -Average).Average, 1) } else { $null }
     }
 }
 
@@ -241,11 +252,11 @@ try {
         $Results.open_video_ready_ms = $runs
     }
     if ((Want 'play') -or (Want 'idle') -or (Want 'panel') -or (Want 'seek') -or (Want 'motion')) {
-        $v = Start-Vlc $Media; Start-Sleep 3; Place $v; Move 1200 700; Start-Sleep 2
-        if (Want 'play') { Move 1200 700; $Results.play = Sample $v 15 }
+        $v = Start-Vlc $Media; Start-Sleep 3; Place $v; MouseTo 1200 700; Start-Sleep 2
+        if (Want 'play') { MouseTo 1200 700; $Results.play = Sample $v 15 }
         if (Want 'idle') { Key ' '; Start-Sleep 1; $Results.idle_paused = Sample $v 10; Key ' '; Start-Sleep 1 }
         if (Want 'panel') {
-            Move 1300 900; Start-Sleep -Milliseconds 300; Click $P.panelBtn[0] $P.panelBtn[1]; Start-Sleep 1
+            MouseTo 1300 900; Start-Sleep -Milliseconds 300; Click $P.panelBtn[0] $P.panelBtn[1]; Start-Sleep 1
             $Results.panel_open_playing = Sample $v 10
             Click $P.panelBtn[0] $P.panelBtn[1]; Start-Sleep 1
         }
@@ -261,30 +272,30 @@ try {
             Key ' '; Start-Sleep 1   # pause: only the UI changes on screen
             $m = [ordered]@{}
             # hover sweep along the control bar, 2.4 s
-            $f = Capture 'hover' 4 { Move 40 ($P.barY); Start-Sleep -Milliseconds 300
-                for ($x = 40; $x -le 2380; $x += 20) { Move $x $P.barY; Start-Sleep -Milliseconds 20 } }
+            $f = Capture 'hover' 4 { MouseTo 40 ($P.barY); Start-Sleep -Milliseconds 300
+                for ($x = 40; $x -le 2380; $x += 20) { MouseTo $x $P.barY; Start-Sleep -Milliseconds 20 } }
             $m.hover = Motion $f $P.barRoi '-'
             # seek bar drag 20 % -> 80 % in 1.5 s
-            $f = Capture 'seekdrag' 4 { Move 1200 900; Start-Sleep -Milliseconds 200
+            $f = Capture 'seekdrag' 4 { MouseTo 1200 900; Start-Sleep -Milliseconds 200
                 $x0 = [int]($P.seekX0 + 0.2 * ($P.seekX1 - $P.seekX0)); $x1 = [int]($P.seekX0 + 0.8 * ($P.seekX1 - $P.seekX0))
-                Move $x0 $P.seekY; Start-Sleep -Milliseconds 60; Down
-                for ($k = 0; $k -le 75; $k++) { Move ([int]($x0 + ($x1 - $x0) * $k / 75)) $P.seekY; Start-Sleep -Milliseconds 20 }
+                MouseTo $x0 $P.seekY; Start-Sleep -Milliseconds 60; Down
+                for ($k = 0; $k -le 75; $k++) { MouseTo ([int]($x0 + ($x1 - $x0) * $k / 75)) $P.seekY; Start-Sleep -Milliseconds 20 }
                 Up }
             $m.seek_drag = Motion $f $P.barRoi '-'
             # volume drag
-            $f = Capture 'voldrag' 3 { Move 1200 900; Start-Sleep -Milliseconds 200
-                Move $P.volX1 $P.volY; Start-Sleep -Milliseconds 60; Down
-                for ($k = 0; $k -le 50; $k++) { Move ([int]($P.volX1 - ($P.volX1 - $P.volX0) * $k / 50)) $P.volY; Start-Sleep -Milliseconds 20 }
-                for ($k = 0; $k -le 50; $k++) { Move ([int]($P.volX0 + ($P.volX1 - $P.volX0) * 0.8 * $k / 50)) $P.volY; Start-Sleep -Milliseconds 20 }
+            $f = Capture 'voldrag' 3 { MouseTo 1200 900; Start-Sleep -Milliseconds 200
+                MouseTo $P.volX1 $P.volY; Start-Sleep -Milliseconds 60; Down
+                for ($k = 0; $k -le 50; $k++) { MouseTo ([int]($P.volX1 - ($P.volX1 - $P.volX0) * $k / 50)) $P.volY; Start-Sleep -Milliseconds 20 }
+                for ($k = 0; $k -le 50; $k++) { MouseTo ([int]($P.volX0 + ($P.volX1 - $P.volX0) * 0.8 * $k / 50)) $P.volY; Start-Sleep -Milliseconds 20 }
                 Up }
             $m.volume_drag = Motion $f $P.barRoi '-'
             # panel open: cursor jumps onto the button (input marker), click right after
-            $f = Capture 'panelopen' 3 { Move 1300 900; Start-Sleep -Milliseconds 300
-                Move $P.panelBtn[0] $P.panelBtn[1]; Start-Sleep -Milliseconds 15; Down; Start-Sleep -Milliseconds 30; Up }
+            $f = Capture 'panelopen' 3 { MouseTo 1300 900; Start-Sleep -Milliseconds 300
+                MouseTo $P.panelBtn[0] $P.panelBtn[1]; Start-Sleep -Milliseconds 15; Down; Start-Sleep -Milliseconds 30; Up }
             $m.panel_open = Motion $f $P.panelRoi "$($P.panelBtn[0]),$($P.panelBtn[1])"
             Start-Sleep 1
-            $f = Capture 'panelclose' 3 { Move 1300 900; Start-Sleep -Milliseconds 300
-                Move $P.panelBtn[0] $P.panelBtn[1]; Start-Sleep -Milliseconds 15; Down; Start-Sleep -Milliseconds 30; Up }
+            $f = Capture 'panelclose' 3 { MouseTo 1300 900; Start-Sleep -Milliseconds 300
+                MouseTo $P.panelBtn[0] $P.panelBtn[1]; Start-Sleep -Milliseconds 15; Down; Start-Sleep -Milliseconds 30; Up }
             $m.panel_close = Motion $f $P.panelRoi "$($P.panelBtn[0]),$($P.panelBtn[1])"
             $Results.motion = $m
             Key ' '
@@ -292,7 +303,7 @@ try {
         Stop-Vlc $v; $v = $null; Start-Sleep 2
     }
     if (Want '4k') {
-        $v = Start-Vlc $Media4k -Rc; Start-Sleep 3; Place $v; Move 1200 700; Start-Sleep 2
+        $v = Start-Vlc $Media4k -Rc; Start-Sleep 3; Place $v; MouseTo 1200 700; Start-Sleep 2
         $s0 = Stats; $r = Sample $v 20; $s1 = Stats
         $r.frames_displayed = $s1.displayed - $s0.displayed; $r.frames_lost = $s1.lost - $s0.lost
         $Results.k4_windowed = $r
@@ -304,13 +315,13 @@ try {
         Stop-Vlc $v; $v = $null; Start-Sleep 2
     }
     if (Want 'queue') {
-        $v = Start-Vlc $Queue; Start-Sleep 4; Place $v; Move 1200 700; Start-Sleep 1; Key ' '; Start-Sleep 1
-        $f = Capture 'queueopen' 3 { Move 1300 900; Start-Sleep -Milliseconds 300
-            Move $P.queueBtn[0] $P.queueBtn[1]; Start-Sleep -Milliseconds 15; Down; Start-Sleep -Milliseconds 30; Up }
+        $v = Start-Vlc $Queue; Start-Sleep 4; Place $v; MouseTo 1200 700; Start-Sleep 1; Key ' '; Start-Sleep 1
+        $f = Capture 'queueopen' 3 { MouseTo 1300 900; Start-Sleep -Milliseconds 300
+            MouseTo $P.queueBtn[0] $P.queueBtn[1]; Start-Sleep -Milliseconds 15; Down; Start-Sleep -Milliseconds 30; Up }
         $q = [ordered]@{ open = (Motion $f $P.panelRoi "$($P.queueBtn[0]),$($P.queueBtn[1])") }
         Start-Sleep 1
         $roi = $P.panelRoi.Split(','); $cx = [int]$roi[0] + [int]$roi[2] / 2; $cy = [int]$roi[1] + [int]$roi[3] / 2
-        $f = Capture 'queuescroll' 4 { Move $cx $cy; Start-Sleep -Milliseconds 300
+        $f = Capture 'queuescroll' 4 { MouseTo $cx $cy; Start-Sleep -Milliseconds 300
             for ($k = 0; $k -lt 40; $k++) { Wheel (-120); Start-Sleep -Milliseconds 35 } }
         $q.scroll = Motion $f $P.panelRoi '-'
         $v.proc.Refresh(); $q.ram_private_mb = [math]::Round($v.proc.PrivateMemorySize64 / 1MB, 0)
