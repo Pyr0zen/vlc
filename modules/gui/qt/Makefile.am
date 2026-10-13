@@ -1447,7 +1447,9 @@ libqml_module_player_a_QML = \
 	player/qml/TracksListPage.qml \
 	player/qml/ControlLayout.qml \
 	player/qml/ControlRepeater.qml \
-	player/qml/NavigationBox.qml
+	player/qml/NavigationBox.qml \
+	player/qml/RdMiniQueue.qml \
+	player/qml/RdMiniPlayer.qml
 
 libqml_module_player_a_Singleton_QML = \
 	player/qml/PlayerControlbarControls.qml \
@@ -1520,7 +1522,8 @@ libqml_module_playlist_a_CPPFLAGS = $(libqt_plugin_la_CPPFLAGS)
 libqml_module_playlist_a_QML = \
 	playlist/qml/PlaylistDelegate.qml \
 	playlist/qml/PlaylistPane.qml \
-	playlist/qml/PlaylistDetachedWindow.qml
+	playlist/qml/PlaylistDetachedWindow.qml \
+	playlist/qml/RdQueueDropArea.qml
 libqml_module_playlist_a_Singleton_QML =
 libqml_module_playlist_a_SOURCES = $(QML_MODULE_playlist_SRC)
 nodist_libqml_module_playlist_a_SOURCES = playlist/qmlassets.cpp $(QML_MODULE_playlist_NODIST_EXTRA)
