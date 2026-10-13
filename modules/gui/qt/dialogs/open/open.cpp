@@ -228,12 +228,18 @@ void OpenDialog::showTab( OpenDialog::OpenTab i_tab, OpenDialog::ActionFlag i_ac
 
     /* redesign (W6.4, video 13:07-13:10): an open entry shows only its own source;
      * Convert, Stream and the advanced enqueue keep the source tabs */
+    if( i_tab == OPEN_CAPTURE_TAB ) captureOpenPanel->initialize();
+    /* select the source first: disabling the current tab would walk through the others */
+    ui.Tab->setTabEnabled( i_tab, true );
+    ui.Tab->setCurrentIndex( i_tab );
+
     QTabBar *tabBar = ui.Tab->findChild<QTabBar*>( QString(), Qt::FindDirectChildrenOnly );
     if( tabBar )
         tabBar->setVisible( !b_single_source );
     /* no Ctrl+Tab to the hidden sources either */
     for( int i = 0; i < OPEN_TAB_MAX; i++ )
-        ui.Tab->setTabEnabled( i, !b_single_source || i == i_tab );
+        if( i != i_tab )
+            ui.Tab->setTabEnabled( i, !b_single_source );
     if( b_single_source )
     {
         switch( i_tab )
@@ -260,8 +266,6 @@ void OpenDialog::showTab( OpenDialog::OpenTab i_tab, OpenDialog::ActionFlag i_ac
     else
         setWindowTitle( qtr( "Open Media" ) );
 
-    if( i_tab == OPEN_CAPTURE_TAB ) captureOpenPanel->initialize();
-    ui.Tab->setCurrentIndex( i_tab );
     show();
     if( ui.Tab->currentWidget() != NULL )
     {
