@@ -99,7 +99,7 @@ T.Pane {
 
             // redesign: "100 %" tooltip 63 px above the speaker while hovered (Figma "audio value", F-03)
             Widgets.RdTooltip {
-                visible: volumeBtn.hovered && !root.paintOnly
+                visible: (volumeBtn.hovered || volumeBtn.visualFocus) && !root.paintOnly
                 text: Math.round(Player.volume * 100) + " %"
                 minimumWidth: VLCStyle.dp(121, VLCStyle.scale)
                 x: (volumeBtn.width - width) / 2

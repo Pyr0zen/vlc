@@ -42,3 +42,11 @@ Log of every CI problem and fix (newest last). Workflow: `.github/workflows/buil
 - Sticky's feedback: bars felt clunky in a window. Decision 30: windowed = both bars always visible, video between them; fullscreen = per-edge show with a smooth fade.
 - To recheck on the next build: VLC once ignored the first close request (second one closed it); a second instance started while the first held the media library came up without the library.
 
+## 2026-10-13 third on-PC test (run 38325488867)
+- Works on this PC: windowed layout with both bars always visible and the framed video between them; tracks popup with None, Figma height, filled accent tab icons; Escape closes it; resume toast text; editable time; volume tooltip.
+- Found: the seek handle was magenta (the seek row had been moved out of the control bar's item tree to silence a layout warning, so its ColorContext had no palette); times still MM:SS (the VLCTick enum is not reachable from QML: VLCTick.SubSecondFormattedAsMS has silently been undefined upstream too); no top bar title for files without a title tag; fullscreen bars did not appear near the edges (Sticky saw it too): hover events do not reach Qt Quick while the cursor is over the native video, so the edge zones never triggered; VLC's shadow gradients behind the bars are not in the design.
+- Fixed: seek row kept in the bar's item tree (hidden holder); VLCTick::formatHHMMSS(); title falls back to the file name; fullscreen edge zones read the cursor position (MainCtx::cursorPosition, 100 ms) instead of hover; gradients removed; top bar background equals the control bar's.
+- Sticky: a file watched to its last 20 seconds starts over without the resume prompt.
+- Review fixes: resume prompt ignores the previous file's length; tracks popup height capped to the space above the control bar; windowed mode pins the visibility FSM (no lock-count side effects, menus are no longer force-closed); cursor stays visible while a bar is shown by proximity; volume tooltip also on keyboard focus.
+- Not reproduced: an "Adjustments and Effects" window that appeared during Sticky's own testing.
+

@@ -60,6 +60,8 @@ FSM {
     // redesign: per-bar hover zones need to know why the toolbars are visible
     property alias isLocked: fsmLocked.active
     property bool keyboardShown: false
+    // redesign: bars pinned (windowed, Decision 30): never time out or hide
+    property bool pinned: false
 
     property int lockCount: 0 // Track the number of locks
     property int timeoutDuration: MainCtx.mouseHideTimeout
@@ -125,9 +127,11 @@ FSM {
                         target: fsmAudioMode
                     },
                     askShow: {
+                        guard: () => !fsm.pinned,
                         target: fsmHidden,
                     },
                     timeout: {
+                        guard: () => !fsm.pinned,
                         target: fsmHidden,
                     },
                     mouseMove: {

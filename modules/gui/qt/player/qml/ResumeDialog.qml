@@ -50,8 +50,21 @@ FocusScope {
 
     // a file watched to its last 20 seconds starts over without asking (Sticky, 2026-10-13); the
     // length is often only known once playback has started
-    readonly property bool _watchedToEnd: Player.restoreProgress > 0 && Player.length.valid()
+    readonly property bool _watchedToEnd: _lengthKnown && Player.restoreProgress > 0
                                           && (1 - Player.restoreProgress) * Player.length.toSeconds() < 20
+
+    // Player.length still holds the previous file's length until the new one is reported
+    property bool _lengthKnown: false
+
+    Connections {
+        target: Player
+        function onPlaybackRestoreQueried() {
+            resumePanel._lengthKnown = false
+        }
+        function onLengthChanged() {
+            resumePanel._lengthKnown = Player.length.valid()
+        }
+    }
 
     on_WatchedToEndChanged: {
         if (_watchedToEnd && visible)
@@ -136,7 +149,7 @@ FocusScope {
             font.pixelSize: VLCStyle.rd_fontSize_header
 
             // the saved progress times the file length (known once playback starts)
-            readonly property bool _hasRestoreTime: Player.restoreProgress > 0 && Player.length.valid()
+            readonly property bool _hasRestoreTime: resumePanel._lengthKnown && Player.restoreProgress > 0
 
             text: _hasRestoreTime
                   ? qsTr("You already watched till %1")

@@ -83,6 +83,7 @@ FocusScope {
     Timer {
         interval: 100
         repeat: true
+        triggeredOnStart: true
         running: !rootPlayer._controlsUnderVideo && rootPlayer.visible
                  && Qt.application.state === Qt.ApplicationActive
 
@@ -135,7 +136,8 @@ FocusScope {
     }
 
     on_ControlsUnderVideoChanged: {
-        lockUnlockAutoHide(_controlsUnderVideo)
+        if (_controlsUnderVideo && !playerToolbarVisibilityFSM.isVisible)
+            playerToolbarVisibilityFSM.askShow()
     }
 
     // Functions
@@ -172,6 +174,8 @@ FocusScope {
 
     PlayerToolbarVisibilityFSM {
         id: playerToolbarVisibilityFSM
+
+        pinned: rootPlayer._controlsUnderVideo
 
         onForceUnlock:{
             controlBar.forceUnlock()
@@ -332,6 +336,7 @@ FocusScope {
                         when: playerToolbarVisibilityFSM.started
                             && !playerToolbarVisibilityFSM.isVisible
                             && !interactiveAutoHideTimer.running
+                            && !rootPlayer._mouseNearTop && !rootPlayer._mouseNearBottom
                         value: Qt.BlankCursor
                     }
 
@@ -1083,10 +1088,10 @@ FocusScope {
 
             anchors.fill: parent
 
-            // redesign: over the video (fullscreen) the top bar has the control bar's BG/A3 95%
+            // redesign: same background as the control bar (BG/A3, 95% over the video in fullscreen)
             opacity: (MainCtx.hasEmbededVideo && !rootPlayer._controlsUnderVideo) ? 0.95 : 1.0
 
-            tintColor: windowTheme.bg.primary
+            tintColor: Qt.alpha(VLCStyle.palette.rdBgA3Transparent, 1.0)
 
             visible: rootPlayer._controlsUnderVideo || (MainCtx.hasEmbededVideo && !rootPlayer.displayFadeRectangles)
         }
@@ -1443,6 +1448,7 @@ FocusScope {
         anchors.bottomMargin: VLCStyle.dp(12, VLCStyle.scale)
         width: VLCStyle.rd_sidePanelWidth
         height: implicitHeight
+        maximumHeight: controlBar.y - anchors.bottomMargin - (topBar.visible ? topBar.y + topBar.height : 0)
         z: 2
     }
 
