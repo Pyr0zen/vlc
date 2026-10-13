@@ -306,16 +306,27 @@ Item {
                 }
             }
             root._focusBeforeOpen = item
+            searchField.forceActiveFocus(Qt.PopupFocusReason)
         }
-        onOpened: searchField.forceActiveFocus(Qt.PopupFocusReason)
-        onClosed: {
+        onOpened: {
+            if (!searchField.activeFocus)
+                searchField.forceActiveFocus(Qt.PopupFocusReason)
+        }
+        // count and focus change hands when hiding starts, so no key is lost in a transition
+        onAboutToHide: {
             if (_holdsModal) {
                 RdPanels.releaseModal()
                 _holdsModal = false
             }
             const item = root._focusBeforeOpen
-            root._focusBeforeOpen = null
             if (item && item.visible)
+                item.forceActiveFocus(Qt.PopupFocusReason)
+        }
+        onClosed: {
+            const item = root._focusBeforeOpen
+            root._focusBeforeOpen = null
+            const window = root.Window.window
+            if (item && item.visible && (!window || window.activeFocusItem !== item))
                 item.forceActiveFocus(Qt.PopupFocusReason)
         }
 

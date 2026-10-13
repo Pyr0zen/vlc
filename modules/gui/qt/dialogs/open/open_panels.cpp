@@ -39,6 +39,7 @@
 #include "util/qt_dirs.hpp"
 #include "util/validators.hpp"
 #include "util/colorizedsvgicon.hpp"
+#include "style/rdwidgetstyle.hpp"
 #include <vlc_intf_strings.h>
 #include <vlc_modules.h>
 #include <vlc_plugin.h>
@@ -1421,6 +1422,8 @@ void CaptureOpenPanel::advancedDialog()
     QPushButton *cancelButton = new QPushButton( qtr( "Cancel" ) );
 
     connect( closeButton, &QPushButton::clicked, adv, &QDialog::accept );
+    /* redesign: the OK of this sub dialog is its main action (accent look) */
+    RdWidgetStyle::setPrimary( closeButton );
     connect( cancelButton, &QPushButton::clicked, adv, &QDialog::reject );
 
     advButtonBox->addButton( closeButton, QDialogButtonBox::AcceptRole );
