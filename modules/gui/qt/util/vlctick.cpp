@@ -71,6 +71,11 @@ QString VLCTick::formatHMS(int formatFlags) const
         return qtr("%1 ms").arg(asMilliseconds());
 }
 
+QString VLCTick::formatHHMMSS() const
+{
+    return formatHMS(AlwaysShowHours);
+}
+
 QString VLCTick::formatLong(int formatFlags) const
 {
     if (!valid())

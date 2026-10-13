@@ -1011,7 +1011,13 @@ static void on_player_playback_restore_queried(vlc_player_t *, void *data)
                 if (media)
                 {
                     if (media->f_progress > 0)
+                    {
                         that->m_restoreProgress = media->f_progress;
+                        // a file watched to its last 20 seconds starts over without asking
+                        // (Sticky, 2026-10-13); i_duration is in milliseconds
+                        if (media->i_duration > 0 && (1. - media->f_progress) * media->i_duration < 20000.)
+                            that->m_canRestorePlayback = false;
+                    }
                     vlc_ml_release(media);
                 }
             }

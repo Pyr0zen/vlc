@@ -51,7 +51,8 @@ FocusScope {
     }
 
     // Only applicable in video mode:
-    property bool displayFadeRectangles: !_controlsUnderVideo && (height > (implicitFadeRectangleHeight * 3))
+    // redesign: no shadow gradients behind the bars; the bars have their own background
+    property bool displayFadeRectangles: false
     property real implicitFadeRectangleHeight: VLCStyle.dp(206, VLCStyle.scale)
 
     // Private
@@ -66,10 +67,8 @@ FocusScope {
     // leaves (video 3:46-3:55, Decisions 4 and 30). Menus, the queue, keyboard use and audio mode
     // show both bars (except the far one while the mouse is in the other bar's zone).
     readonly property real _barHoverZone: VLCStyle.dp(40, VLCStyle.scale)
-    readonly property bool _mouseNearTop: barZoneHover.hovered
-                                          && barZoneHover.point.position.y <= topBar.height + _barHoverZone
-    readonly property bool _mouseNearBottom: barZoneHover.hovered
-                                             && barZoneHover.point.position.y >= height - controlBar.height - _barHoverZone
+    readonly property bool _mouseNearTop: _cursorY >= 0 && _cursorY <= topBar.height + _barHoverZone
+    readonly property bool _mouseNearBottom: _cursorY >= 0 && _cursorY >= height - controlBar.height - _barHoverZone
     readonly property bool _showBothBars: playerToolbarVisibilityFSM.isVisible
                                           && (!MainCtx.hasEmbededVideo || playerToolbarVisibilityFSM.keyboardShown)
     readonly property bool _topBarVisible: _controlsUnderVideo || _showBothBars || _mouseNearTop
@@ -77,8 +76,25 @@ FocusScope {
     readonly property bool _controlBarVisible: _controlsUnderVideo || _showBothBars || _mouseNearBottom
                                                || (playerToolbarVisibilityFSM.isLocked && !_mouseNearTop)
 
-    HoverHandler {
-        id: barZoneHover
+    // cursor height inside the player, -1 outside. Hover events do not reach Qt Quick while the
+    // cursor is over the native video, so in fullscreen the cursor is read ten times a second.
+    property real _cursorY: -1
+
+    Timer {
+        interval: 100
+        repeat: true
+        running: !rootPlayer._controlsUnderVideo && rootPlayer.visible
+                 && Qt.application.state === Qt.ApplicationActive
+
+        onTriggered: {
+            const p = MainCtx.cursorPosition(rootPlayer)
+            const inside = p.x >= 0 && p.y >= 0 && p.x <= rootPlayer.width && p.y <= rootPlayer.height
+            rootPlayer._cursorY = inside ? p.y : -1
+        }
+        onRunningChanged: {
+            if (!running)
+                rootPlayer._cursorY = -1
+        }
     }
 
     // Settings
@@ -1007,7 +1023,8 @@ FocusScope {
                  : rootPlayer.width
 
         focus: true
-        title: Player.title
+        // the media's title, or VLC's display name (the file name) when it has no title tag
+        title: Player.title !== "" ? Player.title : Player.name
 
         pinControls: MainCtx.pinVideoControls
 
@@ -1066,15 +1083,8 @@ FocusScope {
 
             anchors.fill: parent
 
-            opacity: {
-                if (MainCtx.hasEmbededVideo && !rootPlayer._controlsUnderVideo && !rootPlayer.displayFadeRectangles) {
-                    return 0.6
-                } else if (MainCtx.intfMainWindow.visibility === Window.FullScreen && MainCtx.hasEmbededVideo) {
-                    return MainCtx.pinOpacity
-                } else {
-                    return 1.0
-                }
-            }
+            // redesign: over the video (fullscreen) the top bar has the control bar's BG/A3 95%
+            opacity: (MainCtx.hasEmbededVideo && !rootPlayer._controlsUnderVideo) ? 0.95 : 1.0
 
             tintColor: windowTheme.bg.primary
 
