@@ -1,0 +1,519 @@
+/*****************************************************************************
+ * Copyright (C) 2026 VLC authors and VideoLAN
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * ( at your option ) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ *****************************************************************************/
+
+#if HAVE_CONFIG_H
+# include "config.h"
+#endif
+
+#include "rdlibrarymodel.hpp"
+
+#include <QCollator>
+#include <QUrl>
+
+#include <algorithm>
+
+#include <vlc_media_library.h>
+
+#include "medialib.hpp"
+#include "mlhelper.hpp"
+#include "util/vlctick.hpp"
+
+namespace {
+
+// thumbnails are generated at the size VLC's own video views ask for
+constexpr uint32_t THUMBNAIL_WIDTH = 512;
+constexpr uint32_t THUMBNAIL_HEIGHT = 320;
+constexpr double THUMBNAIL_POSITION = .15;
+
+// the page reloads once the media library has been quiet for this long
+constexpr int RELOAD_DELAY_MS = 300;
+
+QString thumbnailOf(const vlc_ml_thumbnail_t (&thumbnails)[VLC_ML_THUMBNAIL_SIZE_COUNT])
+{
+    const vlc_ml_thumbnail_t& small = thumbnails[VLC_ML_THUMBNAIL_SMALL];
+    if (small.i_status == VLC_ML_THUMBNAIL_STATUS_AVAILABLE && small.psz_mrl)
+        return qfu(small.psz_mrl);
+    return {};
+}
+
+const char* kindName(RdLibraryItem::Kind kind)
+{
+    switch (kind)
+    {
+    case RdLibraryItem::Media:    return "media";
+    case RdLibraryItem::Folder:   return "folder";
+    case RdLibraryItem::Playlist: return "playlist";
+    case RdLibraryItem::Artist:   return "artist";
+    case RdLibraryItem::Album:    return "album";
+    case RdLibraryItem::Genre:    return "genre";
+    case RdLibraryItem::Stream:   return "stream";
+    }
+    return "media";
+}
+
+} // namespace
+
+// RdLibraryItems
+
+RdLibraryItem RdLibraryItems::fromMedia(vlc_medialibrary_t* ml, const vlc_ml_media_t& media)
+{
+    RdLibraryItem item;
+    item.id = MLItemId(media.i_id, VLC_ML_PARENT_UNKNOWN);
+    item.isVideo = media.i_type != VLC_ML_MEDIA_TYPE_AUDIO;
+    item.isFavorite = media.b_is_favorite;
+    item.duration = media.i_duration;
+    item.watched = media.i_playcount > 0;
+    item.progress = (media.f_progress > 0. && media.f_progress < 1.) ? media.f_progress : -1.;
+
+    if (media.p_files && media.p_files->i_nb_items > 0)
+    {
+        const vlc_ml_file_t& file = media.p_files->p_items[0];
+        item.mrl = qfu(file.psz_mrl);
+        item.modified = file.i_last_modification_date;
+    }
+    // network streams (stream history, saved streams) are not files
+    if (!item.mrl.isEmpty() && !QUrl(item.mrl).isLocalFile())
+        item.kind = RdLibraryItem::Stream;
+
+    // videos show their file name, as in the design ("The_Wand_S01E05.mp4"); songs their title
+    if (item.isVideo && media.psz_filename && *media.psz_filename && item.kind == RdLibraryItem::Media)
+        item.title = qfu(media.psz_filename);
+    else
+        item.title = qfu(media.psz_title);
+
+    item.thumbnail = thumbnailOf(media.thumbnails);
+
+    if (media.i_type == VLC_ML_MEDIA_TYPE_AUDIO)
+    {
+        item.trackNumber = media.album_track.i_track_nb;
+        item.discNumber = media.album_track.i_disc_nb;
+
+        if (media.album_track.i_artist_id > 0)
+        {
+            ml_unique_ptr<vlc_ml_artist_t> artist(vlc_ml_get_artist(ml, media.album_track.i_artist_id));
+            if (artist && artist->psz_name)
+                item.artist = qfu(artist->psz_name);
+        }
+        if (media.album_track.i_album_id > 0)
+        {
+            ml_unique_ptr<vlc_ml_album_t> album(vlc_ml_get_album(ml, media.album_track.i_album_id));
+            if (album)
+            {
+                item.album = qfu(album->psz_title);
+                if (item.thumbnail.isEmpty())
+                    item.thumbnail = thumbnailOf(album->thumbnails);
+            }
+        }
+        item.subtitle = item.artist;
+    }
+    else
+    {
+        const vlc_ml_thumbnail_status_t status = media.thumbnails[VLC_ML_THUMBNAIL_SMALL].i_status;
+        item.thumbnailMissing = item.kind == RdLibraryItem::Media
+                                && (status == VLC_ML_THUMBNAIL_STATUS_MISSING
+                                    || status == VLC_ML_THUMBNAIL_STATUS_FAILURE);
+    }
+    return item;
+}
+
+RdLibraryItem RdLibraryItems::fromFolder(const vlc_ml_folder_t& folder)
+{
+    RdLibraryItem item;
+    item.kind = RdLibraryItem::Folder;
+    item.id = MLItemId(folder.i_id, VLC_ML_PARENT_FOLDER);
+    item.title = qfu(folder.psz_name);
+    item.mrl = qfu(folder.psz_mrl);
+    item.duration = folder.i_duration;
+    item.count = static_cast<int>(folder.i_nb_media);
+    item.isFavorite = folder.b_is_favorite;
+    return item;
+}
+
+RdLibraryItem RdLibraryItems::fromPlaylist(const vlc_ml_playlist_t& playlist)
+{
+    RdLibraryItem item;
+    item.kind = RdLibraryItem::Playlist;
+    item.id = MLItemId(playlist.i_id, VLC_ML_PARENT_PLAYLIST);
+    item.title = qfu(playlist.psz_name);
+    item.mrl = qfu(playlist.psz_mrl);
+    item.count = static_cast<int>(playlist.i_nb_media);
+    return item;
+}
+
+RdLibraryItem RdLibraryItems::fromArtist(const vlc_ml_artist_t& artist)
+{
+    RdLibraryItem item;
+    item.kind = RdLibraryItem::Artist;
+    item.id = MLItemId(artist.i_id, VLC_ML_PARENT_ARTIST);
+    item.title = qfu(artist.psz_name);
+    item.thumbnail = thumbnailOf(artist.thumbnails);
+    item.count = static_cast<int>(artist.i_nb_tracks);
+    item.isFavorite = artist.b_is_favorite;
+    return item;
+}
+
+QString RdLibraryItems::normalizedMrl(const QString& mrl)
+{
+    QString result = mrl;
+    while (result.endsWith(QLatin1Char('/')) && !result.endsWith(QLatin1String(":///")))
+        result.chop(1);
+    return result;
+}
+
+// RdLibraryModel
+
+RdLibraryModel::RdLibraryModel(QObject* parent)
+    : QAbstractListModel(parent)
+    , m_eventCallback(nullptr, [this](vlc_ml_event_callback_t* cb) {
+        assert(m_mediaLib != nullptr);
+        m_mediaLib->unregisterEventListener(cb);
+    })
+{
+    m_reloadTimer.setSingleShot(true);
+    m_reloadTimer.setInterval(RELOAD_DELAY_MS);
+    connect(&m_reloadTimer, &QTimer::timeout, this, &RdLibraryModel::reload);
+}
+
+RdLibraryModel::~RdLibraryModel()
+{
+    // stop the media library events before the members they reach go away
+    m_eventCallback.reset();
+}
+
+int RdLibraryModel::rowCount(const QModelIndex& parent) const
+{
+    if (parent.isValid())
+        return 0;
+    return count();
+}
+
+QHash<int, QByteArray> RdLibraryModel::roleNames() const
+{
+    return {
+        { KIND, "kind" },
+        { ID, "id" },
+        { TITLE, "title" },
+        { SUBTITLE, "subtitle" },
+        { MRL, "mrl" },
+        { THUMBNAIL, "thumbnail" },
+        { PROGRESS, "progress" },
+        { WATCHED, "watched" },
+        { IS_VIDEO, "isVideo" },
+        { IS_FAVORITE, "isFavorite" },
+        { DURATION, "duration" },
+        { COUNT_ROLE, "itemCount" },
+        { ARTIST, "artist" },
+        { ALBUM, "album" },
+        { IS_CONTAINER, "isContainer" },
+    };
+}
+
+QVariant RdLibraryModel::data(const QModelIndex& index, int role) const
+{
+    if (!index.isValid() || index.row() < 0 || index.row() >= count())
+        return {};
+
+    const RdLibraryItem& item = m_items[static_cast<size_t>(index.row())];
+    switch (role)
+    {
+    case Qt::DisplayRole:
+    case TITLE:
+        return item.title;
+    case KIND:
+        return QString::fromLatin1(kindName(item.kind));
+    case ID:
+        return QVariant::fromValue(item.id);
+    case SUBTITLE:
+        return item.subtitle;
+    case MRL:
+        return item.mrl;
+    case THUMBNAIL:
+        return item.thumbnail;
+    case PROGRESS:
+        return item.progress;
+    case WATCHED:
+        return item.watched;
+    case IS_VIDEO:
+        return item.isVideo;
+    case IS_FAVORITE:
+        return item.isFavorite;
+    case DURATION:
+        return QVariant::fromValue(VLCDuration(VLC_TICK_FROM_MS(item.duration)));
+    case COUNT_ROLE:
+        return item.count;
+    case ARTIST:
+        return item.artist;
+    case ALBUM:
+        return item.album;
+    case IS_CONTAINER:
+        return item.kind != RdLibraryItem::Media && item.kind != RdLibraryItem::Stream;
+    default:
+        return {};
+    }
+}
+
+void RdLibraryModel::setMl(MediaLib* ml)
+{
+    if (m_mediaLib == ml)
+        return;
+
+    m_eventCallback.reset();
+    m_mediaLib = ml;
+    if (m_mediaLib)
+        m_eventCallback.reset(m_mediaLib->registerEventListener(&RdLibraryModel::onMlEvent, this));
+    emit mlChanged();
+    scheduleReload();
+}
+
+void RdLibraryModel::setSortKey(const QString& key)
+{
+    if (m_sortKey == key)
+        return;
+    m_sortKey = key;
+    emit sortKeyChanged();
+    rebuild();
+}
+
+void RdLibraryModel::setSearchPattern(const QString& pattern)
+{
+    if (m_searchPattern == pattern)
+        return;
+    m_searchPattern = pattern;
+    emit searchPatternChanged();
+    rebuild();
+}
+
+int RdLibraryModel::mediaCount() const
+{
+    return static_cast<int>(std::count_if(m_items.cbegin(), m_items.cend(), [](const RdLibraryItem& item) {
+        return item.kind == RdLibraryItem::Media || item.kind == RdLibraryItem::Stream;
+    }));
+}
+
+QVariantMap RdLibraryModel::get(int row) const
+{
+    QVariantMap map;
+    if (row < 0 || row >= count())
+        return map;
+
+    const QModelIndex idx = index(row);
+    const QHash<int, QByteArray> roles = roleNames();
+    for (auto it = roles.cbegin(); it != roles.cend(); ++it)
+        map.insert(QString::fromLatin1(it.value()), data(idx, it.key()));
+    map.insert(QStringLiteral("index"), row);
+    return map;
+}
+
+QVariantList RdLibraryModel::mediaIdsFrom(int row) const
+{
+    QVariantList ids;
+    for (int i = std::max(row, 0); i < count(); ++i)
+    {
+        const RdLibraryItem& item = m_items[static_cast<size_t>(i)];
+        if (item.kind == RdLibraryItem::Media || item.kind == RdLibraryItem::Stream)
+            ids.append(QVariant::fromValue(item.id));
+    }
+    return ids;
+}
+
+bool RdLibraryModel::isRelevantEvent(int eventType) const
+{
+    switch (eventType)
+    {
+    case VLC_ML_EVENT_DISCOVERY_STARTED:
+    case VLC_ML_EVENT_DISCOVERY_PROGRESS:
+    case VLC_ML_EVENT_BACKGROUND_IDLE_CHANGED:
+    case VLC_ML_EVENT_PARSING_PROGRESS_UPDATED:
+    case VLC_ML_EVENT_BOOKMARKS_ADDED:
+    case VLC_ML_EVENT_BOOKMARKS_UPDATED:
+    case VLC_ML_EVENT_BOOKMARKS_DELETED:
+        return false;
+    default:
+        return true;
+    }
+}
+
+void RdLibraryModel::onMlEvent(void* data, const vlc_ml_event_t* event)
+{
+    // media library thread
+    auto* self = static_cast<RdLibraryModel*>(data);
+    if (!self->isRelevantEvent(event->i_type))
+        return;
+    QMetaObject::invokeMethod(self, &RdLibraryModel::scheduleReload, Qt::QueuedConnection);
+}
+
+void RdLibraryModel::scheduleReload()
+{
+    m_reloadTimer.start();
+}
+
+void RdLibraryModel::reload()
+{
+    m_reloadTimer.stop();
+    if (!m_mediaLib || !canLoad())
+        return;
+
+    if (m_taskId != 0)
+        m_mediaLib->cancelMLTask(this, m_taskId);
+
+    if (!m_loading)
+    {
+        m_loading = true;
+        emit loadingChanged();
+    }
+
+    struct Ctx {
+        RdLibraryItemList items;
+    };
+
+    Loader loader = createLoader();
+    m_taskId = m_mediaLib->runOnMLThread<Ctx>(this,
+    [loader](vlc_medialibrary_t* ml, Ctx& ctx) {
+        ctx.items = loader(ml);
+    },
+    [this](quint64 taskId, Ctx& ctx) {
+        if (taskId != m_taskId)
+            return;
+        m_taskId = 0;
+        applyItems(std::move(ctx.items));
+        m_loading = false;
+        emit loadingChanged();
+        emit loaded();
+    });
+}
+
+void RdLibraryModel::applyItems(RdLibraryItemList&& items)
+{
+    m_all = std::move(items);
+    rebuild();
+    requestThumbnails();
+}
+
+void RdLibraryModel::rebuild()
+{
+    RdLibraryItemList items;
+    items.reserve(m_all.size());
+    for (const RdLibraryItem& item : m_all)
+    {
+        if (m_searchPattern.isEmpty()
+            || item.title.contains(m_searchPattern, Qt::CaseInsensitive)
+            || item.subtitle.contains(m_searchPattern, Qt::CaseInsensitive))
+            items.push_back(item);
+    }
+    sortItems(items);
+
+    // same rows in the same order: refresh them in place, so views keep their scroll position
+    const bool sameRows = items.size() == m_items.size()
+                          && std::equal(items.cbegin(), items.cend(), m_items.cbegin(),
+                                        [](const RdLibraryItem& a, const RdLibraryItem& b) {
+                                            return a.kind == b.kind && a.id == b.id && a.mrl == b.mrl;
+                                        });
+    if (sameRows)
+    {
+        m_items = std::move(items);
+        if (!m_items.empty())
+            emit dataChanged(index(0), index(count() - 1));
+        return;
+    }
+
+    beginResetModel();
+    m_items = std::move(items);
+    endResetModel();
+    emit countChanged();
+}
+
+void RdLibraryModel::sortItems(RdLibraryItemList& items) const
+{
+    if (m_sortKey.isEmpty())
+        return;
+
+    QCollator collator;
+    collator.setNumericMode(true);
+    collator.setCaseSensitivity(Qt::CaseInsensitive);
+
+    const QString key = m_sortKey;
+    const bool descending = key.endsWith(QLatin1String("Desc"));
+
+    auto byTitle = [&collator](const RdLibraryItem& a, const RdLibraryItem& b) {
+        return collator.compare(a.title, b.title) < 0;
+    };
+
+    // containers (folders, albums ...) always come first, sorted by title
+    auto isContainer = [](const RdLibraryItem& item) {
+        return item.kind != RdLibraryItem::Media && item.kind != RdLibraryItem::Stream;
+    };
+
+    std::stable_sort(items.begin(), items.end(), [&](const RdLibraryItem& a, const RdLibraryItem& b) {
+        if (isContainer(a) != isContainer(b))
+            return isContainer(a);
+        if (isContainer(a))
+            return descending && key.startsWith(QLatin1String("title")) ? byTitle(b, a) : byTitle(a, b);
+
+        if (key == QLatin1String("unwatched") || key == QLatin1String("watched"))
+        {
+            if (a.watched != b.watched)
+                return key == QLatin1String("unwatched") ? !a.watched : a.watched;
+            return byTitle(a, b);
+        }
+        if (key == QLatin1String("newest") || key == QLatin1String("oldest"))
+        {
+            if (a.modified != b.modified)
+                return key == QLatin1String("newest") ? a.modified > b.modified : a.modified < b.modified;
+            return byTitle(a, b);
+        }
+
+        int cmp = 0;
+        if (key.startsWith(QLatin1String("title")))
+            cmp = collator.compare(a.title, b.title);
+        else if (key.startsWith(QLatin1String("artist")))
+            cmp = collator.compare(a.artist, b.artist);
+        else if (key.startsWith(QLatin1String("album")))
+            cmp = collator.compare(a.album, b.album);
+        else if (key.startsWith(QLatin1String("track")))
+            cmp = a.trackNumber - b.trackNumber;
+        else if (key.startsWith(QLatin1String("disc")))
+            cmp = (a.discNumber != b.discNumber) ? a.discNumber - b.discNumber : a.trackNumber - b.trackNumber;
+        else if (key.startsWith(QLatin1String("uri")))
+            cmp = collator.compare(a.mrl, b.mrl);
+
+        if (cmp == 0)
+            return byTitle(a, b);
+        return descending ? cmp > 0 : cmp < 0;
+    });
+}
+
+void RdLibraryModel::requestThumbnails()
+{
+    std::vector<int64_t> ids;
+    for (const RdLibraryItem& item : m_all)
+    {
+        if (item.thumbnailMissing && !m_thumbnailRequested.contains(item.id.id))
+        {
+            m_thumbnailRequested.insert(item.id.id);
+            ids.push_back(item.id.id);
+        }
+    }
+    if (ids.empty() || !m_mediaLib)
+        return;
+
+    m_mediaLib->runOnMLThread(this, [ids](vlc_medialibrary_t* ml) {
+        for (int64_t id : ids)
+            vlc_ml_media_generate_thumbnail(ml, id, VLC_ML_THUMBNAIL_SMALL,
+                                            THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT, THUMBNAIL_POSITION);
+    });
+}
