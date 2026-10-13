@@ -57,13 +57,16 @@ Item {
     x: _left ? margin : (parent ? parent.width - width - margin : 0)
     y: _top ? margin : (parent ? parent.height - height - margin : 0)
 
+    // Figma "Miniplayer" smart animate: 300 ms
+    readonly property int _snapDuration: 300
+
     Behavior on x {
         enabled: !dragHandler.active
-        NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
+        NumberAnimation { duration: root._snapDuration; easing.type: Easing.OutCubic }
     }
     Behavior on y {
         enabled: !dragHandler.active
-        NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
+        NumberAnimation { duration: root._snapDuration; easing.type: Easing.OutCubic }
     }
 
     // Parent folder of the playing file (as the top bar's folder chip)
