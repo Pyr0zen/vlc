@@ -48,9 +48,10 @@ For every element, every time:
 ## Current phase
 READY TO BUILD. Next session: read CLAUDE.md, VIDEO_INDEX.md, FIGMA_FLOWS.md and BUILD_PLAN.md, then run the build from Phase 1 through all phases continuously, following the test loop, without stopping unless truly blocked.
 
-- Last completed: W1.1 Windows CI build (Phase 1): run 38315049322 green, stock VLC plays a local video on Sticky's PC.
-- In progress: VERIFICATION of the already-coded Step 1 work (W2.1, W2.2, W2.5, W3.1-W3.8, W4.1/W4.2 part 1, commits f6664a9196..e6930fc114), pushed as run 38317777499. Next: download, run on this PC, test every state, fix, review (quality rules below). Nothing counts as done until it ran on this PC.
-- After verification: W2.3 icons (Figma SVG export is in redesign/reference/frames_work/figma_svg, local only) and Inter font, then the rest of Step 1 (BUILD_PLAN.md), then Step 2.
+- Last completed: W1.1 (run 38315049322). Step 1 code so far (W2.1 palette/tokens/accent + light set, W2.2 component kit, W2.3 Figma icons, Inter font, W2.5, W3.1-W3.8, W4.1/W4.2 part 1) has run on this PC in 3 test rounds (builds 38321852725, 38325488867); bugs found are fixed, see redesign/BUILD_NOTES.md.
+- In progress: VERIFICATION round 4. Build run 38329239416 (commit 990258263f) was running at the stop (2026-10-13). Next session: download it (gh run download 38329239416 -R Pyr0zen/vlc -n vlc-redesign-win64 -D <WORK_DIR>\builds\38329239416), run it with the test helper (scratchpad vlctest.ps1: portable mode, 2400x1350 window, --loop) on Sticky's test videos, then check: fullscreen top/bottom bars appear near the edges and fade out (cursor polling fix), windowed both bars always visible, seek handle orange (not magenta), times HH:MM:SS, top bar title = file name, Figma cone, resume prompt hidden when watched to the last 20 s, tracks popup in a small window, no QML warnings in vlc-log.txt, regression checklist, side-by-side images vs the video. Then write STATUS.md with the PROGRESS REPORT and mark VIDEO_INDEX rows done with commit hashes.
+- After verification: rest of Step 1 (BUILD_PLAN.md section 0) in build rounds of 5 work packages, then Step 2.
+- Test media: <TEST_MEDIA_DIR>\<TEST_VIDEO> (landscape) and <TEST_VIDEO_PORTRAIT> (portrait). Never test with the designer's video. Screenshots of them stay local (they show Sticky's screen).
 - Update this section after every item: last completed row/WP with commit hash, next WP, latest green run.
 
 ## Working rules for the build
