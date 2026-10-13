@@ -70,6 +70,9 @@
 #include <QPointer>
 #include <QMessageBox>
 #include <QMetaMethod>
+#include <QWindow>
+
+#include <vector>
 
 #define I_OP_DIR_WINTITLE I_DIR_OR_FOLDER( N_("Open Directory"), \
                                            N_("Open Folder") )
@@ -651,8 +654,14 @@ void DialogsProvider::openDiscDialog()
 void DialogsProvider::openNetDialog()
 {
     /* redesign (W6.4): the QML Open Network Stream dialog when the QML interface
-     * listens for it, the Network source of the Open Media dialog otherwise */
-    if( isSignalConnected( QMetaMethod::fromSignal( &DialogsProvider::showOpenNetworkStreamDialog ) ) )
+     * listens for it and its window can show it, the Network source of the Open
+     * Media dialog otherwise (dialogs provider mode, window hidden or minimized) */
+    const QWindow *mainWindow = p_intf->p_mi ? p_intf->p_mi->intfMainWindow() : nullptr;
+    const bool mainWindowShown = mainWindow
+            && mainWindow->visibility() != QWindow::Hidden
+            && mainWindow->visibility() != QWindow::Minimized;
+    if( mainWindowShown
+        && isSignalConnected( QMetaMethod::fromSignal( &DialogsProvider::showOpenNetworkStreamDialog ) ) )
         emit showOpenNetworkStreamDialog();
     else
         openDialog( OpenDialog::OPEN_NETWORK_TAB );
