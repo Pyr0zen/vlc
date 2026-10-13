@@ -292,28 +292,23 @@ FocusScope {
         return (item.kind === "media" || item.kind === "stream") && item.mrl ? [item.mrl] : []
     }
 
-    function _mrlKey(mrl) {
-        let key = String(mrl)
-        try {
-            key = decodeURIComponent(key)
-        } catch (e) {
-            // not percent-encoded: compare as it is
+    // length of the deepest folder of `folders` that holds `mrl` (0: none)
+    function _depthIn(folders, mrl) {
+        const key = RdLibraryNav.mrlKey(mrl)
+        let depth = 0
+        for (const folder of folders) {
+            const folderKey = RdLibraryNav.mrlKey(folder)
+            if ((key === folderKey || key.startsWith(folderKey + "/")) && folderKey.length > depth)
+                depth = folderKey.length
         }
-        return key.replace(/\/+$/, "")
+        return depth
     }
 
-    function _inside(roots, mrl) {
-        const key = _mrlKey(mrl)
-        return roots.some((root) => {
-            const rootKey = _mrlKey(root)
-            return key === rootKey || key.startsWith(rootKey + "/")
-        })
-    }
-
-    // the category of a Home row: media by their type, folders by the category they were added to
+    // the category of a Home row: media by their type, folders by the deepest folder added to a
+    // category that holds them (as the library store resolves them)
     function categoryOf(item) {
         if (item.kind === "folder")
-            return _inside(RdLibraryStore.musicFolders, item.mrl) && !_inside(RdLibraryStore.videoFolders, item.mrl)
+            return _depthIn(RdLibraryStore.musicFolders, item.mrl) > _depthIn(RdLibraryStore.videoFolders, item.mrl)
                    ? "music" : "video"
         return item.isVideo ? "video" : "music"
     }

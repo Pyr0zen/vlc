@@ -215,6 +215,18 @@ QtObject {
     }
 
     // the library folders of a category, from RdLibraryStore.resolveFolder()
+    // MRLs are percent-encoded differently by Qt, VLC and the media library: compare them decoded,
+    // without a trailing slash
+    function mrlKey(mrl) {
+        let key = String(mrl)
+        try {
+            key = decodeURIComponent(key)
+        } catch (e) {
+            // a stray "%": compare the text as it is
+        }
+        return key.replace(/\/+$/, "")
+    }
+
     function openFolderPath(result) {
         if (!result || result.crumbs.length === 0)
             return

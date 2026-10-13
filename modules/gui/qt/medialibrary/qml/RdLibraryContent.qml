@@ -145,7 +145,7 @@ FocusScope {
             if (!result || RdLibraryNav.pendingFolderMrl !== mrl)
                 return
             const crumbs = result.crumbs
-            if (crumbs.length === 0 || crumbs[crumbs.length - 1].mrl.replace(/\/+$/, "") !== mrl.replace(/\/+$/, ""))
+            if (crumbs.length === 0 || RdLibraryNav.mrlKey(crumbs[crumbs.length - 1].mrl) !== RdLibraryNav.mrlKey(mrl))
                 return
             RdLibraryNav.pendingFolderMrl = ""
             RdLibraryNav.openFolderPath(result)
