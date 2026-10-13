@@ -311,9 +311,10 @@ RdSidePanelPage {
         }
     }
 
-    // label on the left, a 220 px dropdown on the right (Figma "Frame 114": 78 px row)
+    // label on the left, a 220 px dropdown on the right (Figma "video settings": rows 68 px
+    // apart, i.e. 63 plus the 5 px row spacing)
     component DropdownRow: Widgets.RdSettingRow {
-        rowHeight: VLCStyle.dp(58)
+        rowHeight: VLCStyle.dp(63)
     }
 
     // dropdown over the choices VLC declares for an option

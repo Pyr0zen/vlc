@@ -33,9 +33,9 @@ RdSidePanel {
     id: root
 
     tabs: [
-        { key: "queue", label: qsTr("Queue"), icon: "queue", width: 129 },
-        { key: "bookmarks", label: qsTr("Bookmarks"), icon: "bookmarks", width: 129 },
-        { key: "chapters", label: qsTr("Chapters"), icon: "chapters", width: 129 }
+        { key: "queue", label: qsTr("Queue"), icon: "queue", width: 128.67, underline: 112.67 },
+        { key: "bookmarks", label: qsTr("Bookmarks"), icon: "bookmarks", width: 128.67, underline: 112.67 },
+        { key: "chapters", label: qsTr("Chapters"), icon: "chapters", width: 128.67, underline: 112.67 }
     ]
     currentKey: RdPanels.queueOpen ? RdPanels.current : "queue"
     onTabClicked: (key) => RdPanels.open(key)

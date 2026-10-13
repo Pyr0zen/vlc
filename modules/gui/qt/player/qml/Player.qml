@@ -132,7 +132,12 @@ FocusScope {
 
     // Events
 
-    Component.onCompleted: MainCtx.preferHotkeys = true
+    // keys go to VLC's hotkeys, except while a modal redesign popup is open (RdPanels.modalCount)
+    Binding {
+        target: MainCtx
+        property: "preferHotkeys"
+        value: RdPanels.modalCount === 0
+    }
     Component.onDestruction: {
         MainCtx.preferHotkeys = false
         RdPanels.close()

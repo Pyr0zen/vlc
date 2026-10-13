@@ -44,4 +44,20 @@ QtObject {
     function close() {
         current = ""
     }
+
+    // Modal redesign popups (menus, dialogs) that are open. While the player is shown VLC sends
+    // every key to its hotkeys unless the focused item shows keyboard focus
+    // (MainCtx.preferHotkeys); a modal popup needs the keys itself (Escape, arrows, Space,
+    // typing), so Player.qml prefers hotkeys only while this is 0. A popup calls acquireModal()
+    // when it opens and releaseModal() when it closes (and on destruction while open); a count
+    // keeps nested popups (a menu opening a dialog) correct.
+    property int modalCount: 0
+
+    function acquireModal() {
+        modalCount += 1
+    }
+
+    function releaseModal() {
+        modalCount = Math.max(0, modalCount - 1)
+    }
 }

@@ -17,9 +17,13 @@
  *****************************************************************************/
 
 // redesign: right sidebar of the player (settings sidebar 7:12-9:19, queue sidebar 9:29 and
-// 15:08; Figma "Subtitles" / "Queue" frames: 400 wide, radius 10, BG/B1 95%).
-// - tab header 50 px, BG/B2: icon 20 + label Inter 12; active tab: two-tone icon, FG/A2 label
-//   and a 2 px accent underline under the icon and label; inactive: plain icon, FG/A3 label
+// 15:08; Figma "Subtitles" / "Queue" frames: 400 wide, radius 10, BG/B1 95% with a 50 px
+// background blur).
+// - the body is opaque BG/B1: the video is a native surface under the QML scene and cannot be
+//   blurred, and without the blur its 5 % would show through as a sharp ghost image
+// - tab header 50 px, BG/B2, then a 1 px Divider/Dim line: icon 20 + label Inter 12; active
+//   tab: two-tone icon, FG/A2 label and a 2 px accent underline as wide as the Figma tab content
+//   frame (centered); inactive: plain icon, FG/A3 label
 // - pages (RdSidePanelPage) cross-fade when the tab changes (video 8:40, IA-37)
 // - optional footer pinned at the bottom (preset selector, "Open Advanced Settings")
 import QtQuick
@@ -32,8 +36,8 @@ import VLC.Widgets as Widgets
 Widgets.RdPanel {
     id: root
 
-    // [{ key, label, icon, width }]; icon is a Figma icon name, the active tab uses
-    // "<icon>_two-tone-yes"
+    // [{ key, label, icon, width, underline }]; icon is a Figma icon name, the active tab uses
+    // "<icon>_two-tone-yes"; underline is the Figma underline width (default: icon and label)
     property var tabs: []
     property string currentKey: ""
     default property alias pages: pageHost.data
@@ -44,6 +48,7 @@ Widgets.RdPanel {
     readonly property SystemPalette rdPalette: VLCStyle.palette
 
     clip: true
+    color: rdPalette.rdBgB1
 
     Rectangle {
         id: header
@@ -117,9 +122,10 @@ Widgets.RdPanel {
 
                         Rectangle {
                             visible: tab.active
-                            x: tabRow.x
+                            x: (parent.width - width) / 2
                             anchors.bottom: parent.bottom
-                            width: tabRow.width
+                            width: tab.modelData.underline ? VLCStyle.dp(tab.modelData.underline)
+                                                           : tabRow.width
                             height: VLCStyle.dp(2)
                             color: root.rdPalette.rdAccentMain
                         }
@@ -139,13 +145,22 @@ Widgets.RdPanel {
         }
     }
 
+    Rectangle {
+        id: headerDivider
+
+        anchors.top: header.bottom
+        width: parent.width
+        height: VLCStyle.dp(1)
+        color: root.rdPalette.rdDividerDim
+    }
+
     // pages: each RdSidePanelPage shows itself when its key is the current one
     Item {
         id: pageHost
 
         readonly property string currentKey: root.currentKey
 
-        anchors.top: header.bottom
+        anchors.top: headerDivider.bottom
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: footerArea.top

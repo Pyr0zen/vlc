@@ -31,10 +31,10 @@ RdSidePanel {
     id: root
 
     tabs: [
-        { key: "playback", label: qsTr("Playback"), icon: "playback", width: 108 },
-        { key: "videoSettings", label: qsTr("Video"), icon: "video", width: 85 },
-        { key: "audioSettings", label: qsTr("Audio"), icon: "audio", width: 85 },
-        { key: "subtitleSettings", label: qsTr("Subtitles"), icon: "subtitles", width: 108 }
+        { key: "playback", label: qsTr("Playback"), icon: "playback", width: 107.5, underline: 91.5 },
+        { key: "videoSettings", label: qsTr("Video"), icon: "video", width: 85, underline: 61 },
+        { key: "audioSettings", label: qsTr("Audio"), icon: "audio", width: 85, underline: 61 },
+        { key: "subtitleSettings", label: qsTr("Subtitles"), icon: "subtitles", width: 107.5, underline: 91.5 }
     ]
     currentKey: RdPanels.settingsOpen ? RdPanels.current : "playback"
     onTabClicked: (key) => RdPanels.open(key)
