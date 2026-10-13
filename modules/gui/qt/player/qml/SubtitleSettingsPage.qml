@@ -1,0 +1,256 @@
+/*****************************************************************************
+ * Copyright (C) 2026 VLC authors and VideoLAN
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * ( at your option ) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ *****************************************************************************/
+
+// redesign: settings sidebar, Subtitles tab (video 7:16-8:41 final version; Figma
+// "subtitle settings"). Delay, speed, duration, offset and size apply live; the defaults and
+// the text style options are VLC options used from the next file (Decision 29 notice).
+import QtQuick
+import QtQuick.Layouts
+
+import VLC.MainInterface
+import VLC.Style
+import VLC.Player
+import VLC.Widgets as Widgets
+
+RdSidePanelPage {
+    id: root
+
+    key: "subtitleSettings"
+
+    // reading "revision" makes the bindings follow every change made through RdEffects
+    readonly property real _durationFactor: (RdEffects.revision, RdEffects.subtitleDurationFactor())
+
+    function opt(name) {
+        return (RdEffects.revision, RdEffects.option(name))
+    }
+
+    function colorText(value) {
+        return "#" + ("000000" + Number(value).toString(16)).slice(-6).toUpperCase()
+    }
+
+    function parseColor(text) {
+        const v = parseInt(String(text).replace("#", "").trim(), 16)
+        return isNaN(v) ? -1 : (v & 0xFFFFFF)
+    }
+
+    function parseNumber(text) {
+        return parseFloat(String(text).replace(",", ".").replace(/[^0-9.+-]/g, ""))
+    }
+
+    Widgets.RdSettingsSection {
+        title: qsTr("Defaults")
+        showDivider: false
+        note: qsTr("Applies from the next file")
+
+        Widgets.RdSettingRow {
+            text: qsTr("Subtitle Track")
+
+            Widgets.RdValueBox {
+                readonly property int track: root.opt("sub-track")
+
+                text: track < 0 ? qsTr("Auto") : String(track + 1)
+                Accessible.name: qsTr("Subtitle Track")
+                onEdited: (value) => {
+                    const n = parseInt(value)
+                    RdEffects.setOption("sub-track", isNaN(n) || n < 1 ? -1 : n - 1)
+                }
+            }
+        }
+
+        Widgets.RdSettingRow {
+            text: qsTr("Subtitle Language")
+
+            Widgets.RdValueBox {
+                readonly property string language: root.opt("sub-language")
+
+                text: language === "" ? qsTr("Auto") : language
+                Accessible.name: qsTr("Subtitle Language")
+                onEdited: (value) => RdEffects.setOption("sub-language", value === qsTr("Auto") ? "" : value.trim())
+            }
+        }
+    }
+
+    Widgets.RdSettingsSection {
+        title: qsTr("Synchronization")
+
+        Widgets.RdParamSlider {
+            text: qsTr("Subtitle Track Delay")
+            valueBox: true
+            valueText: (Player.subtitleDelayMS / 1000).toFixed(3) + " s"
+            from: -10
+            to: 10
+            stepSize: 0.05
+            bipolar: true
+            showTicks: false
+            labels: [qsTr("-10 s"), qsTr("0 s"), qsTr("+10 s")]
+            value: Player.subtitleDelayMS / 1000
+            onMoved: (v) => Player.subtitleDelayMS = Math.round(v * 1000)
+            onEdited: (text) => {
+                const s = root.parseNumber(text)
+                if (!isNaN(s))
+                    Player.subtitleDelayMS = Math.round(s * 1000)
+            }
+        }
+
+        // VLC's subtitle speed range: 1 to 100 fps
+        Widgets.RdParamSlider {
+            text: qsTr("Subtitle Speed")
+            valueBox: true
+            valueText: Player.subtitleFPS.toFixed(3) + " fps"
+            from: 1
+            to: 100
+            stepSize: 0.2
+            showTicks: false
+            value: Player.subtitleFPS
+            onMoved: (v) => Player.subtitleFPS = v
+            onEdited: (text) => {
+                const f = root.parseNumber(text)
+                if (!isNaN(f))
+                    Player.subtitleFPS = Math.max(1, Math.min(100, f))
+            }
+        }
+
+        Widgets.RdParamSlider {
+            text: qsTr("Subtitle Duration Factor")
+            valueBox: true
+            valueText: root._durationFactor.toFixed(3)
+            from: 0
+            to: 20
+            stepSize: 0.2
+            showTicks: false
+            value: root._durationFactor
+            onMoved: (v) => RdEffects.setSubtitleDurationFactor(v)
+            onEdited: (text) => {
+                const f = root.parseNumber(text)
+                if (!isNaN(f))
+                    RdEffects.setSubtitleDurationFactor(Math.max(0, Math.min(20, f)))
+            }
+        }
+    }
+
+    Widgets.RdSettingsSection {
+        title: qsTr("Appearance")
+        note: qsTr("Font, colors, outline and background apply from the next file")
+
+        Widgets.RdSettingRow {
+            text: qsTr("Embedded Sub Format")
+
+            Widgets.RdToggle {
+                checked: root.opt("subsdec-formatted")
+                Accessible.name: qsTr("Embedded Sub Format")
+                onToggled: RdEffects.setOption("subsdec-formatted", checked)
+            }
+        }
+
+        Widgets.RdSettingRow {
+            text: qsTr("Subtitle Font")
+
+            Widgets.RdValueBox {
+                text: root.opt("freetype-font")
+                Accessible.name: qsTr("Subtitle Font")
+                onEdited: (value) => RdEffects.setOption("freetype-font", value.trim())
+            }
+        }
+
+        Widgets.RdSettingRow {
+            text: qsTr("Text Color")
+
+            Widgets.RdValueBox {
+                readonly property string hex: root.colorText(root.opt("freetype-color"))
+
+                text: hex
+                showSwatch: true
+                swatch: hex
+                Accessible.name: qsTr("Text Color")
+                onEdited: (value) => {
+                    const v = root.parseColor(value)
+                    if (v >= 0)
+                        RdEffects.setOption("freetype-color", v)
+                }
+            }
+        }
+
+        Widgets.RdSettingRow {
+            text: qsTr("Outline Color")
+
+            Widgets.RdValueBox {
+                readonly property string hex: root.colorText(root.opt("freetype-outline-color"))
+
+                text: hex
+                showSwatch: true
+                swatch: hex
+                Accessible.name: qsTr("Outline Color")
+                onEdited: (value) => {
+                    const v = root.parseColor(value)
+                    if (v >= 0)
+                        RdEffects.setOption("freetype-outline-color", v)
+                }
+            }
+        }
+
+        Widgets.RdSettingRow {
+            text: qsTr("Subtitle Offset")
+
+            Widgets.RdValueBox {
+                text: (RdEffects.revision, RdEffects.videoValue("sub-margin")) + "px"
+                Accessible.name: qsTr("Subtitle Offset")
+                onEdited: (value) => {
+                    const px = Math.round(root.parseNumber(value))
+                    if (!isNaN(px))
+                        RdEffects.setVideoValue("sub-margin", px)
+                }
+            }
+        }
+
+        // VLC sizes subtitles relative to the video (sub-text-scale, 100 % = VLC's automatic
+        // size); a size in pixels would need a core change (VIDEO_INDEX Decisions (Claude))
+        Widgets.RdParamSlider {
+            text: qsTr("Font Size")
+            valueText: value === 100 ? qsTr("Auto") : value + " %"
+            from: 25
+            to: 300
+            stepSize: 25
+            value: (RdEffects.revision, RdEffects.subtitleTextScale())
+            onMoved: (v) => RdEffects.setSubtitleTextScale(v)
+        }
+
+        Widgets.RdParamSlider {
+            // VLC's outline thickness values: 0, 2, 4, 6
+            readonly property var names: [qsTr("None"), qsTr("Thin"), qsTr("Normal"), qsTr("Thick")]
+
+            text: qsTr("Outline Thickness")
+            valueText: names[Math.round(value)] ?? ""
+            from: 0
+            to: 3
+            stepSize: 1
+            value: Math.round(root.opt("freetype-outline-thickness") / 2)
+            onMoved: (v) => RdEffects.setOption("freetype-outline-thickness", Math.round(v) * 2)
+        }
+
+        Widgets.RdParamSlider {
+            text: qsTr("Background Opacity")
+            valueText: Math.round(value / 255 * 100) + " %"
+            from: 0
+            to: 255
+            stepSize: 255 / 20
+            showTicks: false
+            value: root.opt("freetype-background-opacity")
+            onMoved: (v) => RdEffects.setOption("freetype-background-opacity", Math.round(v))
+        }
+    }
+}
