@@ -88,6 +88,7 @@ Extra decisions made during the build, one line each (date, row IDs, decision, r
 - 2026-10-13 W2.3 / W2.2: every orange part of every icon must follow the live accent color (accent setting, video 17:44): SVG icons use the colorizer placeholders (`_res_ACCENT` for accent parts, `_res_C2` for Accent/DIm two-tone parts, `_res_C1` for gray) bound to `palette.rd*`, never baked-in orange. (Sticky reminder 2026-10-13.)
 - 2026-10-13 W4.2: the tracks popup lists all tracks under "Embedded Tracks" for now (VLC's track model does not mark external files); External Tracks "+" uses VLC's load-subtitle action until the Add Subtitles dialog (W6.5); "Show Preferences" opens VLC's effects dialog until the settings sidebar tabs (W4.3-W4.6) exist. The output-device refresh icon re-reads the device list (VLC only read it at startup; new AudioDeviceModel.refresh()).
 - 2026-10-13 W2.1: Figma colors are exposed to QML as `palette.rd*` (systempalette.hpp) and Figma sizes as `VLCStyle.rd_*` tokens, so components use exact design values.
+- 2026-10-13 Decision 30: the bars hide 3 s after the mouse stops in a window and in fullscreen (VLCStyle.rd_barsHideDelay), replacing VLC's "mouse-hide-timeout" preference (1 s default) for the bars and the cursor; a window keeps reacting to mouse moves while another app is active (cursor polled, VLC's video surface does not report hover).
 
 ## Core changes (status)
 Approved by Decision 27 (minimal and isolated); reverse playback postponed (Decision 29).

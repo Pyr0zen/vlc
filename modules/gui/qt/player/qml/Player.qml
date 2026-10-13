@@ -89,10 +89,15 @@ FocusScope {
         interval: 100
         repeat: true
         triggeredOnStart: true
-        running: !rootPlayer._controlsUnderVideo && rootPlayer.visible
-                 && Qt.application.state === Qt.ApplicationActive
+        // a window also shows its bars when the mouse moves over it while another app is active
+        running: !rootPlayer._controlsUnderVideo && rootPlayer.visible && MainCtx.hasEmbededVideo
+                 && MainCtx.intfMainWindow.visibility !== Window.Minimized
+                 && (rootPlayer._windowed || Qt.application.state === Qt.ApplicationActive)
 
-        property point _last: Qt.point(-1, -1)
+        // last cursor position in screen coordinates (window moves and fullscreen switches are
+        // not mouse moves); invalid until the first poll after a start
+        property point _last
+        property bool _primed: false
 
         onTriggered: {
             const p = MainCtx.cursorPosition(rootPlayer)
@@ -101,15 +106,18 @@ FocusScope {
 
             // mouse moves over the native video do not reach the toolbar FSM either: report them
             // (ends the keyboard "show both bars" mode and shows the auto-hidden cursor again)
-            if (inside && (p.x !== _last.x || p.y !== _last.y)) {
+            const g = rootPlayer.mapToGlobal(p.x, p.y)
+            if (_primed && inside && (g.x !== _last.x || g.y !== _last.y)) {
                 if (Player.isInteractive)
                     interactiveAutoHideTimer.restart()
                 else
                     playerToolbarVisibilityFSM.mouseMove()
             }
-            _last = p
+            _last = g
+            _primed = true
         }
         onRunningChanged: {
+            _primed = false
             if (!running)
                 rootPlayer._cursorY = -1
         }
@@ -155,6 +163,9 @@ FocusScope {
     on_ControlsUnderVideoChanged: {
         if (_controlsUnderVideo && !playerToolbarVisibilityFSM.isVisible)
             playerToolbarVisibilityFSM.askShow()
+        // the hide timeout was blocked while pinned: start it again
+        else if (!_controlsUnderVideo && playerToolbarVisibilityFSM.isVisible && !Player.isInteractive)
+            playerToolbarVisibilityFSM.mouseMove()
     }
 
     // Functions
@@ -1114,7 +1125,8 @@ FocusScope {
 
             tintColor: Qt.alpha(VLCStyle.palette.rdBgA3Transparent, 1.0)
 
-            visible: rootPlayer._controlsUnderVideo || (MainCtx.hasEmbededVideo && !rootPlayer.displayFadeRectangles)
+            visible: rootPlayer._controlsUnderVideo || rootPlayer._windowed
+                     || (MainCtx.hasEmbededVideo && !rootPlayer.displayFadeRectangles)
         }
     }
 
