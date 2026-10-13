@@ -23,14 +23,24 @@ import QtQuick
 import VLC.MainInterface
 import VLC.Style
 
-Text {
+// Text's implicit size is read-only, so the 39 px row is an Item holding the text.
+Item {
+    property alias text: label.text
+
     implicitHeight: VLCStyle.dp(39)
-    topPadding: VLCStyle.dp(20)
-    leftPadding: VLCStyle.dp(24)
-    rightPadding: VLCStyle.dp(24)
-    font.family: VLCStyle.rd_fontFamily
-    font.pixelSize: VLCStyle.rd_fontSize_header
-    font.weight: Font.Medium
-    color: VLCStyle.palette.rdFgA1
-    elide: Text.ElideRight
+    implicitWidth: label.implicitWidth
+
+    Text {
+        id: label
+
+        anchors.fill: parent
+        topPadding: VLCStyle.dp(20)
+        leftPadding: VLCStyle.dp(24)
+        rightPadding: VLCStyle.dp(24)
+        font.family: VLCStyle.rd_fontFamily
+        font.pixelSize: VLCStyle.rd_fontSize_header
+        font.weight: Font.Medium
+        color: VLCStyle.palette.rdFgA1
+        elide: Text.ElideRight
+    }
 }
