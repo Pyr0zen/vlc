@@ -29,8 +29,9 @@ T.Popup {
 
     property string text: ""
     property int maximumTextWidth: VLCStyle.dp(320)
+    property int minimumWidth: VLCStyle.dp(60)
 
-    implicitWidth: Math.max(VLCStyle.dp(60), label.implicitWidth + leftPadding + rightPadding)
+    implicitWidth: Math.max(minimumWidth, label.implicitWidth + leftPadding + rightPadding)
     implicitHeight: label.implicitHeight + topPadding + bottomPadding
 
     padding: VLCStyle.dp(10)
@@ -40,7 +41,7 @@ T.Popup {
         id: label
 
         text: control.text
-        width: Math.min(implicitWidth, control.maximumTextWidth)
+        width: Math.min(Math.max(implicitWidth, control.availableWidth), control.maximumTextWidth)
         wrapMode: Text.WordWrap
         horizontalAlignment: Text.AlignHCenter
         font.family: VLCStyle.rd_fontFamily

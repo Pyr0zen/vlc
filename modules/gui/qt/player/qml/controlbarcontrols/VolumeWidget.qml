@@ -77,6 +77,8 @@ T.Pane {
             // redesign: Figma speaker icon; the design has no muted variant, so muted keeps VLC's glyph
             rdIcon: _player.muted ? "" : "volume_value-high"
             description: qsTr("Mute")
+            // the "N %" volume tooltip replaces the button's own tooltip (Figma "audio value")
+            T.ToolTip.visible: false
 
             AccessibleCompat.id: "muteButton"
 
@@ -99,6 +101,7 @@ T.Pane {
             Widgets.RdTooltip {
                 visible: volumeBtn.hovered && !root.paintOnly
                 text: Math.round(Player.volume * 100) + " %"
+                minimumWidth: VLCStyle.dp(121, VLCStyle.scale)
                 x: (volumeBtn.width - width) / 2
                 y: -VLCStyle.dp(63, VLCStyle.scale)
             }
