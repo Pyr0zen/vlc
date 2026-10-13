@@ -583,6 +583,22 @@ void DialogsProvider::epgDialog()
     toggleDialogVisible(m_egpDialog);
 }
 
+void DialogsProvider::keyboardShortcutsDialog()
+{
+    /* redesign: the main interface hosts the dialog (Dialogs.qml listens to
+     * showKeyboardShortcutsDialog); its window is raised first. Without it, the
+     * hotkeys stay reachable in VLC's preferences. */
+    MainCtx* const mainCtx = p_intf->p_mi;
+    if( mainCtx && mainCtx->intfMainWindow()
+     && isSignalConnected( QMetaMethod::fromSignal( &DialogsProvider::showKeyboardShortcutsDialog ) ) )
+    {
+        mainCtx->emitRaise();
+        emit showKeyboardShortcutsDialog();
+    }
+    else
+        legacyPrefsDialog();
+}
+
 void DialogsProvider::setPopupMenu()
 {
     popupMenu.reset(VLCMenuBar::PopupMenu( p_intf, true ));
