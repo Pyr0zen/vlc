@@ -35,6 +35,25 @@ FocusScope {
     // space kept free at the bottom right for the mini player
     property real bottomInset: 0
 
+    // the mini player's folder chip: the folder of the playing file
+    function revealMrl(mrl) {
+        if (!mrl)
+            return
+        RdLibraryStore.resolveFolder(mrl, (result) => {
+            if (result)
+                RdLibraryNav.openFolderPath(result)
+        })
+    }
+
+    // mouse back and forward buttons
+    function goBack() {
+        RdLibraryNav.goBack()
+    }
+
+    function goForward() {
+        RdLibraryNav.goForward()
+    }
+
     Rectangle {
         anchors.fill: parent
         color: VLCStyle.palette.rdBgB1
