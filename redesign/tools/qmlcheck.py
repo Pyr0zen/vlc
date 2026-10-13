@@ -20,7 +20,12 @@ import os, re, shutil, sys
 repo = os.path.abspath(sys.argv[1])
 qt = os.path.join(repo, "modules", "gui", "qt")
 import tempfile
-imports = os.path.join(tempfile.gettempdir(), "vlc_qmlcheck", "imports")
+# one tree per process: parallel runs (several agents, the crash-isolated workers) must not
+# overwrite each other's files
+import atexit
+_tree = os.path.join(tempfile.gettempdir(), "vlc_qmlcheck_%d" % os.getpid())
+imports = os.path.join(_tree, "imports")
+atexit.register(shutil.rmtree, _tree, True)
 os.environ["QT_QPA_PLATFORM"] = "offscreen"
 
 from PySide6.QtCore import QObject, QUrl, Property, Signal, QCoreApplication
