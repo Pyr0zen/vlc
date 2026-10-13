@@ -39,10 +39,26 @@ RdSidePanel {
     currentKey: RdPanels.settingsOpen ? RdPanels.current : "playback"
     onTabClicked: (key) => RdPanels.open(key)
 
-    PlaybackSettingsPage { }
-    VideoSettingsPage { }
-    AudioSettingsPage { }
-    SubtitleSettingsPage { }
+    // each page is created when first needed (RdSidePanelPageLoader)
+    RdSidePanelPageLoader {
+        key: "playback"
+        sourceComponent: PlaybackSettingsPage { }
+    }
+
+    RdSidePanelPageLoader {
+        key: "videoSettings"
+        sourceComponent: VideoSettingsPage { }
+    }
+
+    RdSidePanelPageLoader {
+        key: "audioSettings"
+        sourceComponent: AudioSettingsPage { }
+    }
+
+    RdSidePanelPageLoader {
+        key: "subtitleSettings"
+        sourceComponent: SubtitleSettingsPage { }
+    }
 
     // Figma "Button": 360x32, BG/B2, 20 px gear, FG/A3 text
     footer: Widgets.RdButton {

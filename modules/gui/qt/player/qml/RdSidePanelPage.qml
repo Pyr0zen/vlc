@@ -16,9 +16,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
-// redesign: one page of the right sidebar (RdSidePanel). The content scrolls vertically;
-// sections are separated by 1 px Divider/Dim lines (video 8:29, IA-36). The page fades in and
-// out when its tab is selected (video 8:40).
+// redesign: one page of the right sidebar (RdSidePanel), loaded by an RdSidePanelPageLoader with
+// the same key (which also fades it in and out). The content scrolls vertically; sections are
+// separated by 1 px Divider/Dim lines (video 8:29, IA-36).
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Templates as T
@@ -30,23 +30,11 @@ import VLC.Widgets as Widgets
 Flickable {
     id: root
 
+    // the tab key of the page (the same as its loader's)
     required property string key
     default property alias content: column.data
 
-    readonly property bool active: !!parent && parent.currentKey === key
-
     anchors.fill: parent
-
-    opacity: active ? 1 : 0
-    visible: opacity > 0
-    enabled: active
-
-    Behavior on opacity {
-        NumberAnimation {
-            duration: VLCStyle.duration_short
-            easing.type: Easing.InOutSine
-        }
-    }
 
     clip: true
     boundsBehavior: Flickable.StopAtBounds
