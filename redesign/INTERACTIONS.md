@@ -2,6 +2,14 @@
 
 Read this before starting any work package and check it again before marking one done. Every new component must satisfy every rule below that touches it, even if the feature it depends on is built much later. When a new interaction is discovered, add it here.
 
+## 0. Performance rules (Tony, 2026-10-13; above every visual rule)
+Responsiveness wins over visual effects every time; targets and measurements are in CLAUDE.md (Quality rules) and redesign/PERF.md.
+- Background blur: only on panels, and only if it holds 60 fps; otherwise a solid or semi-transparent fill that looks close to it. (The video is a native surface under the QML scene and cannot be blurred at all; panels over the video use an opaque fill.)
+- Seek thumbnails and waveform scanning: in the background at low priority; they never block playback or the UI.
+- Long lists always load rows lazily (ListView / GridView with delegates created on demand), never all at once (no Repeater over a model that can grow: queue, bookmarks, chapters, library).
+- No polling and no timers running when nothing on screen needs them.
+- Animations: the Figma durations where they exist, otherwise 150 to 200 ms at most; a click or key starts the visible response within one frame.
+
 ## 1. Live theme and accent (video 17:39-17:49, 19:49; Decisions 9, 15, 16, 20)
 The user can switch Dark / Light / System and pick one of 9 accent colors at any time, from Settings > General and from onboarding, and everything recolors instantly.
 - Never hardcode a color in QML or C++. Use `VLCStyle.palette.rd*` (design colors) or a `ColorContext` role. Hardcoded design colors are a bug.
