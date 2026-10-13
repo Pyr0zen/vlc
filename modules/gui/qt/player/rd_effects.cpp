@@ -170,6 +170,12 @@ void RdEffects::bump()
     m_saveTimer.start();
 }
 
+void RdEffects::refresh()
+{
+    ++m_revision;
+    emit changed();
+}
+
 QVariant RdEffects::option(const QString& name) const
 {
     return readConfig(qtu(name));

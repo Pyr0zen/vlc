@@ -69,7 +69,6 @@
 #include <QPointer>
 #include <QMessageBox>
 #include <QMetaMethod>
-#include <QWindow>
 
 #define I_OP_DIR_WINTITLE I_DIR_OR_FOLDER( N_("Open Directory"), \
                                            N_("Open Folder") )
@@ -297,30 +296,35 @@ void DialogsProvider::prefsDialog()
 void DialogsProvider::settingsDialog( const QString& category )
 {
     /* redesign: the main interface hosts the Settings dialog (it listens to
-     * showSettingsDialog); without it, or while its window is hidden or
-     * minimized, VLC's preferences open instead */
-    const QWindow* window = p_intf->p_mi ? p_intf->p_mi->intfMainWindow() : nullptr;
-    const bool shown = window && window->visibility() != QWindow::Hidden
-                              && window->visibility() != QWindow::Minimized;
-    if( shown && isSignalConnected( QMetaMethod::fromSignal( &DialogsProvider::showSettingsDialog ) ) )
+     * showSettingsDialog); its window is raised first, as it may be hidden,
+     * minimized or behind the video window. Without it, VLC's preferences
+     * toggle as before. */
+    MainCtx* const mainCtx = p_intf->p_mi;
+    if( mainCtx && mainCtx->intfMainWindow()
+     && isSignalConnected( QMetaMethod::fromSignal( &DialogsProvider::showSettingsDialog ) ) )
+    {
+        mainCtx->emitRaise();
         emit showSettingsDialog( category );
+    }
+    else if( m_prefsDialog )
+        m_prefsDialog->reject();
     else
         legacyPrefsDialog();
 }
 
 void DialogsProvider::legacyPrefsDialog()
 {
-    if (Q_LIKELY(!m_prefsDialog))
+    if( m_prefsDialog )
     {
-        m_prefsDialog = new PrefsDialog( nullptr, p_intf );
-        m_prefsDialog->setAttribute(Qt::WA_DeleteOnClose);
-        m_prefsDialog->installEventFilter(this);
-        m_prefsDialog->open();
+        m_prefsDialog->raise();
+        m_prefsDialog->activateWindow();
+        return;
     }
-    else
-    {
-        m_prefsDialog->reject();
-    }
+
+    m_prefsDialog = new PrefsDialog( nullptr, p_intf );
+    m_prefsDialog->setAttribute(Qt::WA_DeleteOnClose);
+    m_prefsDialog->installEventFilter(this);
+    m_prefsDialog->open();
 }
 
 void DialogsProvider::firstRunDialog()

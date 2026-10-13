@@ -50,6 +50,10 @@ public:
 
     int revision() const { return m_revision; }
 
+    // makes the bindings re-read every value (after another window, e.g. VLC's preferences,
+    // changed the configuration); nothing is written
+    Q_INVOKABLE void refresh();
+
     // options of the configuration (most apply to the next file)
     Q_INVOKABLE QVariant option(const QString& name) const;
     Q_INVOKABLE void setOption(const QString& name, const QVariant& value);
