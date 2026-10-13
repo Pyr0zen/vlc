@@ -120,14 +120,17 @@ T.ToolButton {
 
             anchors.fill: parent
 
-            visible: control.rdIcon === ""
+            // redesign: unused when a Figma icon is set: no text, no color updates or animation
+            readonly property bool used: control.rdIcon === ""
 
-            text: control.text
+            visible: used
 
-            color: control.color
+            text: used ? control.text : ""
+
+            color: used ? control.color : "transparent"
 
             DelayedBehavior on color {
-                delayedEnabled: theme.initialized
+                delayedEnabled: theme.initialized && glyph.used
 
                 ColorAnimation {
                     duration: VLCStyle.duration_long
