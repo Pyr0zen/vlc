@@ -43,6 +43,7 @@ The seek bar has several looks that can combine: thick bar (default), chapter se
 ## 7. Keyboard, focus, accessibility, translation
 - Every new interactive element: keyboard reachable, visible focus, `Accessible.name`, `qsTr` / `qtr` text. Escape closes the top-most popup first.
 - Hotkeys keep VLC defaults (Decision 22); new shortcuts: Ctrl+\ Hide UI, Ctrl+B bookmark. OSD shows the pressed key (W7.3).
+- Hotkey names shown anywhere (menus, onboarding 19:50, OSD "Pressed C", Keyboard Shortcuts dialog) use the same formatting: HotkeysModel.displayKeys() ("Ctrl + F"). Hotkeys edited in the dialog apply after a restart until the core key map can be reloaded (W6.3).
 
 ## 8. Sizes and scaling
 - All sizes go through `VLCStyle.rd_*` / `VLCStyle.dp()` so Windows scaling 100 / 125 / 150 % and VLC's own interface scale work. Test at small window sizes: panels, toast and title must elide or shrink, never overlap the window buttons.
