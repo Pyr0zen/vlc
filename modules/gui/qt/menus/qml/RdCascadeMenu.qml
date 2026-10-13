@@ -22,7 +22,10 @@
 // on hover after a short delay, on click, or with the Right key.
 // The rows come from a RdMenuModel (VLC's own menus as data). One popup covers the window, so
 // the levels never close each other; a click outside the panels closes the menu.
+// Motion (video 5:08, 60 fps): the menu fades in over about 7 frames; submenus appear at once
+// (19:30) and menus close at once, like the Figma prototype's instant overlays.
 import QtQuick
+import QtQuick.Window
 import QtQuick.Templates as T
 
 import VLC.MainInterface
@@ -47,6 +50,8 @@ T.Popup {
     property var _anchors: []
     property var _openRows: []
     property bool _keyboard: false
+    // the item that had the focus before the menu opened gets it back when it closes
+    property Item _opener: null
 
     // the last hovered row, applied when the hover delay ends
     property int _pendingLevel: -1
@@ -70,6 +75,9 @@ T.Popup {
             return
 
         const p = item.mapToItem(root.parent, px, py)
+
+        if (!root.visible)
+            root._opener = item.Window.window ? item.Window.window.activeFocusItem : null
 
         hoverTimer.stop()
         root._pendingLevel = -1
@@ -201,7 +209,22 @@ T.Popup {
     }
 
     // the panels go away once the click that closed the menu is handled
-    onClosed: Qt.callLater(root._reset)
+    onClosed: {
+        if (root._opener && root._opener.visible)
+            root._opener.forceActiveFocus(root._keyboard ? Qt.TabFocusReason : Qt.PopupFocusReason)
+        root._opener = null
+        Qt.callLater(root._reset)
+    }
+
+    enter: Transition {
+        NumberAnimation {
+            property: "opacity"
+            from: 0.0
+            to: 1.0
+            duration: VLCStyle.rd_menuFadeDuration
+            easing.type: Easing.OutQuad
+        }
+    }
 
     Timer {
         id: hoverTimer
@@ -246,6 +269,8 @@ T.Popup {
         MouseArea {
             anchors.fill: parent
             acceptedButtons: Qt.AllButtons
+            // the player may have hidden the cursor over the video
+            cursorShape: Qt.ArrowCursor
             onPressed: root.close()
             onWheel: (wheel) => { wheel.accepted = true }
         }
@@ -264,19 +289,28 @@ T.Popup {
                 readonly property var anchor: index < root._anchors.length ? root._anchors[index] : null
                 readonly property int openRow: index < root._openRows.length ? root._openRows[index] : -1
 
-                // widest row, for submenus with long entries (track names ...)
-                property real naturalWidth: 0
+                // rows are created on demand (chapter and track lists can be long), so the size
+                // comes from the model: row and separator counts, widest label and shortcut
+                readonly property int rowCount: menuModel ? menuModel.count : 0
+                readonly property int separatorCount: menuModel ? menuModel.separatorCount : 0
+                readonly property real contentHeight: (rowCount - separatorCount) * VLCStyle.rd_menuRowHeight
+                                                      + separatorCount * VLCStyle.dp(1)
+                readonly property real naturalWidth: VLCStyle.dp(14) + VLCStyle.rd_iconSize + VLCStyle.dp(10)
+                                                     + labelMetrics.advanceWidth + VLCStyle.dp(10)
+                                                     + Math.max(VLCStyle.rd_iconSize, shortcutMetrics.advanceWidth)
+                                                     + VLCStyle.dp(14)
 
                 function rowAt(row) {
-                    return rows.itemAt(row)
+                    return list.itemAtIndex(row)
                 }
 
                 // focuses the first enabled row from `row` on in `direction`, wrapping around
                 function focusRow(row, direction) {
-                    const count = rows.count
+                    const count = list.count
                     for (let k = 0; k < count; ++k) {
                         const i = (((row + k * direction) % count) + count) % count
-                        const item = rows.itemAt(i)
+                        list.positionViewAtIndex(i, ListView.Contain)
+                        const item = list.itemAtIndex(i)
                         if (item && !item.separator && item.actionEnabled) {
                             item.focusOption()
                             return
@@ -284,22 +318,12 @@ T.Popup {
                     }
                 }
 
-                function updateNaturalWidth() {
-                    let width = 0
-                    for (let i = 0; i < rows.count; ++i) {
-                        const item = rows.itemAt(i)
-                        if (item)
-                            width = Math.max(width, item.naturalWidth)
-                    }
-                    naturalWidth = width
-                }
-
-                visible: menuModel !== null && anchor !== null && rows.count > 0
+                visible: menuModel !== null && anchor !== null && rowCount > 0
 
                 width: index === 0 ? root.rootWidth
                                    : Math.max(VLCStyle.rd_menuWidth,
                                               Math.min(VLCStyle.rd_menuMaxWidth, naturalWidth + 2 * root._padding))
-                height: Math.min(column.height + 2 * root._padding, root.height - 2 * root._margin)
+                height: Math.min(contentHeight + 2 * root._padding, root.height - 2 * root._margin)
 
                 x: {
                     if (!anchor)
@@ -319,137 +343,115 @@ T.Popup {
                     visible: root.withShadow
                 }
 
+                TextMetrics {
+                    id: labelMetrics
+
+                    font.family: VLCStyle.rd_fontFamily
+                    font.pixelSize: VLCStyle.rd_fontSize_label
+                    text: panel.menuModel ? panel.menuModel.longestLabel : ""
+                }
+
+                TextMetrics {
+                    id: shortcutMetrics
+
+                    font.family: VLCStyle.rd_fontFamily
+                    font.pixelSize: VLCStyle.rd_fontSize_label
+                    text: panel.menuModel ? panel.menuModel.longestShortcut : ""
+                }
+
                 // clicks on the panel's padding stay in the menu
                 MouseArea {
                     anchors.fill: parent
                     acceptedButtons: Qt.AllButtons
+                    cursorShape: Qt.ArrowCursor
                     onWheel: (wheel) => { wheel.accepted = true }
                 }
 
-                Flickable {
-                    id: flick
+                ListView {
+                    id: list
 
                     anchors.fill: parent
                     anchors.margins: root._padding
 
-                    contentHeight: column.height
-                    interactive: contentHeight > height
+                    model: panel.menuModel
+                    interactive: panel.contentHeight > height
                     clip: interactive
                     boundsBehavior: Flickable.StopAtBounds
+                    keyNavigationEnabled: false
 
-                    Column {
-                        id: column
+                    delegate: Item {
+                        id: entry
 
-                        width: flick.width
+                        required property int index
+                        required property string label
+                        required property string iconName
+                        required property bool iconAccent
+                        required property string shortcut
+                        required property bool checkable
+                        required property bool checked
+                        required property bool actionEnabled
+                        required property bool separator
+                        required property bool hasSubmenu
 
-                        Repeater {
-                            id: rows
+                        function focusOption() {
+                            option.forceActiveFocus(Qt.TabFocusReason)
+                        }
 
-                            model: panel.menuModel
+                        width: ListView.view.width
+                        height: separator ? divider.height : option.height
 
-                            onItemAdded: Qt.callLater(panel.updateNaturalWidth)
-                            onItemRemoved: Qt.callLater(panel.updateNaturalWidth)
+                        Widgets.RdMenuDivider {
+                            id: divider
 
-                            delegate: Item {
-                                id: entry
+                            visible: entry.separator
+                            width: parent.width
+                        }
 
-                                required property int index
-                                required property string label
-                                required property string iconName
-                                required property bool iconAccent
-                                required property string shortcut
-                                required property bool checkable
-                                required property bool checked
-                                required property bool actionEnabled
-                                required property bool separator
-                                required property bool hasSubmenu
+                        Widgets.RdOptionRow {
+                            id: option
 
-                                readonly property real naturalWidth: separator ? 0
-                                    : option.leftPadding + VLCStyle.rd_iconSize + option.spacing
-                                      + labelMetrics.advanceWidth + option.spacing
-                                      + (hasSubmenu ? VLCStyle.rd_iconSize
-                                                    : Math.max(VLCStyle.rd_iconSize, shortcutMetrics.advanceWidth))
-                                      + option.rightPadding
+                            visible: !entry.separator
+                            width: parent.width
 
-                                function focusOption() {
-                                    option.forceActiveFocus(Qt.TabFocusReason)
-                                    if (entry.y < flick.contentY)
-                                        flick.contentY = entry.y
-                                    else if (entry.y + entry.height > flick.contentY + flick.height)
-                                        flick.contentY = entry.y + entry.height - flick.height
-                                }
+                            text: entry.label
+                            // checked entries show the accent check in the icon column (Profiles.png)
+                            rdIcon: (entry.checkable && entry.checked) ? "check_state-active" : entry.iconName
+                            reserveIconSpace: true
+                            iconColor: entry.iconAccent ? VLCStyle.palette.rdAccentDim : VLCStyle.palette.rdFgA2
+                            shortcut: entry.shortcut
+                            hasSubmenu: entry.hasSubmenu
+                            enabled: entry.actionEnabled
+                            active: panel.openRow === entry.index
 
-                                onNaturalWidthChanged: Qt.callLater(panel.updateNaturalWidth)
+                            Accessible.role: Accessible.MenuItem
+                            Accessible.checkable: entry.checkable
+                            Accessible.checked: entry.checked
 
-                                width: column.width
-                                height: separator ? divider.height : option.height
-
-                                TextMetrics {
-                                    id: labelMetrics
-
-                                    font.family: VLCStyle.rd_fontFamily
-                                    font.pixelSize: VLCStyle.rd_fontSize_label
-                                    text: entry.label
-                                }
-
-                                TextMetrics {
-                                    id: shortcutMetrics
-
-                                    font.family: VLCStyle.rd_fontFamily
-                                    font.pixelSize: VLCStyle.rd_fontSize_label
-                                    text: entry.shortcut
-                                }
-
-                                Widgets.RdMenuDivider {
-                                    id: divider
-
-                                    visible: entry.separator
-                                    width: parent.width
-                                }
-
-                                Widgets.RdOptionRow {
-                                    id: option
-
-                                    visible: !entry.separator
-                                    width: parent.width
-
-                                    text: entry.label
-                                    // checked entries show the accent check in the icon column (Profiles.png)
-                                    rdIcon: (entry.checkable && entry.checked) ? "check_state-active" : entry.iconName
-                                    reserveIconSpace: true
-                                    iconColor: entry.iconAccent ? VLCStyle.palette.rdAccentDim : VLCStyle.palette.rdFgA2
-                                    shortcut: entry.shortcut
-                                    hasSubmenu: entry.hasSubmenu
-                                    enabled: entry.actionEnabled
-                                    active: panel.openRow === entry.index
-
-                                    Accessible.role: Accessible.MenuItem
-                                    Accessible.checkable: entry.checkable
-                                    Accessible.checked: entry.checked
-
-                                    onHoveredChanged: {
-                                        if (!hovered)
-                                            return
-                                        // the mouse takes over from the keyboard highlight
-                                        forceActiveFocus(Qt.MouseFocusReason)
-                                        root._hover(panel.index, entry.index)
-                                    }
-
-                                    onClicked: root._activate(panel.index, entry.index, visualFocus)
-
-                                    Keys.onReturnPressed: root._activate(panel.index, entry.index, true)
-                                    Keys.onEnterPressed: root._activate(panel.index, entry.index, true)
-
-                                    Navigation.upAction: () => panel.focusRow(entry.index - 1, -1)
-                                    Navigation.downAction: () => panel.focusRow(entry.index + 1, 1)
-                                    Navigation.rightAction: () => {
-                                        if (entry.hasSubmenu && entry.actionEnabled)
-                                            root._openSubmenu(panel.index, entry.index, true)
-                                    }
-                                    Navigation.leftAction: () => root._back(panel.index)
-                                    Navigation.cancelAction: () => root._back(panel.index)
-                                }
+                            onHoveredChanged: {
+                                if (!hovered)
+                                    return
+                                // the mouse takes over from the keyboard highlight
+                                forceActiveFocus(Qt.MouseFocusReason)
+                                root._hover(panel.index, entry.index)
                             }
+
+                            onClicked: root._activate(panel.index, entry.index, visualFocus)
+
+                            Keys.onReturnPressed: root._activate(panel.index, entry.index, true)
+                            Keys.onEnterPressed: root._activate(panel.index, entry.index, true)
+
+                            Navigation.upAction: () => panel.focusRow(entry.index - 1, -1)
+                            Navigation.downAction: () => panel.focusRow(entry.index + 1, 1)
+                            Navigation.rightAction: () => {
+                                if (entry.hasSubmenu && entry.actionEnabled)
+                                    root._openSubmenu(panel.index, entry.index, true)
+                            }
+                            // Left closes a submenu; on the first level it does nothing
+                            Navigation.leftAction: () => {
+                                if (panel.index > 0)
+                                    root._back(panel.index)
+                            }
+                            Navigation.cancelAction: () => root._back(panel.index)
                         }
                     }
                 }

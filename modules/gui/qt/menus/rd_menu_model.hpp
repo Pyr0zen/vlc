@@ -57,6 +57,10 @@ class RdMenuModel : public QAbstractListModel
     // the player's UI is hidden (Hide UI): the right-click menu then offers "Show UI"
     Q_PROPERTY(bool uiHidden READ isUiHidden WRITE setUiHidden NOTIFY uiHiddenChanged FINAL)
     Q_PROPERTY(int count READ count NOTIFY countChanged FINAL)
+    // the panel's size without creating every row (long chapter or track lists load lazily)
+    Q_PROPERTY(int separatorCount READ separatorCount NOTIFY countChanged FINAL)
+    Q_PROPERTY(QString longestLabel READ longestLabel NOTIFY labelsChanged FINAL)
+    Q_PROPERTY(QString longestShortcut READ longestShortcut NOTIFY labelsChanged FINAL)
 
 public:
     enum Roles {
@@ -81,6 +85,9 @@ public:
     bool isUiHidden() const { return m_uiHidden; }
     void setUiHidden(bool hidden);
     int count() const { return m_rows.size(); }
+    int separatorCount() const { return m_separatorCount; }
+    QString longestLabel() const { return m_longestLabel; }
+    QString longestShortcut() const { return m_longestShortcut; }
 
     int rowCount(const QModelIndex& parent = {}) const override;
     QVariant data(const QModelIndex& index, int role) const override;
@@ -99,6 +106,7 @@ signals:
     void kindChanged();
     void uiHiddenChanged();
     void countChanged();
+    void labelsChanged();
     // entries handled by the QML side: "hideUi", "showQueue", "keyboardShortcuts", "customizePlayer"
     void requested(const QString& id);
 
@@ -110,6 +118,8 @@ private:
 
     void setMenu(QMenu* menu);
     void clearSubmenus();
+    void watchSubmenus();
+    void updateLabels();
     void scheduleRefresh();
     void refresh();
 
@@ -133,7 +143,12 @@ private:
     RdMenuModel* m_root = nullptr;          // model whose requested() signal the entries emit
     QVector<QPointer<QAction>> m_rows;
     QHash<QMenu*, RdMenuModel*> m_submenus;
+    // the submenus of the rows: a row's enabled state follows whether its submenu has entries
+    QVector<QPointer<QMenu>> m_watchedSubmenus;
     bool m_refreshPending = false;
+    int m_separatorCount = 0;
+    QString m_longestLabel;
+    QString m_longestShortcut;
 };
 
 #endif // RD_MENU_MODEL_HPP

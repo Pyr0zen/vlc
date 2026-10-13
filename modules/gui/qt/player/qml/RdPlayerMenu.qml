@@ -42,10 +42,11 @@ Item {
         menu.close()
     }
 
+    // only for the embedded video: a video in its own window keeps VLC's native menu
     Binding {
         target: DialogsProvider
         property: "rdPopupMenu"
-        value: root.visible
+        value: root.visible && MainCtx.hasEmbededVideo
     }
 
     Component.onDestruction: DialogsProvider.rdPopupMenu = false
