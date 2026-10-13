@@ -270,7 +270,8 @@ FocusScope {
         }
     }
 
-    // the subfolders above the media of a folder (one level holds few folders)
+    // a folder shows its subfolders, then its media: one list, both models paged (rows load as
+    // they scroll in, however many subfolders a folder has)
     Loader {
         id: subfolderLoader
 
@@ -278,6 +279,20 @@ FocusScope {
         sourceComponent: subfolderModelComponent
     }
     readonly property var subfolderModel: subfolderLoader.item
+
+    Loader {
+        id: folderContentLoader
+
+        active: !!page.subfolderModel && !!page.dataModel
+
+        sourceComponent: RdConcatModel {
+            first: page.subfolderModel
+            second: page.dataModel
+        }
+    }
+
+    // the model the view shows
+    readonly property var viewModel: folderContentLoader.item ?? dataModel
 
     readonly property var _noParent: MediaLib.deserializeMlItemIdFromString("")
 
@@ -436,6 +451,13 @@ FocusScope {
 
     // one row of the page's model as a library item (see RdLibraryActions)
     function toItem(model, index) {
+        // a folder page: its subfolders first, then its media
+        if (folderContentLoader.item) {
+            if (model.rdFirst)
+                return { kind: "folder", index: model.rdSourceRow, id: model.id, title: model.title ?? "",
+                         mrl: model.mrl ?? "", isRoot: false }
+            index = model.rdSourceRow
+        }
         switch (modelKind) {
         case "subfolder":
             return { kind: "folder", index: index, id: model.id, title: model.title ?? "", mrl: model.mrl ?? "",
@@ -571,14 +593,14 @@ FocusScope {
         // a few rows ahead of the view, no more
         cacheBuffer: cellHeight * 2
 
-        model: page.dataModel
+        model: page.viewModel
         boundsBehavior: Flickable.StopAtBounds
         keyNavigationEnabled: true
 
         header: Column {
             width: grid.width
             spacing: page._gap
-            bottomPadding: (page.fixedRows.length > 0 || subfolderRepeater.count > 0) ? page._gap : 0
+            bottomPadding: page.fixedRows.length > 0 ? page._gap : 0
 
             Repeater {
                 model: page.fixedRows
@@ -597,32 +619,9 @@ FocusScope {
                 }
             }
 
-            // subfolders of a folder, above its media
-            Repeater {
-                id: subfolderRepeater
-
-                model: page.subfolderModel
-
-                delegate: RdLibraryRow {
-                    required property var model
-                    required property int index
-
-                    readonly property var item: ({ kind: "folder", index: index, id: model.id, title: model.title ?? "",
-                                                   mrl: model.mrl ?? "", isRoot: false })
-
-                    width: Math.min(parent.width, VLCStyle.dp(480))
-                    title: item.title
-                    iconName: "folder"
-                    boxed: false
-                    secondary: true
-                    onClicked: page.activate(item)
-                    onMoreClicked: (button) => itemMenu.openForItem(item, button, page.category)
-                }
-            }
-
             Text {
                 visible: !!page.dataModel && page.dataModel.count === 0 && !page.dataModel.loading
-                         && subfolderRepeater.count === 0 && page.searchText === ""
+                         && !(page.subfolderModel && page.subfolderModel.count > 0) && page.searchText === ""
                 width: parent.width
                 wrapMode: Text.WordWrap
                 text: {
