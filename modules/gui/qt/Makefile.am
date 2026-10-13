@@ -1640,7 +1640,8 @@ libqml_module_widgets_a_QML = \
 	widgets/qml/RdParamSlider.qml \
 	widgets/qml/RdChoiceDropdown.qml \
 	widgets/qml/RdEqCurve.qml \
-	widgets/qml/RdListRow.qml
+	widgets/qml/RdListRow.qml \
+	widgets/qml/RdListView.qml
 libqml_module_widgets_a_Singleton_QML =
 libqml_module_widgets_a_SOURCES = $(QML_MODULE_widgets_SRC)
 nodist_libqml_module_widgets_a_SOURCES = widgets/qmlassets.cpp $(QML_MODULE_widgets_NODIST_EXTRA)

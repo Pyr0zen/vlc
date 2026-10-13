@@ -989,6 +989,7 @@ qml_modules += {
         'widgets/qml/RdChoiceDropdown.qml',
         'widgets/qml/RdEqCurve.qml',
         'widgets/qml/RdListRow.qml',
+        'widgets/qml/RdListView.qml',
     ),
 }
 
