@@ -106,8 +106,17 @@ T.Popup {
         _restoreFocusItem = null
     }
 
-    // dimmed window behind the dialog (video 13:09)
+    // Motion measured on the video at 60 fps (13:09.2-13:09.5): the window dims and the
+    // dialog fades in together, in place (no scale), over about 200 ms with a slow start
+    // (ease-in: about 30 % at half time, 60 % at three quarters). Closing is not shown:
+    // the dialog fades out in the same 200 ms, fastest first, so it never lingers.
+
+    // dimmed window behind the dialog (video 13:09); the popup drives its opacity
     T.Overlay.modal: Item {
+        Behavior on opacity {
+            NumberAnimation { duration: VLCStyle.duration_long; easing.type: Easing.InQuad }
+        }
+
         Rectangle {
             anchors.fill: parent
             anchors.margins: MainCtx.windowExtendedMargin
@@ -116,14 +125,11 @@ T.Popup {
     }
 
     enter: Transition {
-        ParallelAnimation {
-            OpacityAnimator { from: 0.0; to: 1.0; duration: VLCStyle.duration_long; easing.type: Easing.OutCubic }
-            ScaleAnimator { from: 0.97; to: 1.0; duration: VLCStyle.duration_long; easing.type: Easing.OutCubic }
-        }
+        OpacityAnimator { from: 0.0; to: 1.0; duration: VLCStyle.duration_long; easing.type: Easing.InQuad }
     }
 
     exit: Transition {
-        OpacityAnimator { from: 1.0; to: 0.0; duration: VLCStyle.duration_short }
+        OpacityAnimator { from: 1.0; to: 0.0; duration: VLCStyle.duration_long; easing.type: Easing.OutQuad }
     }
 
     // Figma: Dark/BG/A3 Transparent, radius 14, effect "bg blur + shadow"
