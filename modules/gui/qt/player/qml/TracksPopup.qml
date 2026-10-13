@@ -38,6 +38,9 @@ Item {
     readonly property string tab: RdPanels.tracksOpen ? RdPanels.current : "subtitles"
     readonly property SystemPalette rdPalette: VLCStyle.palette
 
+    // room available above the control bar; the Figma height (524) shrinks to fit small windows
+    property real maximumHeight: VLCStyle.dp(524, VLCStyle.scale)
+
     implicitWidth: VLCStyle.rd_sidePanelWidth
     implicitHeight: tabs.height + panel.implicitHeight
 
@@ -114,7 +117,7 @@ Item {
         anchors.right: parent.right
 
         implicitHeight: Math.max(content.implicitHeight + VLCStyle.dp(20, VLCStyle.scale),
-                                 VLCStyle.dp(524, VLCStyle.scale) - tabs.height)
+                                 Math.min(VLCStyle.dp(524, VLCStyle.scale), root.maximumHeight) - tabs.height)
         height: implicitHeight
 
         ColumnLayout {

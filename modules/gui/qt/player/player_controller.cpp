@@ -383,6 +383,7 @@ static  void on_player_current_media_changed(vlc_player_t *, input_item_t *new_m
         }
 
         that->m_canRestorePlayback = false;
+        that->m_restoreProgress = 0.;
         emit q->playbackRestoreQueried();
 
         emit q->inputChanged(true);
@@ -444,6 +445,7 @@ static void on_player_state_changed(vlc_player_t *, enum vlc_player_state state,
             that->m_isInteractive= false;
             emit q->isInteractiveChanged( false );
             that->m_canRestorePlayback = false;
+            that->m_restoreProgress = 0.;
             emit q->playbackRestoreQueried();
 
             that->m_teletextAvailable = false;
