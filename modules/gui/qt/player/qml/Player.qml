@@ -438,7 +438,7 @@ FocusScope {
                     anchors.right: parent.right
 
                     opacity: topBar.opacity
-                    visible: rootPlayer.displayFadeRectangles && !topBarAcrylicBg.visible
+                    visible: rootPlayer.displayFadeRectangles
 
                     gradient: Gradient {
                         GradientStop { position: 0; color: Qt.rgba(0, 0, 0, .8) }
@@ -1195,24 +1195,10 @@ FocusScope {
             MainCtx.playerView = false
         }
 
+        // redesign: no acrylic background behind the top bar, it paints its own opaque BG/A3
+
         FadeControllerStateGroup {
             target: topBar
-        }
-
-        // TODO: Make TopBar a Control and use background
-        Widgets.AcrylicBackground {
-            id: topBarAcrylicBg
-
-            z: -1
-
-            anchors.fill: parent
-
-            // redesign: same background as the control bar (BG/A3, 95% over the video in fullscreen)
-            opacity: (MainCtx.hasEmbededVideo && !rootPlayer._controlsUnderVideo) ? 0.95 : 1.0
-
-            tintColor: Qt.alpha(VLCStyle.palette.rdBgA3Transparent, 1.0)
-
-            visible: rootPlayer._windowed || !MainCtx.hasEmbededVideo || !rootPlayer.displayFadeRectangles
         }
     }
 
