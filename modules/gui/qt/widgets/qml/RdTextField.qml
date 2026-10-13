@@ -53,4 +53,16 @@ T.TextField {
                                           : (control.hovered ? control.rdPalette.rdDividerBright
                                                              : control.rdPalette.rdBgA4)
     }
+
+    // T.TextField does not draw its placeholder (the Controls styles do)
+    Text {
+        x: control.leftPadding
+        width: control.availableWidth
+        anchors.verticalCenter: parent.verticalCenter
+        visible: control.length === 0 && control.preeditText === ""
+        text: control.placeholderText
+        elide: Text.ElideRight
+        font: control.font
+        color: control.placeholderTextColor
+    }
 }
