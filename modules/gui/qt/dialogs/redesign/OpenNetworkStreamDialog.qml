@@ -61,7 +61,17 @@ T.Popup {
 
         urlArea.clear()
         nameField.clear()
-        _restoreFocusItem = (window && window.activeFocusItem) ? window.activeFocusItem : null
+
+        // an item inside another popup (the main menu that opened this dialog) closes
+        // with it, so focus goes back to the window content instead
+        let focusItem = (window && window.activeFocusItem) ? window.activeFocusItem : null
+        for (let item = focusItem; item; item = item.parent) {
+            if (item === root.parent) {
+                focusItem = null
+                break
+            }
+        }
+        _restoreFocusItem = focusItem
 
         open()
     }
