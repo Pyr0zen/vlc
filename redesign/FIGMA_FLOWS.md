@@ -1,6 +1,6 @@
 # FIGMA_FLOWS: prototype interactions and specs from the Figma file
 
-Source: Figma REST API `GET /v1/files/mNrr8joVY8wKLkEAuKP77p` ("VLC Redesign (Community)", version 2409521707817118521, last modified 2026-10-12), saved locally as `redesign/reference/figma/figma_file.json` (26 MB, git-excluded). Generated from that JSON; nothing here was guessed from images. PNG names refer to `redesign/reference/figma/`.
+Source: Figma REST API `GET /v1/files/mNrr8joVY8wKLkEAuKP77p` ("VLC Redesign (Community)", version 2409521707817118521, last modified 2026-10-12), saved locally as `redesign/reference/figma/figma_file.json` (26 MB, committed). Generated from that JSON; nothing here was guessed from images. PNG names refer to `redesign/reference/figma/`.
 
 How to read this together with the other references:
 - `VIDEO_INDEX.md` = what she shows and says (primary source). This file = what the Figma prototype wires up (clicks, hovers, drags, keys, transitions) plus exact sizes. Where they disagree, see "Conflicts" below and VIDEO_INDEX "Decisions needed".
