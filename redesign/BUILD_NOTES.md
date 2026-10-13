@@ -65,3 +65,11 @@ Log of every CI problem and fix (newest last). Workflow: `.github/workflows/buil
 - Found while building the Open Network Stream dialog: RdTextField (QtQuick.Templates TextField) never showed its placeholder text, because only the Controls styles draw one. Fixed: RdTextField draws the placeholder itself (the dialog's multi-line URL box does the same).
 - RdButton's disabled Save style showed the orange colors at 50 %; the Figma export and the video (13:10) show a gray button. Fixed: BG/A1 + FG/A2 at 50 %.
 - Checked offscreen before pushing: the dialog rendered with Qt 6.8.3 (PySide6) against stub VLC modules, compared with Figma "Open network stream" and video 13:10 / 13:19 (agentwork/W6.4/preview); the widget style sheet parsed without warnings on the windowsvista style. Its border-triangle arrows rendered as gray boxes, so combo box and spin box arrows stay native.
+
+## 2026-10-13 W6.4 independent review fixes
+- The widget dialogs styled QPushButton:default as the accent button; every QPushButton in a dialog is auto-default, so the orange look followed the focus (Browse, Cancel turned orange). Fixed: an rdPrimary property marks the main action button.
+- Open dialog: disabling the current tab before selecting the requested one made the tab widget walk through the other sources (running the capture device enumeration). Fixed: select and enable the source first, then disable the others.
+- openNetDialog() emitted to the QML dialog while the main window was hidden or minimized. Fixed: the widget dialog is the fallback then.
+- Saving a named stream playlist created the playlist before knowing whether any link became a media, passed links without a scheme raw, and failed silently. Fixed: media ids first, file URIs for scheme-less links (like Open URL), one append call, failures logged and shown.
+- The dialog could give the focus back to an item inside the main menu popup that closes as it opens. Fixed: items inside popups are not restored.
+- Motion: the dim appeared at once while the dialog scaled and faded in. Now both fade together in 200 ms ease-out (numbers in VIDEO_INDEX Decisions; no PERF.md on this branch yet).
