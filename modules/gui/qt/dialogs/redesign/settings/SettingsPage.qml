@@ -22,7 +22,8 @@
 // Page API (W6.2 fills the 13 pages with it):
 //   SettingsPage {
 //       SettingsSection { title: qsTr("Loading Subtitles")
-//           SettingsRow { text: qsTr("..."); description: ...; Widgets.RdToggle { ... } }
+//           SettingsRow { text: qsTr("..."); description: ...; available: <parent setting on>
+//                         Widgets.RdToggle { ... } }
 //       }
 //       advanced: [ SettingsSection { ... } ]     // optional; adds the Advanced Options bar
 //   }

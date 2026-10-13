@@ -353,6 +353,8 @@ Item {
                     settingsDialogLoader.active = true
                     if (settingsDialogLoader.item)
                         settingsDialogLoader.item.toggle(category)
+                    else
+                        DialogsProvider.legacyPrefsDialog()
                 }
             }
         }

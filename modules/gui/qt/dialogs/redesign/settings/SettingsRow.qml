@@ -22,7 +22,9 @@
 // with a 36 px field). `below` items (sliders, panels) go under the row at full width.
 // While the dialog's search is active the row hides itself unless its text, description,
 // keywords or its section title match. Hide a row conditionally with `shown`, not `visible`;
-// disable it (`enabled: false`, shown at 30 %) while it depends on a setting that is off.
+// set `available: false` while it depends on a setting that is off: the row is drawn at 30 %
+// and its control disabled, its info icon stays usable.
+// Escape closes an open info popover first (before the search field and the dialog).
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Templates as T
@@ -40,6 +42,7 @@ ColumnLayout {
     // extra words the search finds this row by (e.g. VLC's option name)
     property string keywords: ""
     property bool shown: true
+    property bool available: true
     default property alias control: controlSlot.data
     property alias below: belowSlot.data
 
@@ -56,7 +59,7 @@ ColumnLayout {
 
     visible: shown && matches
     // a setting that depends on another one that is off (Figma "Settings - library", video 18:15)
-    opacity: enabled ? 1.0 : VLCStyle.rd_disabledRowOpacity
+    opacity: available ? 1.0 : VLCStyle.rd_disabledRowOpacity
     Layout.fillWidth: true
     spacing: VLCStyle.dp(5)
 
@@ -123,6 +126,19 @@ ColumnLayout {
 
             Keys.onReturnPressed: popover.toggle()
             Keys.onEnterPressed: popover.toggle()
+            // Escape is a shortcut of the dialog popup: take it while the popover is open
+            Keys.onShortcutOverride: (event) => {
+                if (event.key === Qt.Key_Escape && popover.opened)
+                    event.accepted = true
+            }
+            Keys.onEscapePressed: (event) => {
+                if (popover.opened) {
+                    popover.hide()
+                    event.accepted = true
+                } else {
+                    event.accepted = false
+                }
+            }
 
             onClicked: popover.toggle()
 
@@ -192,6 +208,7 @@ ColumnLayout {
         Item {
             id: controlSlot
 
+            enabled: root.available
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
             width: childrenRect.width
@@ -203,6 +220,7 @@ ColumnLayout {
     Column {
         id: belowSlot
 
+        enabled: root.available
         visible: children.length > 0
         Layout.fillWidth: true
     }
