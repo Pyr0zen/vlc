@@ -142,6 +142,7 @@ ConvertDialog::ConvertDialog( QWindow *parent, qt_intf_t *_p_intf,
     QDialogButtonBox *buttonBox = new QDialogButtonBox;
 
     okButton->setDefault( true );
+    RdWidgetStyle::setPrimary( okButton );
     buttonBox->addButton( okButton, QDialogButtonBox::AcceptRole );
     buttonBox->addButton( cancelButton, QDialogButtonBox::RejectRole );
 
