@@ -774,6 +774,7 @@ qml_modules += {
        'player/qml/ControlLayout.qml',
        'player/qml/ControlRepeater.qml',
        'player/qml/NavigationBox.qml',
+       'player/qml/RdPlayerMenu.qml',
    ),
    'singletons' : files(
        'player/qml/PlayerControlbarControls.qml',
