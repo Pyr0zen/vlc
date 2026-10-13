@@ -116,78 +116,93 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
 
-        implicitHeight: Math.max(content.implicitHeight + VLCStyle.dp(20, VLCStyle.scale),
-                                 Math.min(VLCStyle.dp(524, VLCStyle.scale), root.maximumHeight) - tabs.height)
+        // Figma height (524 with the tabs), shrunk to the room above the control bar; the content
+        // scrolls when it does not fit (small windows, many tracks or devices)
+        implicitHeight: Math.min(Math.max(content.implicitHeight + VLCStyle.dp(20, VLCStyle.scale),
+                                          Math.min(VLCStyle.dp(524, VLCStyle.scale), root.maximumHeight) - tabs.height),
+                                 root.maximumHeight - tabs.height)
         height: implicitHeight
 
-        ColumnLayout {
-            id: content
+        Flickable {
+            id: flick
 
             anchors.fill: parent
             anchors.bottomMargin: VLCStyle.dp(20, VLCStyle.scale)
-            spacing: 0
 
-            SectionLabel {
-                text: qsTr("Embedded Tracks")
-            }
+            clip: true
+            boundsBehavior: Flickable.StopAtBounds
+            contentWidth: width
+            contentHeight: content.height
 
-            TrackList {
-                model: root.tab === "audio" ? Player.audioTracks
-                     : root.tab === "video" ? Player.videoTracks
-                     : Player.subtitleTracks
-            }
+            ColumnLayout {
+                id: content
 
-            // subtitles: external tracks (+ adds a subtitle file)
-            Widgets.RdMenuDivider {
-                visible: root.tab === "subtitles"
-                Layout.fillWidth: true
-            }
+                width: flick.width
+                height: Math.max(implicitHeight, flick.height)
+                spacing: 0
 
-            SectionLabel {
-                visible: root.tab === "subtitles"
-                text: qsTr("External Tracks")
-                actionIcon: "add"
-                actionDescription: qsTr("Add subtitle file")
-                onActionTriggered: DialogsProvider.loadSubtitlesFile()
-            }
+                SectionLabel {
+                    text: qsTr("Embedded Tracks")
+                }
 
-            // audio: output device (refresh re-reads the device list)
-            Widgets.RdMenuDivider {
-                visible: root.tab === "audio"
-                Layout.fillWidth: true
-            }
+                TrackList {
+                    model: root.tab === "audio" ? Player.audioTracks
+                         : root.tab === "video" ? Player.videoTracks
+                         : Player.subtitleTracks
+                }
 
-            SectionLabel {
-                visible: root.tab === "audio"
-                text: qsTr("Output Device")
-                actionIcon: "refresh"
-                actionDescription: qsTr("Refresh output devices")
-                onActionTriggered: Player.audioDevices.refresh()
-            }
+                // subtitles: external tracks (+ adds a subtitle file)
+                Widgets.RdMenuDivider {
+                    visible: root.tab === "subtitles"
+                    Layout.fillWidth: true
+                }
 
-            TrackList {
-                visible: root.tab === "audio"
-                tracks: false
-                model: Player.audioDevices
-            }
+                SectionLabel {
+                    visible: root.tab === "subtitles"
+                    text: qsTr("External Tracks")
+                    actionIcon: "add"
+                    actionDescription: qsTr("Add subtitle file")
+                    onActionTriggered: DialogsProvider.loadSubtitlesFile()
+                }
 
-            // the panel keeps the Figma height (400x524 with the tabs); Show Preferences sits at the bottom
-            Item {
-                Layout.fillHeight: true
-            }
+                // audio: output device (refresh re-reads the device list)
+                Widgets.RdMenuDivider {
+                    visible: root.tab === "audio"
+                    Layout.fillWidth: true
+                }
 
-            Widgets.RdButton {
-                Layout.fillWidth: true
-                Layout.leftMargin: VLCStyle.dp(20, VLCStyle.scale)
-                Layout.rightMargin: VLCStyle.dp(20, VLCStyle.scale)
+                SectionLabel {
+                    visible: root.tab === "audio"
+                    text: qsTr("Output Device")
+                    actionIcon: "refresh"
+                    actionDescription: qsTr("Refresh output devices")
+                    onActionTriggered: Player.audioDevices.refresh()
+                }
 
-                style: Widgets.RdButton.Style.Bar
-                text: qsTr("Show Preferences")
+                TrackList {
+                    visible: root.tab === "audio"
+                    tracks: false
+                    model: Player.audioDevices
+                }
 
-                // until the settings sidebar tabs exist (W4.3-W4.6) this opens VLC's effects dialog
-                onClicked: {
-                    RdPanels.close()
-                    DialogsProvider.extendedDialog()
+                // the panel keeps the Figma height (400x524 with the tabs); Show Preferences sits at the bottom
+                Item {
+                    Layout.fillHeight: true
+                }
+
+                Widgets.RdButton {
+                    Layout.fillWidth: true
+                    Layout.leftMargin: VLCStyle.dp(20, VLCStyle.scale)
+                    Layout.rightMargin: VLCStyle.dp(20, VLCStyle.scale)
+
+                    style: Widgets.RdButton.Style.Bar
+                    text: qsTr("Show Preferences")
+
+                    // until the settings sidebar tabs exist (W4.3-W4.6) this opens VLC's effects dialog
+                    onClicked: {
+                        RdPanels.close()
+                        DialogsProvider.extendedDialog()
+                    }
                 }
             }
         }

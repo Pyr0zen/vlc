@@ -87,10 +87,22 @@ FocusScope {
         running: !rootPlayer._controlsUnderVideo && rootPlayer.visible
                  && Qt.application.state === Qt.ApplicationActive
 
+        property point _last: Qt.point(-1, -1)
+
         onTriggered: {
             const p = MainCtx.cursorPosition(rootPlayer)
             const inside = p.x >= 0 && p.y >= 0 && p.x <= rootPlayer.width && p.y <= rootPlayer.height
             rootPlayer._cursorY = inside ? p.y : -1
+
+            // mouse moves over the native video do not reach the toolbar FSM either: report them
+            // (ends the keyboard "show both bars" mode and shows the auto-hidden cursor again)
+            if (inside && (p.x !== _last.x || p.y !== _last.y)) {
+                if (Player.isInteractive)
+                    interactiveAutoHideTimer.restart()
+                else
+                    playerToolbarVisibilityFSM.mouseMove()
+            }
+            _last = p
         }
         onRunningChanged: {
             if (!running)
