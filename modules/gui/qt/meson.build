@@ -805,6 +805,8 @@ qml_modules += {
        'player/qml/ControlLayout.qml',
        'player/qml/ControlRepeater.qml',
        'player/qml/NavigationBox.qml',
+       'player/qml/RdMiniQueue.qml',
+       'player/qml/RdMiniPlayer.qml',
    ),
    'singletons' : files(
        'player/qml/PlayerControlbarControls.qml',
@@ -875,6 +877,7 @@ qml_modules += {
         'playlist/qml/PlaylistDelegate.qml',
         'playlist/qml/PlaylistPane.qml',
         'playlist/qml/PlaylistDetachedWindow.qml',
+        'playlist/qml/RdQueueDropArea.qml',
     ),
 }
 
