@@ -23,6 +23,10 @@
 
 #include <QLocale>
 
+#include <cfloat>
+#include <cstdint>
+#include <cstring>
+
 #include <vlc_common.h>
 #include <vlc_aout.h>
 #include <vlc_configuration.h>
@@ -220,14 +224,23 @@ QVariantMap RdEffects::optionRange(const QString& name) const
     if (!config)
         return {};
 
+    // options declared without a range report the type's limits: no usable range
     if (IsConfigIntegerType(config->i_type))
+    {
+        if (config->min.i == INT64_MIN || config->max.i == INT64_MAX)
+            return {};
         return { { QStringLiteral("min"), static_cast<qlonglong>(config->min.i) },
                  { QStringLiteral("max"), static_cast<qlonglong>(config->max.i) },
                  { QStringLiteral("default"), static_cast<qlonglong>(config->orig.i) } };
+    }
     if (IsConfigFloatType(config->i_type))
+    {
+        if (config->min.f <= -FLT_MAX || config->max.f >= FLT_MAX)
+            return {};
         return { { QStringLiteral("min"), static_cast<double>(config->min.f) },
                  { QStringLiteral("max"), static_cast<double>(config->max.f) },
                  { QStringLiteral("default"), static_cast<double>(config->orig.f) } };
+    }
     return {};
 }
 
@@ -259,7 +272,7 @@ void RdEffects::setAudioFilterEnabled(const QString& module, bool enabled)
     chain.removeAll(module);
     if (enabled)
         chain << module;
-    config_PutPsz("audio-filter", qtu(chain.join(':')));
+    writeConfig("audio-filter", chain.join(':'));
 
     vlc_player_aout_EnableFilter(m_intf->p_player, qtu(module), enabled);
     bump();
@@ -281,7 +294,7 @@ void RdEffects::setAudioValue(const QString& name, double value)
 {
     if (SharedAOut aout = m_player->getAout())
         var_SetFloat(aout.get(), qtu(name), value);
-    config_PutFloat(qtu(name), value);
+    writeConfig(qtu(name), value);
     bump();
 }
 
@@ -299,7 +312,7 @@ void RdEffects::setAudioFlag(const QString& name, bool value)
 {
     if (SharedAOut aout = m_player->getAout())
         var_SetBool(aout.get(), qtu(name), value);
-    config_PutInt(qtu(name), value);
+    writeConfig(qtu(name), value);
     bump();
 }
 
@@ -369,9 +382,9 @@ void RdEffects::setEqualizerPreset(int preset)
         var_SetFloat(aout.get(), "equalizer-preamp", p.f_preamp);
         var_SetString(aout.get(), "equalizer-bands", qtu(bands));
     }
-    config_PutPsz("equalizer-preset", preset_list[preset]);
-    config_PutFloat("equalizer-preamp", p.f_preamp);
-    config_PutPsz("equalizer-bands", qtu(bands));
+    writeConfig("equalizer-preset", QString::fromLatin1(preset_list[preset]));
+    writeConfig("equalizer-preamp", static_cast<double>(p.f_preamp));
+    writeConfig("equalizer-bands", bands);
 
     if (!audioFilterEnabled(QStringLiteral("equalizer")))
         setAudioFilterEnabled(QStringLiteral("equalizer"), true);
@@ -384,7 +397,7 @@ QVariantList RdEffects::equalizerBands() const
     QString bands;
     if (SharedAOut aout = m_player->getAout())
     {
-        if (var_Type(aout.get(), "equalizer-bands") == VLC_VAR_STRING)
+        if ((var_Type(aout.get(), "equalizer-bands") & VLC_VAR_CLASS) == VLC_VAR_STRING)
         {
             char* value = var_GetString(aout.get(), "equalizer-bands");
             bands = qfu(value ? value : "");
@@ -412,7 +425,7 @@ void RdEffects::setEqualizerBand(int band, double gain)
     const QString bands = floatList(gains);
     if (SharedAOut aout = m_player->getAout())
         var_SetString(aout.get(), "equalizer-bands", qtu(bands));
-    config_PutPsz("equalizer-bands", qtu(bands));
+    writeConfig("equalizer-bands", bands);
     bump();
 }
 
@@ -420,32 +433,43 @@ void RdEffects::setEqualizerBand(int band, double gain)
 
 QString RdEffects::videoFilterType(const QString& module) const
 {
-    module_t* obj = module_find(qtu(module));
-    if (!obj)
-    {
-        msg_Err(m_intf, "Unable to find filter module \"%s\".", qtu(module));
-        return {};
-    }
+    // the answer never changes for a module: look it up once (bindings ask often)
+    const auto cached = m_filterTypes.constFind(module);
+    if (cached != m_filterTypes.constEnd())
+        return *cached;
 
-    if (module_provides(obj, "video splitter"))
-        return QStringLiteral("video-splitter");
-    if (module_provides(obj, "video filter"))
-        return QStringLiteral("video-filter");
-    if (module_provides(obj, "sub source"))
-        return QStringLiteral("sub-source");
-    if (module_provides(obj, "sub filter"))
-        return QStringLiteral("sub-filter");
-    return {};
+    QString type;
+    if (module_t* obj = module_find(qtu(module)))
+    {
+        if (module_provides(obj, "video splitter"))
+            type = QStringLiteral("video-splitter");
+        else if (module_provides(obj, "video filter"))
+            type = QStringLiteral("video-filter");
+        else if (module_provides(obj, "sub source"))
+            type = QStringLiteral("sub-source");
+        else if (module_provides(obj, "sub filter"))
+            type = QStringLiteral("sub-filter");
+    }
+    else
+        msg_Err(m_intf, "Unable to find filter module \"%s\".", qtu(module));
+
+    m_filterTypes.insert(module, type);
+    return type;
 }
 
 QString RdEffects::filterChain(const char* type) const
 {
-    if (SharedVOutThread vout = m_player->getVout())
+    // the video output has no "video-splitter" variable: a splitter is chosen when the output
+    // is created, from the configuration
+    if (strcmp(type, "video-splitter") != 0)
     {
-        char* value = var_GetString(vout.get(), type);
-        const QString chain = qfu(value ? value : "");
-        free(value);
-        return chain;
+        if (SharedVOutThread vout = m_player->getVout())
+        {
+            char* value = var_GetString(vout.get(), type);
+            const QString chain = qfu(value ? value : "");
+            free(value);
+            return chain;
+        }
     }
     return configString(type);
 }
@@ -464,18 +488,43 @@ void RdEffects::setVideoFilterEnabled(const QString& module, bool enabled)
     if (type.isEmpty())
         return;
 
+    if (type == QLatin1String("video-splitter"))
+    {
+        // one splitter at a time; it applies to the next video output
+        writeConfig("video-splitter", enabled ? module : QString());
+        bump();
+        return;
+    }
+
     QStringList chain = splitChain(filterChain(qtu(type)));
     chain.removeAll(module);
     if (enabled)
         chain << module;
     const QString result = chain.join(':');
 
-    config_PutPsz(qtu(type), qtu(result));
-    // splitters need a new video output; the other filters apply on the fly
-    if (type != QLatin1String("video-splitter"))
+    writeConfig(qtu(type), result);
+    for (const SharedVOutThread& vout : m_player->getVouts())
+        var_SetString(vout.get(), qtu(type), qtu(result));
+    bump();
+}
+
+void RdEffects::restartVideoFilter(const QString& module)
+{
+    // filter options that are read when the filter starts: rebuild the chain without and with
+    // the filter (the video output ignores an unchanged chain)
+    if (!videoFilterEnabled(module))
+        return;
+    const QString type = videoFilterType(module);
+    if (type == QLatin1String("video-splitter"))
+        return;
+
+    QStringList without = splitChain(filterChain(qtu(type)));
+    const QString with = without.join(':');
+    without.removeAll(module);
+    for (const SharedVOutThread& vout : m_player->getVouts())
     {
-        for (const SharedVOutThread& vout : m_player->getVouts())
-            var_SetString(vout.get(), qtu(type), qtu(result));
+        var_SetString(vout.get(), qtu(type), qtu(without.join(':')));
+        var_SetString(vout.get(), qtu(type), qtu(with));
     }
     bump();
 }
@@ -511,9 +560,10 @@ void RdEffects::setSubtitleTextScale(int percent)
 {
     {
         vlc_player_locker lock{ m_intf->p_player };
-        vlc_player_SetSubtitleTextScale(m_intf->p_player, static_cast<unsigned>(percent));
+        // the core accepts 10 % to 500 %
+        vlc_player_SetSubtitleTextScale(m_intf->p_player, static_cast<unsigned>(qBound(10, percent, 500)));
     }
-    config_PutInt("sub-text-scale", percent);
+    writeConfig("sub-text-scale", qBound(10, percent, 500));
     bump();
 }
 
@@ -528,6 +578,6 @@ void RdEffects::setSubtitleDurationFactor(double factor)
 {
     for (const SharedVOutThread& vout : m_player->getVouts())
         var_SetFloat(vout.get(), "subsdelay-factor", factor);
-    config_PutFloat("subsdelay-factor", factor);
+    writeConfig("subsdelay-factor", factor);
     setVideoFilterEnabled(QStringLiteral("subsdelay"), factor > 0);
 }

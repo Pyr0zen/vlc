@@ -35,7 +35,10 @@ Widgets.IconToolButton {
     // elsewhere it keeps VLC's play queue panel
     onClicked: {
         if (MainCtx.playerView) {
-            RdPanels.toggle("queue")
+            if (RdPanels.queueOpen)
+                RdPanels.close()
+            else
+                RdPanels.open("queue")
             return
         }
         MainCtx.playqueuePanel.visible = !MainCtx.playqueuePanel.visible

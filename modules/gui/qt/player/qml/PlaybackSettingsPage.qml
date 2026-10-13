@@ -34,7 +34,7 @@ RdSidePanelPage {
     key: "playback"
 
     function rateText(rate) {
-        return (Math.round(rate * 100) / 100) + "x"
+        return qsTr("%1x").arg(Math.round(rate * 100) / 100)
     }
 
     Widgets.RdSettingsSection {

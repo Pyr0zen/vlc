@@ -83,6 +83,7 @@ Widgets.RdPanel {
                     focusPolicy: Qt.StrongFocus
                     Accessible.role: Accessible.PageTab
                     Accessible.name: modelData.label
+                    Accessible.checkable: true
                     Accessible.checked: active
 
                     onClicked: root.tabClicked(modelData.key)
@@ -148,6 +149,8 @@ Widgets.RdPanel {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: footerArea.top
+        // keep scrolled content off the rounded corners when there is no footer
+        anchors.bottomMargin: footerArea.used ? 0 : root.radius
     }
 
     // Figma "Frame 68": pinned footer, padding 20, gap 10, BG/B1 95%, 1 px Divider/Dim on top

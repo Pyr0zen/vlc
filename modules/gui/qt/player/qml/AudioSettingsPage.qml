@@ -38,6 +38,12 @@ RdSidePanelPage {
         return (RdEffects.revision, RdEffects.option(name))
     }
 
+    // editing a band or the preamp while the preset is "None" turns the equalizer on
+    function ensureEqualizer() {
+        if (root._eqPreset < 0)
+            RdEffects.setAudioFilterEnabled("equalizer", true)
+    }
+
     function parseNumber(text) {
         return parseFloat(String(text).replace(",", ".").replace(/[^0-9.+-]/g, ""))
     }
@@ -95,7 +101,7 @@ RdSidePanelPage {
         Widgets.RdParamSlider {
             text: qsTr("Audio Track Delay")
             valueBox: true
-            valueText: (Player.audioDelayMS / 1000).toFixed(3) + " s"
+            valueText: qsTr("%1 s").arg((Player.audioDelayMS / 1000).toFixed(3))
             from: -10
             to: 10
             stepSize: 0.05
@@ -171,11 +177,16 @@ RdSidePanelPage {
                     stepSize: 0.1
                     showTicks: false
                     value: root._eqPreamp
-                    onMoved: (v) => RdEffects.setAudioValue("equalizer-preamp", v)
+                    onMoved: (v) => {
+                        RdEffects.setAudioValue("equalizer-preamp", v)
+                        root.ensureEqualizer()
+                    }
                     onEdited: (text) => {
                         const v = root.parseNumber(text)
-                        if (!isNaN(v))
-                            RdEffects.setAudioValue("equalizer-preamp", Math.max(-20, Math.min(20, v)))
+                        if (isNaN(v))
+                            return
+                        RdEffects.setAudioValue("equalizer-preamp", Math.max(-20, Math.min(20, v)))
+                        root.ensureEqualizer()
                     }
                 }
 
@@ -196,11 +207,16 @@ RdSidePanelPage {
                         stepSize: 0.1
                         showTicks: false
                         value: gain
-                        onMoved: (v) => RdEffects.setEqualizerBand(index, v)
+                        onMoved: (v) => {
+                            RdEffects.setEqualizerBand(index, v)
+                            root.ensureEqualizer()
+                        }
                         onEdited: (text) => {
                             const v = root.parseNumber(text)
-                            if (!isNaN(v))
-                                RdEffects.setEqualizerBand(index, Math.max(-20, Math.min(20, v)))
+                            if (isNaN(v))
+                                return
+                            RdEffects.setEqualizerBand(index, Math.max(-20, Math.min(20, v)))
+                            root.ensureEqualizer()
                         }
                     }
                 }

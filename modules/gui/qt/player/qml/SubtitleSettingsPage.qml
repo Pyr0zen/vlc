@@ -91,7 +91,7 @@ RdSidePanelPage {
         Widgets.RdParamSlider {
             text: qsTr("Subtitle Track Delay")
             valueBox: true
-            valueText: (Player.subtitleDelayMS / 1000).toFixed(3) + " s"
+            valueText: qsTr("%1 s").arg((Player.subtitleDelayMS / 1000).toFixed(3))
             from: -10
             to: 10
             stepSize: 0.05
@@ -111,7 +111,7 @@ RdSidePanelPage {
         Widgets.RdParamSlider {
             text: qsTr("Subtitle Speed")
             valueBox: true
-            valueText: Player.subtitleFPS.toFixed(3) + " fps"
+            valueText: qsTr("%1 fps").arg(Player.subtitleFPS.toFixed(3))
             from: 1
             to: 100
             stepSize: 0.2
@@ -207,7 +207,7 @@ RdSidePanelPage {
             text: qsTr("Subtitle Offset")
 
             Widgets.RdValueBox {
-                text: (RdEffects.revision, RdEffects.videoValue("sub-margin")) + "px"
+                text: qsTr("%1px").arg((RdEffects.revision, Number(RdEffects.videoValue("sub-margin")) || 0))
                 Accessible.name: qsTr("Subtitle Offset")
                 onEdited: (value) => {
                     const px = Math.round(root.parseNumber(value))
@@ -221,7 +221,7 @@ RdSidePanelPage {
         // size); a size in pixels would need a core change (VIDEO_INDEX Decisions (Claude))
         Widgets.RdParamSlider {
             text: qsTr("Font Size")
-            valueText: value === 100 ? qsTr("Auto") : value + " %"
+            valueText: value === 100 ? qsTr("Auto") : qsTr("%1 %").arg(value)
             from: 25
             to: 300
             stepSize: 25
@@ -244,7 +244,7 @@ RdSidePanelPage {
 
         Widgets.RdParamSlider {
             text: qsTr("Background Opacity")
-            valueText: Math.round(value / 255 * 100) + " %"
+            valueText: qsTr("%1 %").arg(Math.round(value / 255 * 100))
             from: 0
             to: 255
             stepSize: 255 / 20
