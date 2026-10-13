@@ -246,6 +246,8 @@ public slots:
     void openUrlDialog();
     void openNetDialog();
     void openCaptureDialog();
+    /* redesign: Save of the QML Open Network Stream dialog (one link per line) */
+    void openNetworkStreams( const QString& links, const QString& playlistName = QString() );
 
     void PLOpenDir();
     void PLAppendDir();
@@ -288,6 +290,8 @@ public:
 signals:
     void releaseMouseEvents();
     void showToolbarEditorDialog();
+    /* redesign: shows the QML Open Network Stream dialog (MainInterface.qml) */
+    void showOpenNetworkStreamDialog();
 
     //visiblity signal
     void openDialogVisibleChanged();

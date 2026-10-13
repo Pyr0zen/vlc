@@ -38,6 +38,7 @@
 #include "util/qt_dirs.hpp"
 #include "util/vlchotkeyconverter.hpp"
 #include "maininterface/mainctx.hpp"
+#include "medialibrary/medialib.hpp"
 
 /* The dialogs */
 #include "dialogs/bookmarks/bookmarks.hpp"
@@ -68,6 +69,7 @@
 #include <QInputDialog>
 #include <QPointer>
 #include <QMessageBox>
+#include <QMetaMethod>
 
 #define I_OP_DIR_WINTITLE I_DIR_OR_FOLDER( N_("Open Directory"), \
                                            N_("Open Folder") )
@@ -631,7 +633,8 @@ void DialogsProvider::openFileGenericDialog( intf_dialog_args_t *p_arg )
 void DialogsProvider::openDialog( OpenDialog::OpenTab i_tab )
 {
     ensureDialog(m_openDialog);
-    m_openDialog->showTab( i_tab, OpenDialog::OPEN_AND_PLAY );
+    /* redesign (W6.4): each open entry is its own dialog, without the other sources */
+    m_openDialog->showTab( i_tab, OpenDialog::OPEN_AND_PLAY, true );
 }
 void DialogsProvider::openDialog()
 {
@@ -647,7 +650,73 @@ void DialogsProvider::openDiscDialog()
 }
 void DialogsProvider::openNetDialog()
 {
-    openDialog( OpenDialog::OPEN_NETWORK_TAB );
+    /* redesign (W6.4): the QML Open Network Stream dialog when the QML interface
+     * listens for it, the Network source of the Open Media dialog otherwise */
+    if( isSignalConnected( QMetaMethod::fromSignal( &DialogsProvider::showOpenNetworkStreamDialog ) ) )
+        emit showOpenNetworkStreamDialog();
+    else
+        openDialog( OpenDialog::OPEN_NETWORK_TAB );
+}
+
+void DialogsProvider::openNetworkStreams( const QString& links, const QString& playlistName )
+{
+    /* one link per line, same rules as the Network source of the Open Media dialog */
+    QStringList mrls;
+    const QStringList lines = links.split( QLatin1Char( '\n' ), Qt::SkipEmptyParts );
+    for( const QString& line : lines )
+    {
+        const QString link = line.trimmed();
+        if( link.isEmpty() )
+            continue;
+
+        if( !link.contains( QLatin1String( "://" ) ) )
+        {
+            mrls << link;
+            continue;
+        }
+
+        char *uri = vlc_uri_fixup( qtu( link ) );
+        if( uri == NULL )
+            continue;
+        mrls << qfu( uri );
+        free( uri );
+    }
+
+    if( mrls.isEmpty() )
+        return;
+
+    const QString name = playlistName.trimmed();
+    MainCtx *mainCtx = p_intf->p_mi;
+    if( name.isEmpty() || !mainCtx || !mainCtx->hasMediaLibrary() )
+    {
+        QVector<vlc::playlist::Media> medias;
+        for( const QString& mrl : mrls )
+            medias.push_back( vlc::playlist::Media{ mrl, QString {} } );
+        THEMPL->append( medias, true );
+        return;
+    }
+
+    /* with a name, the links are saved as a media library playlist (video 13:17-13:20) */
+    mainCtx->getMediaLibrary()->runOnMLThread( this,
+    //ML thread
+    [name, mrls]( vlc_medialibrary_t* ml )
+    {
+        vlc_ml_playlist_t *playlist = vlc_ml_playlist_create( ml, qtu( name ) );
+        if( playlist == NULL )
+            return;
+
+        for( const QString& mrl : mrls )
+        {
+            vlc_ml_media_t *media = vlc_ml_get_media_by_mrl( ml, qtu( mrl ) );
+            if( media == NULL )
+                media = vlc_ml_new_stream( ml, qtu( mrl ) );
+            if( media == NULL )
+                continue;
+            vlc_ml_playlist_append( ml, playlist->i_id, &media->i_id, 1 );
+            vlc_ml_media_release( media );
+        }
+        vlc_ml_playlist_release( playlist );
+    } );
 }
 void DialogsProvider::openCaptureDialog()
 {

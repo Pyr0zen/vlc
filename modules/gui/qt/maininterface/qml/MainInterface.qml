@@ -335,6 +335,20 @@ Item {
             source: "qrc:///qt/qml/VLC/Menus/GlobalShortcuts.qml"
         }
 
+        // redesign (W6.4): Open Network Stream dialog over the whole window, opened by
+        // DialogsProvider.openNetDialog() (main menu, Ctrl+N, library, core requests)
+        OpenNetworkStreamDialog {
+            id: openNetworkStreamDialog
+        }
+
+        Connections {
+            target: DialogsProvider
+
+            function onShowOpenNetworkStreamDialog() {
+                openNetworkStreamDialog.openDialog()
+            }
+        }
+
         Loader {
             active: {
                 const windowVisibility = MainCtx.intfMainWindow.visibility
