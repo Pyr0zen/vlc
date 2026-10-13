@@ -79,10 +79,20 @@ private:
         std::unique_ptr<MLItem> loadItemById(vlc_medialibrary_t* ml, MLItemId itemId) const override;
 
     private:
-        // every folder of the level, filtered and sorted; `holder` keeps them alive. A level
-        // holds a few folders (the media library returns subfolders all at once anyway).
-        std::vector<const vlc_ml_folder_t*> folders(vlc_medialibrary_t* ml,
-                                                    ml_unique_ptr<vlc_ml_folder_list_t>& holder) const;
+        struct Folders
+        {
+            ml_unique_ptr<vlc_ml_folder_list_t> list;
+            std::vector<ml_unique_ptr<vlc_ml_folder_t>> extra;
+            std::vector<const vlc_ml_folder_t*> sorted;
+        };
+
+        // every folder of the level, filtered and sorted. VLC's media library returns all the
+        // subfolders of a folder in one query (it ignores offset and limit there); only the
+        // rows of the requested page become model items.
+        void folders(vlc_medialibrary_t* ml, Folders& result) const;
+        // the category's own folders that are not library folders (a folder inside a library
+        // folder of the other category)
+        void addInnerFolders(vlc_medialibrary_t* ml, Folders& result) const;
 
         QSet<QString> m_mine;
         QSet<QString> m_others;

@@ -181,17 +181,6 @@ Rectangle {
         RdLibraryStore.addFolder("video", url)
     }
 
-    // MRLs are percent-encoded differently by Qt and the media library: compare them decoded
-    function _mrlKey(mrl) {
-        let key = mrl
-        try {
-            key = decodeURIComponent(mrl)
-        } catch (e) {
-            // a stray "%": compare the text as it is
-        }
-        return key.replace(/\/+$/, "")
-    }
-
     Connections {
         target: RdLibraryStore
         enabled: rail._folderToPin !== ""
@@ -212,7 +201,7 @@ Rectangle {
                 return
             const crumbs = result.crumbs
             const last = crumbs[crumbs.length - 1]
-            if (rail._mrlKey(last.mrl) !== rail._mrlKey(mrl))
+            if (RdLibraryNav.mrlKey(last.mrl) !== RdLibraryNav.mrlKey(mrl))
                 return
             rail._folderToPin = ""
             const categoryRoot = result.category === "music"

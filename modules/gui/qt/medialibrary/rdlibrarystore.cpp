@@ -194,11 +194,12 @@ void RdLibraryStore::addFolder(const QString& category, const QUrl& url)
 
     struct Ctx {
         bool isRoot = false;
-        bool insideRoot = false;
+        // library folders the folder is inside
+        QStringList containingRoots;
     };
     m_mediaLib->runOnMLThread<Ctx>(this,
     [mrl](vlc_medialibrary_t* ml, Ctx& ctx) {
-        // a folder inside a library folder is already scanned: it only needs to be opened
+        // a folder inside a library folder is already scanned: it is only recorded
         ml_unique_ptr<vlc_ml_folder_list_t> roots(vlc_ml_list_entry_points(ml, nullptr));
         if (roots)
         {
@@ -210,17 +211,54 @@ void RdLibraryStore::addFolder(const QString& category, const QUrl& url)
                 if (RdLibraryItems::mrlKey(rootMrl) == RdLibraryItems::mrlKey(mrl))
                     ctx.isRoot = true;
                 else if (isInside(rootMrl, mrl))
-                    ctx.insideRoot = true;
+                    ctx.containingRoots.append(rootMrl);
             }
         }
-        if (!ctx.isRoot && !ctx.insideRoot)
+        if (!ctx.isRoot && ctx.containingRoots.isEmpty())
             vlc_ml_add_folder(ml, qtu(mrl));
     },
     [this, category, mrl, &mine](quint64, Ctx& ctx) {
-        // a library folder already shown in the other category joins this one too
-        if (!ctx.insideRoot && !RdLibraryItems::containsMrl(mine, mrl))
+        QStringList& other = (&mine == &m_musicFolders) ? m_videoFolders : m_musicFolders;
+        const auto inNoList = [this](const QString& folder) {
+            return !RdLibraryItems::containsMrl(m_videoFolders, folder)
+                && !RdLibraryItems::containsMrl(m_musicFolders, folder);
+        };
+
+        bool changed = false;
+        if (ctx.isRoot)
+        {
+            // a library folder from before the redesign shows in both categories: it stays in
+            // the other one
+            if (inNoList(mrl))
+            {
+                other.append(mrl);
+                changed = true;
+            }
+        }
+        else if (!ctx.containingRoots.isEmpty())
+        {
+            // a folder inside a library folder: already shown here when that library folder
+            // (or a folder of this category above it) is; otherwise it is listed at the root
+            // of this category (e.g. a Music folder inside a Videos folder)
+            bool shownHere = std::any_of(mine.cbegin(), mine.cend(), [&mrl](const QString& folder) {
+                return isInside(folder, mrl);
+            });
+            for (const QString& root : std::as_const(ctx.containingRoots))
+                shownHere = shownHere || inNoList(root);
+            if (shownHere)
+            {
+                emit folderAdded(category, mrl);
+                return;
+            }
+        }
+
+        if (!RdLibraryItems::containsMrl(mine, mrl))
         {
             mine.append(mrl);
+            changed = true;
+        }
+        if (changed)
+        {
             save(RD_LIBRARY_KEY("videoFolders"), m_videoFolders);
             save(RD_LIBRARY_KEY("musicFolders"), m_musicFolders);
             emit foldersChanged();
@@ -247,11 +285,32 @@ void RdLibraryStore::removeFolder(const QString& category, const QString& mrl)
     save(RD_LIBRARY_KEY("musicFolders"), m_musicFolders);
     emit foldersChanged();
 
-    // the folder leaves the media library once no category shows it
+    // a library folder leaves the media library once no category shows it; the folders of a
+    // category inside it (a Music folder inside a Videos folder) become library folders of
+    // their own. A folder inside a library folder is only taken off its list.
     if (!shownInOther && m_mediaLib)
     {
-        m_mediaLib->runOnMLThread(this, [normalized](vlc_medialibrary_t* ml) {
+        QStringList inner;
+        for (const QString& folder : m_videoFolders + m_musicFolders)
+        {
+            if (RdLibraryItems::mrlKey(folder) != RdLibraryItems::mrlKey(normalized) && isInside(normalized, folder)
+                && !RdLibraryItems::containsMrl(inner, folder))
+                inner.append(folder);
+        }
+        m_mediaLib->runOnMLThread(this, [normalized, inner](vlc_medialibrary_t* ml) {
+            ml_unique_ptr<vlc_ml_folder_list_t> roots(vlc_ml_list_entry_points(ml, nullptr));
+            if (!roots)
+                return;
+            const QString key = RdLibraryItems::mrlKey(normalized);
+            const bool isRoot = std::any_of(roots->p_items, roots->p_items + roots->i_nb_items,
+                                            [&key](const vlc_ml_folder_t& root) {
+                return root.psz_mrl && RdLibraryItems::mrlKey(qfu(root.psz_mrl)) == key;
+            });
+            if (!isRoot)
+                return;
             vlc_ml_remove_folder(ml, qtu(withTrailingSlash(normalized)));
+            for (const QString& folder : inner)
+                vlc_ml_add_folder(ml, qtu(folder));
         });
     }
 }
@@ -349,14 +408,22 @@ void RdLibraryStore::resolveFolder(const QString& mrl, QJSValue callback)
             return;
         }
 
-        const QString root = ctx.crumbs.front().mrl;
-        QString category;
-        if (RdLibraryItems::containsMrl(m_musicFolders, root))
-            category = QStringLiteral("music");
-        else if (RdLibraryItems::containsMrl(m_videoFolders, root))
-            category = QStringLiteral("video");
-        else
-            category = ctx.audio ? QStringLiteral("music") : QStringLiteral("video");
+        // the deepest folder added to a category decides it, and the address line starts there
+        // (a Music folder inside a Videos folder is listed at the root of Music)
+        QString category = ctx.audio ? QStringLiteral("music") : QStringLiteral("video");
+        size_t first = 0;
+        for (size_t i = ctx.crumbs.size(); i-- > 0;)
+        {
+            const QString& folder = ctx.crumbs[i].mrl;
+            const bool music = RdLibraryItems::containsMrl(m_musicFolders, folder);
+            if (music || RdLibraryItems::containsMrl(m_videoFolders, folder))
+            {
+                category = music ? QStringLiteral("music") : QStringLiteral("video");
+                first = i;
+                break;
+            }
+        }
+        ctx.crumbs.erase(ctx.crumbs.begin(), ctx.crumbs.begin() + first);
 
         QVariantList crumbs;
         for (const Crumb& crumb : ctx.crumbs)
