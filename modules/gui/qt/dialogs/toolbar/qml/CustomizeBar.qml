@@ -53,6 +53,15 @@ Rectangle {
     // Figma "Controls" BG/A3 Transparent, opaque over the native video
     color: Qt.alpha(VLCStyle.palette.rdBgA3Transparent, 1.0)
 
+    // Figma "Controls" in this frame: 1 px Divider/Dim stroke on top (as the live bar draws it)
+    Rectangle {
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: parent.top
+        height: VLCStyle.dp(1)
+        color: VLCStyle.palette.rdDividerDim
+    }
+
     // keeps the arrow cursor and the clicks inside the bar
     MouseArea {
         anchors.fill: parent
