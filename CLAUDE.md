@@ -81,6 +81,7 @@ READY TO BUILD. Next session: read CLAUDE.md, VIDEO_INDEX.md, FIGMA_FLOWS.md and
 
 ## Using Tony's PC (Tony, 2026-10-14)
 - On-PC tests (Tony, 2026-10-14): mouse, keyboard and windows may be used anytime, no need to wait. Requirement: when a test is done, close every window and process it opened (test VLC, scripts, captures, command windows) so nothing is left running or open. Keep the safety guard: input only goes to VLC while it is the window in front (vlcperf.ps1 Guard, vlctest.ps1 Require-Focus).
+- Never delete or overwrite anything of Tony's (Tony, 2026-10-14). Deleting is allowed only inside paths this project created: the session scratchpad, `C:\Users\Prem\Desktop\vlc-redesign\builds\<run>`, perfruns, perfmedia, agentwork, qttools, the agent worktrees under `vlc\.claude\worktrees`, and files the repo itself generates. No recursive deletes or wildcards outside those paths; never touch his Desktop items, Downloads, documents, other projects or the installed VLC. Check the exact target path before any delete.
 
 ## Quality rules (mandatory for every work package; a package is NOT done until all pass)
 - **Performance first (Tony, 2026-10-13, top priority):** the redesign must feel at least as snappy as stock VLC. If it feels sluggish it has failed, no matter how close it looks to the video. Responsiveness wins over visual effects every time. Hard targets, measured on this PC every build round against stock VLC 4 (the green stock build from Phase 1, run 38315049322, in builds\38315049322), both in portable mode, same tester videos:
