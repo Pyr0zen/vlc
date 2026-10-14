@@ -128,16 +128,17 @@ Item {
                                     anchors.verticalCenter: parent.verticalCenter
                                     name: tabButton.active ? tabButton.modelData.icon + "_two-tone-yes" : tabButton.modelData.icon
                                     size: VLCStyle.dp(20, VLCStyle.scale)
-                                    color: (tabButton.active || tabButton.hovered) ? root.rdPalette.rdFgA2 : root.rdPalette.rdFgA3
+                                    // Figma: FG/A3 strokes when active, FG/A4 when not (hover: FG/A3)
+                                    color: (tabButton.active || tabButton.hovered) ? root.rdPalette.rdFgA3 : root.rdPalette.rdFgA4
                                 }
 
                                 Text {
                                     anchors.verticalCenter: parent.verticalCenter
                                     text: tabButton.modelData.label
+                                    // Figma: Inter 400 12, FG/A2 when active, FG/A3 when not
                                     font.family: VLCStyle.rd_fontFamily
-                                    font.pixelSize: VLCStyle.rd_fontSize_label
-                                    color: tabButton.active ? root.rdPalette.rdFg2
-                                                            : (tabButton.hovered ? root.rdPalette.rdFgA2 : root.rdPalette.rdFgA3)
+                                    font.pixelSize: VLCStyle.rd_fontSize_toggle
+                                    color: (tabButton.active || tabButton.hovered) ? root.rdPalette.rdFgA2 : root.rdPalette.rdFgA3
                                 }
                             }
 
@@ -188,24 +189,26 @@ Item {
                     text: qsTr("Embedded Tracks")
                 }
 
+                // Figma: the list frame is 138.5 tall whatever the track count (with the 20 px
+                // below the rows), so the next section label stays in place
                 TrackList {
+                    Layout.minimumHeight: VLCStyle.dp(118.5, VLCStyle.scale)
                     model: root.tab === "audio" ? Player.audioTracks
                          : root.tab === "video" ? Player.videoTracks
                          : Player.subtitleTracks
                 }
 
-                // subtitles: external tracks (+ adds a subtitle file)
-                Widgets.RdMenuDivider {
-                    visible: root.tab === "subtitles"
-                    Layout.fillWidth: true
-                }
-
+                // subtitles: external tracks; the pencil and + both add a subtitle file (Figma wires
+                // both to the Add Subtitles dialog, W6.5). Figma has no divider above it on this
+                // tab, only on the Audio tab.
                 SectionLabel {
                     visible: root.tab === "subtitles"
                     text: qsTr("External Tracks")
-                    actionIcon: "add"
-                    actionDescription: qsTr("Add subtitle file")
-                    onActionTriggered: DialogsProvider.loadSubtitlesFile()
+                    actions: [
+                        { icon: "edit", description: qsTr("Edit subtitle files") },
+                        { icon: "add", description: qsTr("Add subtitle file") }
+                    ]
+                    onActionTriggered: (index) => DialogsProvider.loadSubtitlesFile()
                 }
 
                 // audio: output device (refresh re-reads the device list)
@@ -217,9 +220,8 @@ Item {
                 SectionLabel {
                     visible: root.tab === "audio"
                     text: qsTr("Output Device")
-                    actionIcon: "refresh"
-                    actionDescription: qsTr("Refresh output devices")
-                    onActionTriggered: Player.audioDevices.refresh()
+                    actions: [ { icon: "refresh", description: qsTr("Refresh output devices") } ]
+                    onActionTriggered: (index) => Player.audioDevices.refresh()
                 }
 
                 TrackList {
@@ -238,8 +240,8 @@ Item {
                     Layout.leftMargin: VLCStyle.dp(20, VLCStyle.scale)
                     Layout.rightMargin: VLCStyle.dp(20, VLCStyle.scale)
 
+                    // Figma button 500:3075 hides its icon: text only
                     style: Widgets.RdButton.Style.Bar
-                    rdIcon: "settings"
                     text: qsTr("Show Preferences")
 
                     // opens the settings sidebar on the matching tab (Figma F-07)
@@ -250,16 +252,15 @@ Item {
         }
     }
 
-    // section label row (Figma "Frame 60": 60 px, padding 0,28, FG/A3 14 px) with an optional icon
-    // action on the right
+    // section label row (Figma "Frame 60": 60 px, padding 0,28, FG/A3 14 px) with optional icon
+    // actions on the right (Figma "Frame 61": 24 px icons 20 apart, 28 px from the right edge)
     component SectionLabel: Item {
         id: section
 
         property alias text: label.text
-        // Figma icon name (Widgets.RdIcon)
-        property string actionIcon: ""
-        property string actionDescription: ""
-        signal actionTriggered()
+        // [{ icon, description }]; icon is a Figma icon name (Widgets.RdIcon)
+        property var actions: []
+        signal actionTriggered(int index)
 
         Layout.fillWidth: true
         Layout.preferredHeight: VLCStyle.dp(60, VLCStyle.scale)
@@ -275,18 +276,31 @@ Item {
             color: VLCStyle.palette.rdFgA3
         }
 
-        Widgets.IconToolButton {
-            visible: section.actionIcon !== ""
+        Row {
+            // the 30 px buttons center their 24 px icons: 3 px of each button lie outside the icon
+            readonly property real _iconInset: (VLCStyle.rd_iconButtonWidth - VLCStyle.rd_iconSize) / 2
+
             anchors.right: parent.right
-            anchors.rightMargin: VLCStyle.dp(24, VLCStyle.scale)
+            anchors.rightMargin: VLCStyle.dp(28, VLCStyle.scale) - _iconInset
             anchors.verticalCenter: parent.verticalCenter
-            width: VLCStyle.rd_iconButtonWidth
-            height: VLCStyle.rd_iconButtonHeight
-            font.pixelSize: VLCStyle.rd_iconSize
-            text: VLCIcons.add
-            rdIcon: section.actionIcon
-            description: section.actionDescription
-            onClicked: section.actionTriggered()
+            spacing: VLCStyle.dp(20, VLCStyle.scale) - 2 * _iconInset
+
+            Repeater {
+                model: section.actions
+
+                delegate: Widgets.IconToolButton {
+                    required property var modelData
+                    required property int index
+
+                    width: VLCStyle.rd_iconButtonWidth
+                    height: VLCStyle.rd_iconButtonHeight
+                    font.pixelSize: VLCStyle.rd_iconSize
+                    text: VLCIcons.add
+                    rdIcon: modelData.icon
+                    description: modelData.description
+                    onClicked: section.actionTriggered(index)
+                }
+            }
         }
     }
 
@@ -321,15 +335,17 @@ Item {
                 name: "check_state-active"
             }
 
+            // Figma: 32 px check cell + 10 px gap
             Text {
-                x: VLCStyle.dp(36, VLCStyle.scale)
+                x: VLCStyle.dp(42, VLCStyle.scale)
                 width: parent.width - x
                 anchors.verticalCenter: parent.verticalCenter
                 elide: Text.ElideRight
                 text: row.label
                 font.family: VLCStyle.rd_fontFamily
                 font.pixelSize: VLCStyle.rd_fontSize_label
-                color: (row.selected || row.hovered) ? VLCStyle.palette.rdFg2 : VLCStyle.palette.rdFgA1
+                // the selected row keeps FG/A1 (Figma): only the accent check marks it
+                color: row.hovered ? VLCStyle.palette.rdFg2 : VLCStyle.palette.rdFgA1
             }
         }
     }
