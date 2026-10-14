@@ -165,8 +165,9 @@ T.ItemDelegate {
             //button text is already exposed
             Accessible.ignored: true
 
-            Behavior on color {
-                enabled: theme.initialized
+            // redesign: off during a theme or accent switch (P8-41)
+            DelayedBehavior on color {
+                delayedEnabled: theme.initialized
 
                 ColorAnimation {
                     duration: VLCStyle.duration_short

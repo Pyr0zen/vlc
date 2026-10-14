@@ -15,10 +15,24 @@ everything, like a crash.
   `perfmedia\queue500.m3u` (520 entries).
 - Smoothness: VLC renders its QML through its own compositor (QQuickRenderControl), so
   QSG_RENDER_TIMING prints nothing, and VLC's Qt has no QML profiler. Instead the screen is
-  captured with Desktop Duplication (ffmpeg ddagrab, 120 fps, only changed frames, GPU present
-  timestamps) during scripted interactions on a paused video; `motion.py` gives the input-to-
-  first-change latency and the gaps between UI updates. On the 99 Hz monitor a smooth update is
-  every ~10 ms; a gap over 16.7 ms is below 60 fps.
+  captured with Desktop Duplication (ffmpeg ddagrab polling at 240 Hz, only changed frames, no
+  pointer, millisecond timestamps via `-enc_time_base 1:1000`) during scripted interactions on a
+  paused video. The input is driven from C# on a 1 ms timer: a pointer step every 4 ms (2.5 steps
+  per 99 Hz refresh), so every refresh has new input to show; every event is logged on the QPC
+  clock. A 20x20 marker square of our own (bottom-left corner, no focus, click-through) flips
+  black/white at logged times before and after each interaction; `motion.py` uses the flips to
+  map the input log onto the capture (`sync.spread_ms` says how well they agree). It reports, per
+  interaction: drags and wheel scrolling: gaps between UI updates only while the input moves,
+  how many input steps arrived inside each gap (`worst_gap_steps`, `stalls` = gaps over 16.7 ms
+  with an input waiting more than one refresh) and per-step response time; hover: latency from
+  the pointer crossing a control to its first change, frame pacing inside the hover animations;
+  panel open/close: click release to first change in the panel region, animation length, gaps.
+  On the 99 Hz monitor a smooth update is every ~10 ms; a gap over 16.7 ms is below 60 fps.
+  Capture stamps are 0-4 ms after the real present; latencies are relative to the marker (a GDI
+  paint shown at the next refresh). Each capture has `<capture>.input.json` and `<capture>.png`
+  (last frame) next to it: check the PNG shows the panel open where the region expects it.
+  Offline check of the analysis: synthetic captures with known stalls and latencies, encoded the
+  same way, are recovered within one refresh.
 - CPU from the process times, RAM private bytes, GPU from nvidia-smi (whole GPU and the video
   decoder; valid because the machine is quiet). Dropped frames from VLC's own statistics (cli
   interface on 127.0.0.1, `stats`: frames displayed / lost).
@@ -48,10 +62,10 @@ back to back, two rounds of three launches each, alternating stock and redesign.
 | Playing: CPU / RAM private / GPU / decoder | 0.2 % / 296 MB / 6.3 % / 20 % | 0.4 % / 321 MB / 8.7 % / 20 % | OK (+25 MB RAM, GPU within noise of the busy PC) |
 | Idle paused: CPU / RAM | 1.1 % / 295 MB | 0.1 % / 317 MB | OK |
 | Seeking: CPU / RAM | 1.4 % / 420 MB | 1.3 % / 442 MB | OK |
-| Panel open while playing: CPU / RAM | 0.2 % / 280 MB | 0.3 % / 300 MB | OK |
-| 4K60 80 Mbit/s windowed: frames lost | 0 of 1335 | 0 of 1351 | OK |
+| Panel open while playing: CPU / RAM | 0.2 % / 280 MB | 0.3 % / 300 MB | **invalid**: the click hit VLC's console window, no panel was open (see below) |
+| 4K60 80 Mbit/s windowed: frames lost | 0 of 1335 | 0 of 1351 | OK, but at VLC's own window size (the console window was resized instead) |
 | 4K60 80 Mbit/s fullscreen: frames lost | 43 of 1289 | 85 of 1250 | **suspect**: redesign ran with 29 % background CPU; re-measure on a quiet PC |
-| 520-entry queue open: RAM | 291 MB | 341 MB | +50 MB; check after the lazy panels branch |
+| 520-entry queue open: RAM | 291 MB | 341 MB | +50 MB with the queue loaded but never shown (the click hit the console); re-measure |
 
 Motion (Desktop Duplication captures, both builds):
 
@@ -62,15 +76,47 @@ Motion (Desktop Duplication captures, both builds):
 | Volume drag | 33 / 208 ms | 25 / 217 ms |
 | Queue scroll | 100 / 1367 ms | 50 / 325 ms |
 
-The motion method is not valid yet: the medians follow the scripted input rate (a mouse step
-every ~17-33 ms), the worst gaps include the pauses between script steps, and panel/queue open
-found 0 changed frames in both builds (wrong capture region and stock button position). Both
-builds look the same, but the 60 fps target is not proven. Fix the harness (input faster than
-the refresh rate, gaps measured only while the input moves, region checked against the capture)
-before round 2.
+**These motion numbers are invalid (found after the round, from the captures).** Every motion and
+queue capture of both builds shows VLC's console window, not the player: with `--extraintf=cli`
+VLC on Windows opens a console (no `--rc-quiet`), and the harness took `MainWindowHandle`, which
+was that console. So it resized, focused, clicked and captured the console: the hover and drag
+"updates" are the pointer and the console's text selection, the wheel scrolled the console, and
+panel/queue open found 0 changes because no panel opened. Same cause, also invalid: "Panel open
+while playing" CPU/RAM (no panel was open), the queue RAM (the queue was never opened), and
+4K windowed ran at VLC's own window size, not 2400x1350 (so did play / idle / seek, the same
+for both builds, so those stay comparable). The button positions themselves were
+right (checked on earlier screenshots at this window size). Also: the capture timestamps were
+rounded to 1/120 s by the encoder, and the pointer was drawn into the capture and counted as UI.
+Fixed in the harness (Qt window by class, `--rc-quiet`, window position checked before any
+input, pointer not captured, ms timestamps, 4 ms input steps, QPC input log with sync marker,
+gaps only while the input moves); re-measure in round 2.
 
-Round 2 (next): the lazy panels branch and the event-driven cursor (merged in cbb2f4c2f5),
-on a quiet PC: open file, startup, 4K fullscreen, queue RAM, fixed motion method.
+### Round 2 (2026-10-14): stock 38315049322 vs redesign 38600975461 (lazy panels + event-driven cursor)
+Raw results: `perfruns\r2\stock.json` (19:09, background 13 %) and `redesign.json` (19:39,
+background 21 %; Sticky away, the session's own agents running). The fixed harness worked for
+stock: sync spread <= 17 ms, 4 ms input steps, panels and queue detected. For the redesign the
+input scenarios (panel, motion, queue) were skipped: VLC could not take the foreground at that
+moment; they run in round 3.
+
+| Measure | Stock | Redesign | Verdict |
+|---|---|---|---|
+| Startup to window (ms) | 1430/910/1126 | 1135/1087/1248 | equal (noise) |
+| Open file to first video frame (ms) | 1498/1731/1849 | 1466/1032/1291 | **round 1 regression fixed** (lazy panels) |
+| Playing / idle CPU | 0.7 % / 0 % | 0.7 % / 0.6 % | OK |
+| 4K windowed frames lost | 0 of 1335 | 0 of 1335 | OK |
+| 4K fullscreen frames lost | 4 of 1317 | 46 of 1302 | **suspect**, measured 30 min apart under different load: re-measure back to back |
+| RAM and decoder load while playing | 300 MB, NVDEC 20 % (19:09) | 417 MB, NVDEC 42 % (19:39) | **not a regression**: back to back at 19:50 all three builds read the same (stock 429 MB / 42 %, round 1 redesign 437 MB / 42 %, this build 403 MB / 42 %); the machine state changed between the runs |
+
+Stock motion baseline (valid, fixed method): hover latency 6 ms, hover animation gaps median 10 ms
+(worst 21); seek drag 67 updates/s, gap median 15 ms, p95 22, worst 26, 19 stalls; volume drag
+96 updates/s, median 8.5 ms, worst 22; panel open 41 ms to first change, 96 ms animation, worst
+gap 19; panel close 8 ms, 90 ms; queue open 35 ms, 90 ms; queue scroll median 10 ms, worst 30.
+
+Lesson: RAM, GPU and lost frames drift with the machine state, so every comparison runs back to
+back (stock, then redesign, minutes apart) with the same background load.
+
+Round 3 (next): back to back on a quiet PC with Sticky away: redesign input scenarios (panel,
+motion, queue) and 4K fullscreen for both builds, plus the library and settings builds.
 
 ## Motion measurements
 | Element | Source | Measured | Built |
