@@ -74,7 +74,8 @@ function Total-CpuSeconds { (Get-Process | ForEach-Object { try { $_.TotalProces
 $c0 = Total-CpuSeconds; Start-Sleep 3; $c1 = Total-CpuSeconds
 $bg = [pscustomobject]@{ Average = ($c1 - $c0) / 3 / [Environment]::ProcessorCount * 100 }
 $Results.background_cpu_pct = [math]::Round($bg.Average, 1)
-if ($bg.Average -gt 15) { throw "the PC is busy ($([math]::Round($bg.Average, 1)) % CPU before starting); run again when it is quiet" }
+# the Claude app itself and Chrome use about 15-20 % while a session runs; both builds see the same
+if ($bg.Average -gt 30) { throw "the PC is busy ($([math]::Round($bg.Average, 1)) % CPU before starting); run again when it is quiet" }
 function Want($name) { return ($Only.Count -eq 0) -or ($Only -contains $name) }
 function Exe { return (Get-ChildItem $Build -Recurse -Filter vlc.exe | Select-Object -First 1) }
 function LogPath { return (Join-Path $Build 'vlc-perf-log.txt') }
@@ -120,6 +121,15 @@ function Start-Vlc([string]$media, [switch]$Rc) {
 function Place($v) {
     [RdPerf]::MoveWindow($v.hwnd, 0, 0, 2400, 1350, $true) | Out-Null
     Focus $v.hwnd
+    $script:CurHwnd = $v.hwnd
+}
+# every input helper refuses unless the VLC window under test is in front, so no key, click or
+# pointer move can ever reach another application (Tony uses this PC)
+$script:CurHwnd = [IntPtr]::Zero
+function Guard {
+    if ($script:CurHwnd -eq [IntPtr]::Zero -or [RdPerf]::GetForegroundWindow() -ne $script:CurHwnd) {
+        throw 'VLC is not the foreground window: no input sent, round stopped'
+    }
 }
 function Stop-Vlc($v) {
     if (-not $v) { return }
@@ -156,12 +166,12 @@ function Wait-Video($v, [int]$timeoutMs = 20000) {
         return $null
     } finally { $g.Dispose(); $bmp.Dispose() }
 }
-function MouseTo($x, $y) { [RdPerf]::SetCursorPos($x, $y) | Out-Null }
-function Down { [RdPerf]::mouse_event(0x0002, 0, 0, 0, [IntPtr]::Zero) }
-function Up { [RdPerf]::mouse_event(0x0004, 0, 0, 0, [IntPtr]::Zero) }
+function MouseTo($x, $y) { Guard; [RdPerf]::SetCursorPos($x, $y) | Out-Null }
+function Down { Guard; [RdPerf]::mouse_event(0x0002, 0, 0, 0, [IntPtr]::Zero) }
+function Up { Guard; [RdPerf]::mouse_event(0x0004, 0, 0, 0, [IntPtr]::Zero) }
 function Click($x, $y) { MouseTo $x $y; Start-Sleep -Milliseconds 30; Down; Start-Sleep -Milliseconds 40; Up }
-function Wheel($n) { [RdPerf]::mouse_event(0x0800, 0, 0, $n, [IntPtr]::Zero) }
-function Key($k) { [System.Windows.Forms.SendKeys]::SendWait($k) }
+function Wheel($n) { Guard; [RdPerf]::mouse_event(0x0800, 0, 0, $n, [IntPtr]::Zero) }
+function Key($k) { Guard; [System.Windows.Forms.SendKeys]::SendWait($k) }
 
 # CPU from the process times; GPU from nvidia-smi (whole GPU: 3D/compute load and the video
 # decoder), valid because the machine is quiet during a round
