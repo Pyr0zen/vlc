@@ -703,6 +703,20 @@ void RdEffects::setAudioFilterEnabled(const QString& module, bool enabled)
 
     const QString key = makeKey("audioFilter", module);
     setCached(key, enabled);
+    // the preset follows at once (-1 while the equalizer is off), not only after the apply
+    if (module == QLatin1String("equalizer"))
+    {
+        int preset = -1;
+        if (enabled)
+        {
+            const QString name = configString("equalizer-preset");
+            preset = 0;
+            for (int i = 0; i < NB_PRESETS; ++i)
+                if (name == QLatin1String(preset_list[i]))
+                    preset = i;
+        }
+        store(equalizerPresetKey(), preset);
+    }
     schedule(key, [this, module, enabled]() {
         QStringList chain = splitChain(configString("audio-filter"));
         chain.removeAll(module);
