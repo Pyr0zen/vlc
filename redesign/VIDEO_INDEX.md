@@ -135,6 +135,7 @@ Extra decisions made during the build, one line each (date, row IDs, decision, r
 - 2026-10-14 W8.4: the volume cone takes each theme's Figma fills: empty part BG/B2 (Dark) / BG/A5 (Light), gradient tint #000000 20 % / #FFFFFF 20 % (rdVolumeEmpty, rdVolumeTint).
 - 2026-10-14 W8.4 (review): selected text on the Accent/DIm selection is FG/1 in Dark and BG/A1 in Light (rdSelectionText; FG/1 on Light Accent/DIm reads at 3.4:1); Figma shows no text selection.
 - 2026-10-14 W8.4 (review): the Qt widget dialogs' push buttons take the light Standard look of RdButton in Light (FG/A2, BG/A1 text); a disabled Standard button is drawn at 50 % in both themes, like Figma's only disabled button (Save, "Open network stream").
+- 2026-10-14 control bar, narrow window (Figma has no narrow bar): VLC's own ControlRepeater rule hides the right controls from the end (queue, settings, subtitles, audio, then volume) before the seek row shrinks below both times plus a 76 px seek bar; with no right control left, the duration goes, then the current time; prev / play / next and a seek bar of at least 76 px always stay (fits VLC's 320 px minimum window).
 
 ## Core changes (status)
 Approved by Decision 27 (minimal and isolated); reverse playback postponed (Decision 29).
