@@ -66,6 +66,8 @@ QtObject {
     //   params: { items } for a new playlist, { playlist } to edit one (Properties & Metadata)
     signal playlistDialogRequested(var params)
     signal infoRequested(var item)
+    //   params: { title, message, button, action } for an action that cannot be undone
+    signal confirmRequested(var params)
 
     function _root(page) {
         const titles = {

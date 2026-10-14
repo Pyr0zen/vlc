@@ -91,7 +91,12 @@ Item {
             { text: qsTr("Properties & Metadata"), icon: "info_two-tone-yes",
               action: () => RdLibraryNav.playlistDialogRequested({ playlist: item }) },
             { text: qsTr("Delete Playlist"), icon: "close",
-              action: () => RdLibraryStore.deletePlaylist(item.id) }
+              action: () => RdLibraryNav.confirmRequested({
+                  title: qsTr("Delete Playlist"),
+                  message: qsTr("Delete the playlist \"%1\"? Its media stay in the library.").arg(item.title ?? ""),
+                  button: qsTr("Delete"),
+                  action: () => RdLibraryStore.deletePlaylist(item.id)
+              }) }
         ]
     }
 
@@ -125,7 +130,12 @@ Item {
         // a library folder of the category's root can leave the category
         if (folder && folder.isRoot)
             entries.push({ text: qsTr("Remove from Library"), icon: "close",
-                           action: () => RdLibraryStore.removeFolder(category, folder.mrl) })
+                           action: () => RdLibraryNav.confirmRequested({
+                               title: qsTr("Remove from Library"),
+                               message: qsTr("Remove \"%1\" from the library? The files stay on disk.").arg(folder.title ?? ""),
+                               button: qsTr("Remove"),
+                               action: () => RdLibraryStore.removeFolder(category, folder.mrl)
+                           }) })
         return entries
     }
 

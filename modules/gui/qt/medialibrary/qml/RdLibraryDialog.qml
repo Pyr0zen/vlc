@@ -57,6 +57,8 @@ T.Popup {
 
     property string title: ""
     property bool canSave: true
+    // the right button (Figma "Save"; the action's name in a confirmation)
+    property string saveText: qsTr("Save")
     property real preferredWidth: VLCStyle.dp(713)
     default property alias body: bodyColumn.data
     // width of the body's children
@@ -160,7 +162,7 @@ T.Popup {
                 anchors.rightMargin: VLCStyle.dp(20)
                 anchors.verticalCenter: parent.verticalCenter
                 style: Widgets.RdButton.Style.Save
-                text: qsTr("Save")
+                text: dialog.saveText
                 enabled: dialog.canSave
                 onClicked: {
                     dialog.saved()

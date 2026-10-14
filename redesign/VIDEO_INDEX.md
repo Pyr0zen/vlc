@@ -133,6 +133,8 @@ Extra decisions made during the build, one line each (date, row IDs, decision, r
 - 2026-10-14 Phase 5: page "..." menu Add File adds the files to the end of the queue without playing; on a playlist page it adds them to that playlist.
 - 2026-10-14 Phase 5: rail "+" opens a small menu: Pin This Page, Pin a Folder... (the video only shows the result).
 - 2026-10-14 Phase 5: extra menu items not in the video but needed to manage the data: Delete Playlist, Remove from Library (folders), Unpin and Move Up / Down (pins).
+- 2026-10-14 Phase 5: Delete Playlist and Remove from Library cannot be undone, and the video shows neither, so they ask first in the library dialog frame (RdConfirmDialog: the question, Cancel, and the action's name on the right button).
+- 2026-10-14 P6-14 / W6.4: one Open Network Stream dialog for the whole app (W6.4); with a Playlist Name and the media library it saves the links as the library's stream lists under Network and shows them (13:19, compact library when the player is shown) instead of a media library playlist.
 - 2026-10-14 Phase 5: mini player X stops playback (VLC has no other "close the mini player" state).
 - 2026-10-14 Phase 5: Network Podcasts and Radio are VLC's existing "podcast" and "radio" services.
 - 2026-10-14 Phase 5: window title text "VLC Media Player" stays until the Phase 6 rename; while something plays, the full library's top bar shows its title like the player's (Figma Player-3.png). That top bar is the player's TopBar without the sidebar toggle and folder chip, so both line up exactly.

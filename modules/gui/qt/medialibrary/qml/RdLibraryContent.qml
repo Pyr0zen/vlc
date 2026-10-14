@@ -19,7 +19,7 @@
 // redesign: the page area of the library: the page of RdLibraryNav.location, crossfading into
 // the next one (video 12:12-12:14, IB-21: the old page fades out while the new one fades in at
 // the same place, no slide; 10:56-10:59, IB-05 after Add Folder). It also shows the library
-// dialogs (New Playlist, folder info) and opens a folder that was just
+// dialogs (New Playlist, folder info, confirmations) and opens a folder that was just
 // added once the media library has it (P5-16).
 import QtQuick
 
@@ -173,6 +173,14 @@ FocusScope {
         function onInfoRequested(item) {
             infoPopup.show(item)
         }
+
+        function onConfirmRequested(params) {
+            confirmDialog.ask(params)
+        }
+    }
+
+    RdConfirmDialog {
+        id: confirmDialog
     }
 
     RdPlaylistDialog {

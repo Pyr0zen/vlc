@@ -1397,6 +1397,7 @@ libqml_module_medialibrary_a_QML = \
 	medialibrary/qml/RdLibraryDialog.qml \
 	medialibrary/qml/RdDashedBorder.qml \
 	medialibrary/qml/RdPlaylistDialog.qml \
+	medialibrary/qml/RdConfirmDialog.qml \
 	medialibrary/qml/RdStreamListSaver.qml \
 	medialibrary/qml/RdFolderInfoPopup.qml \
 	medialibrary/qml/RdLibraryRail.qml \
