@@ -1,31 +1,29 @@
 # STATUS
 
-- Updated: 2026-10-14 18:42 Central Europe Daylight Time
-- Current work package: Sunday plan step 3 (performance round 1 done) and step 4 (redesign-library, agents running)
+- Updated: 2026-10-14 19:05 Central Europe Daylight Time
+- Current work package: Sunday plan steps 4-6 in parallel (library integration, Step 1 W8.1a / W8.3 / W8.4), build 38600975461 running
 
 ## Last 10 commits
 ```
+24d799428f Merge the perf harness fix: valid motion measurement
+c71b82efb4 redesign: Decision 33: light FG/1 #111111, FG/2 #222222
+6025232911 redesign: PERF.md: round 1 motion invalid, new motion method
+9fa5d68152 redesign: perf harness: valid motion measurement
+37d1627e9b redesign: current phase: queue drag ghost per IB-15
+2a6d81b939 qt: effects: the equalizer preset follows the equalizer toggle at once
+0da8e15633 redesign: current phase after round 1 and the two performance merges
+94a35ce7b0 Merge lazy panels and the redesign queue list
+3041cac057 redesign: performance round 1 in PERF.md, status
 cbb2f4c2f5 Merge the event-driven cursor and render-cost branch
-86d57b2155 redesign: rule: never delete anything outside project-created paths
-eb54ec0427 qt: video frame: the original border, split into two moving halves
-1b59a7cb77 qt: player cursor: a hover handler on the video surface
-9f50ed4170 Merge redesign into the event-driven cursor branch
-2593350797 qt: no top line on the control bar (not in Figma); rule: tests anytime, close everything after
-d8c80e720f qt: top bar spacing as in Figma
-e0cc6dd1f3 qt: control bar spacing and time labels as in Figma
-c674ac4f32 redesign: on-PC tests continue while Sticky works; close test windows after each test
-10b542199c redesign: ask before using Sticky's mouse and keyboard; perf harness input guard
 ```
 
 ## Latest report
 ```
 PROGRESS REPORT (2026-10-14)
-- Steps 1-2 done (no bug issues; build 38441433330 tested; fixes in a2d7d5ef7c).
-- Step 3, performance round 1: numbers in redesign/PERF.md "Rounds". Open file to first frame is about +300 ms slower than stock (stop-everything; expected fix: lazy panels branch). CPU/RAM/GPU close to stock; 4K fullscreen lost frames and the motion method need a clean re-run (a harness fix is in progress offline).
-- Figma detail fixes pushed: control bar gaps and time labels (e0cc6dd1f3), top bar spacing (d8c80e720f), no top line on the control bar (2593350797).
-- Merged: event-driven cursor branch (cbb2f4c2f5): no 100 ms cursor poll, video frame as two fixed halves, no hidden acrylic under the top bar.
-- Build 38600122429 (cbb2f4c2f5) running; then test: Customize Player, opaque popups, bar spacing vs Figma, cursor/bars behaviour, video frame.
-- Running: redesign-library integration and review, lazy panels review, motion harness fix.
-- Rule added: never delete anything outside project-created paths.
-- Waiting for Sticky: redesign-settings push (web session); decisions on Hide UI 300 ms, Light FG colors, subtitle size, DM Mono.
+- Round 1 (PERF.md): open file ~+300 ms vs stock (stop-everything; lazy panels now merged, re-measure). The round 1 motion, panel-open CPU and queue RAM rows were invalid: the harness drove VLC's console window. Harness fixed (24d799428f): main window by class, --rc-quiet, 4 ms input pacing with QPC log, sync square, ms timestamps, no pointer in the capture. Round 2 needs a moment when VLC can take the foreground (the guard refused while Sticky was active).
+- Merged and pushed: event-driven cursor (cbb2f4c2f5), lazy panels + RdListView lists (94a35ce7b0, review fixes included). Build 38600975461 running.
+- Local, not pushed yet: equalizer preset cache fix (2a6d81b939), Decision 33 (light FG/1 #111111, FG/2 #222222).
+- Verified on build 38595146574: Customize Player opens again (stock editor until W8.1a), main menu opaque over video.
+- Agents running: library integration (merge current redesign + 20 review findings, 1 high: Add to Playlist submenu empty), W8.1a Customize Player restyle, W8.3 onboarding, W8.4 light theme.
+- Waiting for Sticky: redesign-settings push; decisions on Hide UI 300 ms, subtitle size, DM Mono.
 ```

@@ -41,7 +41,7 @@ T.TextField {
     placeholderTextColor: rdPalette.rdFgA4
     color: rdPalette.rdFg2
     selectionColor: rdPalette.rdAccentDim
-    selectedTextColor: rdPalette.rdFg1
+    selectedTextColor: rdPalette.rdSelectionText
     verticalAlignment: TextInput.AlignVCenter
     font.family: VLCStyle.rd_fontFamily
     font.pixelSize: VLCStyle.rd_fontSize_label
