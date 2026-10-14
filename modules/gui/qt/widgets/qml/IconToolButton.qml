@@ -51,8 +51,12 @@ T.ToolButton {
 
     enabled: !paintOnly
 
+    // redesign: width of the Figma "Icon Wrapper" around the icon (control bar: 30), 0 = icon size
+    property real rdMinimumWidth: 0
+
     implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
-                            implicitContentWidth + leftPadding + rightPadding)
+                            implicitContentWidth + leftPadding + rightPadding,
+                            rdMinimumWidth)
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              implicitContentHeight + topPadding + bottomPadding)
 
@@ -120,14 +124,17 @@ T.ToolButton {
 
             anchors.fill: parent
 
-            visible: control.rdIcon === ""
+            // redesign: unused when a Figma icon is set: no text, no color updates or animation
+            readonly property bool used: control.rdIcon === ""
 
-            text: control.text
+            visible: used
 
-            color: control.color
+            text: used ? control.text : ""
+
+            color: used ? control.color : "transparent"
 
             DelayedBehavior on color {
-                delayedEnabled: theme.initialized
+                delayedEnabled: theme.initialized && glyph.used
 
                 ColorAnimation {
                     duration: VLCStyle.duration_long

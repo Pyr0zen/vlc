@@ -406,8 +406,8 @@ public:
 
     Q_INVOKABLE static double dp(const double px, const double scale);
 
-    // redesign: mouse cursor position in item coordinates. Hover events do not reach Qt Quick
-    // while the cursor is over the native video, so the fullscreen bars read the cursor directly.
+    // redesign: mouse cursor position in item coordinates, read once when the player's
+    // right-click menu opens (the request comes through DialogsProvider without a position)
     Q_INVOKABLE static QPointF cursorPosition(const QQuickItem* item);
     Q_INVOKABLE double dp(const double px) const;
 

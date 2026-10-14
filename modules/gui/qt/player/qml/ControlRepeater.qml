@@ -19,9 +19,31 @@ import QtQuick
 import QtQuick.Layouts
 
 import VLC.MainInterface
+import VLC.Style
+import VLC.PlayerControls
 
 Repeater {
     id: repeater
+
+    // redesign: Figma control bar (Frame 24 / 15 / 23 and the last Icon Wrapper): icon buttons
+    // are 30 wide; 8 between controls (the layout spacing), 12 between two icon buttons, 20
+    // after the volume group and before the queue button
+    property bool figmaGaps: false
+    property real baseSpacing: 0
+
+    function gapBefore(index) {
+        if (index <= 0)
+            return 0
+        const cur = itemAt(index)
+        const prev = itemAt(index - 1)
+        if (!cur || !prev)
+            return baseSpacing
+        if (cur.controlId === ControlListModel.PLAYLIST_BUTTON || prev.controlId === ControlListModel.VOLUME)
+            return VLCStyle.rd_controlBarSpacing
+        if (cur.item && prev.item && (cur.item.rdIcon ?? "") !== "" && (prev.item.rdIcon ?? "") !== "")
+            return VLCStyle.dp(12, VLCStyle.scale)
+        return baseSpacing
+    }
 
     property int alignment: Qt.AlignVCenter
 
@@ -64,6 +86,12 @@ Repeater {
 
         Layout.alignment: repeater.alignment
 
+        readonly property int controlId: model.id
+        // extra space on top of the layout spacing (Figma gaps), re-evaluated once the items load
+        Layout.leftMargin: repeater.figmaGaps ? (repeater.count, loader.item,
+                                                 Math.max(0, repeater.gapBefore(index) - repeater.baseSpacing))
+                                              : 0
+
         Binding on visible {
             delayed: true // this is important
             when: condition
@@ -95,6 +123,8 @@ Repeater {
         onLoaded: {
             // control should not request focus if they are not enabled:
             item.focus = Qt.binding(function() { return item.enabled && item.visible })
+            if (repeater.figmaGaps && (item.rdIcon ?? "") !== "" && item.rdMinimumWidth !== undefined)
+                item.rdMinimumWidth = VLCStyle.rd_iconButtonWidth
 
             // navigation parent of control is always controlLayout
             // so it can be set here unlike leftItem and rightItem:

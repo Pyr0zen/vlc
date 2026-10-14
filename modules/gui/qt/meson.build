@@ -801,6 +801,7 @@ qml_modules += {
        'player/qml/TracksPopup.qml',
        'player/qml/RdSidePanel.qml',
        'player/qml/RdSidePanelPage.qml',
+       'player/qml/RdSidePanelPageLoader.qml',
        'player/qml/SettingsSidebar.qml',
        'player/qml/QueueSidebar.qml',
        'player/qml/PlaybackSettingsPage.qml',
@@ -1035,6 +1036,7 @@ qml_modules += {
         'widgets/qml/RdChoiceDropdown.qml',
         'widgets/qml/RdEqCurve.qml',
         'widgets/qml/RdListRow.qml',
+        'widgets/qml/RdListView.qml',
     ),
 }
 
