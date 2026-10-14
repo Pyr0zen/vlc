@@ -137,11 +137,14 @@ FocusScope {
                                           && (_windowed || !MainCtx.hasEmbededVideo
                                               || playerToolbarVisibilityFSM.keyboardShown)
     // Hide UI (W4.10, Ctrl + \) hides both bars whatever the mouse does
+    // (the compact library sits between both bars and keeps them, also in fullscreen)
     readonly property bool _topBarVisible: !RdPanels.uiHidden
                                            && (_controlsUnderVideo || _showBothBars || _mouseNearTop
+                                               || _libraryShown
                                                || (playerToolbarVisibilityFSM.isLocked && !_mouseNearBottom))
     readonly property bool _controlBarVisible: !RdPanels.uiHidden
                                                && (_controlsUnderVideo || _showBothBars || _mouseNearBottom
+                                                   || _libraryShown
                                                    || (playerToolbarVisibilityFSM.isLocked && !_mouseNearTop))
 
     // cursor height inside the player, -1 outside, from mouse events (no polling): the hover
@@ -916,7 +919,8 @@ FocusScope {
 
                             Layout.alignment: Qt.AlignHCenter
                             Layout.topMargin: VLCStyle.margin_xxlarge
-                            Layout.maximumWidth: centerContent.width - 2 * VLCStyle.margin_large
+                            // the column's pane: the whole view, or the right pane with lyrics
+                            Layout.maximumWidth: parent.parent.width - 2 * VLCStyle.margin_large
 
                             Binding on visible {
                                 delayed: true
@@ -1797,8 +1801,11 @@ FocusScope {
         target: playerToolbarVisibilityFSM
 
         function onStartedChanged() {
-            if (playerToolbarVisibilityFSM.started)
+            if (playerToolbarVisibilityFSM.started) {
+                // a lock() before the start went nowhere: lock again
+                rootPlayer._panelLocked = false
                 rootPlayer._updatePanelLock()
+            }
         }
     }
 
