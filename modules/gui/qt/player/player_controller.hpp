@@ -243,6 +243,8 @@ public slots:
     void jumpFwd();
     void jumpBwd();
     void jumpTime( VLCTime i_time );
+    // redesign: relative jump in seconds (the 15 s buttons); quick clicks add up
+    void jumpSeconds( int seconds );
     void jumpToPos( double );
     void frameNext();
     void framePrev();
