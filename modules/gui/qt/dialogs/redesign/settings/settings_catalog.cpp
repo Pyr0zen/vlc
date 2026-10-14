@@ -106,7 +106,7 @@ const QSet<QString>& curatedOptions()
         "file-caching", "disc-caching", "network-caching", "live-caching", "http-proxy",
         "http-proxy-pwd", "gnutls-system-trust", "gnutls-priorities", "ipv4-timeout", "mtu",
         // Performance
-        "dec-dev", "postproc-q", "avcodec-skiploopfilter", "avcodec-threads", "drop-late-frames",
+        "hw-dec", "dec-dev", "postproc-q", "avcodec-skiploopfilter", "avcodec-threads", "drop-late-frames",
         "high-priority", "codec", "clock-synchro", "clock-jitter", "cr-average", "clock-master",
         // Recording
         "input-record-path", "input-record-native", "sout-chromecast-conversion-quality",
