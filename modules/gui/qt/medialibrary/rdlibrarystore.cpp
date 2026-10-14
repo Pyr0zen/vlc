@@ -190,7 +190,6 @@ void RdLibraryStore::addFolder(const QString& category, const QUrl& url)
         return;
 
     const QString mrl = RdLibraryItems::normalizedMrl(url.toString(QUrl::FullyEncoded));
-    QStringList& mine = (category == QLatin1String("music")) ? m_musicFolders : m_videoFolders;
 
     struct Ctx {
         bool isRoot = false;
@@ -217,8 +216,12 @@ void RdLibraryStore::addFolder(const QString& category, const QUrl& url)
         if (!ctx.isRoot && ctx.containingRoots.isEmpty())
             vlc_ml_add_folder(ml, qtu(mrl));
     },
-    [this, category, mrl, &mine](quint64, Ctx& ctx) {
-        QStringList& other = (&mine == &m_musicFolders) ? m_videoFolders : m_musicFolders;
+    [this, category, mrl](quint64, Ctx& ctx) {
+        // the lists are members: pick them again here instead of keeping a reference across
+        // the media library task
+        const bool music = category == QLatin1String("music");
+        QStringList& mine = music ? m_musicFolders : m_videoFolders;
+        QStringList& other = music ? m_videoFolders : m_musicFolders;
         const auto inNoList = [this](const QString& folder) {
             return !RdLibraryItems::containsMrl(m_videoFolders, folder)
                 && !RdLibraryItems::containsMrl(m_musicFolders, folder);
@@ -675,7 +678,7 @@ void RdLibraryStore::renamePlaylist(const MLItemId& playlistId, const QString& n
     const int64_t id = playlistId.id;
     const QString title = name.trimmed();
     m_mediaLib->runOnMLThread(this, [id, title](vlc_medialibrary_t* ml) {
-        vlc_ml_control(ml, VLC_ML_PLAYLIST_RENAME, id, qtu(title));
+        vlc_ml_playlist_rename(ml, id, qtu(title));
     });
 }
 

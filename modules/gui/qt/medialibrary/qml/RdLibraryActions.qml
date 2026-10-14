@@ -18,8 +18,8 @@
 
 // redesign: what the library rows and menus do (video 10:52-10:57, 11:44-11:47, 13:30-13:33;
 // Figma "file context menu", "folder context menu", "playlist context menu", F-11, F-12).
-// An item is a row of RdFolderModel / RdCollectionModel (RdLibraryModel.get()) or a network
-// row ({ kind: "stream", title, mrl }).
+// An item is a plain object made from a library row ({ kind, id, title, mrl, ... }, see
+// RdLibraryHome.toItem and RdLibraryPage) or a network row ({ kind: "stream", title, mrl }).
 pragma Singleton
 
 import QtQml

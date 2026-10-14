@@ -115,10 +115,9 @@ void RdSubfolderModel::onVlcMlEvent(const MLEvent& event)
     case VLC_ML_EVENT_ENTRY_POINT_REMOVED:
     case VLC_ML_EVENT_ENTRY_POINT_BANNED:
     case VLC_ML_EVENT_ENTRY_POINT_UNBANNED:
-        emit resetRequested();
-        return;
+    // MLEvent does not copy the id of an updated folder (mlevent.hpp): reload the level
     case VLC_ML_EVENT_FOLDER_UPDATED:
-        updateItemInCache(MLItemId(event.modification.i_entity_id, VLC_ML_PARENT_FOLDER));
+        emit resetRequested();
         return;
     default:
         break;

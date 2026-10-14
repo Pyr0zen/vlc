@@ -69,7 +69,7 @@ void RdCollectionModel::setSection(const QString& section)
         return;
     m_section = section;
     emit sectionChanged();
-    scheduleReload();
+    requestReload();
 }
 
 void RdCollectionModel::setLimit(int limit)
@@ -78,6 +78,8 @@ void RdCollectionModel::setLimit(int limit)
         return;
     m_limit = limit;
     emit limitChanged();
+    // follows the window width: wait until a resize settles (the first load is requested by the
+    // other parameters)
     scheduleReload();
 }
 
@@ -87,7 +89,7 @@ void RdCollectionModel::setIds(const QVariantList& ids)
         return;
     m_ids = ids;
     emit idsChanged();
-    scheduleReload();
+    requestReload();
 }
 
 RdLibraryModel::Loader RdCollectionModel::createLoader() const

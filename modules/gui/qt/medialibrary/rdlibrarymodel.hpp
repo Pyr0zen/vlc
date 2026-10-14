@@ -35,6 +35,8 @@
 
 #include "mlqmltypes.hpp"
 
+Q_MOC_INCLUDE("medialibrary/medialib.hpp")
+
 class MediaLib;
 struct vlc_medialibrary_t;
 struct vlc_ml_event_callback_t;
@@ -147,7 +149,10 @@ protected:
     // the model may only load once its parameters are set
     virtual bool canLoad() const { return true; }
 
+    // media library events: reload after a short quiet time (a scan sends many events)
     void scheduleReload();
+    // a parameter changed: load at the next event loop turn, once QML has set every parameter
+    void requestReload();
 
 private:
     static void onMlEvent(void* data, const vlc_ml_event_t* event);
@@ -160,6 +165,7 @@ private:
     QTimer m_reloadTimer;
     quint64 m_taskId = 0;
     bool m_loading = false;
+    bool m_reloadQueued = false;
 
     QString m_searchPattern;
 

@@ -44,9 +44,9 @@ constexpr int RELOAD_DELAY_MS = 300;
 
 QString thumbnailOf(const vlc_ml_thumbnail_t (&thumbnails)[VLC_ML_THUMBNAIL_SIZE_COUNT])
 {
-    const vlc_ml_thumbnail_t& small = thumbnails[VLC_ML_THUMBNAIL_SMALL];
-    if (small.i_status == VLC_ML_THUMBNAIL_STATUS_AVAILABLE && small.psz_mrl)
-        return qfu(small.psz_mrl);
+    const vlc_ml_thumbnail_t& smallThumbnail = thumbnails[VLC_ML_THUMBNAIL_SMALL];
+    if (smallThumbnail.i_status == VLC_ML_THUMBNAIL_STATUS_AVAILABLE && smallThumbnail.psz_mrl)
+        return qfu(smallThumbnail.psz_mrl);
     return {};
 }
 
@@ -289,7 +289,7 @@ void RdLibraryModel::setMl(MediaLib* ml)
     if (m_mediaLib)
         m_eventCallback.reset(m_mediaLib->registerEventListener(&RdLibraryModel::onMlEvent, this));
     emit mlChanged();
-    scheduleReload();
+    requestReload();
 }
 
 void RdLibraryModel::setSearchPattern(const QString& pattern)
@@ -332,11 +332,36 @@ void RdLibraryModel::scheduleReload()
     m_reloadTimer.start();
 }
 
+void RdLibraryModel::requestReload()
+{
+    // the views hide their empty state while loading: no "nothing here" flash before the
+    // first rows arrive
+    if (!m_loading)
+    {
+        m_loading = true;
+        emit loadingChanged();
+    }
+    if (m_reloadQueued)
+        return;
+    m_reloadQueued = true;
+    QMetaObject::invokeMethod(this, [this]() {
+        m_reloadQueued = false;
+        reload();
+    }, Qt::QueuedConnection);
+}
+
 void RdLibraryModel::reload()
 {
     m_reloadTimer.stop();
     if (!m_mediaLib || !canLoad())
+    {
+        if (m_loading && m_taskId == 0)
+        {
+            m_loading = false;
+            emit loadingChanged();
+        }
         return;
+    }
 
     if (m_taskId != 0)
         m_mediaLib->cancelMLTask(this, m_taskId);
