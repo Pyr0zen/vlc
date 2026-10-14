@@ -57,8 +57,13 @@ SettingsPage {
     property var _installRequested: ({})
 
     readonly property bool _installPending: !!_selected && !!_installRequested[_selectedKey]
+    // VLC's installer has no installer for these kinds (addons_manager: EINVAL): Add would do
+    // nothing and stay usable
+    readonly property bool _unsupportedType: !!_selected
+                                             && [ServicesDiscoveryModel.TYPE_UNKNOWN, ServicesDiscoveryModel.TYPE_PLUGIN,
+                                                 ServicesDiscoveryModel.TYPE_OTHER].map(Number).indexOf(Number(_selected.type)) >= 0
     readonly property bool _canInstall: !!_selected && _selected.state === ServicesDiscoveryModel.STATE_NOTINSTALLED
-                                        && !_installPending
+                                        && !_installPending && !_unsupportedType
     readonly property bool _canRemove: !!_selected && _selected.state === ServicesDiscoveryModel.STATE_INSTALLED
                                        && !!_selected.manageable
 
@@ -165,17 +170,30 @@ SettingsPage {
     // an add-on package (.vlp) from the computer: VLC's add-ons manager reads it as a repository
     function _addPackage() {
         _notice = ""
-        const path = SettingsCatalog.pickFile(qsTr("Add an add-on package (.vlp)"))
+        const path = SettingsCatalog.pickFile(qsTr("Add an add-on package (.vlp)"), "", false,
+                                              qsTr("VLC add-on packages (*.vlp)"))
         if (path === "")
             return
-        if (!/\.vlp$/i.test(path)) {
-            _notice = qsTr("\"%1\" is not a VLC add-on package (.vlp).").arg(path)
+        if (!_isPackageName(path))
             return
-        }
+        _loadPackage(_fileUrl(path))
+    }
+
+    // VLC reads a package only when its name ends in ".vlp", in lower case (vorepository.c)
+    function _isPackageName(path) {
+        if (/\.vlp$/.test(path))
+            return true
+        _notice = /\.vlp$/i.test(path)
+                ? qsTr("VLC reads add-on packages whose name ends in \".vlp\" in lower case: rename \"%1\".").arg(path)
+                : qsTr("\"%1\" is not a VLC add-on package (.vlp).").arg(path)
+        return false
+    }
+
+    function _fileUrl(path) {
         const encoded = path.replace(/\\/g, "/").split("/")
                             .map((part) => encodeURIComponent(part).replace(/%3A/gi, ":"))
                             .join("/")
-        _loadPackage((encoded.startsWith("/") ? "file://" : "file:///") + encoded)
+        return (encoded.startsWith("/") ? "file://" : "file:///") + encoded
     }
 
     function _detail(type, version, author, state, manageable) {
@@ -308,8 +326,7 @@ SettingsPage {
                     required property int index
                     required property var model
 
-                    readonly property string detail: root._detail(model.type, model.version, model.author,
-                                                                  model.state, !!model.manageable)
+                    detail: root._detail(model.type, model.version, model.author, model.state, !!model.manageable)
 
                     width: ListView.view.width
                     focusPolicy: Qt.NoFocus
@@ -388,8 +405,10 @@ SettingsPage {
                                     && /^file:.*\.vlp$/i.test(String(drag.urls[0]))
                 }
                 onDropped: (drop) => {
-                    root._loadPackage(drop.urls[0])
                     drop.accept(Qt.CopyAction)
+                    root._notice = ""
+                    if (root._isPackageName(decodeURIComponent(String(drop.urls[0]))))
+                        root._loadPackage(drop.urls[0])
                 }
             }
         }
@@ -433,6 +452,11 @@ SettingsPage {
                 onClicked: {
                     if (root._installPending)
                         return
+                    if (root._unsupportedType && root._selected.state === ServicesDiscoveryModel.STATE_NOTINSTALLED) {
+                        root._notice = qsTr("VLC cannot install \"%1\": it has no installer for this kind of add-on.")
+                                           .arg(root._selected.name)
+                        return
+                    }
                     if (!root._canInstall) {
                         root._addPackage()
                         return

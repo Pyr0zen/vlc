@@ -136,23 +136,26 @@ SettingsPage {
             restartRequired: true
         }
 
+        // the log is opened when VLC starts (modules/logger/file.c)
         SettingsOption {
             option: "logfile"
             text: qsTr("Log file")
             kind: "savefile"
             available: root._logging
+            restartRequired: true
         }
 
+        // the file logger adds VLC's error level to this value and writes the messages up to
+        // that level: 0 errors, 1 warnings too, 2 debug messages too; -1 follows "verbose"
         SettingsOption {
             option: "log-verbose"
             text: qsTr("Log details")
             available: root._logging
-            // VLC's levels: a message is written when its level is at most this one
+            restartRequired: true
             choices: [
-                { value: 1, text: qsTr("Errors only") },
-                { value: 2, text: qsTr("Errors and warnings") },
-                { value: 3, text: qsTr("Everything") },
-                { value: 0, text: qsTr("Information only") },
+                { value: 0, text: qsTr("Errors") },
+                { value: 1, text: qsTr("Errors and warnings") },
+                { value: 2, text: qsTr("Everything (debug)") },
                 { value: -1, text: qsTr("Same as VLC's messages") }
             ]
         }
@@ -169,6 +172,7 @@ SettingsPage {
                 option: "logmode"
                 text: qsTr("Log format")
                 available: root._logging
+                restartRequired: true
                 choices: [
                     { value: "text", text: qsTr("Plain text") },
                     { value: "html", text: qsTr("HTML") }
@@ -196,12 +200,16 @@ SettingsPage {
                 description: qsTr("Puts every setting of VLC back to how it was when VLC was installed. Your library, playlists and window layout stay.")
                 keywords: "reset preferences defaults"
 
+                // Figma "Settings - global-1": the red "Reset"
                 Widgets.RdButton {
+                    style: Widgets.RdButton.Style.Destructive
                     text: qsTr("Reset")
                     onClicked: {
                         if (!DialogsProvider.questionDialog(qsTr("Are you sure you want to reset all of VLC's settings?"),
                                                             qsTr("Reset all settings")))
                             return
+                        // a change still on its way to VLC must not land after the reset
+                        RdEffects.discardPending()
                         SettingsCatalog.resetAll()
                         RdEffects.refresh()
                     }

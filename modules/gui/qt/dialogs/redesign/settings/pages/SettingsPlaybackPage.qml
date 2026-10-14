@@ -29,6 +29,9 @@ import VLC.Dialogs
 SettingsPage {
     id: root
 
+    // the disc drives: a folder picker on Windows (a drive, written "D:"), else a device file
+    readonly property string _driveKind: Qt.platform.os === "windows" ? "directory" : ""
+
     function _option(name) {
         return RdEffects.values[RdEffects.optionKey(name)]
     }
@@ -174,10 +177,12 @@ SettingsPage {
     SettingsSection {
         title: qsTr("Files & Discs")
 
+        // a file option holding a device: on Windows a drive ("D:"), picked as a folder
         SettingsOption {
             option: "dvd"
             text: qsTr("Default optical drive")
-            kind: "directory"
+            kind: root._driveKind
+            driveLetter: true
         }
 
         SettingsOption {
@@ -234,7 +239,8 @@ SettingsPage {
             SettingsOption {
                 option: "cd-audio"
                 text: qsTr("Default audio CD drive")
-                kind: "directory"
+                kind: root._driveKind
+                driveLetter: true
             }
         },
 

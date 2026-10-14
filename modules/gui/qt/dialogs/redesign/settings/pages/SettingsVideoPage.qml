@@ -35,6 +35,15 @@ SettingsPage {
 
     readonly property var _pictureValues: ["hue", "brightness", "contrast", "saturation", "gamma"]
 
+    // the built-in ratios, then the user's own ones that are not among them
+    function _ratioChoices(none, builtIn, customOption) {
+        const custom = String(_option(customOption) ?? "").split(",").map((r) => r.trim())
+                       .filter((r) => r !== "" && builtIn.indexOf(r) < 0)
+        return [{ value: "", text: none }].concat(
+                    builtIn.concat(custom.filter((r, i) => custom.indexOf(r) === i))
+                    .map((r) => ({ value: r, text: r })))
+    }
+
     SettingsSection {
         title: qsTr("Output")
 
@@ -95,7 +104,8 @@ SettingsPage {
                     implicitWidth: VLCStyle.dp(320)
                     from: pictureRow.range.min ?? 0
                     to: pictureRow.range.max ?? 1
-                    stepSize: 0
+                    // a hundred steps (the keyboard moves by one); hue in whole degrees
+                    stepSize: pictureRow.modelData.name === "hue" ? 1 : (to - from) / 100
                     value: Number(RdEffects.values[RdEffects.videoKey(pictureRow.modelData.name)] ?? 0)
                     Accessible.name: pictureRow.text
                     onMoved: {
@@ -147,19 +157,17 @@ SettingsPage {
         SettingsOption {
             option: "aspect-ratio"
             text: qsTr("Aspect ratio")
-            choices: [{ value: "", text: qsTr("Automatic") }].concat(
-                         ["16:9", "4:3", "1:1", "16:10", "2.21:1", "2.35:1", "2.39:1", "5:4"]
-                         .concat(String(root._option("custom-aspect-ratios") ?? "").split(",").filter((r) => r !== ""))
-                         .map((r) => ({ value: r, text: r })))
+            choices: root._ratioChoices(qsTr("Automatic"),
+                                        ["16:9", "4:3", "1:1", "16:10", "2.21:1", "2.35:1", "2.39:1", "5:4"],
+                                        "custom-aspect-ratios")
         }
 
         SettingsOption {
             option: "crop"
             text: qsTr("Crop")
-            choices: [{ value: "", text: qsTr("None") }].concat(
-                         ["16:10", "16:9", "4:3", "1.85:1", "2.21:1", "2.35:1", "2.39:1", "5:3", "5:4", "1:1"]
-                         .concat(String(root._option("custom-crop-ratios") ?? "").split(",").filter((r) => r !== ""))
-                         .map((r) => ({ value: r, text: r })))
+            choices: root._ratioChoices(qsTr("None"),
+                                        ["16:10", "16:9", "4:3", "1.85:1", "2.21:1", "2.35:1", "2.39:1", "5:3", "5:4", "1:1"],
+                                        "custom-crop-ratios")
         }
 
         SettingsOption {

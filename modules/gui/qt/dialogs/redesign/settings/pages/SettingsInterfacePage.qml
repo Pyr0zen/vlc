@@ -38,8 +38,10 @@ SettingsPage {
     SettingsSection {
         title: qsTr("Skin")
 
+        // only in builds with VLC's skinnable interface
         SettingsOption {
             option: "intf"
+            shown: SettingsCatalog.exists("skins2-last")
             text: qsTr("Use a custom skin")
             description: qsTr("Replaces this interface with VLC's skinnable one, drawn by a skin file. VLC uses it the next time it starts.")
             kind: "toggle"
@@ -78,10 +80,10 @@ SettingsPage {
             text: qsTr("Keep window above other windows")
         }
 
+        // applies at once (MainCtx reads it again and the window changes its frame)
         SettingsOption {
             option: "qt-titlebar"
             text: qsTr("Show window decorations")
-            restartRequired: true
         }
 
         SettingsOption {
@@ -95,8 +97,11 @@ SettingsPage {
             choices: {
                 const list = [{ value: -1, text: qsTr("Current screen") }]
                 const screens = Qt.application.screens
-                for (let i = 0; i < screens.length; ++i)
-                    list.push({ value: i, text: qsTr("Screen %1 (%2)").arg(i + 1).arg(screens[i].name) })
+                for (let i = 0; i < screens.length; ++i) {
+                    // the monitor's maker and model; the system name ("\\.\DISPLAY1") as a fallback
+                    const model = [screens[i].manufacturer, screens[i].model].filter((t) => !!t).join(" ")
+                    list.push({ value: i, text: qsTr("Screen %1 (%2)").arg(i + 1).arg(model !== "" ? model : screens[i].name) })
+                }
                 return list
             }
         }
@@ -133,8 +138,40 @@ SettingsPage {
         }
 
         SettingsOption {
+            id: fsControllerRow
+
             option: "qt-fs-controller"
             text: qsTr("Show controls in fullscreen")
+        }
+
+        // how near the top or bottom edge the mouse shows a bar in fullscreen (Figma "Values")
+        SettingsRow {
+            text: qsTr("Fullscreen controls sensitivity")
+            description: qsTr("How near the top or bottom edge of the screen the mouse has to be to show the controls in fullscreen. High shows them from further away.")
+            keywords: "qt-fs-sensitivity fullscreen mouse edge"
+            shown: SettingsCatalog.exists("qt-fs-sensitivity")
+            available: fsControllerRow.value !== false
+
+            SettingsSegmented {
+                // distance from the edge, in dp (Player.qml); Medium is the default
+                readonly property var distances: [16, 40, 96]
+
+                implicitWidth: VLCStyle.dp(320)
+                implicitHeight: VLCStyle.dp(36)
+                model: [qsTr("Low"), qsTr("Medium"), qsTr("High")]
+                // a value set elsewhere shows as the nearest choice
+                currentIndex: {
+                    const v = MainCtx.fsSensitivity
+                    let best = 0
+                    for (let i = 1; i < distances.length; ++i) {
+                        if (Math.abs(distances[i] - v) < Math.abs(distances[best] - v))
+                            best = i
+                    }
+                    return best
+                }
+                Accessible.name: qsTr("Fullscreen controls sensitivity")
+                onActivated: (index) => MainCtx.fsSensitivity = distances[index]
+            }
         }
     }
 
@@ -229,18 +266,30 @@ SettingsPage {
                 restartRequired: true
             }
 
-            SettingsOption {
-                option: "qt-interface-scale"
+            // the interface's own scale (kept in its settings, as Ctrl + wheel changes it; VLC's
+            // "qt-interface-scale" is a command-line override that is never saved): live
+            SettingsRow {
                 text: qsTr("Interface size")
-                restartRequired: true
-                choices: [
-                    { value: -1, text: qsTr("Automatic") },
-                    { value: 0.75, text: qsTr("75%") },
-                    { value: 1, text: qsTr("100%") },
-                    { value: 1.25, text: qsTr("125%") },
-                    { value: 1.5, text: qsTr("150%") },
-                    { value: 2, text: qsTr("200%") }
-                ]
+                description: qsTr("Makes the whole interface larger or smaller. Ctrl + mouse wheel changes it too.")
+                keywords: "qt-interface-scale scale zoom size"
+
+                Widgets.RdDropdown {
+                    // MainCtx's scale changes with it (intfScaleFactor)
+                    readonly property real current: (MainCtx.intfScaleFactor, MainCtx.getIntfUserScaleFactor())
+                    readonly property var entries: {
+                        const list = [0.75, 1, 1.25, 1.5, 2]
+                        if (!list.some((v) => Math.abs(v - current) < 0.005))
+                            list.push(current)
+                        return list.sort((a, b) => a - b)
+                    }
+
+                    implicitWidth: VLCStyle.dp(320)
+                    implicitHeight: VLCStyle.dp(36)
+                    model: entries.map((v) => qsTr("%1%").arg(Math.round(v * 100)))
+                    currentIndex: entries.findIndex((v) => Math.abs(v - current) < 0.005)
+                    Accessible.name: qsTr("Interface size")
+                    onActivated: (index) => MainCtx.setIntfUserScaleFactor(entries[index])
+                }
             }
 
             SettingsOption {

@@ -40,17 +40,27 @@ SettingsPage {
     }
 
     readonly property string _aout: String(_option("aout") ?? "")
-    // the device and start volume options of the output in use (VLC's preferences do the same)
-    readonly property string _deviceOption: _aout === "directsound" ? "directx-audio-device"
-                                          : _aout === "waveout" ? "waveout-audio-device"
-                                          : "mmdevice-audio-device"
+    // the device and start volume options of the output in use (VLC's preferences do the same;
+    // VLC 4 has no DirectSound output any more)
+    readonly property string _deviceOption: _aout === "waveout" ? "waveout-audio-device" : "mmdevice-audio-device"
     readonly property string _volumeOption: _aout === "waveout" ? "waveout-volume" : "mmdevice-volume"
     readonly property bool _rememberVolume: _option("volume-save") === true
+    // the effects this build of VLC has (a toggle without its filter would stay on doing nothing)
+    readonly property bool _equalizer: SettingsCatalog.moduleExists("equalizer")
     readonly property int _eqPreset: RdEffects.values.equalizerPreset
+    // bands moved away from the preset's: the dropdown says "Custom"
+    readonly property bool _eqCustom: {
+        if (_eqPreset < 0)
+            return false
+        const bands = RdEffects.values.equalizerBands ?? []
+        return RdEffects.equalizerPresetBands(_eqPreset)
+                .some((gain, i) => Math.abs(gain - Number(bands[i] ?? 0)) > 0.05)
+    }
     // spatial audio: the room spatializer or the headphone virtualization filter; the mode
     // shown is the filter that is on, else the one last chosen here
     readonly property var _spatialModes: ["headphone_channel_mixer", "spatializer"]
-    property string _preferredSpatialMode: "headphone_channel_mixer"
+                                         .filter((m) => SettingsCatalog.moduleExists(m))
+    property string _preferredSpatialMode: _spatialModes.length > 0 ? _spatialModes[0] : ""
     readonly property string _spatialMode: _filterOn("spatializer") ? "spatializer"
                                          : _filterOn("headphone_channel_mixer") ? "headphone_channel_mixer"
                                          : _preferredSpatialMode
@@ -143,7 +153,9 @@ SettingsPage {
                                 if (isNaN(percent))
                                     return
                                 RdEffects.setOption("volume-save", false)
-                                const max = RdEffects.optionRange(root._volumeOption).max ?? 1.25
+                                // the output's own limit (mmdevice 125 %, waveout 200 %)
+                                const max = RdEffects.optionRange(root._volumeOption).max
+                                            ?? (root._volumeOption === "waveout-volume" ? 2 : 1.25)
                                 RdEffects.setOption(root._volumeOption, Math.max(0, Math.min(max, percent / 100)))
                             }
                         }
@@ -203,6 +215,7 @@ SettingsPage {
             text: qsTr("Equalizer")
             description: qsTr("Raises or lowers ten bands of frequencies, from the deep bass to the high treble.")
             keywords: "equalizer eq"
+            shown: root._equalizer
 
             Widgets.RdToggle {
                 checked: root._eqPreset >= 0
@@ -220,18 +233,26 @@ SettingsPage {
             text: qsTr("Equalizer preset")
             description: qsTr("Ready-made settings of the equalizer for a kind of music or place.")
             keywords: "equalizer preset eq"
+            shown: root._equalizer
 
             Widgets.RdDropdown {
+                readonly property var presets: RdEffects.equalizerPresetNames()
+
                 implicitWidth: VLCStyle.dp(320)
                 implicitHeight: VLCStyle.dp(36)
-                model: [qsTr("None")].concat(RdEffects.equalizerPresetNames())
-                currentIndex: root._eqPreset + 1
+                model: [qsTr("None")].concat(presets).concat(root._eqCustom ? [qsTr("Custom")] : [])
+                currentIndex: root._eqCustom ? presets.length + 1 : root._eqPreset + 1
                 Accessible.name: qsTr("Equalizer preset")
-                onActivated: (index) => RdEffects.setEqualizerPreset(index - 1)
+                onActivated: (index) => {
+                    // "Custom" is the bands as they are
+                    if (index <= presets.length)
+                        RdEffects.setEqualizerPreset(index - 1)
+                }
             }
         }
 
         SettingsEqualizer {
+            visible: root._equalizer
             Layout.fillWidth: true
             Layout.preferredHeight: implicitHeight
         }
@@ -240,6 +261,7 @@ SettingsPage {
             text: qsTr("Two-pass")
             description: RdEffects.optionDescription("equalizer-2pass")
             keywords: "equalizer-2pass"
+            shown: root._equalizer
 
             Widgets.RdToggle {
                 checked: RdEffects.values[RdEffects.audioFlagKey("equalizer-2pass")] === true
@@ -252,6 +274,7 @@ SettingsPage {
             text: qsTr("Spatial audio")
             description: qsTr("Makes the sound seem to come from around you: in a room, or through headphones.")
             keywords: "spatializer headphone"
+            shown: root._spatialModes.length > 0
 
             Widgets.RdToggle {
                 checked: root._spatial
@@ -264,6 +287,8 @@ SettingsPage {
             text: qsTr("Spatial audio mode")
             description: qsTr("Headphone virtualization places the speakers around you in headphones; Room adds the echo of a room.")
             keywords: "spatializer headphone"
+            // a choice only when this build has both filters
+            shown: root._spatialModes.length > 1
 
             Widgets.RdDropdown {
                 implicitWidth: VLCStyle.dp(320)
@@ -296,6 +321,7 @@ SettingsPage {
             text: qsTr("Pitch shift")
             description: RdEffects.optionDescription("pitch-shift")
             keywords: "pitch-shift scaletempo_pitch semitones"
+            shown: SettingsCatalog.moduleExists("scaletempo_pitch")
 
             Widgets.RdValueBox {
                 readonly property real pitch: root._filterOn("scaletempo_pitch")
@@ -433,6 +459,7 @@ SettingsPage {
         property string module
 
         keywords: module
+        shown: SettingsCatalog.moduleExists(module)
 
         Widgets.RdToggle {
             checked: RdEffects.values[RdEffects.audioFilterKey(filterRow.module)] === true

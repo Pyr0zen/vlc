@@ -73,6 +73,10 @@ SettingsPage {
                         if (c.value !== "any" && c.value !== "none" && c.value !== "")
                             list.push({ device: c.value, text: c.text })
                     }
+                    // a device VLC does not list (set elsewhere) is kept, as SettingsOption does
+                    if (_device !== "any" && _device !== "none" && _device !== ""
+                            && !list.some((e) => e.device === _device))
+                        list.push({ device: _device, text: _device })
                     list.push({ device: "", text: qsTr("Off") })
                     return list
                 }
@@ -108,13 +112,17 @@ SettingsPage {
                 readonly property int _quality: Number(root._option("postproc-q") ?? 6)
                 readonly property var levels: [qsTr("Off"), qsTr("Lowest"), qsTr("Low"), qsTr("Medium"),
                                                qsTr("High"), qsTr("Very high"), qsTr("Highest")]
+                // the filter on with a quality outside 1-6 (0: it does nothing) shows that value
+                readonly property bool _raw: _on && (_quality < 1 || _quality > 6)
 
                 implicitWidth: VLCStyle.dp(320)
                 implicitHeight: VLCStyle.dp(36)
-                model: levels
-                currentIndex: _on ? Math.max(1, Math.min(6, _quality)) : 0
+                model: _raw ? levels.concat([String(_quality)]) : levels
+                currentIndex: _raw ? levels.length : (_on ? _quality : 0)
                 Accessible.name: qsTr("Video post-processing")
                 onActivated: (index) => {
+                    if (index >= levels.length)
+                        return
                     // also the running filter's quality
                     if (index > 0)
                         RdEffects.setVideoValue("postproc-q", index)
@@ -151,11 +159,16 @@ SettingsPage {
             text: qsTr("Drop frames when the system can't keep up")
         }
 
-        // Windows: VLC raises its process priority when it starts
+        // Windows: VLC's process priority, raised at once and when VLC starts (the core reads
+        // the option before the configuration file, so SettingsCatalog applies the saved value)
         SettingsOption {
             option: "high-priority"
             text: qsTr("Give VLC high priority")
-            restartRequired: true
+
+            onValueChanged: {
+                if (typeof value === "boolean")
+                    SettingsCatalog.setHighPriority(value)
+            }
         }
     }
 

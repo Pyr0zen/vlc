@@ -159,9 +159,11 @@ SettingsPage {
     SettingsSection {
         title: qsTr("Remotes")
 
+        // only in builds with VLC's web interface (its password option comes with it)
         SettingsInterfaceToggle {
             id: webRemoteRow
 
+            shown: SettingsCatalog.exists("http-password")
             module: "http"
             text: qsTr("Web remote control")
             description: qsTr("Lets a web browser on this computer or your network control VLC. VLC uses this setting the next time it starts.")
@@ -222,7 +224,13 @@ SettingsPage {
             model: [qsTr("Volume"), qsTr("Seek"), qsTr("Nothing")]
             currentIndex: values.indexOf(wheelRow.mode === 3 ? 2 : wheelRow.mode)
             Accessible.name: wheelRow.text
-            onActivated: (index) => RdEffects.setOption(wheelRow.option, values[index])
+            // Seek keeps the reversed direction of "Reverse scroll direction" (mode 3)
+            onActivated: (index) => {
+                const reversed = wheelRow.mode === 3 || root._yWheel === 3 || root._xWheel === 3
+                const mode = values[index] === 2 && reversed ? 3 : values[index]
+                if (mode !== wheelRow.mode)
+                    RdEffects.setOption(wheelRow.option, mode)
+            }
         }
     }
 }

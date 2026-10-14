@@ -208,6 +208,7 @@ SettingsPage {
             text: qsTr("Shadow")
             description: RdEffects.optionDescription("freetype-shadow-opacity")
             keywords: "freetype-shadow-opacity"
+            shown: SettingsCatalog.exists("freetype-shadow-opacity")
 
             Widgets.RdToggle {
                 checked: root._shadow
@@ -237,6 +238,7 @@ SettingsPage {
             text: qsTr("Background")
             description: RdEffects.optionDescription("freetype-background-opacity")
             keywords: "freetype-background-opacity box"
+            shown: SettingsCatalog.exists("freetype-background-opacity")
 
             Widgets.RdDropdown {
                 implicitWidth: VLCStyle.dp(320)
@@ -254,15 +256,17 @@ SettingsPage {
             available: root._background
         }
 
+        // from 1 %: at 0 the box is off (Background "None"), and the row would turn itself off
+        // under the slider being dragged
         SettingsOption {
             option: "freetype-background-opacity"
             text: qsTr("Background opacity")
             kind: "slider"
             valueScale: 2.55
-            from: 0
+            from: 1
             to: 100
             step: 1
-            labels: [qsTr("0%"), qsTr("50%"), qsTr("100%")]
+            labels: [qsTr("1%"), qsTr("50%"), qsTr("100%")]
             available: root._background
         }
 
