@@ -261,8 +261,10 @@ QScrollBar::add-page, QScrollBar::sub-page {
 
 QString makeStyleSheet( const SystemPalette& p )
 {
-    /* opaque dialog window: Dark/BG/A3 Transparent (#191919 95 %) seen over nothing */
-    const QColor bg = p.get_rdBgA4();
+    /* opaque dialog window: BG/A3 Transparent seen over nothing (Dark #191919, Light #D5D5D5),
+     * like the QML dialogs */
+    QColor bg = p.get_rdBgA3Transparent();
+    bg.setAlpha( 255 );
 
     const std::pair<const char*, QColor> colors[] = {
         { "{bg}", bg },
