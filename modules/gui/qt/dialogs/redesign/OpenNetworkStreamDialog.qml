@@ -18,8 +18,10 @@
 
 // redesign (W6.4, video 13:07-13:20, Figma "Open network stream" 6216:13614):
 // modal dialog over the dimmed window. "Network URL" takes one link per line;
-// "Playlist Name (optional)" saves the links as a named media library playlist
-// instead of playing them (shown only when the media library is available).
+// "Playlist Name (optional)" saves links to playlists (m3u, pls ...) as stream lists
+// under the library's Network and shows them there (RdStreamListSaver, P6-14), and the
+// other links as a media library playlist, instead of playing them (shown only when the
+// media library is available).
 // Opened by DialogsProvider.openNetDialog() through showOpenNetworkStreamDialog().
 import QtQuick
 import QtQuick.Templates as T
@@ -82,9 +84,30 @@ T.Popup {
         if (!_canSave)
             return
 
-        DialogsProvider.openNetworkStreams(urlArea.text,
-                                           _showPlaylistName ? nameField.text.trim() : "")
+        // with a Playlist Name, links to playlists become stream lists under Network, shown in
+        // the library (video 13:17-13:20, P6-14); the other links are saved as a media library
+        // playlist; without a name they play
+        const name = _showPlaylistName ? nameField.text.trim() : ""
+        const saver = _streamListSaver.item
+        if (name !== "" && saver) {
+            const links = urlArea.text.split("\n").map((u) => u.trim()).filter((u) => u !== "")
+            const lists = links.filter((u) => saver.isPlaylistUrl(u))
+            const others = links.filter((u) => !saver.isPlaylistUrl(u))
+            if (others.length > 0)
+                DialogsProvider.openNetworkStreams(others.join("\n"), name)
+            saver.save(name, lists)
+        } else {
+            DialogsProvider.openNetworkStreams(urlArea.text, name)
+        }
         close()
+    }
+
+    // the library's stream lists (VLC.MediaLibrary is only there with the media library); not
+    // a child of the dialog's content column
+    readonly property Loader _streamListSaver: Loader {
+        // loaded while the dialog shows
+        active: root._showPlaylistName && root.visible
+        source: "qrc:///qt/qml/VLC/MediaLibrary/RdStreamListSaver.qml"
     }
 
     parent: T.Overlay.overlay

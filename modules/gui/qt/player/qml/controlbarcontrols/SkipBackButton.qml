@@ -28,9 +28,14 @@ Widgets.IconToolButton {
 
     enabled: Player.seekable
 
+    // redesign: 15 s back (Figma "Player - Music" and the Customize Player item "Backward 15s"),
+    // relative to where the player is, so quick clicks add up
+    readonly property int jumpSeconds: 15
+
     text: VLCIcons.skip_back
-    onClicked: Player.jumpBwd()
-    description: qsTr("Step back")
+    rdIcon: "backward-15-sec"
+    onClicked: Player.jumpSeconds(-jumpSeconds)
+    description: qsTr("Back %1 second", "Back %1 seconds", jumpSeconds).arg(jumpSeconds)
 
     AccessibleCompat.id: "skipBackButton"
 }

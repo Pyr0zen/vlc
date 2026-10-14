@@ -66,6 +66,71 @@ FocusScope {
 
     property bool _keyPressed: false
 
+    // redesign: the compact library docked on the left between the bars (video 11:37-11:59,
+    // P5-23 / P5-25 / F-16; Figma Player.png): the top bar's sidebar toggle and folder chip open
+    // and close it with the Figma smart animate "slow" (208 ms), the video area sits to its
+    // right. Without the media library the toggle opens VLC's own library view instead.
+    readonly property bool _libraryShown: MainCtx.mediaLibraryAvailable && RdPanels.libraryOpen
+                                          && !RdPanels.uiHidden
+    // 0 closed, 1 open
+    property real _libraryProgress: _libraryShown ? 1 : 0
+    Behavior on _libraryProgress {
+        NumberAnimation {
+            duration: VLCStyle.rd_librarySlideDuration
+            easing.type: Easing.OutCubic
+        }
+    }
+    readonly property real _libraryFullWidth: VLCStyle.rd_libraryRailWidth + VLCStyle.rd_libraryPanelWidth
+    readonly property real _libraryWidth: _libraryFullWidth * _libraryProgress
+    // left edge of the video area. The library slides over the video, which takes its new size
+    // once, when the opening ends or the closing starts: the native video surface is resized
+    // once instead of on every frame of the slide (performance first)
+    readonly property real _videoInset: (_libraryShown && _libraryProgress >= 1) ? _libraryFullWidth : 0
+    // the library is built on its first opening and then kept, so it reopens within a frame
+    property bool _libraryActivated: false
+    // built in the background when the player starts with it open (the player shows first)
+    property bool _libraryAsync: false
+
+    // open already when the player comes back from the full library
+    Component.onCompleted: {
+        if (_libraryShown) {
+            _libraryAsync = true
+            _libraryActivated = true
+        }
+    }
+
+    on_LibraryShownChanged: {
+        if (_libraryShown) {
+            // opened by the user: built at once (the folder chip reveals in it right away)
+            _libraryAsync = false
+            _libraryActivated = true
+        } else if (librarySidebar.activeFocus) {
+            // keys must not go on to the hidden library
+            topBar.forceActiveFocus()
+        }
+        _updatePanelLock()
+    }
+
+    // sidebar toggle (reveal = false) and folder chip (reveal = true): open or close the compact
+    // library; the folder chip opens it on the folder of the playing file (11:24-11:31)
+    function toggleLibrary(reveal) {
+        if (!MainCtx.mediaLibraryAvailable) {
+            if (MainCtx.hasEmbededVideo && !MainCtx.canShowVideoPIP)
+                MainPlaylistController.stop()
+            MainCtx.playerView = false
+            return
+        }
+
+        if (RdPanels.libraryOpen) {
+            RdPanels.libraryOpen = false
+            return
+        }
+
+        RdPanels.libraryOpen = true
+        if (reveal && librarySidebar.item)
+            librarySidebar.item.revealMrl(Player.url.toString())
+    }
+
     // redesign (Decision 30): in a window both bars show while the mouse moves over the player and
     // fade out a few seconds after it stops; in fullscreen each bar shows while the mouse is near
     // it (video 3:46-3:55). Menus, panels, keyboard use and audio mode show both bars (in
@@ -78,11 +143,14 @@ FocusScope {
                                           && (_windowed || !MainCtx.hasEmbededVideo
                                               || playerToolbarVisibilityFSM.keyboardShown)
     // Hide UI (W4.10, Ctrl + \) hides both bars whatever the mouse does
+    // (the compact library sits between both bars and keeps them, also in fullscreen)
     readonly property bool _topBarVisible: !RdPanels.uiHidden
                                            && (_controlsUnderVideo || _showBothBars || _mouseNearTop
+                                               || _libraryShown
                                                || (playerToolbarVisibilityFSM.isLocked && !_mouseNearBottom))
     readonly property bool _controlBarVisible: !RdPanels.uiHidden
                                                && (_controlsUnderVideo || _showBothBars || _mouseNearBottom
+                                                   || _libraryShown
                                                    || (playerToolbarVisibilityFSM.isLocked && !_mouseNearTop))
 
     // cursor height inside the player, -1 outside, from mouse events (no polling): the hover
@@ -178,6 +246,9 @@ FocusScope {
     // Events
 
     // keys go to VLC's hotkeys, except while a modal redesign popup is open (RdPanels.modalCount).
+    // In the compact library a row with keyboard focus or the search field still gets its keys
+    // (InterfaceWindowHandler::applyKeyEvent), a row clicked with the mouse does not: Space
+    // pauses as everywhere else in the player.
     // _leaving keeps the binding off while the view is destroyed: a menu released during the
     // destruction would otherwise turn the hotkeys back on for the library
     property bool _leaving: false
@@ -194,9 +265,27 @@ FocusScope {
     }
 
     Keys.priority: Keys.AfterItem
+
+    // Ctrl+F searches the compact library while it is shown: the shortcut override comes
+    // before VLC's global Ctrl+F "Open Folder" shortcut and before the hotkeys (the key press
+    // itself may go to the hotkeys); with the library closed Ctrl+F stays Open Folder
+    Keys.onShortcutOverride: (event) => {
+        if (rootPlayer._libraryShown && librarySidebar.item && KeyHelper.matchSearch(event)) {
+            event.accepted = true
+            librarySidebar.item.focusSearch()
+        }
+    }
+
     Keys.onPressed: (event) => {
         if (event.accepted)
             return
+
+        // Ctrl+F reaching the player (focus in the library search): stays there
+        if (rootPlayer._libraryShown && librarySidebar.item && KeyHelper.matchSearch(event)) {
+            librarySidebar.item.focusSearch()
+            event.accepted = true
+            return
+        }
 
         _keyPressed = true
 
@@ -315,6 +404,8 @@ FocusScope {
 
         anchors {
             left: parent.left
+            // the video area starts right of the compact library
+            leftMargin: rootPlayer._videoInset
             right: parent.right
             top: (MainCtx.hasEmbededVideo && rootPlayer._controlsUnderVideo) ? topBar.bottom : parent.top
             bottom: (MainCtx.hasEmbededVideo && rootPlayer._controlsUnderVideo) ? controlBar.top : parent.bottom
@@ -549,7 +640,8 @@ FocusScope {
 
                     postprocess: true
                     tint: bgtheme.palette.isDark ? "black" : "white"
-                    tintStrength: 0.5
+                    // redesign: Figma "Player - Music" blurs the artwork without a tint
+                    tintStrength: 0
                     backgroundColor: bgtheme.bg.primary
 
                     readonly property ColorContext colorContext: ColorContext {
@@ -742,15 +834,23 @@ FocusScope {
 
                         Item {
                             id: coverItem
-                            Layout.preferredHeight: rootPlayer.height / sizeConstant
+                            // no wider than the pane it sits in (a narrow window, lyrics)
+                            Layout.preferredHeight: Math.min(rootPlayer.height / sizeConstant,
+                                                             parent.parent.width - 2 * VLCStyle.margin_large)
                             Layout.preferredWidth: cover.paintedWidth
                             Layout.maximumHeight: centerContent.height
                             Layout.alignment: Qt.AlignHCenter
 
-                            readonly property real sizeConstant: 2.7182
+                            // redesign: Figma "Player - Music": the cover is 737 high in a 1080 high window
+                            readonly property real sizeConstant: 1080 / 737
 
+                            // the texture of the cover and of the blurred background, and the cover
+                            // size; shown through roundedCover below (falls back to itself where
+                            // rounding is not available)
                             Image {
                                 id: cover
+
+                                visible: roundedCover.effectiveRadius <= 0
 
                                 //source aspect ratio
                                 readonly property real sar: paintedWidth / paintedHeight
@@ -806,69 +906,64 @@ FocusScope {
                                                                                                                   }
                                                                                                               })
                                 }
+                            }
 
-                                Widgets.RoundedRectangleShadow {
-                                    color: Qt.rgba(0, 0, 0, .18)
-                                    yOffset: VLCStyle.dp(24, VLCStyle.scale)
-                                    blurRadius: VLCStyle.dp(54, VLCStyle.scale)
-                                }
+                            // redesign: the cover with rounded corners (Figma "Player - Music":
+                            // radius 20, P6-04), drawn from the cover's own texture
+                            Widgets.ImageExt {
+                                id: roundedCover
 
+                                anchors.fill: cover
+                                textureProviderItem: cover
+                                fillMode: Image.PreserveAspectFit
+                                radius: VLCStyle.rd_radius_cover
+
+                                // Figma: one faint glow, #FFFFFF 3 %, no offset, blur 90.5
                                 Widgets.RoundedRectangleShadow {
-                                    color: Qt.rgba(0, 0, 0, .22)
-                                    yOffset: VLCStyle.dp(5, VLCStyle.scale)
-                                    blurRadius: VLCStyle.dp(14, VLCStyle.scale)
+                                    color: VLCStyle.palette.rdCoverGlow
+                                    blurRadius: VLCStyle.dp(90.5, VLCStyle.scale)
                                 }
                             }
                         }
 
-                        Widgets.SubtitleLabel {
-                            id: albumLabel
+                        // redesign: "title - artist" under the cover (Figma "Player - Music":
+                        // Inter 500 24, FG/A1; P6-04, IB-23)
+                        Text {
+                            id: captionLabel
 
                             Layout.alignment: Qt.AlignHCenter
-                            Layout.topMargin: VLCStyle.margin_xxlarge
+                            // Figma: the space between the bars is split in three equal gaps:
+                            // above the cover, between cover and caption, below the caption
+                            Layout.topMargin: Math.max(VLCStyle.margin_small,
+                                                       (centerContent.height + 2 * VLCStyle.margin_xsmall
+                                                        - coverItem.Layout.preferredHeight - implicitHeight) / 3)
+                            // the column's pane: the whole view, or the right pane with lyrics
+                            Layout.maximumWidth: parent.parent.width - 2 * VLCStyle.margin_large
 
                             Binding on visible {
                                 delayed: true
-                                when: albumLabel.componentCompleted
-                                value: centerContent.height > (albumLabel.y + albumLabel.height)
+                                when: captionLabel.componentCompleted
+                                value: captionLabel.text !== "" && centerContent.height > (captionLabel.y + captionLabel.height)
                             }
-
-                            text: Player.album
-                            font.pixelSize: VLCStyle.fontSize_xxlarge
-                            horizontalAlignment: Text.AlignHCenter
-                            color: centerTheme.fg.primary
-                            Accessible.description: qsTr("album")
 
                             property bool componentCompleted: false
 
                             Component.onCompleted: {
                                 componentCompleted = true
                             }
-                        }
 
-                        Widgets.MenuLabel {
-                            id: artistLabel
+                            readonly property string _title: Player.title !== "" ? Player.title : Player.name
 
-                            Layout.alignment: Qt.AlignHCenter
-                            Layout.topMargin: VLCStyle.margin_small
-
-                            Binding on visible {
-                                delayed: true
-                                when: artistLabel.componentCompleted
-                                value: centerContent.height > (artistLabel.y + artistLabel.height)
-                            }
-
-                            text: Player.artist
-                            font.weight: Font.Light
+                            text: Player.artist !== "" ? qsTr("%1 - %2").arg(_title).arg(Player.artist) : _title
+                            elide: Text.ElideRight
                             horizontalAlignment: Text.AlignHCenter
-                            color: centerTheme.fg.primary
-                            Accessible.description: qsTr("artist")
+                            font.family: VLCStyle.rd_fontFamily
+                            font.pixelSize: VLCStyle.rd_fontSize_title
+                            font.weight: Font.Medium
+                            color: VLCStyle.palette.rdFgA1
 
-                            property bool componentCompleted: false
-
-                            Component.onCompleted: {
-                                componentCompleted = true
-                            }
+                            Accessible.role: Accessible.StaticText
+                            Accessible.name: text
                         }
 
                         Widgets.SubtitleLabel {
@@ -1096,6 +1191,9 @@ FocusScope {
         id: videoFrame
 
         anchors.fill: parent
+        // next to the compact library the opening starts at the library's edge (Figma
+        // Player.png: no frame between the library and the video)
+        anchors.leftMargin: rootPlayer._videoInset > 0 ? rootPlayer._videoInset - inset : 0
         visible: MainCtx.hasEmbededVideo && (MainCtx.intfMainWindow.visibility !== Window.FullScreen)
         enabled: false
 
@@ -1149,6 +1247,34 @@ FocusScope {
         }
     }
 
+    // redesign: the compact library (RdLibrarySidebar, 427 px: rail 50 + panel 377) between the
+    // top bar and the control bar; it slides in from the left edge over the video (opaque: the
+    // video is a native surface under the scene)
+    Item {
+        id: libraryHost
+
+        anchors.left: parent.left
+        anchors.top: topBar.bottom
+        anchors.bottom: controlBar.top
+        width: rootPlayer._libraryWidth
+        visible: width > 0
+        clip: rootPlayer._libraryProgress < 1
+        z: 1
+
+        Loader {
+            id: librarySidebar
+
+            x: libraryHost.width - width
+            width: rootPlayer._libraryFullWidth
+            height: libraryHost.height
+
+            enabled: rootPlayer._libraryShown
+            active: rootPlayer._libraryActivated
+            asynchronous: rootPlayer._libraryAsync
+            source: "qrc:///qt/qml/VLC/MediaLibrary/RdLibrarySidebar.qml"
+        }
+    }
+
     TopBar {
         id: topBar
 
@@ -1170,6 +1296,7 @@ FocusScope {
         title: Player.title !== "" ? Player.title : Player.name
 
         pinControls: MainCtx.pinVideoControls
+        libraryOpen: rootPlayer._libraryShown
 
         showCSD: MainCtx.clientSideDecoration && (MainCtx.intfMainWindow.visibility !== Window.FullScreen)
         showToolbar: MainCtx.hasToolbarMenu && (MainCtx.intfMainWindow.visibility !== Window.FullScreen)
@@ -1213,6 +1340,9 @@ FocusScope {
             }
             MainCtx.playerView = false
         }
+
+        onLibraryToggleRequested: rootPlayer.toggleLibrary(false)
+        onFolderRequested: rootPlayer.toggleLibrary(true)
 
         // redesign: no acrylic background behind the top bar, it paints its own background
         // (BG/A3 in Dark, BG/A3 Transparent in Light, see TopBar.qml)
@@ -1670,16 +1800,38 @@ FocusScope {
         }
     }
 
+    // an open panel or the compact library keeps both bars visible (F-06, Decision 30)
     property bool _panelLocked: false
+
+    function _updatePanelLock() {
+        const open = RdPanels.current !== "" || rootPlayer._libraryShown
+        if (open === rootPlayer._panelLocked)
+            return
+        rootPlayer._panelLocked = open
+        // a hidden toolbar FSM ignores lock(): show it first so lock and unlock stay balanced
+        if (open && !playerToolbarVisibilityFSM.isVisible)
+            playerToolbarVisibilityFSM.askShow()
+        rootPlayer.lockUnlockAutoHide(open)
+    }
 
     Connections {
         target: RdPanels
 
         function onCurrentChanged() {
-            const open = RdPanels.current !== ""
-            if (open !== rootPlayer._panelLocked) {
-                rootPlayer._panelLocked = open
-                rootPlayer.lockUnlockAutoHide(open)
+            rootPlayer._updatePanelLock()
+        }
+    }
+
+    // the compact library stays open after a visit to the full library: lock the bars once the
+    // toolbar FSM runs
+    Connections {
+        target: playerToolbarVisibilityFSM
+
+        function onStartedChanged() {
+            if (playerToolbarVisibilityFSM.started) {
+                // a lock() before the start went nowhere: lock again
+                rootPlayer._panelLocked = false
+                rootPlayer._updatePanelLock()
             }
         }
     }
@@ -1707,11 +1859,14 @@ FocusScope {
         id: resumeToast
 
         anchors.horizontalCenter: parent.horizontalCenter
+        // centered over the video area, right of the compact library
+        anchors.horizontalCenterOffset: rootPlayer._videoInset / 2
         anchors.bottom: controlBar.top
         anchors.bottomMargin: VLCStyle.margin_small
         z: 2
 
-        maxWidth: Math.min(VLCStyle.dp(552, VLCStyle.scale), rootPlayer.width - 2 * VLCStyle.margin_normal)
+        maxWidth: Math.min(VLCStyle.dp(552, VLCStyle.scale),
+                           rootPlayer.width - rootPlayer._videoInset - 2 * VLCStyle.margin_normal)
 
         Navigation.parentItem: rootPlayer
 
@@ -1744,11 +1899,19 @@ FocusScope {
 
     MouseArea {
         anchors.fill: parent
-        acceptedButtons: Qt.BackButton
+        acceptedButtons: Qt.BackButton | Qt.ForwardButton
         propagateComposedEvents: true
         cursorShape: undefined
-        onClicked: {
-            MainCtx.playerView = false
+        // with the compact library open the mouse buttons go back and forward in the library
+        onClicked: (mouse) => {
+            if (rootPlayer._libraryShown && librarySidebar.item) {
+                if (mouse.button === Qt.BackButton)
+                    librarySidebar.item.goBack()
+                else
+                    librarySidebar.item.goForward()
+            } else if (mouse.button === Qt.BackButton) {
+                MainCtx.playerView = false
+            }
         }
     }
 

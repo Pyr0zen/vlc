@@ -117,8 +117,11 @@ RdSidePanel {
                 width: parent.width
                 height: VLCStyle.dp(68)
 
-                text: qsTr("%n item(s)", "", queueModel.count)
-                      + (queueModel.duration.valid() ? " - " + root.durationText(queueModel.duration) : "")
+                readonly property string countText: qsTr("%1 item", "%1 items", queueModel.count).arg(queueModel.count)
+
+                text: queueModel.duration.valid()
+                      ? qsTr("%1 - %2").arg(countText).arg(root.durationText(queueModel.duration))
+                      : countText
 
                 HeaderButton {
                     rdIcon: "sort"
@@ -171,12 +174,15 @@ RdSidePanel {
 
                 model: queueModel
 
-                // a row of the queue moved, library items or files dropped in
+                // a row of the queue moved, library items or files dropped in; rows of the
+                // redesigned library carry their URLs in rdDragUrls (video 11:44-11:49, W5.9)
                 isDropAcceptableFunc: function(drag, index) {
                     if (drag.source === dragItem)
                         return Helpers.itemsMovable(dragItem.indexes, index)
                     else if (Helpers.isValidInstanceOf(drag.source, Widgets.DragItem))
                         return true
+                    else if (drag.source && drag.source.rdDragUrls)
+                        return drag.source.rdDragUrls.length > 0
                     return drag.hasUrls
                 }
 
@@ -194,6 +200,8 @@ RdSidePanel {
                             }
                             MainPlaylistController.insert(index, inputItems, false)
                         })
+                    } else if (source && source.rdDragUrls) {
+                        MainPlaylistController.insert(index, source.rdDragUrls, false)
                     } else if (drop.hasUrls) {
                         const urls = []
                         for (let i in drop.urls)
@@ -302,7 +310,8 @@ RdSidePanel {
             spacing: 0
 
             Header {
-                text: qsTr("%n Bookmark(s)", "", bookmarkLoader.item ? bookmarkLoader.item.count : 0)
+                text: qsTr("%1 Bookmark", "%1 Bookmarks", bookmarkLoader.item ? bookmarkLoader.item.count : 0)
+                          .arg(bookmarkLoader.item ? bookmarkLoader.item.count : 0)
 
                 // Ctrl+B and the instant bookmark are new features (BUILD_PLAN.md W4.8b); until then
                 // both buttons open VLC's bookmark editor

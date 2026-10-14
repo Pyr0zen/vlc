@@ -342,6 +342,7 @@ QtObject {
     readonly property int rd_fontSize_label: MainCtx.dp(14, scale)      // Inter 400 14 / 16.9
     readonly property int rd_fontSize_time: MainCtx.dp(15, scale)       // time labels 400 15 / 18.2
     readonly property int rd_fontSize_header: MainCtx.dp(16, scale)     // section headers 500 16
+    readonly property int rd_fontSize_section: MainCtx.dp(20, scale)    // full library Home section titles 400 20
     readonly property int rd_fontSize_toggle: MainCtx.dp(12, scale)     // toggle ON/OFF 400 12
     readonly property int rd_fontSize_title: MainCtx.dp(24, scale)      // onboarding titles
     readonly property int rd_fontSize_display: MainCtx.dp(32, scale)    // "Welcome to VLC!"
@@ -352,6 +353,8 @@ QtObject {
     readonly property int rd_radius_large: MainCtx.dp(14, scale)        // dialogs, mini player, thumbnail card
     readonly property int rd_radius_toast: MainCtx.dp(16, scale)        // resume toast
     readonly property int rd_radius_video: MainCtx.dp(19, scale)        // inset video area
+    readonly property int rd_radius_cover: MainCtx.dp(20, scale)        // music player cover (Figma "Player - Music")
+    readonly property int rd_radius_card: MainCtx.dp(12, scale)         // full library card picture (Figma Player-3)
     readonly property int rd_topBarHeight: MainCtx.dp(40, scale)
     readonly property int rd_controlBarHeight: MainCtx.dp(54, scale)
     readonly property int rd_controlBarSpacing: MainCtx.dp(20, scale)
@@ -374,7 +377,9 @@ QtObject {
     readonly property int rd_sidePanelWidth: MainCtx.dp(400, scale)
     readonly property int rd_sidePanelTabHeight: MainCtx.dp(50, scale)
     readonly property int rd_libraryRailWidth: MainCtx.dp(50, scale)
+    readonly property int rd_libraryRailFullWidth: MainCtx.dp(217, scale)  // full library rail (Figma Player-1..5)
     readonly property int rd_libraryPanelWidth: MainCtx.dp(377, scale)
+    readonly property int rd_librarySlideDuration: 208                   // compact library open / close, Figma smart animate "slow"
     readonly property int rd_menuRowHeight: MainCtx.dp(48, scale)
     readonly property int rd_menuWidth: MainCtx.dp(265, scale)
     readonly property int rd_mainMenuWidth: MainCtx.dp(375, scale)

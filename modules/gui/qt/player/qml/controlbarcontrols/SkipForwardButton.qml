@@ -28,9 +28,14 @@ Widgets.IconToolButton {
 
     enabled: Player.seekable
 
+    // redesign: 15 s forward (Figma "Player - Music" and the Customize Player item "Forward
+    // 15s"), relative to where the player is, so quick clicks add up
+    readonly property int jumpSeconds: 15
+
     text: VLCIcons.skip_for
-    onClicked: Player.jumpFwd()
-    description: qsTr("Step forward")
+    rdIcon: "forward-15-sec"
+    onClicked: Player.jumpSeconds(jumpSeconds)
+    description: qsTr("Forward %1 second", "Forward %1 seconds", jumpSeconds).arg(jumpSeconds)
 
     AccessibleCompat.id: "skipForwardButton"
 }
