@@ -219,29 +219,6 @@ SettingsPage {
                     { value: 104857600, text: qsTr("Large (100 MB)") }
                 ]
             }
-
-            SettingsOption {
-                option: "start-paused"
-                text: qsTr("Start paused")
-            }
-
-            SettingsOption {
-                option: "restore-playback-states"
-                text: qsTr("Remember the speed and tracks of each file")
-            }
-
-            SettingsOption {
-                option: "video-track"
-                text: qsTr("Default video track")
-                choices: root._trackChoices()
-            }
-
-            SettingsOption {
-                option: "cd-audio"
-                text: qsTr("Default audio CD drive")
-                kind: "dropdown"
-                choices: root._driveChoices
-            }
         },
 
         SettingsMoreOptions {

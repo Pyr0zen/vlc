@@ -92,24 +92,28 @@ SettingsPage {
 
         SettingsOption {
             option: "extrashort-jump-size"
+            minimumLineHeight: VLCStyle.dp(38)
             text: qsTr("Very short skip")
             unit: qsTr("s")
         }
 
         SettingsOption {
             option: "short-jump-size"
+            minimumLineHeight: VLCStyle.dp(38)
             text: qsTr("Short skip")
             unit: qsTr("s")
         }
 
         SettingsOption {
             option: "medium-jump-size"
+            minimumLineHeight: VLCStyle.dp(38)
             text: qsTr("Medium skip")
             unit: qsTr("s")
         }
 
         SettingsOption {
             option: "long-jump-size"
+            minimumLineHeight: VLCStyle.dp(38)
             text: qsTr("Long skip")
             unit: qsTr("s")
         }
@@ -176,6 +180,7 @@ SettingsPage {
 
         SettingsOption {
             option: "http-port"
+            minimumLineHeight: VLCStyle.dp(38)
             text: qsTr("Port")
             available: root._webRemote
         }

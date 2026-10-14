@@ -54,7 +54,7 @@ const QSet<QString>& curatedOptions()
 {
     static const QSet<QString> names {
         // General
-        "interact", "qt-updates-notif", "qt-updates-days", "file-logging", "logfile", "log-verbose",
+        "interact", "qt-updates-notif", "file-logging", "logfile", "log-verbose",
         "qt-error-dialogs", "logmode", "stats", "syslog", "syslog-debug", "syslog-ident",
         "syslog-facility", "qt-verbose", "qt-accent-color",
         // Interface
@@ -63,8 +63,6 @@ const QSet<QString>& curatedOptions()
         "mouse-hide-timeout", "qt-fs-controller", "qt-system-tray", "qt-start-minimized",
         "qt-notification", "playlist-tree", "qt-opacity", "qt-pause-minimized", "qt-auto-raise",
         "qt-bgcone", "qt-embedded-open", "qt-icon-change", "qt-fs-opacity", "qt-fs-sensitivity",
-        "qt-menubar", "qt-interface-scale", "qt-close-to-system-tray", "qt-smooth-scrolling",
-        "qt-backdrop-blur", "qt-pip-mode", "qt-safe-area",
         // Privacy
         "save-recentplay", "restore-playback-pos", "metadata-network-access", "lastfm-username",
         "lastfm-password", "scrobbler-url", "qt-privacy-ask",
@@ -75,22 +73,20 @@ const QSet<QString>& curatedOptions()
         // Playback
         "playlist-autostart", "rate", "playlist-cork", "preferred-resolution", "menu-language",
         "audio-track", "sub-track", "loop", "repeat", "random", "play-and-stop", "play-and-exit",
-        "play-and-pause", "input-fast-seek", "dvd", "cd-audio", "avi-index", "mkv-preload-local-dir",
-        "input-timeshift-path", "input-timeshift-granularity", "start-paused",
-        "restore-playback-states", "video-track",
+        "play-and-pause", "input-fast-seek", "dvd", "avi-index", "mkv-preload-local-dir",
+        "input-timeshift-path", "input-timeshift-granularity",
         // Video
         "video", "fullscreen", "disable-screensaver", "video-wallpaper", "deinterlace",
         "deinterlace-mode", "aspect-ratio", "crop", "autoscale", "fit", "align", "snapshot-path",
         "snapshot-prefix", "snapshot-format", "snapshot-width", "snapshot-height",
         "snapshot-sequential", "snapshot-preview", "custom-aspect-ratios", "custom-crop-ratios",
-        "monitor-par", "vout", "video-filter", "zoom", "grayscale", "video-deco",
+        "monitor-par",
         // Audio
-        "audio", "aout", "mmdevice-audio-device", "directx-audio-device", "waveout-audio-device",
+        "audio", "mmdevice-audio-device", "waveout-audio-device",
         "mix-mode", "qt-max-volume", "volume-save", "mmdevice-volume", "waveout-volume",
         "volume-step", "norm-max-level", "audio-replay-gain-mode", "audio-replay-gain-preamp",
         "equalizer-2pass", "pitch-shift", "audio-language", "audio-desync", "audio-visual",
-        "mmdevice-passthrough", "force-dolby-surround", "audio-resampler", "soxr-resampler-quality", "role",
-        "effect-width", "effect-height", "audio-time-stretch", "audio-filter", "stereo-mode", "gain",
+        "mmdevice-passthrough", "force-dolby-surround", "soxr-resampler-quality", "role",
         // Subtitles
         "spu", "sub-language", "subsdec-encoding", "sub-autodetect-file", "sub-autodetect-fuzzy",
         "freetype-font", "freetype-bold",
@@ -99,8 +95,7 @@ const QSet<QString>& curatedOptions()
         "freetype-shadow-distance", "freetype-background-opacity", "freetype-background-color",
         "sub-margin", "sub-delay", "osd", "video-title-show", "video-title-timeout",
         "sub-autodetect-path", "freetype-shadow-angle", "freetype-text-direction",
-        "freetype-monofont", "video-title-position", "secondary-sub-alignment",
-        "secondary-sub-margin", "sub-text-scale", "subsdec-align",
+        "freetype-monofont", "sub-text-scale",
         // Library
         "one-instance", "one-instance-when-started-from-file", "playlist-enqueue", "recursive",
         "show-hiddenfiles", "media-library", "auto-preparse", "ignore-filetypes",
@@ -109,7 +104,7 @@ const QSet<QString>& curatedOptions()
         "http-proxy-pwd", "gnutls-system-trust", "gnutls-priorities", "ipv4-timeout", "mtu",
         // Performance
         "hw-dec", "dec-dev", "postproc-q", "avcodec-skiploopfilter", "avcodec-threads", "drop-late-frames",
-        "high-priority", "codec", "clock-synchro", "clock-jitter", "cr-average", "clock-master",
+        "high-priority", "codec", "clock-synchro", "clock-jitter", "cr-average",
         // Recording
         "input-record-path", "input-record-native", "sout-chromecast-conversion-quality",
         "sout-display", "sout-audio", "sout-video", "sout-spu", "sout-x264-preset", "sout-x264-tune",

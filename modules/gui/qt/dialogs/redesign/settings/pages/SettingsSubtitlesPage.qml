@@ -105,6 +105,7 @@ SettingsPage {
 
         SettingsOption {
             option: "freetype-font"
+            minimumLineHeight: VLCStyle.dp(38)
             text: qsTr("Font")
             placeholder: qsTr("System, sans-serif")
         }
@@ -112,6 +113,7 @@ SettingsPage {
         // Figma "Values" (2): words, or the exact value
         SettingsRow {
             text: qsTr("Size values")
+            minimumLineHeight: VLCStyle.dp(38)
             description: qsTr("Relative sizes are in words, from Smaller to Larger. Precise sets the exact size, in percent of VLC's normal size.")
             keywords: "sub-text-scale font size relative precise"
 
@@ -186,6 +188,7 @@ SettingsPage {
         // VLC's opacities are 0 to 255
         SettingsOption {
             option: "freetype-opacity"
+            tickStep: 10
             text: qsTr("Text opacity")
             kind: "slider"
             valueScale: 2.55
@@ -257,18 +260,21 @@ SettingsPage {
             available: root._background
         }
 
-        // from 1 %: at 0 the box is off (Background "None"), and the row would turn itself off
-        // under the slider being dragged
+        // at 0 the box is off (Background "None"): the row stays usable while its slider is
+        // dragged there, so it does not turn itself off under the mouse
         SettingsOption {
+            id: backgroundOpacityRow
+
             option: "freetype-background-opacity"
+            tickStep: 10
             text: qsTr("Background opacity")
             kind: "slider"
             valueScale: 2.55
-            from: 1
+            from: 0
             to: 100
             step: 1
-            labels: [qsTr("1%"), qsTr("50%"), qsTr("100%")]
-            available: root._background
+            labels: [qsTr("0%"), qsTr("50%"), qsTr("100%")]
+            available: root._background || backgroundOpacityRow._dragging
         }
 
         // VLC's "sub-margin" lifts the subtitles from the bottom, in pixels
@@ -331,12 +337,14 @@ SettingsPage {
         SettingsSection {
             SettingsOption {
                 option: "sub-autodetect-path"
+                minimumLineHeight: VLCStyle.dp(38)
                 text: qsTr("Load subtitles from these folders")
                 available: root._autodetect
             }
 
             SettingsOption {
                 option: "freetype-shadow-angle"
+                minimumLineHeight: VLCStyle.dp(38)
                 text: qsTr("Shadow angle")
                 unit: "°"
                 available: root._shadow
@@ -354,29 +362,9 @@ SettingsPage {
 
             SettingsOption {
                 option: "freetype-monofont"
+                minimumLineHeight: VLCStyle.dp(38)
                 text: qsTr("Monospace font")
                 placeholder: qsTr("System monospace")
-            }
-
-            SettingsOption {
-                option: "video-title-position"
-                text: qsTr("Filename position")
-            }
-
-            SettingsOption {
-                option: "subsdec-align"
-                text: qsTr("Text alignment")
-            }
-
-            SettingsOption {
-                option: "secondary-sub-alignment"
-                text: qsTr("Second subtitles position")
-            }
-
-            SettingsOption {
-                option: "secondary-sub-margin"
-                text: qsTr("Second subtitles margin")
-                unit: qsTr("px")
             }
         },
 

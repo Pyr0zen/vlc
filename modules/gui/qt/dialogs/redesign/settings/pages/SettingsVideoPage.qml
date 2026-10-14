@@ -293,33 +293,6 @@ SettingsPage {
                 text: qsTr("Monitor pixel aspect ratio")
                 placeholder: "1:1"
             }
-
-            SettingsOption {
-                option: "vout"
-                text: qsTr("Video output")
-                restartRequired: true
-            }
-
-            SettingsOption {
-                option: "video-filter"
-                text: qsTr("Video filters")
-            }
-
-            SettingsOption {
-                option: "zoom"
-                text: qsTr("Zoom factor")
-                decimals: 2
-            }
-
-            SettingsOption {
-                option: "grayscale"
-                text: qsTr("Black and white")
-            }
-
-            SettingsOption {
-                option: "video-deco"
-                text: qsTr("Decorations of separate video windows")
-            }
         },
 
         SettingsMoreOptions {

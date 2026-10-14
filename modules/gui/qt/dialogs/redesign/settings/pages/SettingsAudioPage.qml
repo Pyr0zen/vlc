@@ -110,6 +110,7 @@ SettingsPage {
         // Figma "Values" (stacked): remember the last volume, or always start at a level
         SettingsRow {
             text: qsTr("Startup volume")
+            rowPadding: VLCStyle.dp(10)
             description: RdEffects.optionDescription("volume-save")
             keywords: "volume-save " + root._volumeOption
 
@@ -170,6 +171,7 @@ SettingsPage {
         // VLC's step is on its 0-256 scale (256 = 100%)
         SettingsOption {
             option: "volume-step"
+            minimumLineHeight: VLCStyle.dp(38)
             text: qsTr("Volume step")
             valueScale: 2.56
             unit: "%"
@@ -187,6 +189,7 @@ SettingsPage {
 
         SettingsOption {
             option: "norm-max-level"
+            minimumLineHeight: VLCStyle.dp(38)
             text: qsTr("Target level")
             decimals: 1
             available: root._filterOn("normvol")
@@ -204,6 +207,7 @@ SettingsPage {
 
         SettingsOption {
             option: "audio-replay-gain-preamp"
+            minimumLineHeight: VLCStyle.dp(38)
             text: qsTr("Replay gain preamp")
             decimals: 1
             unit: qsTr("dB")
@@ -237,6 +241,7 @@ SettingsPage {
             description: qsTr("Ready-made settings of the equalizer for a kind of music or place.")
             keywords: "equalizer preset eq"
             shown: root._equalizer
+            minimumLineHeight: VLCStyle.dp(38)
 
             Widgets.RdDropdown {
                 readonly property var presets: RdEffects.equalizerPresetNames()
@@ -418,50 +423,6 @@ SettingsPage {
             SettingsOption {
                 option: "role"
                 text: qsTr("Media role")
-            }
-
-            SettingsOption {
-                option: "effect-width"
-                text: qsTr("Visualization width")
-                unit: qsTr("px")
-            }
-
-            SettingsOption {
-                option: "effect-height"
-                text: qsTr("Visualization height")
-                unit: qsTr("px")
-            }
-
-            SettingsOption {
-                option: "aout"
-                text: qsTr("Audio output")
-                restartRequired: true
-            }
-
-            SettingsOption {
-                option: "audio-resampler"
-                text: qsTr("Resampler")
-            }
-
-            SettingsOption {
-                option: "audio-time-stretch"
-                text: qsTr("Keep the pitch when the speed changes")
-            }
-
-            SettingsOption {
-                option: "stereo-mode"
-                text: qsTr("Stereo mode")
-            }
-
-            SettingsOption {
-                option: "gain"
-                text: qsTr("Audio gain")
-                decimals: 2
-            }
-
-            SettingsOption {
-                option: "audio-filter"
-                text: qsTr("Audio filters")
             }
         },
 

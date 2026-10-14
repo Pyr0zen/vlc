@@ -48,6 +48,7 @@ SettingsPage {
 
         SettingsOption {
             option: "input-record-path"
+            minimumLineHeight: VLCStyle.dp(38)
             text: qsTr("Save recordings to")
             kind: "directory"
             placeholder: qsTr("Videos or Music folder")

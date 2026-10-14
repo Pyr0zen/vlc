@@ -43,6 +43,10 @@ ColumnLayout {
     property string keywords: ""
     property bool shown: true
     property bool available: true
+    // Figma row geometry: the line is at least 32 high (most text input rows: 38), padded 5
+    // above and below (10 around the start volume choice)
+    property real minimumLineHeight: VLCStyle.rd_rowHeight
+    property real rowPadding: VLCStyle.dp(5)
     default property alias control: controlSlot.data
     property alias below: belowSlot.data
 
@@ -97,7 +101,7 @@ ColumnLayout {
         id: line
 
         Layout.fillWidth: true
-        Layout.preferredHeight: Math.max(VLCStyle.rd_rowHeight, controlSlot.height) + 2 * VLCStyle.dp(5)
+        Layout.preferredHeight: Math.max(root.minimumLineHeight, controlSlot.height) + 2 * root.rowPadding
 
         Text {
             id: label

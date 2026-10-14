@@ -63,6 +63,7 @@ SettingsRow {
     // it, 57 high); the Interface page's are 4 and 8 (47 high)
     property real sliderTrackTop: VLCStyle.dp(8)
     property real sliderLabelSpacing: VLCStyle.dp(14)
+    property real tickStep: step
     // text fields
     property string placeholder: ""
     // VLC reads the option when it starts: the info popover says so
@@ -76,7 +77,9 @@ SettingsRow {
         if (kind !== "")
             return kind
         switch (info.type) {
-        case "bool": return "toggle"
+        // a yes / no option the page words as two choices is a dropdown (Figma "Resize window
+        // to fit video", "Auto-hide the controls")
+        case "bool": return choices ? "dropdown" : "toggle"
         case "integer":
         case "float": return _choices.length > 0 ? "dropdown" : "number"
         case "color": return "color"
@@ -236,6 +239,7 @@ SettingsRow {
             to: root.to
             stepSize: root.step
             labels: root.labels
+            tickStep: root.tickStep
             trackTop: root.sliderTrackTop
             labelSpacing: root.sliderLabelSpacing
             bipolar: root.bipolar
@@ -281,6 +285,7 @@ SettingsRow {
             implicitHeight: root.controlHeight
             // Figma "Frame 265": the value in FG/A2
             color: VLCStyle.palette.rdFgA2
+            placeholderTextColor: VLCStyle.palette.rdFgA2
             text: String(root.value ?? "")
             placeholderText: root.placeholder
             echoMode: root.resolvedKind === "password" ? TextInput.Password : TextInput.Normal
@@ -305,6 +310,7 @@ SettingsRow {
                 width: root.controlWidth - browseButton.width - parent.spacing
                 height: root.controlHeight
                 color: VLCStyle.palette.rdFgA2
+                placeholderTextColor: VLCStyle.palette.rdFgA2
                 text: String(root.value ?? "")
                 placeholderText: root.placeholder
                 Accessible.name: root.text

@@ -67,6 +67,7 @@ SettingsPage {
 
         SettingsOption {
             option: "file-caching"
+            minimumLineHeight: VLCStyle.dp(38)
             text: qsTr("Local files")
             unit: qsTr("ms")
             available: root._custom
@@ -74,6 +75,7 @@ SettingsPage {
 
         SettingsOption {
             option: "disc-caching"
+            minimumLineHeight: VLCStyle.dp(38)
             text: qsTr("Discs")
             unit: qsTr("ms")
             available: root._custom
@@ -81,6 +83,7 @@ SettingsPage {
 
         SettingsOption {
             option: "network-caching"
+            minimumLineHeight: VLCStyle.dp(38)
             text: qsTr("Network streams")
             unit: qsTr("ms")
             available: root._custom
@@ -88,6 +91,7 @@ SettingsPage {
 
         SettingsOption {
             option: "live-caching"
+            minimumLineHeight: VLCStyle.dp(38)
             text: qsTr("Live capture")
             unit: qsTr("ms")
             available: root._custom
@@ -99,12 +103,14 @@ SettingsPage {
 
         SettingsOption {
             option: "http-proxy"
+            minimumLineHeight: VLCStyle.dp(38)
             text: qsTr("HTTP proxy")
             placeholder: qsTr("System proxy")
         }
 
         SettingsOption {
             option: "http-proxy-pwd"
+            minimumLineHeight: VLCStyle.dp(38)
             text: qsTr("HTTP proxy password")
         }
     }

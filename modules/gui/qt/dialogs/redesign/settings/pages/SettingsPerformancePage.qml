@@ -138,6 +138,7 @@ SettingsPage {
 
         SettingsOption {
             option: "avcodec-threads"
+            minimumLineHeight: VLCStyle.dp(38)
             text: qsTr("Decoding threads")
             // Figma: a text input; 0 lets FFmpeg pick the number of threads (the info popover)
             kind: "number"
@@ -182,24 +183,15 @@ SettingsPage {
 
             SettingsOption {
                 option: "clock-jitter"
+                minimumLineHeight: VLCStyle.dp(38)
                 text: qsTr("Clock jitter")
                 unit: qsTr("ms")
             }
 
             SettingsOption {
                 option: "cr-average"
+                minimumLineHeight: VLCStyle.dp(38)
                 text: qsTr("Clock reference averaging")
-            }
-
-            SettingsOption {
-                option: "clock-master"
-                text: qsTr("Clock source")
-                choices: [
-                    { value: "auto", text: qsTr("Automatic") },
-                    { value: "input", text: qsTr("Input (PCR)") },
-                    { value: "audio", text: qsTr("Audio") },
-                    { value: "monotonic", text: qsTr("System clock") }
-                ]
             }
         },
 

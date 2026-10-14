@@ -33,7 +33,10 @@ T.Slider {
 
     property bool bipolar: false
     property real zeroValue: 0
-    property bool showTicks: stepSize > 0 && (to - from) / stepSize <= 40
+    // tick marks every tickStep (the step by default; a percentage slider moving by 1 marks
+    // every 10, Figma "Text opacity")
+    property real tickStep: stepSize
+    property bool showTicks: tickStep > 0 && (to - from) / tickStep <= 40
     // labels under the track, spread from the left end to the right end (Figma "Frame 205")
     property var labels: []
     // Figma "wrapper" auto layout: the track 4 px down (8 in the Settings rows whose slider is
@@ -86,18 +89,24 @@ T.Slider {
                 color: control.rdPalette.rdBgAccentBright
             }
 
+            // Figma "degrees": the marks between the ends (its first and last are hidden)
             Repeater {
-                model: control.showTicks ? Math.round((control.to - control.from) / control.stepSize) + 1 : 0
+                id: ticks
+
+                readonly property int segments: control.showTicks ? Math.round((control.to - control.from) / control.tickStep) : 0
+
+                model: Math.max(0, segments - 1)
 
                 delegate: Rectangle {
                     required property int index
-                    readonly property int count: Math.round((control.to - control.from) / control.stepSize)
 
-                    x: control._inset + (count > 0 ? index * (fill.span - width) / count : 0)
+                    x: control._inset + (index + 1) * (fill.span - width) / ticks.segments
                     anchors.verticalCenter: parent.verticalCenter
-                    // Figma "degrees": 2 px lines, 6 high, BG/Accent Dark
+                    // Figma "degrees": 6 px lines stroked 2 px with round caps (2 x 8 drawn),
+                    // BG/Accent Dark
                     width: VLCStyle.dp(2)
-                    height: VLCStyle.dp(6)
+                    height: VLCStyle.dp(8)
+                    radius: width / 2
                     color: control.rdPalette.rdBgAccentDark
                 }
             }

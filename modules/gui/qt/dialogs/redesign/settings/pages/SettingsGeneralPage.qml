@@ -112,13 +112,6 @@ SettingsPage {
             option: "qt-updates-notif"
             text: qsTr("Check for updates automatically")
         }
-
-        SettingsOption {
-            option: "qt-updates-days"
-            text: qsTr("Check every")
-            unit: qsTr("days")
-            available: updatesRow.value === true
-        }
     }
 
     SettingsSection {

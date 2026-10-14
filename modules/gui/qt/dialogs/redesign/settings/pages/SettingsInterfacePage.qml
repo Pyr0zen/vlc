@@ -145,41 +145,6 @@ SettingsPage {
             option: "qt-fs-controller"
             text: qsTr("Show controls in fullscreen")
         }
-
-        // how near the top or bottom edge the mouse shows a bar in fullscreen (Figma: a three
-        // stop slider, "wrapper" 320x47)
-        SettingsRow {
-            text: qsTr("Fullscreen controls sensitivity")
-            description: qsTr("How near the top or bottom edge of the screen the mouse has to be to show the controls in fullscreen. High shows them from further away.")
-            keywords: "qt-fs-sensitivity fullscreen mouse edge"
-            shown: SettingsCatalog.exists("qt-fs-sensitivity")
-            available: fsControllerRow.value !== false
-
-            Widgets.RdSlider {
-                // distance from the edge, in dp (Player.qml); Medium is the default
-                readonly property var distances: [16, 40, 96]
-
-                implicitWidth: VLCStyle.dp(320)
-                trackTop: VLCStyle.dp(4)
-                labelSpacing: VLCStyle.dp(8)
-                from: 0
-                to: distances.length - 1
-                stepSize: 1
-                labels: [qsTr("Low"), qsTr("Medium"), qsTr("High")]
-                // a value set elsewhere shows as the nearest choice
-                value: {
-                    const v = MainCtx.fsSensitivity
-                    let best = 0
-                    for (let i = 1; i < distances.length; ++i) {
-                        if (Math.abs(distances[i] - v) < Math.abs(distances[best] - v))
-                            best = i
-                    }
-                    return best
-                }
-                Accessible.name: qsTr("Fullscreen controls sensitivity")
-                onMoved: MainCtx.fsSensitivity = distances[Math.round(value)]
-            }
-        }
     }
 
     SettingsSection {
@@ -194,12 +159,6 @@ SettingsPage {
         SettingsOption {
             option: "qt-start-minimized"
             text: qsTr("Start minimized to the tray")
-            available: root._tray
-        }
-
-        SettingsOption {
-            option: "qt-close-to-system-tray"
-            text: qsTr("Close to the tray")
             available: root._tray
         }
 
@@ -271,60 +230,39 @@ SettingsPage {
                 labels: [qsTr("10%"), qsTr("100%")]
             }
 
-            SettingsOption {
-                option: "qt-menubar"
-                text: qsTr("Show the menu bar")
-                restartRequired: true
-            }
-
-            // the interface's own scale (kept in its settings, as Ctrl + wheel changes it; VLC's
-            // "qt-interface-scale" is a command-line override that is never saved): live
+            // how near the top or bottom edge the mouse shows a bar in fullscreen (Figma: a three
+            // stop slider, "wrapper" 320x47)
             SettingsRow {
-                text: qsTr("Interface size")
-                description: qsTr("Makes the whole interface larger or smaller. Ctrl + mouse wheel changes it too.")
-                keywords: "qt-interface-scale scale zoom size"
+                text: qsTr("Fullscreen controls sensitivity")
+                description: qsTr("How near the top or bottom edge of the screen the mouse has to be to show the controls in fullscreen. High shows them from further away.")
+                keywords: "qt-fs-sensitivity fullscreen mouse edge"
+                shown: SettingsCatalog.exists("qt-fs-sensitivity")
+                available: fsControllerRow.value !== false
 
-                Widgets.RdDropdown {
-                    // MainCtx's scale changes with it (intfScaleFactor)
-                    readonly property real current: (MainCtx.intfScaleFactor, MainCtx.getIntfUserScaleFactor())
-                    readonly property var entries: {
-                        const list = [0.75, 1, 1.25, 1.5, 2]
-                        if (!list.some((v) => Math.abs(v - current) < 0.005))
-                            list.push(current)
-                        return list.sort((a, b) => a - b)
-                    }
+                Widgets.RdSlider {
+                    // distance from the edge, in dp (Player.qml); Medium is the default
+                    readonly property var distances: [16, 40, 96]
 
                     implicitWidth: VLCStyle.dp(320)
-                    implicitHeight: VLCStyle.dp(36)
-                    model: entries.map((v) => qsTr("%1%").arg(Math.round(v * 100)))
-                    currentIndex: entries.findIndex((v) => Math.abs(v - current) < 0.005)
-                    Accessible.name: qsTr("Interface size")
-                    onActivated: (index) => MainCtx.setIntfUserScaleFactor(entries[index])
+                    trackTop: VLCStyle.dp(4)
+                    labelSpacing: VLCStyle.dp(8)
+                    from: 0
+                    to: distances.length - 1
+                    stepSize: 1
+                    labels: [qsTr("Low"), qsTr("Medium"), qsTr("High")]
+                    // a value set elsewhere shows as the nearest choice
+                    value: {
+                        const v = MainCtx.fsSensitivity
+                        let best = 0
+                        for (let i = 1; i < distances.length; ++i) {
+                            if (Math.abs(distances[i] - v) < Math.abs(distances[best] - v))
+                                best = i
+                        }
+                        return best
+                    }
+                    Accessible.name: qsTr("Fullscreen controls sensitivity")
+                    onMoved: MainCtx.fsSensitivity = distances[Math.round(value)]
                 }
-            }
-
-            SettingsOption {
-                option: "qt-smooth-scrolling"
-                text: qsTr("Smooth scrolling")
-            }
-
-            SettingsOption {
-                option: "qt-backdrop-blur"
-                text: qsTr("Blur behind panels")
-                restartRequired: true
-            }
-
-            SettingsOption {
-                option: "qt-pip-mode"
-                text: qsTr("Keep playing video in a corner while browsing")
-                restartRequired: true
-            }
-
-            SettingsOption {
-                option: "qt-safe-area"
-                text: qsTr("Safe area around the interface")
-                kind: "number"
-                unit: "%"
             }
         },
 
