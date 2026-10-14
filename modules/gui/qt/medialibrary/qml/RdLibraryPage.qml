@@ -654,7 +654,9 @@ FocusScope {
             }
         }
 
-        delegate: Item {
+        // keyboard: the arrows move the current cell (GridView), its row or card takes the focus
+        // and shows it; Space or Enter opens or plays it
+        delegate: FocusScope {
             id: cell
 
             required property var model
@@ -665,10 +667,27 @@ FocusScope {
             width: grid.cellWidth
             height: grid.cellHeight
 
+            focus: GridView.isCurrentItem
+
+            // the arrows made this cell current: show the keyboard focus on it (a click gives
+            // the focus first, so it keeps its mouse focus)
+            GridView.onIsCurrentItemChanged: {
+                if (GridView.isCurrentItem && grid.activeFocus && cellLoader.item && !cellLoader.item.activeFocus)
+                    cellLoader.item.forceActiveFocus(Qt.TabFocusReason)
+            }
+
+            Keys.onPressed: (event) => {
+                if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                    page.activate(cell.item)
+                    event.accepted = true
+                }
+            }
+
             // the row or the card, never both
             Loader {
                 id: cellLoader
 
+                focus: true
                 sourceComponent: page.listMode ? rowComponent : cardComponent
             }
 
@@ -685,6 +704,7 @@ FocusScope {
                 id: rowComponent
 
                 RdLibraryRow {
+                    focus: true
                     width: cell.width - (page._columns > 1 ? page._gap : 0)
                     title: page.titleOf(cell.item)
                     iconName: page.iconOf(cell.item)
@@ -705,6 +725,7 @@ FocusScope {
                 id: cardComponent
 
                 RdLibraryCard {
+                    focus: true
                     width: cell.width - page._gap
                     title: cell.item.title
                     subtitle: (cell.item.kind === "media" && !cell.item.isVideo) || cell.item.kind === "album"
