@@ -226,10 +226,13 @@ FocusScope{
                 width: VLCStyle.dp(24, VLCStyle.scale)
                 height: VLCStyle.dp(28, VLCStyle.scale)
 
+                // Figma "Vector 26": an 18 px line, 1.5 px stroke with round caps (19.5 x 1.5 drawn,
+                // 3 px wide in the 2x export). Not rounded through dp(): 1.5 would become 2.
                 Rectangle {
                     anchors.centerIn: parent
-                    width: VLCStyle.dp(1, VLCStyle.scale)
-                    height: VLCStyle.dp(20, VLCStyle.scale)
+                    width: 1.5 * VLCStyle.scale
+                    height: 19.5 * VLCStyle.scale
+                    radius: width / 2
                     color: VLCStyle.palette.rdDividerBright
                 }
             }
