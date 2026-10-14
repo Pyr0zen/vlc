@@ -64,10 +64,17 @@ QtObject {
         modalCount = Math.max(0, modalCount - 1)
     }
 
+    // the compact library docked on the left of the player (video 11:37-11:59, P5-23): opened and
+    // closed by the top bar's sidebar toggle and folder chip. Kept here, not in Player.qml, so
+    // the player finds it open again after a visit to the full library (11:58).
+    property bool libraryOpen: false
+
     // hiding the UI closes every panel; showing it again brings the bars back, not the panels
     function toggleUi() {
-        if (!uiHidden)
+        if (!uiHidden) {
             current = ""
+            libraryOpen = false
+        }
         uiHidden = !uiHidden
     }
 }

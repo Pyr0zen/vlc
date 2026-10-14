@@ -372,6 +372,7 @@ QtObject {
     readonly property int rd_sidePanelTabHeight: MainCtx.dp(50, scale)
     readonly property int rd_libraryRailWidth: MainCtx.dp(50, scale)
     readonly property int rd_libraryPanelWidth: MainCtx.dp(377, scale)
+    readonly property int rd_librarySlideDuration: 208                   // compact library open / close, Figma smart animate "slow"
     readonly property int rd_menuRowHeight: MainCtx.dp(48, scale)
     readonly property int rd_menuWidth: MainCtx.dp(265, scale)
     readonly property int rd_mainMenuWidth: MainCtx.dp(375, scale)

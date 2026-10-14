@@ -58,6 +58,9 @@ FocusScope{
 
     property bool playlistVisible: false
 
+    // the compact library is open (sidebar toggle shown active)
+    property bool libraryOpen: false
+
     readonly property ColorContext colorContext: ColorContext {
         id: theme
         colorSet: ColorContext.Window
@@ -77,6 +80,9 @@ FocusScope{
     signal togglePlaylistVisibility()
     signal requestLockUnlockAutoHide(bool lock)
     signal backRequested()
+    // sidebar toggle and folder chip: open or close the compact library (Player.qml)
+    signal libraryToggleRequested()
+    signal folderRequested()
 
     ///incomming signal to request all menu and popup to close
     signal forceUnlock()
@@ -191,8 +197,7 @@ FocusScope{
                 }
             }
 
-            // sidebar toggle (video 11:37): opens the library. Until the compact library sidebar
-            // exists (BUILD_PLAN W5.1) this uses VLC's library view.
+            // sidebar toggle (video 11:37): opens and closes the compact library
             Item {
                 width: VLCStyle.dp(10, VLCStyle.scale)
                 height: 1
@@ -208,6 +213,10 @@ FocusScope{
 
                 text: VLCIcons.panel_left
                 rdIcon: "sidebar_direction-left"
+                // Figma "sidebar" icon state=active: the filled panel, in the icon's own color
+                rdIconChecked: "sidebar_state-active"
+                checked: root.libraryOpen
+                color: colorContext.fg.primary
                 description: qsTr("Library")
 
                 AccessibleCompat.id: "topBarBackButton"
@@ -216,7 +225,7 @@ FocusScope{
                 Navigation.leftItem: menuSelector
                 Navigation.rightItem: folderChip
 
-                onClicked: root.backRequested()
+                onClicked: root.libraryToggleRequested()
                 onHoveredChanged: root.requestLockUnlockAutoHide(hovered)
             }
 
@@ -249,7 +258,7 @@ FocusScope{
                 Navigation.parentItem: root
                 Navigation.leftItem: sidebarButton
 
-                onClicked: root.backRequested()
+                onClicked: root.folderRequested()
                 onHoveredChanged: root.requestLockUnlockAutoHide(hovered)
 
                 background: Rectangle {

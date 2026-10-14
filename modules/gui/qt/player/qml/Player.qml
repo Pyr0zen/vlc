@@ -66,6 +66,61 @@ FocusScope {
 
     property bool _keyPressed: false
 
+    // redesign: the compact library docked on the left between the bars (video 11:37-11:59,
+    // P5-23 / P5-25 / F-16; Figma Player.png): the top bar's sidebar toggle and folder chip open
+    // and close it with the Figma smart animate "slow" (208 ms), the video area moves to its
+    // right. Without the media library the toggle opens VLC's own library view instead.
+    readonly property bool _libraryShown: MainCtx.mediaLibraryAvailable && RdPanels.libraryOpen
+                                          && !RdPanels.uiHidden
+    // 0 closed, 1 open
+    property real _libraryProgress: _libraryShown ? 1 : 0
+    Behavior on _libraryProgress {
+        NumberAnimation {
+            duration: VLCStyle.rd_librarySlideDuration
+            easing.type: Easing.OutCubic
+        }
+    }
+    readonly property real _libraryFullWidth: VLCStyle.rd_libraryRailWidth + VLCStyle.rd_libraryPanelWidth
+    readonly property real _libraryWidth: _libraryFullWidth * _libraryProgress
+    // the library is built on its first opening and then kept, so it reopens within a frame
+    property bool _libraryActivated: false
+
+    // open already when the player comes back from the full library
+    Component.onCompleted: {
+        if (_libraryShown)
+            _libraryActivated = true
+    }
+
+    on_LibraryShownChanged: {
+        if (_libraryShown) {
+            _libraryActivated = true
+        } else if (librarySidebar.activeFocus) {
+            // keys must not go on to the hidden library
+            topBar.forceActiveFocus()
+        }
+        _updatePanelLock()
+    }
+
+    // sidebar toggle (reveal = false) and folder chip (reveal = true): open or close the compact
+    // library; the folder chip opens it on the folder of the playing file (11:24-11:31)
+    function toggleLibrary(reveal) {
+        if (!MainCtx.mediaLibraryAvailable) {
+            if (MainCtx.hasEmbededVideo && !MainCtx.canShowVideoPIP)
+                MainPlaylistController.stop()
+            MainCtx.playerView = false
+            return
+        }
+
+        if (RdPanels.libraryOpen) {
+            RdPanels.libraryOpen = false
+            return
+        }
+
+        RdPanels.libraryOpen = true
+        if (reveal && librarySidebar.item)
+            librarySidebar.item.revealMrl(Player.url.toString())
+    }
+
     // redesign (Decision 30): in a window both bars show while the mouse moves over the player and
     // fade out a few seconds after it stops; in fullscreen each bar shows while the mouse is near
     // it (video 3:46-3:55). Menus, panels, keyboard use and audio mode show both bars (in
@@ -136,14 +191,16 @@ FocusScope {
 
     // Events
 
-    // keys go to VLC's hotkeys, except while a modal redesign popup is open (RdPanels.modalCount).
+    // keys go to VLC's hotkeys, except while a modal redesign popup is open (RdPanels.modalCount)
+    // or the compact library has the focus (its lists and search field use the keys, unhandled
+    // keys still reach the hotkeys below, as in the full library).
     // _leaving keeps the binding off while the view is destroyed: a menu released during the
     // destruction would otherwise turn the hotkeys back on for the library
     property bool _leaving: false
     Binding {
         target: MainCtx
         property: "preferHotkeys"
-        value: !rootPlayer._leaving && RdPanels.modalCount === 0
+        value: !rootPlayer._leaving && RdPanels.modalCount === 0 && !librarySidebar.activeFocus
     }
     Component.onDestruction: {
         rootPlayer._leaving = true
@@ -156,6 +213,14 @@ FocusScope {
     Keys.onPressed: (event) => {
         if (event.accepted)
             return
+
+        // Ctrl+F searches the compact library, as in the full library (VLC's global Ctrl+F
+        // "Open Folder" shortcut runs first while global shortcuts are on)
+        if (rootPlayer._libraryShown && librarySidebar.item && KeyHelper.matchSearch(event)) {
+            librarySidebar.item.focusSearch()
+            event.accepted = true
+            return
+        }
 
         _keyPressed = true
 
@@ -275,6 +340,8 @@ FocusScope {
 
         anchors {
             left: parent.left
+            // the video area starts right of the compact library
+            leftMargin: rootPlayer._libraryWidth
             right: parent.right
             top: (MainCtx.hasEmbededVideo && rootPlayer._controlsUnderVideo) ? topBar.bottom : parent.top
             bottom: (MainCtx.hasEmbededVideo && rootPlayer._controlsUnderVideo) ? controlBar.top : parent.bottom
@@ -1033,6 +1100,9 @@ FocusScope {
         id: videoFrame
 
         anchors.fill: parent
+        // next to the compact library the opening starts at the library's edge (Figma
+        // Player.png: no frame between the library and the video)
+        anchors.leftMargin: Math.max(0, rootPlayer._libraryWidth - inset * rootPlayer._libraryProgress)
         visible: MainCtx.hasEmbededVideo && (MainCtx.intfMainWindow.visibility !== Window.FullScreen)
         enabled: false
         clip: true
@@ -1065,6 +1135,32 @@ FocusScope {
         }
     }
 
+    // redesign: the compact library (RdLibrarySidebar, 427 px: rail 50 + panel 377) between the
+    // top bar and the control bar; it slides in from the left edge while the video area moves
+    Item {
+        id: libraryHost
+
+        anchors.left: parent.left
+        anchors.top: topBar.bottom
+        anchors.bottom: controlBar.top
+        width: rootPlayer._libraryWidth
+        visible: width > 0
+        clip: rootPlayer._libraryProgress < 1
+        z: 1
+
+        Loader {
+            id: librarySidebar
+
+            x: libraryHost.width - width
+            width: rootPlayer._libraryFullWidth
+            height: libraryHost.height
+
+            enabled: rootPlayer._libraryShown
+            active: rootPlayer._libraryActivated
+            source: "qrc:///qt/qml/VLC/MediaLibrary/RdLibrarySidebar.qml"
+        }
+    }
+
     TopBar {
         id: topBar
 
@@ -1086,6 +1182,7 @@ FocusScope {
         title: Player.title !== "" ? Player.title : Player.name
 
         pinControls: MainCtx.pinVideoControls
+        libraryOpen: rootPlayer._libraryShown
 
         showCSD: MainCtx.clientSideDecoration && (MainCtx.intfMainWindow.visibility !== Window.FullScreen)
         showToolbar: MainCtx.hasToolbarMenu && (MainCtx.intfMainWindow.visibility !== Window.FullScreen)
@@ -1129,6 +1226,9 @@ FocusScope {
             }
             MainCtx.playerView = false
         }
+
+        onLibraryToggleRequested: rootPlayer.toggleLibrary(false)
+        onFolderRequested: rootPlayer.toggleLibrary(true)
 
         FadeControllerStateGroup {
             target: topBar
@@ -1534,17 +1634,36 @@ FocusScope {
         z: 2
     }
 
+    // an open panel or the compact library keeps both bars visible (F-06, Decision 30)
     property bool _panelLocked: false
+
+    function _updatePanelLock() {
+        const open = RdPanels.current !== "" || rootPlayer._libraryShown
+        if (open === rootPlayer._panelLocked)
+            return
+        rootPlayer._panelLocked = open
+        // a hidden toolbar FSM ignores lock(): show it first so lock and unlock stay balanced
+        if (open && !playerToolbarVisibilityFSM.isVisible)
+            playerToolbarVisibilityFSM.askShow()
+        rootPlayer.lockUnlockAutoHide(open)
+    }
 
     Connections {
         target: RdPanels
 
         function onCurrentChanged() {
-            const open = RdPanels.current !== ""
-            if (open !== rootPlayer._panelLocked) {
-                rootPlayer._panelLocked = open
-                rootPlayer.lockUnlockAutoHide(open)
-            }
+            rootPlayer._updatePanelLock()
+        }
+    }
+
+    // the compact library stays open after a visit to the full library: lock the bars once the
+    // toolbar FSM runs
+    Connections {
+        target: playerToolbarVisibilityFSM
+
+        function onStartedChanged() {
+            if (playerToolbarVisibilityFSM.started)
+                rootPlayer._updatePanelLock()
         }
     }
 
@@ -1571,11 +1690,14 @@ FocusScope {
         id: resumeToast
 
         anchors.horizontalCenter: parent.horizontalCenter
+        // centered over the video area, right of the compact library
+        anchors.horizontalCenterOffset: rootPlayer._libraryWidth / 2
         anchors.bottom: controlBar.top
         anchors.bottomMargin: VLCStyle.margin_small
         z: 2
 
-        maxWidth: Math.min(VLCStyle.dp(552, VLCStyle.scale), rootPlayer.width - 2 * VLCStyle.margin_normal)
+        maxWidth: Math.min(VLCStyle.dp(552, VLCStyle.scale),
+                           rootPlayer.width - rootPlayer._libraryWidth - 2 * VLCStyle.margin_normal)
 
         Navigation.parentItem: rootPlayer
 
@@ -1608,11 +1730,19 @@ FocusScope {
 
     MouseArea {
         anchors.fill: parent
-        acceptedButtons: Qt.BackButton
+        acceptedButtons: Qt.BackButton | Qt.ForwardButton
         propagateComposedEvents: true
         cursorShape: undefined
-        onClicked: {
-            MainCtx.playerView = false
+        // with the compact library open the mouse buttons go back and forward in the library
+        onClicked: (mouse) => {
+            if (rootPlayer._libraryShown && librarySidebar.item) {
+                if (mouse.button === Qt.BackButton)
+                    librarySidebar.item.goBack()
+                else
+                    librarySidebar.item.goForward()
+            } else if (mouse.button === Qt.BackButton) {
+                MainCtx.playerView = false
+            }
         }
     }
 

@@ -48,6 +48,15 @@ FocusScope {
         })
     }
 
+    // mouse back and forward buttons over the player
+    function goBack() {
+        RdLibraryNav.goBack()
+    }
+
+    function goForward() {
+        RdLibraryNav.goForward()
+    }
+
     // Ctrl+F
     function focusSearch() {
         header.focusSearch()
