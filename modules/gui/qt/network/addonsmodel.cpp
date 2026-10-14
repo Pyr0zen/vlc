@@ -640,8 +640,28 @@ void AddonsModelPrivate::addonFound( AddonPtr addon )
 
 void AddonsModelPrivate::addonChanged( AddonPtr addon )
 {
+    Q_Q(AddonsModel);
     AddonItemPtr sdItem = std::make_shared<AddonItem>(addon);
-    m_cache->updateItem(std::move(sdItem));
+    const QByteArray uuid = sdItem->uuid;
+    // redesign: the cache updates a row in place only when no reload is pending; the second of
+    // two changes back to back (installing, then installed) found the reload of the first one
+    // pending, and that reload keeps the row (same uuid) without notifying it, so the row showed
+    // the old state. The rows read the add-on's state live from its entry: notify the row
+    // shown now
+    if (m_cache && m_cache->updateItem(std::move(sdItem)) < 0)
+    {
+        const int count = q->rowCount();
+        for (int row = 0; row < count; ++row)
+        {
+            const AddonItemPtr* item = m_cache->get(row);
+            if (item && (*item)->uuid == uuid)
+            {
+                const QModelIndex index = q->index(row, 0);
+                emit q->dataChanged(index, index);
+                break;
+            }
+        }
+    }
 
     m_revision++;
     invalidateCache();
