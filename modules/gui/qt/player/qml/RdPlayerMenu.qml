@@ -75,6 +75,9 @@ Item {
         rootWidth: VLCStyle.rd_contextMenuWidth
         withShadow: false
 
+        // like a native context menu: a right click elsewhere reopens the menu there
+        onRightPressedOutside: Qt.callLater(root.popupAtCursor)
+
         model: Menus.RdMenuModel {
             kind: "player"
             ctx: MainCtx

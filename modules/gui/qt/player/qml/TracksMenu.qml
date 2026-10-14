@@ -56,8 +56,8 @@ T.Popup {
     }
 
     background: Rectangle {
-        // NOTE: The opacity should be stronger on a light background for readability.
-        color: popupTheme.bg.primary.alpha(popupTheme.palette.isDark ? 0.8 : 0.96)
+        // redesign: opaque over the native video like every popup (no blur is possible there)
+        color: popupTheme.bg.primary
 
         Rectangle {
             anchors.left: parent.left

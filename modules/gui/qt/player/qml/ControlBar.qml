@@ -44,7 +44,9 @@ T.Pane {
     implicitHeight: Math.max(implicitBackgroundHeight + bottomInset,
                              implicitContentHeight + topPadding + bottomPadding)
 
-    topInset: sliderY
+    // redesign: the inline row has no slider row above it, so the background covers the whole
+    // 54 px bar (Figma "Controls": padding 11 inside the background, visual audit A1)
+    topInset: textPosition === ControlBar.TimeTextPosition.Inline ? 0 : sliderY
 
     bottomPadding: VLCStyle.margin_xsmall
 

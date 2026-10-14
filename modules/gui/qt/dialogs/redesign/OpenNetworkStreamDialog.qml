@@ -121,7 +121,11 @@ T.Popup {
     padding: 0
     modal: true
     focus: true
-    closePolicy: T.Popup.CloseOnEscape
+    // a click outside closes the dialog while nothing is typed; typed links are never lost to
+    // a stray click (Escape, X and Cancel still close it)
+    closePolicy: (urlArea.text.trim() === "" && nameField.text.trim() === "")
+                 ? (T.Popup.CloseOnEscape | T.Popup.CloseOnPressOutside)
+                 : T.Popup.CloseOnEscape
 
     // while open, keys go to the dialog instead of VLC's hotkeys (RdPanels.modalCount). The count
     // and the focus change hands when the dialog starts to show / hide, not when its fade ends,

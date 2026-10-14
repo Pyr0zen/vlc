@@ -33,4 +33,15 @@ Rectangle {
     RdShadow {
         visible: parent.withShadow
     }
+
+    // the panel is solid to the mouse: a click or the wheel on its empty parts does not reach
+    // what is behind it (the video would pause or change the volume, the player would take the
+    // click as a click outside the panel and close it)
+    MouseArea {
+        anchors.fill: parent
+        acceptedButtons: Qt.AllButtons
+        // the player may have hidden the cursor over the video
+        cursorShape: Qt.ArrowCursor
+        onWheel: (wheel) => { wheel.accepted = true }
+    }
 }
