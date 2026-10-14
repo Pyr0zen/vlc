@@ -307,7 +307,8 @@ RdSidePanelPage {
                 { kind: "toggle", module: "ripple", label: qsTr("Water Effect") },
                 { kind: "toggle", module: "motiondetect", label: qsTr("Motion Detect") },
                 { kind: "toggle", module: "gaussianblur", label: qsTr("Spatial Blur") },
-                { kind: "slider", module: "gaussianblur", name: "gaussianblur-sigma", label: qsTr("Sigma"), decimals: 1 },
+                // read when the filter starts (not a command variable of gaussianblur)
+                { kind: "slider", module: "gaussianblur", name: "gaussianblur-sigma", label: qsTr("Sigma"), decimals: 1, live: false },
                 { kind: "toggle", module: "motionblur", label: qsTr("Motion Blur") },
                 { kind: "slider", module: "motionblur", name: "blur-factor", label: qsTr("Factor"), decimals: 0 },
                 { kind: "toggle", module: "antiflicker", label: qsTr("Anti-Flickering") },
@@ -418,25 +419,46 @@ RdSidePanelPage {
                         }
                     }
 
-                    // a numeric parameter; moving it turns its filter on
+                    // a numeric parameter; moving it turns its filter on. A parameter the filter
+                    // reads only when it starts ("live: false") restarts the whole filter chain
+                    // on every change: it is applied when the slider is released.
                     Component {
                         id: sliderEntry
 
                         Widgets.RdParamSlider {
+                            id: paramSlider
+
                             readonly property var range: RdEffects.optionRange(entry.name)
                             readonly property real current: Number(RdEffects.values[RdEffects.videoKey(entry.name)])
+                            readonly property bool live: entry.live ?? true
+                            readonly property real shown: live ? current : restartCommit.shown
+
+                            readonly property RdSliderCommit restartCommit: RdSliderCommit {
+                                pressed: paramSlider.pressed
+                                current: paramSlider.current
+                                keyDelay: 300
+                                tolerance: Math.pow(10, -(entry.decimals ?? 1)) / 2
+                                onCommit: (v) => paramSlider.apply(v)
+                            }
+
+                            function apply(v) {
+                                RdEffects.setVideoValue(entry.name, v)
+                                if (!RdEffects.videoFilterEnabled(entry.module))
+                                    RdEffects.setVideoFilterEnabled(entry.module, true)
+                            }
 
                             text: entry.label
-                            valueText: current.toFixed(entry.decimals ?? 1) + (entry.unit ?? "")
+                            valueText: shown.toFixed(entry.decimals ?? 1) + (entry.unit ?? "")
                             from: entry.from ?? range.min ?? 0
                             to: entry.to ?? range.max ?? 1
                             stepSize: (entry.decimals ?? 1) === 0 ? 1 : Math.pow(10, -(entry.decimals ?? 1))
                             showTicks: false
-                            value: current
+                            value: shown
                             onMoved: (v) => {
-                                RdEffects.setVideoValue(entry.name, v)
-                                if (!RdEffects.videoFilterEnabled(entry.module))
-                                    RdEffects.setVideoFilterEnabled(entry.module, true)
+                                if (live)
+                                    apply(v)
+                                else
+                                    restartCommit.push(v)
                             }
                         }
                     }

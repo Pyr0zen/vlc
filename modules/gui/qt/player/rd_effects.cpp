@@ -886,16 +886,23 @@ void RdEffects::applyVideoFilter(const QString& module, const QString& type, boo
         return;
     }
 
+    // a filter already in the chain keeps its place: moving it would rebuild the chain
     const SharedVOutThread vout = m_player->getVout();
     QStringList chain = splitChain(videoChain(type, vout.get()));
-    chain.removeAll(module);
-    if (enabled)
+    if (enabled && !chain.contains(module))
         chain << module;
+    else if (!enabled)
+        chain.removeAll(module);
     const QString result = chain.join(':');
 
     putConfig(qtu(type), result);
+    // setting a chain rebuilds it, even unchanged (the sub-source / sub-filter chains do not
+    // compare): only the outputs whose chain differs get it
     for (const SharedVOutThread& v : m_player->getVouts())
-        var_SetString(v.get(), qtu(type), qtu(result));
+    {
+        if (videoChain(type, v.get()) != result)
+            var_SetString(v.get(), qtu(type), qtu(result));
+    }
 }
 
 void RdEffects::restartVideoFilter(const QString& module)
