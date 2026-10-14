@@ -53,10 +53,17 @@ Item {
         }
     }
 
+    // while the media library scans or indexes (VLC's old side bar showed a progress bar), the
+    // count says so: the new rows are still coming
     function _countText() {
         if (!page)
             return ""
-        return qsTr("%n item(s)", "", page.itemCount)
+        const count = qsTr("%n item(s)", "", page.itemCount)
+        if (MediaLib.idle)
+            return count
+        const status = MediaLib.discoveryPending ? qsTr("Scanning...")
+                                                 : qsTr("Indexing %1%").arg(MediaLib.parsingProgress)
+        return qsTr("%1 - %2").arg(count).arg(status)
     }
 
     // closing the search clears it

@@ -195,6 +195,17 @@ FocusScope {
             if (library.item && library.item.revealMrl)
                 library.item.revealMrl(Player.url.toString())
         }
+
+        // Ctrl+L (VLC's play queue toggle, GlobalShortcuts.qml) shows and hides the mini
+        // player's queue, the library's play queue (Decision 3: the queue is everywhere)
+        Connections {
+            target: MainCtx.playqueuePanel
+
+            function onVisibleChanged() {
+                if (miniPlayer.visible)
+                    miniPlayer.queueOpen = !miniPlayer.queueOpen
+            }
+        }
     }
 
     // the last rows scroll out from under the mini player in a bottom corner
