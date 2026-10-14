@@ -78,6 +78,14 @@ ColumnLayout {
             root._page.registerRow(root)
     }
 
+    // the page and the section count the shown rows that match
+    onShownChanged: {
+        if (root._section)
+            root._section.recount()
+        if (root._page)
+            root._page.recount()
+    }
+
     Component.onDestruction: {
         if (root._section)
             root._section.unregisterRow(root)
@@ -205,6 +213,15 @@ ColumnLayout {
                     text: root.description
                     textAlignment: Text.AlignLeft
                     closePolicy: T.Popup.CloseOnEscape | T.Popup.CloseOnPressOutsideParent
+
+                    // opaque, like the dialog and its other popups: where it passes the dialog's
+                    // edge, Figma's 95 % (meant with a background blur) shows the video through
+                    background: Rectangle {
+                        radius: VLCStyle.rd_radius_normal
+                        color: Qt.alpha(root.rdPalette.rdBgB1, 1.0)
+
+                        Widgets.RdShadow { }
+                    }
                 }
             }
         }

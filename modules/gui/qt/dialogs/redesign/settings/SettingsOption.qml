@@ -61,6 +61,8 @@ SettingsRow {
     property string placeholder: ""
     // VLC reads the option when it starts: the info popover says so
     property bool restartRequired: false
+    // directory: a drive is written as VLC's default writes it ("D:", not "D:\")
+    property bool driveLetter: false
 
     readonly property var info: SettingsCatalog.describe(option)
     // a binding reading RdEffects.values[key] follows only this option's value
@@ -87,9 +89,11 @@ SettingsRow {
     readonly property var _choices: choices ?? RdEffects.optionChoices(option)
 
     // options the interface reads into MainCtx (MainCtx::loadPrefs): it reads them again once
-    // RdEffects has written the change, so they apply at once (as after VLC's preferences)
+    // RdEffects has written the change, so they apply at once (as after VLC's preferences).
+    // Not "qt-minimal-view": it is the compact mode VLC starts in, and reading it again would
+    // switch the running window's compact mode
     readonly property bool _readByInterface: ["mouse-hide-timeout", "qt-bgcone", "qt-fs-opacity", "qt-max-volume",
-                                              "qt-menubar", "qt-minimal-view", "qt-pin-controls", "qt-safe-area",
+                                              "qt-menubar", "qt-pin-controls", "qt-safe-area",
                                               "qt-smooth-scrolling", "qt-titlebar", "video-on-top"].indexOf(option) >= 0
     property bool _reloadPending: false
     // a slider being dragged: the interface reads the value once it is released
@@ -231,8 +235,10 @@ SettingsRow {
             Accessible.name: root.text
             onPressedChanged: {
                 root._dragging = pressed
+                // the released value is written once more, so the interface reads it after the
+                // write (RdEffects signals nothing when the last step was already applied)
                 if (!pressed && root._readByInterface)
-                    root._reloadPending = true
+                    root.applyNumber(value)
             }
             onMoved: root.applyNumber(value)
         }
@@ -303,9 +309,11 @@ SettingsRow {
                 Accessible.name: qsTr("Browse for \"%1\"").arg(root.text)
                 onClicked: {
                     const current = String(root.value ?? "")
-                    const path = root.resolvedKind === "directory"
-                               ? SettingsCatalog.pickDirectory(root.text, current)
-                               : SettingsCatalog.pickFile(root.text, current, root.resolvedKind === "savefile")
+                    let path = root.resolvedKind === "directory"
+                             ? SettingsCatalog.pickDirectory(root.text, current)
+                             : SettingsCatalog.pickFile(root.text, current, root.resolvedKind === "savefile")
+                    if (root.driveLetter && /^[A-Za-z]:[\\/]$/.test(path))
+                        path = path.substring(0, 2)
                     if (path !== "")
                         root.apply(path)
                 }

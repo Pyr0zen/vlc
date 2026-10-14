@@ -106,36 +106,55 @@ Rectangle {
             }
         }
 
-        // Figma "Frame 309": 60 px columns, 8 px apart, centered
+        // Figma "Frame 309": 60 px columns, 8 px apart, centered; the eleven columns (740 px)
+        // scroll sideways when the page is narrower (a small window)
         Loader {
             anchors.horizontalCenter: parent.horizontalCenter
             active: root.expanded
             visible: active
 
-            sourceComponent: Row {
-                spacing: VLCStyle.dp(8)
+            sourceComponent: Flickable {
+                width: Math.min(column.width, bands.implicitWidth)
+                height: bands.implicitHeight + (contentWidth > width ? VLCStyle.dp(12) : 0)
+                contentWidth: bands.implicitWidth
+                contentHeight: bands.implicitHeight
+                clip: true
+                interactive: contentWidth > width
+                flickableDirection: Flickable.HorizontalFlick
+                boundsBehavior: Flickable.StopAtBounds
 
-                Band {
-                    text: qsTr("Preamp")
-                    value: root._preamp
-                    onMoved: (v) => {
-                        RdEffects.setAudioValue("equalizer-preamp", v)
-                        root._ensureEqualizer()
-                    }
+                // the popup is outside the window's color context: give the scroll bar the palette
+                T.ScrollBar.horizontal: Widgets.ScrollBarExt {
+                    colorContext.palette: VLCStyle.palette
                 }
 
-                Repeater {
-                    model: RdEffects.equalizerBandNames()
+                Row {
+                    id: bands
 
-                    delegate: Band {
-                        required property int index
-                        required property var modelData
+                    spacing: VLCStyle.dp(8)
 
-                        text: modelData
-                        value: Number(root._bands[index] ?? 0)
+                    Band {
+                        text: qsTr("Preamp")
+                        value: root._preamp
                         onMoved: (v) => {
-                            RdEffects.setEqualizerBand(index, v)
+                            RdEffects.setAudioValue("equalizer-preamp", v)
                             root._ensureEqualizer()
+                        }
+                    }
+
+                    Repeater {
+                        model: RdEffects.equalizerBandNames()
+
+                        delegate: Band {
+                            required property int index
+                            required property var modelData
+
+                            text: modelData
+                            value: Number(root._bands[index] ?? 0)
+                            onMoved: (v) => {
+                                RdEffects.setEqualizerBand(index, v)
+                                root._ensureEqualizer()
+                            }
                         }
                     }
                 }

@@ -69,7 +69,7 @@ SettingsRow {
                 id: countText
 
                 anchors.verticalCenter: parent.verticalCenter
-                text: qsTr("%n setting(s)", "", root.group.options.length)
+                text: qsTr("%1 setting", "%1 settings", root.group.options.length).arg(root.group.options.length)
                 font.family: VLCStyle.rd_fontFamily
                 font.pixelSize: VLCStyle.rd_fontSize_label
                 color: VLCStyle.palette.rdFgA3

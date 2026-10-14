@@ -44,8 +44,20 @@ Rectangle {
         return colors.indexOf(String(current).toUpperCase())
     }
 
+    // the cell Tab reaches: the chosen one (the first while the accent is none of the nine)
+    readonly property int _focusIndex: Math.max(0, currentIndex)
+
     function select(index) {
         MainCtx.accentColor = Qt.color(colors[index])
+    }
+
+    // arrows choose the next color and keep the keyboard focus on it (a radio group)
+    function _step(from, step) {
+        const index = Math.max(0, Math.min(colors.length - 1, from + step))
+        select(index)
+        const cell = cells.itemAt(index)
+        if (cell)
+            cell.forceActiveFocus(Qt.TabFocusReason)
     }
 
     implicitWidth: VLCStyle.dp(320)
@@ -57,11 +69,15 @@ Rectangle {
     Accessible.name: qsTr("Accent color")
 
     Row {
+        id: cellRow
+
         anchors.fill: parent
         anchors.margins: VLCStyle.dp(2)
         spacing: VLCStyle.dp(4)
 
         Repeater {
+            id: cells
+
             model: root.colors.length
 
             delegate: T.AbstractButton {
@@ -71,10 +87,13 @@ Rectangle {
 
                 readonly property bool selected: root.currentIndex === index
 
-                width: VLCStyle.dp(32)
+                // nine cells and their gaps fill the strip's inner width (Figma's 32 px cells
+                // with 4 px gaps are 4 px wider than its 316 px)
+                width: (cellRow.width - cellRow.spacing * (root.colors.length - 1)) / root.colors.length
                 height: VLCStyle.dp(32)
 
-                focusPolicy: Qt.StrongFocus
+                // one stop in the tab order; the arrows move between the colors
+                focusPolicy: index === root._focusIndex ? Qt.StrongFocus : Qt.ClickFocus
                 hoverEnabled: true
 
                 Accessible.role: Accessible.RadioButton
@@ -83,8 +102,8 @@ Rectangle {
 
                 Keys.onReturnPressed: clicked()
                 Keys.onEnterPressed: clicked()
-                Keys.onLeftPressed: root.select(Math.max(0, index - 1))
-                Keys.onRightPressed: root.select(Math.min(root.colors.length - 1, index + 1))
+                Keys.onLeftPressed: root._step(index, -1)
+                Keys.onRightPressed: root._step(index, 1)
 
                 onClicked: root.select(index)
 

@@ -32,6 +32,8 @@ SettingsSection {
     id: root
 
     property bool _wanted: false
+    // the list follows the search field once typing pauses (it is rebuilt on each change)
+    property string _filter: ""
     readonly property bool _requested: !!_page && (_page.advancedExpanded || _page.filtering)
     on_RequestedChanged: _build()
     Component.onCompleted: Qt.callLater(_build)
@@ -58,6 +60,22 @@ SettingsSection {
             implicitHeight: VLCStyle.dp(36)
             placeholderText: qsTr("Name or capability")
             Accessible.name: qsTr("Search plugins")
+
+            onTextChanged: {
+                if (text.trim() === "") {
+                    filterDelay.stop()
+                    root._filter = ""
+                } else {
+                    filterDelay.restart()
+                }
+            }
+
+            Timer {
+                id: filterDelay
+
+                interval: VLCStyle.duration_long
+                onTriggered: root._filter = filterField.text
+            }
         }
     }
 
@@ -108,7 +126,7 @@ SettingsSection {
             clip: true
             boundsBehavior: Flickable.StopAtBounds
 
-            model: root._wanted && SettingsCatalog.ready ? SettingsCatalog.plugins(filterField.text) : []
+            model: root._wanted && SettingsCatalog.ready ? SettingsCatalog.plugins(root._filter) : []
 
             T.ScrollBar.vertical: Widgets.ScrollBarExt {
                 colorContext.palette: VLCStyle.palette
@@ -140,7 +158,7 @@ SettingsSection {
         Text {
             anchors.centerIn: list
             visible: list.count === 0
-            text: SettingsCatalog.ready ? qsTr("No plugin matches \"%1\"").arg(filterField.text)
+            text: SettingsCatalog.ready ? qsTr("No plugin matches \"%1\"").arg(root._filter)
                                         : qsTr("Loading the plugins...")
             font.family: VLCStyle.rd_fontFamily
             font.pixelSize: VLCStyle.rd_fontSize_label
