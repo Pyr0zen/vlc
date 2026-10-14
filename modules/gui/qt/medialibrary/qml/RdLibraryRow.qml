@@ -39,8 +39,10 @@ T.AbstractButton {
     property real progress: -1
     property bool watched: false
     property bool playing: false
-    // containers and action rows ("+ Add") use the secondary text color
+    // folders, categories, action rows ("+ Add") and Home rows use the secondary text color
+    // (Figma FG/A3)
     property bool secondary: false
+    property color iconColor: VLCStyle.palette.rdFgA2
     property bool showMore: true
     // drag to the queue: URLs of the dragged media, empty for rows that cannot be dragged
     property var dragUrls: []
@@ -92,6 +94,7 @@ T.AbstractButton {
                 source: row.thumbnail
                 iconName: row.iconName
                 boxed: row.boxed
+                iconColor: row.iconColor
                 progress: row.progress
                 watched: row.watched
                 playing: row.playing
@@ -108,7 +111,7 @@ T.AbstractButton {
                 color: row.playing ? VLCStyle.palette.rdAccentMain
                      : (row.hovered || row.visualFocus) ? VLCStyle.palette.rdFg2
                      : row.watched ? VLCStyle.palette.rdFgA3
-                     : row.secondary ? VLCStyle.palette.rdFgA2
+                     : row.secondary ? VLCStyle.palette.rdFgA3
                      : VLCStyle.palette.rdFgA1
             }
         }

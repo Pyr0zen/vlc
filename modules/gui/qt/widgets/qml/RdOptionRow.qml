@@ -30,6 +30,8 @@ T.ItemDelegate {
     property string rdIcon: ""              // Figma icon name (Widgets.RdIcon), two-tone menu icons included
     property string shortcut: ""
     property bool hasSubmenu: false
+    // the ">" of a submenu row (Figma's "Add to Playlist" row has none)
+    property bool showChevron: true
     property bool selected: false           // orange check at the right
     property bool dimmed: false             // e.g. "+ New Custom Preset"
     property Component leading: null        // optional item before the text (equalizer curve)
@@ -109,7 +111,7 @@ T.ItemDelegate {
             }
 
             RdIcon {
-                visible: control.hasSubmenu || control.selected
+                visible: (control.hasSubmenu && control.showChevron) || control.selected
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
                 name: control.selected ? "check_state-active" : "chevron_direction-right"

@@ -38,8 +38,18 @@ Rectangle {
     // full library: labels next to the icons
     property bool showLabels: false
 
-    implicitWidth: showLabels ? VLCStyle.dp(200) : VLCStyle.rd_libraryRailWidth
-    color: VLCStyle.palette.rdBgA4
+    // Figma: next to the video a 50 wide BG/A4 column; in the full library 217 wide on BG/B1
+    // with a BG/A4 card inside (margins 8, radius 6, padding 12 / 16)
+    implicitWidth: showLabels ? VLCStyle.rd_libraryRailFullWidth : VLCStyle.rd_libraryRailWidth
+    color: showLabels ? VLCStyle.palette.rdBgB1 : VLCStyle.palette.rdBgA4
+
+    Rectangle {
+        visible: rail.showLabels
+        anchors.fill: parent
+        anchors.margins: VLCStyle.dp(8)
+        radius: VLCStyle.rd_radius_normal
+        color: VLCStyle.palette.rdBgA4
+    }
 
     readonly property var _categories: [
         { page: "home", category: "home", label: qsTr("Home"), icon: "home",
@@ -65,10 +75,15 @@ Rectangle {
         Column {
             id: column
 
+            // width of the buttons
+            readonly property real itemWidth: width - leftPadding - rightPadding
+
             width: parent.width
-            topPadding: VLCStyle.dp(8)
-            bottomPadding: VLCStyle.dp(8)
-            spacing: rail.showLabels ? VLCStyle.dp(6) : VLCStyle.dp(14)
+            topPadding: rail.showLabels ? VLCStyle.dp(20) : VLCStyle.dp(8)
+            bottomPadding: rail.showLabels ? VLCStyle.dp(20) : VLCStyle.dp(8)
+            leftPadding: rail.showLabels ? VLCStyle.dp(24) : 0
+            rightPadding: rail.showLabels ? VLCStyle.dp(24) : 0
+            spacing: VLCStyle.dp(14)
 
             Repeater {
                 model: rail._categories
@@ -85,7 +100,7 @@ Rectangle {
                     accentIcon: isCurrent && modelData.page === "recent"
                     current: isCurrent
                     showLabel: rail.showLabels
-                    width: column.width
+                    width: column.itemWidth
                     onClicked: RdLibraryNav.openRoot(modelData.page)
                 }
             }
@@ -111,7 +126,7 @@ Rectangle {
                     current: RdLibraryNav.key(RdLibraryNav.location) === modelData.location.key
                              && RdLibraryNav.location.page === modelData.location.page
                     showLabel: rail.showLabels
-                    width: column.width
+                    width: column.itemWidth
                     onClicked: RdLibraryNav.openPin(modelData.location)
                     onContextRequested: (x, y) => {
                         pinMenu.entries = [
@@ -133,7 +148,7 @@ Rectangle {
                 label: qsTr("Add item")
                 iconName: "add"
                 showLabel: rail.showLabels
-                width: column.width
+                width: column.itemWidth
                 onClicked: {
                     const location = RdLibraryNav.location
                     addMenu.entries = [
@@ -253,7 +268,7 @@ Rectangle {
 
         signal contextRequested(real x, real y)
 
-        implicitHeight: showLabel ? VLCStyle.dp(36) : VLCStyle.rd_iconButtonHeight
+        implicitHeight: VLCStyle.rd_iconButtonHeight
         hoverEnabled: true
         focusPolicy: Qt.TabFocus
 
@@ -273,12 +288,13 @@ Rectangle {
             Rectangle {
                 id: wrapper
 
-                x: button.showLabel ? VLCStyle.dp(12) : (parent.width - width) / 2
+                x: button.showLabel ? 0 : (parent.width - width) / 2
                 anchors.verticalCenter: parent.verticalCenter
                 width: VLCStyle.rd_iconButtonWidth
                 height: VLCStyle.rd_iconButtonHeight
                 radius: VLCStyle.rd_radius_small
-                color: !button.showLabel && button._hot ? VLCStyle.palette.rdHoverOverlay : "transparent"
+                // Figma "Icon Wrapper" hover: #FFFFFF 6 %, the icon and label keep their colors
+                color: button._hot ? VLCStyle.palette.rdHoverOverlay : "transparent"
 
                 Widgets.ImageExt {
                     anchors.centerIn: parent
@@ -296,25 +312,23 @@ Rectangle {
                     anchors.centerIn: parent
                     visible: button.image.toString() === ""
                     name: button.iconName
-                    color: button.accentIcon || (button.showLabel && button._hot) ? VLCStyle.palette.rdAccentMain
-                                                                                : VLCStyle.palette.rdFgA2
+                    color: button.accentIcon ? VLCStyle.palette.rdAccentMain : VLCStyle.palette.rdFgA2
                 }
             }
 
             Text {
                 visible: button.showLabel
                 anchors.left: wrapper.right
-                anchors.leftMargin: VLCStyle.dp(10)
+                anchors.leftMargin: VLCStyle.dp(8)
                 anchors.right: parent.right
-                anchors.rightMargin: VLCStyle.dp(10)
                 anchors.verticalCenter: parent.verticalCenter
                 text: button.label
                 elide: Text.ElideRight
                 font.family: VLCStyle.rd_fontFamily
                 font.pixelSize: VLCStyle.rd_fontSize_label
-                color: button._hot ? VLCStyle.palette.rdAccentMain
-                     : button.current ? VLCStyle.palette.rdFg1
-                     : VLCStyle.palette.rdFgA2
+                // Figma Player-5: the current category's label is FG/2 at its root, FG/A2 inside
+                color: button.current && RdLibraryNav.atCategoryRoot ? VLCStyle.palette.rdFg2
+                                                                     : VLCStyle.palette.rdFgA2
             }
         }
 

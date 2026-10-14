@@ -56,7 +56,7 @@ Item {
         entries.push({ text: qsTr("Convert"), icon: "swap_two-tone-yes", action: () => RdLibraryActions.convert(item) })
         entries.push({ text: qsTr("Add to Queue"), icon: "queue_two-tone-yes", action: () => RdLibraryActions.addToQueue(item) })
         if (isMl)
-            entries.push({ text: qsTr("Add to Playlist"), icon: "playlist_two-tone-yes", submenu: true,
+            entries.push({ text: qsTr("Add to Playlist"), icon: "playlist_two-tone-yes", submenu: true, chevron: false,
                            action: (row) => { playlistMenu.mediaItems = [item.id]; playlistMenu.openBeside(row) } })
         if (isLocal) {
             entries.push({ text: qsTr("Show in File Explorer"), icon: "folder_two-tone-yes",
@@ -111,7 +111,7 @@ Item {
                                               action: () => RdLibraryActions.toggleFavorite(item) } : null,
             { text: qsTr("Shuffle"), icon: "shuffle_two-tone-yes_direction-right", action: () => RdLibraryActions.shuffle(item) },
             { text: qsTr("Add to Queue"), icon: "queue_two-tone-yes", action: () => RdLibraryActions.addToQueue(item) },
-            { text: qsTr("Add to Playlist"), icon: "playlist_two-tone-yes", submenu: true,
+            { text: qsTr("Add to Playlist"), icon: "playlist_two-tone-yes", submenu: true, chevron: false,
               action: (row) => { playlistMenu.mediaItems = [item.id]; playlistMenu.openBeside(row) } }
         ].filter((entry) => !!entry)
     }
@@ -129,7 +129,7 @@ Item {
               action: () => DialogsProvider.loadAudioFile() },
             { text: qsTr("Resync"), icon: "refresh_two-tone-yes",
               action: () => RdLibraryStore.reloadFolder(folder ? folder.mrl : "") },
-            { text: qsTr("Info"), icon: "info", enabled: !!folder, action: () => RdLibraryNav.infoRequested(folder) }
+            { text: qsTr("Info"), icon: "info_two-tone-yes", enabled: !!folder, action: () => RdLibraryNav.infoRequested(folder) }
         ]
         // a library folder of the category's root can leave the category
         if (folder && folder.isRoot)
@@ -161,10 +161,13 @@ Item {
         default: entries = _fileEntries(item)
         }
         menu.entries = entries
-        menu.openBelow(button, true)
+        // Figma row "..." menus: overlay offset -16, 34 from the icon
+        menu.openOffset(button, -VLCStyle.dp(16), VLCStyle.dp(34))
     }
 
-    function openForPage(button) {
+    // compact: the "..." next to the video; Figma overlay offset -11, 30 there, -235, 30 in the
+    // full library
+    function openForPage(button, compact) {
         const loc = root.location
         let entries
         switch (loc.page) {
@@ -206,7 +209,7 @@ Item {
             ]
         }
         menu.entries = entries
-        menu.openBelow(button, true)
+        menu.openOffset(button, compact ? -VLCStyle.dp(11) : -VLCStyle.dp(235), VLCStyle.dp(30))
     }
 
     function close() {

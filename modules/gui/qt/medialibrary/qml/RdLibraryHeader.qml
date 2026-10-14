@@ -41,7 +41,8 @@ Item {
 
     property bool searchOpen: false
 
-    implicitHeight: compact ? VLCStyle.dp(68) : VLCStyle.dp(32)
+    // Figma: two 24 px rows 20 apart next to the video, one 34 px row in the full library
+    implicitHeight: compact ? VLCStyle.dp(68) : VLCStyle.dp(34)
 
     // Ctrl+F
     function focusSearch() {
@@ -91,7 +92,7 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.top: parent.top
-        height: VLCStyle.dp(24)
+        height: root.compact ? VLCStyle.dp(24) : VLCStyle.dp(34)
 
         Row {
             id: navButtons
@@ -119,11 +120,12 @@ Item {
             anchors.left: navButtons.right
             anchors.leftMargin: VLCStyle.dp(10)
             anchors.right: root.compact ? pageActions.left : fullTools.left
-            anchors.rightMargin: VLCStyle.dp(10)
+            anchors.rightMargin: root.compact ? VLCStyle.dp(10) : VLCStyle.dp(20)
             anchors.verticalCenter: parent.verticalCenter
 
             crumbs: RdLibraryNav.location.crumbs
-            boldLast: !root.compact
+            // Figma Player-5: a category's root alone is not bold
+            boldLast: !root.compact && RdLibraryNav.location.crumbs.length > 1
             onCrumbClicked: (index) => RdLibraryNav.openCrumb(index)
         }
 
@@ -138,12 +140,14 @@ Item {
             RdLibraryIconButton {
                 id: compactMore
 
+                normalColor: VLCStyle.palette.rdFgA3
                 iconName: "more"
                 description: qsTr("More")
-                onClicked: pageMenu.openForPage(compactMore)
+                onClicked: pageMenu.openForPage(compactMore, true)
             }
 
             RdLibraryIconButton {
+                normalColor: VLCStyle.palette.rdFgA3
                 iconName: "open"
                 description: qsTr("Open the library in full")
                 onClicked: root.openFullRequested()
@@ -157,7 +161,7 @@ Item {
             visible: !root.compact
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
-            spacing: VLCStyle.dp(16)
+            spacing: VLCStyle.dp(20)
 
             CountText {
                 anchors.verticalCenter: parent.verticalCenter
@@ -169,13 +173,16 @@ Item {
                 header: root
                 menu: toolMenu
                 showSearchButton: false
+                spacing: VLCStyle.dp(20)
             }
 
+            // Figma "Frame 122": 325 x 34
             SearchField {
                 id: fullSearch
 
                 anchors.verticalCenter: parent.verticalCenter
-                width: VLCStyle.dp(240)
+                width: VLCStyle.dp(325)
+                height: VLCStyle.dp(34)
                 page: root.page
             }
 
@@ -183,10 +190,10 @@ Item {
                 id: fullMore
 
                 anchors.verticalCenter: parent.verticalCenter
+                normalColor: VLCStyle.palette.rdFgA3
                 iconName: "more"
                 description: qsTr("More")
-                iconColor: VLCStyle.palette.rdFg2
-                onClicked: pageMenu.openForPage(fullMore)
+                onClicked: pageMenu.openForPage(fullMore, false)
             }
         }
     }
@@ -215,6 +222,8 @@ Item {
             anchors.right: compactTools.left
             anchors.rightMargin: VLCStyle.dp(12)
             anchors.verticalCenter: parent.verticalCenter
+            // no Figma state: the field fits the 24 px count row
+            height: VLCStyle.dp(28)
             page: root.page
             onEscaped: root.searchOpen = false
         }
@@ -291,9 +300,23 @@ Item {
         RdLibraryIconButton {
             id: sortButton
 
+            readonly property bool sorted: !!tools.page && tools.page.sortKey !== tools.page.defaultSortKey
+
             visible: !!tools.page && tools.page.sortOptions.length > 0
-            iconName: tools.page && tools.page.sortKey !== tools.page.defaultSortKey ? "sort_state-active" : "sort"
+            normalColor: VLCStyle.palette.rdFgA3
+            iconName: "sort"
             description: qsTr("Sort")
+
+            // Figma "sort" state=active: a 4 px accent dot at (22, -1), outside the icon's box
+            Rectangle {
+                visible: sortButton.sorted
+                x: VLCStyle.dp(22)
+                y: VLCStyle.dp(-1)
+                width: VLCStyle.dp(4)
+                height: VLCStyle.dp(4)
+                radius: width / 2
+                color: VLCStyle.palette.rdAccentMain
+            }
             onClicked: {
                 if (tools._toggleMenu(sortButton))
                     tools.openSortMenu(sortButton)
@@ -304,6 +327,7 @@ Item {
             id: viewButton
 
             visible: !!tools.page
+            normalColor: VLCStyle.palette.rdFgA3
             iconName: tools.page && tools.page.viewMode === "grid" ? "grid" : "list"
             description: qsTr("View")
             onClicked: {
@@ -323,6 +347,7 @@ Item {
 
         RdLibraryIconButton {
             visible: tools.showSearchButton && !!tools.page && tools.page.searchable
+            normalColor: VLCStyle.palette.rdFgA3
             iconName: "search"
             description: qsTr("Search")
             onClicked: tools.searchClicked()
@@ -342,7 +367,7 @@ Item {
             input.forceActiveFocus()
         }
 
-        implicitHeight: VLCStyle.dp(28)
+        implicitHeight: VLCStyle.dp(34)
         radius: VLCStyle.rd_radius_normal
         // a little lighter than the page (video 10:44-10:59)
         color: VLCStyle.palette.rdBgA5
@@ -352,11 +377,12 @@ Item {
         Widgets.RdIcon {
             id: searchIcon
 
+            // Figma: padding 5,8; 24 px icon, 10 before the text
             anchors.left: parent.left
-            anchors.leftMargin: VLCStyle.dp(6)
+            anchors.leftMargin: VLCStyle.dp(8)
             anchors.verticalCenter: parent.verticalCenter
             name: "search"
-            size: VLCStyle.dp(20)
+            size: VLCStyle.rd_iconSize
             color: VLCStyle.palette.rdFgA3
         }
 
@@ -364,7 +390,7 @@ Item {
             id: input
 
             anchors.left: searchIcon.right
-            anchors.leftMargin: VLCStyle.dp(6)
+            anchors.leftMargin: VLCStyle.dp(10)
             anchors.right: parent.right
             anchors.rightMargin: VLCStyle.dp(8)
             anchors.verticalCenter: parent.verticalCenter

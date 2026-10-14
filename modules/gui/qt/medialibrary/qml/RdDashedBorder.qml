@@ -31,26 +31,28 @@ Item {
     property real lineWidth: VLCStyle.dp(2)
     property real dash: VLCStyle.dp(4)
     property real gap: VLCStyle.dp(4)
+    // the sides stop this far from the corners (rounded background)
+    property real cornerInset: 0
 
     readonly property real _step: dash + gap
 
     // the dashes exist only while the border is shown (the closed dialog follows window resizes)
 
     Repeater {
-        model: root.visible ? Math.max(0, Math.floor(root.width / root._step)) : 0
+        model: root.visible ? Math.max(0, Math.floor((root.width - 2 * root.cornerInset + root.gap) / root._step)) : 0
 
         delegate: Item {
             required property int index
 
             Rectangle {
-                x: index * root._step
+                x: root.cornerInset + index * root._step
                 width: root.dash
                 height: root.lineWidth
                 color: root.color
             }
 
             Rectangle {
-                x: index * root._step
+                x: root.cornerInset + index * root._step
                 y: root.height - root.lineWidth
                 width: root.dash
                 height: root.lineWidth
@@ -60,13 +62,13 @@ Item {
     }
 
     Repeater {
-        model: root.visible ? Math.max(0, Math.floor(root.height / root._step)) : 0
+        model: root.visible ? Math.max(0, Math.floor((root.height - 2 * root.cornerInset + root.gap) / root._step)) : 0
 
         delegate: Item {
             required property int index
 
             Rectangle {
-                y: index * root._step
+                y: root.cornerInset + index * root._step
                 width: root.lineWidth
                 height: root.dash
                 color: root.color
@@ -74,7 +76,7 @@ Item {
 
             Rectangle {
                 x: root.width - root.lineWidth
-                y: index * root._step
+                y: root.cornerInset + index * root._step
                 width: root.lineWidth
                 height: root.dash
                 color: root.color

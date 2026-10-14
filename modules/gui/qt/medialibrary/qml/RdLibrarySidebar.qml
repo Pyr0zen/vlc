@@ -112,7 +112,8 @@ FocusScope {
 
             anchors.left: header.left
             anchors.right: header.right
-            anchors.top: divider.bottom
+            // Figma: the rows start 20 below the divider's line
+            anchors.top: divider.top
             anchors.topMargin: VLCStyle.dp(20)
             anchors.bottom: parent.bottom
             anchors.bottomMargin: VLCStyle.dp(20)

@@ -33,9 +33,12 @@ T.AbstractButton {
 
     property string iconName: ""
     property string description: ""
-    property color iconColor: !enabled ? VLCStyle.palette.rdFgA4
+    // the icon's color at rest (Figma: back / forward FG/A2, the header tools FG/A3)
+    property color normalColor: VLCStyle.palette.rdFgA2
+    // Figma disabled arrow: FG/A2 at 30 % opacity
+    property color iconColor: !enabled ? Qt.alpha(VLCStyle.palette.rdFgA2, 0.3)
                                        : (hovered || visualFocus) ? VLCStyle.palette.rdFgA1
-                                                                  : VLCStyle.palette.rdFgA2
+                                                                  : normalColor
     property bool showHoverBackground: true
 
     implicitWidth: VLCStyle.rd_iconSize
