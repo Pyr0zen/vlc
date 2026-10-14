@@ -353,7 +353,7 @@ T.Popup {
                         placeholderText: qsTr("e.g., https://www.example.com/stream.avi")
                         placeholderTextColor: root.rdPalette.rdFgA4
                         selectionColor: root.rdPalette.rdAccentDim
-                        selectedTextColor: root.rdPalette.rdFg1
+                        selectedTextColor: root.rdPalette.rdSelectionText
 
                         Accessible.name: qsTr("Network URL")
 

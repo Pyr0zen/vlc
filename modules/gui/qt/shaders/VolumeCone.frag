@@ -20,8 +20,9 @@
 
 // redesign: cone-shaped volume slider (video 3:04-3:10, 11:41; Figma "volume" component).
 // A horizontal cone: rounded narrow tip on the left, full height on the right. The part left of
-// `level` (0..1 of the width) shows the green > orange > red gradient, darkened 20%, which stays
-// the same in every theme and accent (video 17:44-17:49); the rest shows `emptyColor`.
+// `level` (0..1 of the width) shows the green > orange > red gradient, which stays the same in
+// every theme and accent (video 17:44-17:49), under the theme's `tint` (Figma: #000000 20 % in
+// Dark, #FFFFFF 20 % in Light); the rest shows `emptyColor`.
 
 layout(location = 0) in vec2 qt_TexCoord0;
 
@@ -35,6 +36,7 @@ layout(std140, binding = 0) uniform buf {
   float level;
   float tipRadius;
   vec4 emptyColor;
+  vec4 tint;
 };
 
 vec3 gradientAt(float t)
@@ -74,9 +76,9 @@ void main()
 
     // filled part, antialiased at the level edge
     float filled = clamp(level * w - p.x + 0.5, 0.0, 1.0);
-    vec3 fill = gradientAt(clamp(p.x / w, 0.0, 1.0)) * 0.8;
+    // the colors are premultiplied: the tint lies over the gradient
+    vec3 fill = gradientAt(clamp(p.x / w, 0.0, 1.0)) * (1.0 - tint.a) + tint.rgb;
 
-    // emptyColor is premultiplied
     vec4 color = mix(emptyColor, vec4(fill, 1.0), filled);
 
     fragColor = color * coverage * qt_Opacity;

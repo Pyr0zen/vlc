@@ -102,9 +102,10 @@ FocusScope{
 
     // Children
 
+    // Figma "topbar": BG/A3 in the dark Player frames, BG/A3 Transparent in "Player - Light"
     Rectangle {
         anchors.fill: parent
-        color: VLCStyle.palette.rdBgA3
+        color: VLCStyle.palette.isDark ? VLCStyle.palette.rdBgA3 : VLCStyle.palette.rdBgA3Transparent
     }
 
     //drag and dbl click the titlebar in CSD mode
@@ -143,8 +144,8 @@ FocusScope{
             // wide 10 apart ("Frame 50"), the divider in a 24 wide cell ("Frame 6"), folder chip
             spacing: 0
 
-            // cone (Figma "Frame 8", 38x28 cell, Figma "vlc" icon, accent colored so it follows
-            // the live accent: video 17:46)
+            // cone (Figma "Frame 8", 38x28 cell, Figma "vlc" icon in Accent/Logo, derived from the
+            // live accent: video 17:46)
             Item {
                 width: VLCStyle.dp(38, VLCStyle.scale)
                 height: VLCStyle.dp(28, VLCStyle.scale)
@@ -152,7 +153,7 @@ FocusScope{
                 Widgets.RdIcon {
                     anchors.centerIn: parent
                     name: "vlc"
-                    accentColor: theme.accent
+                    accentColor: VLCStyle.palette.rdAccentLogo
                 }
             }
 
@@ -242,10 +243,13 @@ FocusScope{
                 width: VLCStyle.dp(24, VLCStyle.scale)
                 height: VLCStyle.dp(28, VLCStyle.scale)
 
+                // Figma "Vector 26": an 18 px line, 1.5 px stroke with round caps (19.5 x 1.5 drawn,
+                // 3 px wide in the 2x export). Not rounded through dp(): 1.5 would become 2.
                 Rectangle {
                     anchors.centerIn: parent
-                    width: VLCStyle.dp(1, VLCStyle.scale)
-                    height: VLCStyle.dp(20, VLCStyle.scale)
+                    width: 1.5 * VLCStyle.scale
+                    height: 19.5 * VLCStyle.scale
+                    radius: width / 2
                     color: VLCStyle.palette.rdDividerBright
                 }
             }

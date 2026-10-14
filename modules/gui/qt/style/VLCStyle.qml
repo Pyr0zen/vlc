@@ -360,9 +360,12 @@ QtObject {
     readonly property int rd_seekBarHeight: MainCtx.dp(28, scale)
     readonly property int rd_seekFillHeight: MainCtx.dp(24, scale)
     readonly property int rd_seekHandleWidth: MainCtx.dp(8, scale)
+    // narrow window: the seek bar never gets narrower than a time label
+    readonly property int rd_seekBarMinimumWidth: MainCtx.dp(76, scale)
     readonly property int rd_iconSize: MainCtx.dp(24, scale)
     readonly property int rd_iconButtonWidth: MainCtx.dp(30, scale)
     readonly property int rd_iconButtonHeight: MainCtx.dp(32, scale)
+    readonly property int rd_iconButtonSpacing: MainCtx.dp(12, scale)   // Figma "Frame 23": track / settings buttons
     readonly property int rd_playButtonWidth: MainCtx.dp(54, scale)
     // in a window, the bars hide this long after the last mouse movement (ms, Decision 30)
     readonly property int rd_barsHideDelay: 3000
