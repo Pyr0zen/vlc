@@ -54,7 +54,7 @@ const QSet<QString>& curatedOptions()
         // General
         "interact", "qt-updates-notif", "qt-updates-days", "file-logging", "logfile", "log-verbose",
         "qt-error-dialogs", "logmode", "stats", "syslog", "syslog-debug", "syslog-ident",
-        "syslog-facility", "verbose", "qt-verbose", "qt-accent-color",
+        "syslog-facility", "qt-verbose", "qt-accent-color",
         // Interface
         "intf", "skins2-last", "embedded-video", "qt-video-autoresize", "video-on-top", "qt-titlebar",
         "qt-name-in-title", "qt-fullscreen-screennumber", "qt-minimal-view", "qt-pin-controls",
@@ -108,7 +108,6 @@ const QSet<QString>& curatedOptions()
         // Performance
         "dec-dev", "postproc-q", "avcodec-skiploopfilter", "avcodec-threads", "drop-late-frames",
         "high-priority", "codec", "clock-synchro", "clock-jitter", "cr-average", "clock-master",
-        "avcodec-hw", "plugins-cache", "plugins-scan",
         // Recording
         "input-record-path", "input-record-native", "sout-chromecast-conversion-quality",
         "sout-display", "sout-audio", "sout-video", "sout-spu", "sout-x264-preset", "sout-x264-tune",
