@@ -38,6 +38,7 @@
 #include "dialogs/toolbar/controlbar_profile_model.hpp"
 #include "dialogs/toolbar/controlbar_profile.hpp"
 #include "dialogs/redesign/hotkeys_model.hpp"
+#include "dialogs/redesign/onboarding_helper.hpp"
 #include "dialogs/redesign/settings/settings_catalog.hpp"
 
 #include "playlist/playlist_model.hpp"
@@ -290,6 +291,8 @@ void MainUI::registerQMLTypes()
         qmlRegisterSingletonInstance<DialogErrorModel>(uri, versionMajor, versionMinor, "DialogErrorModel", DialogErrorModel::getInstance<false>());
         // redesign: hotkey configuration of the Keyboard Shortcuts dialog
         qmlRegisterType<HotkeysModel>( uri, versionMajor, versionMinor, "HotkeysModel" );
+        // redesign (W8.3): settings side of the onboarding
+        qmlRegisterType<OnboardingHelper>( uri, versionMajor, versionMinor, "OnboardingHelper" );
         // redesign: VLC's options by Settings category, plugins, pickers (Settings pages)
         qmlRegisterSingletonInstance<SettingsCatalog>( uri, versionMajor, versionMinor, "SettingsCatalog",
                                                        new SettingsCatalog( m_intf, this ) );

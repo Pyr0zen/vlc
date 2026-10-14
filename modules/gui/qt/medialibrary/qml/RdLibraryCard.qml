@@ -18,8 +18,10 @@
 
 // redesign: a library grid card (full library grid view, video 10:57-10:59, IB-06, P5-17; Home
 // cards 13:48-13:55, IB-34): the picture (16:9 for videos, square for songs, albums, folders and
-// playlists) with a small radius, no border or shadow; the title under it in small gray text,
-// dimmer once watched; the artist on a second, dimmer line for songs and albums.
+// playlists), Figma Player-3 / Player-5: radius 12, base #171717 (#1E1E1E for folders), a 20 %
+// black layer over video pictures, a 48 px icon on square cards without a picture, the 4 px
+// watched bar; 20 below it the title (Inter 400 16, FG/A1, FG/A3 once watched), 10 below that
+// the artist (16, FG/A3) for songs and albums.
 import QtQuick
 import QtQuick.Templates as T
 
@@ -45,9 +47,9 @@ T.AbstractButton {
 
     readonly property real pictureHeight: wide ? width * 9 / 16 : width
 
-    implicitWidth: VLCStyle.dp(211)
-    implicitHeight: pictureHeight + VLCStyle.dp(8) + titleText.implicitHeight
-                    + (subtitle !== "" ? subtitleText.implicitHeight + VLCStyle.dp(2) : 0)
+    implicitWidth: VLCStyle.dp(316)
+    implicitHeight: pictureHeight + VLCStyle.dp(20) + titleText.implicitHeight
+                    + (subtitle !== "" ? subtitleText.implicitHeight + VLCStyle.dp(10) : 0)
 
     focusPolicy: Qt.StrongFocus
     hoverEnabled: true
@@ -83,11 +85,16 @@ T.AbstractButton {
             height: card.pictureHeight
             source: card.thumbnail
             iconName: card.iconName
-            radius: VLCStyle.rd_radius_small
+            iconSize: card.wide ? VLCStyle.rd_iconSize : VLCStyle.dp(48)
+            radius: VLCStyle.rd_radius_card
+            baseColor: card.iconName === "folder" ? VLCStyle.palette.rdFolderCardBase
+                                                  : VLCStyle.palette.rdCardBase
+            shaded: card.wide
             progress: card.progress
             watched: card.watched
             playing: card.playing
-            barInset: 0
+            barTrim: 0
+            barHeight: VLCStyle.dp(4)
         }
 
         Rectangle {
@@ -111,12 +118,12 @@ T.AbstractButton {
             id: titleText
 
             anchors.top: picture.bottom
-            anchors.topMargin: VLCStyle.dp(8)
+            anchors.topMargin: VLCStyle.dp(20)
             width: parent.width
             text: card.title
             elide: Text.ElideRight
             font.family: VLCStyle.rd_fontFamily
-            font.pixelSize: VLCStyle.rd_fontSize_label
+            font.pixelSize: VLCStyle.rd_fontSize_header
             color: card.playing ? VLCStyle.palette.rdAccentMain
                  : (card.hovered || card.visualFocus) ? VLCStyle.palette.rdFg2
                  : card.watched ? VLCStyle.palette.rdFgA3
@@ -127,13 +134,13 @@ T.AbstractButton {
             id: subtitleText
 
             anchors.top: titleText.bottom
-            anchors.topMargin: VLCStyle.dp(2)
+            anchors.topMargin: VLCStyle.dp(10)
             width: parent.width
             visible: card.subtitle !== ""
             text: card.subtitle
             elide: Text.ElideRight
             font.family: VLCStyle.rd_fontFamily
-            font.pixelSize: VLCStyle.rd_fontSize_label
+            font.pixelSize: VLCStyle.rd_fontSize_header
             color: VLCStyle.palette.rdFgA3
         }
     }

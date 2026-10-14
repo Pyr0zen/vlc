@@ -519,6 +519,20 @@ bool InterfaceWindowHandler::applyKeyEvent(QKeyEvent * event) const
     //       inherit from QQuickControl we have to declare the 'visualFocus' property ourselves.
     if (item)
     {
+        // redesign: keys go to an open popup (a drop-down list, a menu or a dialog drawn by the
+        // interface) while the focus is inside it, and to a combo box while its list is open
+        // (Escape and the arrows must close and move in the list, not reach the player)
+        for (const QQuickItem * parent = item; parent; parent = parent->parentItem())
+        {
+            if (parent->inherits("QQuickPopupItem"))
+                return false;
+        }
+        if (item->inherits("QQuickComboBox"))
+        {
+            const QObject * const popup = item->property("popup").value<QObject *>();
+            if (popup && popup->property("visible").toBool())
+                return false;
+        }
 
         QVariant visualFocus = QQmlProperty::read(item, "visualFocus", qmlContext(item));
         if (visualFocus.isValid())

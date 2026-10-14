@@ -323,6 +323,11 @@ FocusScope {
 
     function lockUnlockAutoHide(lock) {
         if (lock) {
+            // a hidden FSM ignores lock() (fullscreen bars shown by their edge zone, a panel or the
+            // time field opened from such a bar): show it first, so every lock is counted and the
+            // matching unlock() cannot release another component's lock
+            if (!playerToolbarVisibilityFSM.isVisible)
+                playerToolbarVisibilityFSM.askShow()
             playerToolbarVisibilityFSM.lock()
         } else {
             playerToolbarVisibilityFSM.unlock()
@@ -641,7 +646,8 @@ FocusScope {
 
                     postprocess: true
                     tint: bgtheme.palette.isDark ? "black" : "white"
-                    tintStrength: 0.5
+                    // redesign: Figma "Player - Music" blurs the artwork without a tint
+                    tintStrength: 0
                     backgroundColor: bgtheme.bg.primary
 
                     readonly property ColorContext colorContext: ColorContext {
@@ -834,12 +840,15 @@ FocusScope {
 
                         Item {
                             id: coverItem
-                            Layout.preferredHeight: rootPlayer.height / sizeConstant
+                            // no wider than the pane it sits in (a narrow window, lyrics)
+                            Layout.preferredHeight: Math.min(rootPlayer.height / sizeConstant,
+                                                             parent.parent.width - 2 * VLCStyle.margin_large)
                             Layout.preferredWidth: cover.paintedWidth
                             Layout.maximumHeight: centerContent.height
                             Layout.alignment: Qt.AlignHCenter
 
-                            readonly property real sizeConstant: 2.7182
+                            // redesign: Figma "Player - Music": the cover is 737 high in a 1080 high window
+                            readonly property real sizeConstant: 1080 / 737
 
                             // the texture of the cover and of the blurred background, and the cover
                             // size; shown through roundedCover below (falls back to itself where
@@ -915,16 +924,10 @@ FocusScope {
                                 fillMode: Image.PreserveAspectFit
                                 radius: VLCStyle.rd_radius_cover
 
+                                // Figma: one faint glow, #FFFFFF 3 %, no offset, blur 90.5
                                 Widgets.RoundedRectangleShadow {
-                                    color: Qt.rgba(0, 0, 0, .18)
-                                    yOffset: VLCStyle.dp(24, VLCStyle.scale)
-                                    blurRadius: VLCStyle.dp(54, VLCStyle.scale)
-                                }
-
-                                Widgets.RoundedRectangleShadow {
-                                    color: Qt.rgba(0, 0, 0, .22)
-                                    yOffset: VLCStyle.dp(5, VLCStyle.scale)
-                                    blurRadius: VLCStyle.dp(14, VLCStyle.scale)
+                                    color: VLCStyle.palette.rdCoverGlow
+                                    blurRadius: VLCStyle.dp(90.5, VLCStyle.scale)
                                 }
                             }
                         }
@@ -935,7 +938,11 @@ FocusScope {
                             id: captionLabel
 
                             Layout.alignment: Qt.AlignHCenter
-                            Layout.topMargin: VLCStyle.margin_xxlarge
+                            // Figma: the space between the bars is split in three equal gaps:
+                            // above the cover, between cover and caption, below the caption
+                            Layout.topMargin: Math.max(VLCStyle.margin_small,
+                                                       (centerContent.height + 2 * VLCStyle.margin_xsmall
+                                                        - coverItem.Layout.preferredHeight - implicitHeight) / 3)
                             // the column's pane: the whole view, or the right pane with lyrics
                             Layout.maximumWidth: parent.parent.width - 2 * VLCStyle.margin_large
 
@@ -1196,8 +1203,9 @@ FocusScope {
         visible: MainCtx.hasEmbededVideo && (MainCtx.intfMainWindow.visibility !== Window.FullScreen)
         enabled: false
 
-        readonly property real inset: VLCStyle.dp(6, VLCStyle.scale)
-        readonly property real innerRadius: VLCStyle.dp(8, VLCStyle.scale)
+        // Figma "Frame 312": 10 px of BG/A3 frame, visible corner about 9 px (visual audit A7, A8)
+        readonly property real inset: VLCStyle.dp(10, VLCStyle.scale)
+        readonly property real innerRadius: VLCStyle.dp(9, VLCStyle.scale)
         // the opening follows the bars' fade, so it grows and shrinks with them instead of
         // jumping once a bar has faded out (bars auto-hide over the video, Decision 30)
         readonly property real topEdge: inset + (topBar.height - inset) * (topBar.visible ? topBar.opacity : 0)
@@ -1271,6 +1279,83 @@ FocusScope {
             active: rootPlayer._libraryActivated
             asynchronous: rootPlayer._libraryAsync
             source: "qrc:///qt/qml/VLC/MediaLibrary/RdLibrarySidebar.qml"
+        }
+    }
+
+    // redesign: a click outside the open player panel closes it (INTERACTIONS.md section 2).
+    // Over the video (or the audio view) the click only closes the panel: it does not reach the
+    // video, which would pause on the click (mouse-pause-policy) and switch to fullscreen on a
+    // double click; the second click of a quick double click is held back too. A right click
+    // closes the panel and opens the right-click menu. Clicks on the bars are handled below.
+    MouseArea {
+        id: panelDismissArea
+
+        anchors.fill: parent
+
+        enabled: RdPanels.current !== "" || dismissClickGuard.running || pressed
+        acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+
+        onPressed: {
+            if (RdPanels.current === "")
+                return
+            RdPanels.close()
+            dismissClickGuard.restart()
+        }
+
+        onClicked: (mouse) => {
+            if (mouse.button === Qt.RightButton)
+                playerMenu.popupAtCursor()
+        }
+
+        Timer {
+            id: dismissClickGuard
+
+            interval: Qt.styleHints.mouseDoubleClickInterval
+        }
+    }
+
+    // a press on the bars (or anywhere else in the player outside the panel) closes the panel
+    // once the click is done, unless the click itself changed the panel: the button of the open
+    // panel toggles it, another panel button switches to its panel without the panel flashing
+    // closed in between. The handler only observes: the click still reaches the control (play,
+    // seek, volume ... work in the same click). It sits on an empty item above everything in the
+    // player, because Qt delivers a press that a control accepted to the handlers of the items
+    // above that control, not to its parents.
+    Item {
+        anchors.fill: parent
+        z: 100
+
+        PointHandler {
+            id: panelOutsidePress
+
+            enabled: RdPanels.current !== ""
+            acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+
+            property string _panel: ""
+
+            function _inside(item, scenePoint) {
+                if (!item || !item.visible)
+                    return false
+                const p = item.mapFromItem(null, scenePoint.x, scenePoint.y)
+                return p.x >= 0 && p.y >= 0 && p.x < item.width && p.y < item.height
+            }
+
+            onActiveChanged: {
+                if (active) {
+                    const p = point.scenePressPosition
+                    const panel = RdPanels.tracksOpen ? tracksPopupLoader
+                                : RdPanels.settingsOpen ? settingsPanelLoader
+                                : RdPanels.queueOpen ? queuePanelLoader : null
+                    _panel = _inside(panel, p) ? "" : RdPanels.current
+                } else if (_panel !== "") {
+                    const panel = _panel
+                    _panel = ""
+                    Qt.callLater(() => {
+                        if (RdPanels.current === panel)
+                            RdPanels.close()
+                    })
+                }
+            }
         }
     }
 
@@ -1691,10 +1776,14 @@ FocusScope {
                 }
             }
 
-            // redesign: BG/A3 95%; a 1 px Divider/Dim top line only in the light theme (Figma
-            // "Player - Light" has it, the dark "Player" frame has none)
-            color: (controlBar.textPosition === ControlBar.TimeTextPosition.Inline) ? VLCStyle.palette.rdBgA3Transparent
-                                                                                    : windowTheme.bg.primary
+            // redesign: opaque, like the panels and menus, so the fullscreen bar over the native
+            // video looks like the windowed one: BG/A3 in Dark (the dark Player frames override
+            // the bar fill to BG/A3, visual audit A2, like the top bar), BG/A3 Transparent made
+            // opaque in Light (its 95 % assumes a background blur); a 1 px Divider/Dim top line
+            // only in the light theme (Figma "Player - Light" has it, the dark frames have none)
+            color: (controlBar.textPosition !== ControlBar.TimeTextPosition.Inline) ? windowTheme.bg.primary
+                   : VLCStyle.palette.isDark ? VLCStyle.palette.rdBgA3
+                                             : Qt.alpha(VLCStyle.palette.rdBgA3Transparent, 1.0)
 
             Rectangle {
                 visible: controlBar.textPosition === ControlBar.TimeTextPosition.Inline && !VLCStyle.palette.isDark
@@ -1747,7 +1836,7 @@ FocusScope {
         anchors.right: parent.right
         anchors.rightMargin: VLCStyle.dp(20, VLCStyle.scale)
         anchors.bottom: controlBar.top
-        anchors.bottomMargin: VLCStyle.dp(12, VLCStyle.scale)
+        anchors.bottomMargin: VLCStyle.dp(20, VLCStyle.scale)
         z: 2
 
         open: RdPanels.tracksOpen
@@ -1762,14 +1851,16 @@ FocusScope {
     }
 
     // settings sidebar (gear) and queue sidebar (list button): inside the video area at the right,
-    // from under the top bar to over the control bar (video 7:12, 9:29; Figma 400 wide)
+    // 20 px from both bars and the right edge (video 7:12, 9:29; Figma "queue" 491:1781 400 wide)
     PanelLoader {
+        id: settingsPanelLoader
+
         anchors.right: parent.right
         anchors.rightMargin: VLCStyle.dp(20, VLCStyle.scale)
         anchors.top: topBar.bottom
-        anchors.topMargin: VLCStyle.dp(10, VLCStyle.scale)
+        anchors.topMargin: VLCStyle.dp(20, VLCStyle.scale)
         anchors.bottom: controlBar.top
-        anchors.bottomMargin: VLCStyle.dp(12, VLCStyle.scale)
+        anchors.bottomMargin: VLCStyle.dp(20, VLCStyle.scale)
         width: VLCStyle.rd_sidePanelWidth
         z: 2
 
@@ -1782,12 +1873,14 @@ FocusScope {
     }
 
     PanelLoader {
+        id: queuePanelLoader
+
         anchors.right: parent.right
         anchors.rightMargin: VLCStyle.dp(20, VLCStyle.scale)
         anchors.top: topBar.bottom
-        anchors.topMargin: VLCStyle.dp(10, VLCStyle.scale)
+        anchors.topMargin: VLCStyle.dp(20, VLCStyle.scale)
         anchors.bottom: controlBar.top
-        anchors.bottomMargin: VLCStyle.dp(12, VLCStyle.scale)
+        anchors.bottomMargin: VLCStyle.dp(20, VLCStyle.scale)
         width: VLCStyle.rd_sidePanelWidth
         z: 2
 
@@ -1835,12 +1928,18 @@ FocusScope {
         }
     }
 
-    // Escape closes the open player panel first. A shortcut runs before the focused control's
-    // own cancel action (the control bar would otherwise leave the player).
+    // Escape closes the open player panel first, then shows the UI again after Hide UI (a second
+    // Escape then leaves fullscreen as usual). A shortcut runs before the focused control's own
+    // cancel action (the control bar would otherwise leave the player).
     Shortcut {
         sequences: [StandardKey.Cancel]
-        enabled: RdPanels.current !== ""
-        onActivated: RdPanels.close()
+        enabled: RdPanels.current !== "" || RdPanels.uiHidden
+        onActivated: {
+            if (RdPanels.current !== "")
+                RdPanels.close()
+            else
+                RdPanels.uiHidden = false
+        }
     }
 
     // the tracks popup belongs to the current file: close it when the media changes
@@ -1861,7 +1960,8 @@ FocusScope {
         // centered over the video area, right of the compact library
         anchors.horizontalCenterOffset: rootPlayer._videoInset / 2
         anchors.bottom: controlBar.top
-        anchors.bottomMargin: VLCStyle.margin_small
+        // Figma "continue": 24 px above the control bar (visual audit A21)
+        anchors.bottomMargin: VLCStyle.dp(24, VLCStyle.scale)
         z: 2
 
         maxWidth: Math.min(VLCStyle.dp(552, VLCStyle.scale),
@@ -1877,12 +1977,17 @@ FocusScope {
     RdPlayerMenu {
         id: playerMenu
 
-        // a hidden toolbar FSM ignores lock(): show it first so lock and unlock stay balanced
-        onShownChanged: {
-            if (shown && !playerToolbarVisibilityFSM.isVisible)
-                playerToolbarVisibilityFSM.askShow()
-            rootPlayer.lockUnlockAutoHide(shown)
-        }
+        onShownChanged: rootPlayer.lockUnlockAutoHide(shown)
+    }
+
+    // redesign: a right click on the control bar (its buttons included) opens the right-click
+    // menu too, like a right click on the video; the top bar keeps the window menu of its
+    // client-side decorations
+    TapHandler {
+        parent: controlBar
+        acceptedButtons: Qt.RightButton
+
+        onTapped: playerMenu.popupAtCursor()
     }
 
     TapHandler {

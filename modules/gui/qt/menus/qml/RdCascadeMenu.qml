@@ -41,6 +41,9 @@ T.Popup {
     property real rootWidth: VLCStyle.rd_menuWidth
     property bool withShadow: true
 
+    // a right press outside the panels closed the menu (a context menu opens again there)
+    signal rightPressedOutside()
+
     readonly property int _maxDepth: 5
     readonly property real _margin: VLCStyle.margin_xsmall
     readonly property real _padding: VLCStyle.rd_menuPadding
@@ -300,7 +303,11 @@ T.Popup {
             acceptedButtons: Qt.AllButtons
             // the player may have hidden the cursor over the video
             cursorShape: Qt.ArrowCursor
-            onPressed: root.close()
+            onPressed: (mouse) => {
+                root.close()
+                if (mouse.button === Qt.RightButton)
+                    root.rightPressedOutside()
+            }
             onWheel: (wheel) => { wheel.accepted = true }
         }
 

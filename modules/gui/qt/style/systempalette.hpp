@@ -155,10 +155,27 @@ public:
     // selected text on the Accent/DIm selection (no Figma style): FG/1 in Dark, BG/A1 in Light
     COLOR_DEFINITION(rdSelectionText, "#EAEAEA");
     COLOR_DEFINITION(rdShadow, QColor(0x00, 0x00, 0x00, 117)); // Figma effect drop shadow #000000 46%
+    COLOR_DEFINITION(rdCardShadow, QColor(0x00, 0x00, 0x00, 97)); // Figma onboarding drop shadow #000000 38% (y 4, blur 11.8)
+    COLOR_DEFINITION(rdKeyShadow, QColor(0x5C, 0x5C, 0x5C, 64)); // Figma onboarding keycap drop shadow #5C5C5C 25% (y 6, no blur)
     // Figma "volume" component fills of each theme's Player frame: the cone's empty part and the
     // tint over its gradient (Dark: BG/B2 and #000000 20 %, Light: BG/A5 and #FFFFFF 20 %)
     COLOR_DEFINITION(rdVolumeEmpty, "#090909");
     COLOR_DEFINITION(rdVolumeTint, QColor(0x00, 0x00, 0x00, 51));
+    // Figma library media fills (unnamed fills of the library frames, only drawn in Dark; media
+    // placeholders and shades, the same in both themes): thumbnail / mini player picture base,
+    // full library card base, the 20 % shade over card pictures, the playing row's shade and
+    // tint, the mini player's hover dim, its card shadow and the music cover's glow
+    COLOR_DEFINITION(rdMediaBase, "#303030");
+    COLOR_DEFINITION(rdCardBase, "#171717");
+    COLOR_DEFINITION(rdFolderCardBase, "#1E1E1E");
+    COLOR_DEFINITION(rdCardShade, QColor(0x00, 0x00, 0x00, 51));
+    COLOR_DEFINITION(rdPlayingShade, QColor(0x00, 0x00, 0x00, 179));
+    COLOR_DEFINITION(rdPlayingTint, QColor(0x95, 0x80, 0x69, 51));
+    COLOR_DEFINITION(rdMiniPlayerDim, QColor(0x00, 0x00, 0x00, 153));
+    COLOR_DEFINITION(rdMiniPlayerShadow, QColor(0x00, 0x00, 0x00, 97));
+    COLOR_DEFINITION(rdCoverGlow, QColor(0xFF, 0xFF, 0xFF, 8));
+    // the dashed border of the New Playlist drop zone (Figma "new playlist": #2D2D2D)
+    COLOR_DEFINITION(rdDropZoneDash, "#2D2D2D");
 
     COLOR_DEFINITION(orange400, "#f89a06"); //FIXME name have been chosen randomly by me
     COLOR_DEFINITION(orange200, "#e29a06"); //FIXME name have been chosen randomly by me

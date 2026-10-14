@@ -93,6 +93,13 @@ T.ComboBox {
 
         width: control.width
         height: listHeight
+
+        // like a native drop-down list, a click outside only closes the list: it does not
+        // also reach what is under it (the video, which would pause, or a panel that would
+        // close with the list)
+        modal: true
+        dim: false
+        closePolicy: T.Popup.CloseOnEscape | T.Popup.CloseOnPressOutside
         y: control.openUpward ? control.height - height
                               : -Math.min(control.currentIndex, control.maxVisibleRows - 1) * rowHeight
         padding: VLCStyle.dp(2)

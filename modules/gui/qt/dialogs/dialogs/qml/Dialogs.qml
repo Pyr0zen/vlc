@@ -594,18 +594,6 @@ Item {
         onAboutToHide: restoreFocus()
     }
 
-    Loader {
-        id: toolbarEditorDialogLoader
-        active: false
-        source: "qrc:///qt/qml/VLC/Dialogs/ToolbarEditorDialog.qml"
-
-        Connections {
-            target: DialogsProvider
-
-            function onShowToolbarEditorDialog() {
-                toolbarEditorDialogLoader.active = true
-                toolbarEditorDialogLoader.item.open()
-            }
-        }
-    }
+    // redesign (W8.1a): DialogsProvider.showToolbarEditorDialog opens Customize Player, hosted by
+    // MainInterface.qml over every view (dialogs/toolbar/qml/CustomizePlayerDialog.qml)
 }

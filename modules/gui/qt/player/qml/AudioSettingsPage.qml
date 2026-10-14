@@ -110,18 +110,29 @@ RdSidePanelPage {
     Widgets.RdSettingsSection {
         title: qsTr("Synchronization")
 
+        // each audio delay change shifts the audio against the video clock (VLC inserts
+        // silence or holds the video back): applied once, when the slider is released
         Widgets.RdParamSlider {
+            id: audioDelaySlider
+
+            readonly property RdSliderCommit delay: RdSliderCommit {
+                pressed: audioDelaySlider.pressed
+                current: Player.audioDelayMS / 1000
+                keyDelay: 300
+                onCommit: (v) => Player.audioDelayMS = Math.round(v * 1000)
+            }
+
             text: qsTr("Audio Track Delay")
             valueBox: true
-            valueText: qsTr("%1 s").arg((Player.audioDelayMS / 1000).toFixed(3))
+            valueText: qsTr("%1 s").arg(delay.shown.toFixed(3))
             from: -10
             to: 10
             stepSize: 0.05
             bipolar: true
             showTicks: false
             labels: [qsTr("-10 s"), qsTr("0 s"), qsTr("+10 s")]
-            value: Player.audioDelayMS / 1000
-            onMoved: (v) => Player.audioDelayMS = Math.round(v * 1000)
+            value: delay.shown
+            onMoved: (v) => delay.push(v)
             onEdited: (text) => {
                 const s = root.parseNumber(text)
                 if (!isNaN(s))
@@ -290,20 +301,37 @@ RdSidePanelPage {
         readonly property real pitch: RdEffects.values[RdEffects.audioFilterKey("scaletempo_pitch")]
                                       ? RdEffects.values[RdEffects.audioKey("pitch-shift")] : 0
 
+        // the shift changes live on the running filter; switching the filter on or off restarts
+        // the audio filters, so it is switched on once and off only when released at 0
         Widgets.RdParamSlider {
+            id: pitchSlider
+
+            readonly property RdSliderCommit pitchCommit: RdSliderCommit {
+                pressed: pitchSlider.pressed
+                current: pitchSection.pitch
+                dragInterval: 0
+                keyDelay: 150
+                tolerance: 0.01
+                onCommit: (v, last) => {
+                    const enabled = RdEffects.audioFilterEnabled("scaletempo_pitch")
+                    if (v !== 0 || enabled)
+                        RdEffects.setAudioValue("pitch-shift", v)
+                    if (v !== 0 && !enabled)
+                        RdEffects.setAudioFilterEnabled("scaletempo_pitch", true)
+                    else if (v === 0 && enabled && last)
+                        RdEffects.setAudioFilterEnabled("scaletempo_pitch", false)
+                }
+            }
+
             text: qsTr("Adjust Pitch")
-            valueText: pitchSection.pitch.toFixed(1) + " " + qsTr("semitones")
+            valueText: pitchCommit.shown.toFixed(1) + " " + qsTr("semitones")
             from: -12
             to: 12
             stepSize: 0.25
             bipolar: true
             showTicks: false
-            value: pitchSection.pitch
-            onMoved: (v) => {
-                RdEffects.setAudioValue("pitch-shift", v)
-                if ((v !== 0) !== RdEffects.audioFilterEnabled("scaletempo_pitch"))
-                    RdEffects.setAudioFilterEnabled("scaletempo_pitch", v !== 0)
-            }
+            value: pitchCommit.shown
+            onMoved: (v) => pitchCommit.push(v)
         }
     }
 

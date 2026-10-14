@@ -78,13 +78,14 @@ T.Popup {
     parent: T.Overlay.overlay
     anchors.centerIn: parent
     width: Math.min(VLCStyle.dp(420), parent ? parent.width - VLCStyle.dp(40) : VLCStyle.dp(420))
-    padding: VLCStyle.dp(16)
+    // Figma info popover ("audio value"): padding 10, radius 6
+    padding: VLCStyle.dp(10)
     modal: false
     focus: true
     closePolicy: T.Popup.CloseOnEscape | T.Popup.CloseOnPressOutside
 
     background: Rectangle {
-        radius: VLCStyle.rd_radius_panel
+        radius: VLCStyle.rd_radius_normal
         // opaque over the native video (Figma's 95 % assumes a background blur)
         color: Qt.alpha(VLCStyle.palette.rdBgB1Transparent, 1.0)
 

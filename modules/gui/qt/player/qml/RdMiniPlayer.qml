@@ -35,8 +35,8 @@ import VLC.Widgets as Widgets
 Item {
     id: root
 
-    // the area the card moves in (corners)
-    property real margin: VLCStyle.dp(20)
+    // distance to the window edges in its corner (Figma Player-1..3: 6)
+    property real margin: VLCStyle.dp(6)
     // kept free at the top (the library header stays usable when the card is in a top corner)
     property real topInset: 0
     property bool queueOpen: false
@@ -113,7 +113,12 @@ Item {
         radius: VLCStyle.rd_radius_large
         color: VLCStyle.palette.rdBgA3
 
-        Widgets.RdShadow { }
+        // Figma "Miniplayer" drop shadow: #000000 38 %, no offset, blur 11.8
+        Widgets.RdShadow {
+            color: VLCStyle.palette.rdMiniPlayerShadow
+            yOffset: 0
+            blurRadius: VLCStyle.dp(11.8)
+        }
 
         // the queue sits above the player in the bottom corners, below it in the top ones
         Loader {
@@ -144,7 +149,7 @@ Item {
                 width: parent.width - VLCStyle.dp(16)
                 height: VLCStyle.dp(211)
                 radius: VLCStyle.rd_radius_normal
-                color: VLCStyle.palette.rdBgB2
+                color: VLCStyle.palette.rdMediaBase
                 border.width: VLCStyle.dp(2)
                 border.color: VLCStyle.palette.rdBgB2
                 clip: true
@@ -202,15 +207,18 @@ Item {
                 Rectangle {
                     anchors.fill: parent
                     visible: pictureHover.hovered || closeButton.hovered || openButton.hovered
-                    color: VLCStyle.palette.rdBgB2Transparent
+                    color: VLCStyle.palette.rdMiniPlayerDim
                     radius: parent.radius
 
+                    // Figma "Miniplayer" hover: 24 px icons 16 px from the top left and 17 px
+                    // from the top right of the picture
                     OverlayButton {
                         id: closeButton
 
                         anchors.left: parent.left
                         anchors.top: parent.top
-                        anchors.margins: VLCStyle.dp(14)
+                        anchors.leftMargin: VLCStyle.dp(13)
+                        anchors.topMargin: VLCStyle.dp(12)
                         iconName: "close"
                         description: qsTr("Close")
                         onClicked: MainPlaylistController.stop()
@@ -221,34 +229,41 @@ Item {
 
                         anchors.right: parent.right
                         anchors.top: parent.top
-                        anchors.margins: VLCStyle.dp(14)
+                        anchors.rightMargin: VLCStyle.dp(14)
+                        anchors.topMargin: VLCStyle.dp(12)
                         iconName: "open"
                         description: qsTr("Open the player")
                         onClicked: MainCtx.playerView = true
                     }
 
-                    Row {
-                        anchors.centerIn: parent
-                        spacing: VLCStyle.dp(40)
+                    // Figma: 42.857 px icons (24 px scaled 1.786) at x 90.357 / 167.572 / 240.357,
+                    // y 82.57 in the 375 x 210.94 picture
+                    OverlayButton {
+                        x: VLCStyle.dp(90.357)
+                        y: VLCStyle.dp(82.57)
+                        iconSize: VLCStyle.dp(42.857)
+                        iconName: "previous"
+                        description: qsTr("Previous")
+                        onClicked: MainPlaylistController.prev()
+                    }
 
-                        OverlayButton {
-                            iconName: "previous"
-                            description: qsTr("Previous")
-                            onClicked: MainPlaylistController.prev()
-                        }
+                    OverlayButton {
+                        x: VLCStyle.dp(167.572)
+                        y: VLCStyle.dp(82.57)
+                        iconSize: VLCStyle.dp(42.857)
+                        iconName: root._ended ? "replay"
+                                : Player.playingState === Player.PLAYING_STATE_PLAYING ? "pause" : "play"
+                        description: Player.playingState === Player.PLAYING_STATE_PLAYING ? qsTr("Pause") : qsTr("Play")
+                        onClicked: MainPlaylistController.togglePlayPause()
+                    }
 
-                        OverlayButton {
-                            iconName: root._ended ? "replay"
-                                    : Player.playingState === Player.PLAYING_STATE_PLAYING ? "pause" : "play"
-                            description: Player.playingState === Player.PLAYING_STATE_PLAYING ? qsTr("Pause") : qsTr("Play")
-                            onClicked: MainPlaylistController.togglePlayPause()
-                        }
-
-                        OverlayButton {
-                            iconName: "next"
-                            description: qsTr("Next")
-                            onClicked: MainPlaylistController.next()
-                        }
+                    OverlayButton {
+                        x: VLCStyle.dp(240.357)
+                        y: VLCStyle.dp(82.57)
+                        iconSize: VLCStyle.dp(42.857)
+                        iconName: "next"
+                        description: qsTr("Next")
+                        onClicked: MainPlaylistController.next()
                     }
                 }
             }
@@ -260,12 +275,14 @@ Item {
                 anchors.left: picture.left
                 anchors.right: picture.right
                 anchors.top: picture.bottom
-                anchors.topMargin: VLCStyle.dp(6)
+                anchors.topMargin: VLCStyle.dp(4)
                 height: VLCStyle.dp(16)
                 radius: VLCStyle.rd_radius_normal
                 color: VLCStyle.palette.rdBgB2
 
                 Rectangle {
+                    id: seekFill
+
                     x: VLCStyle.dp(2)
                     anchors.verticalCenter: parent.verticalCenter
                     width: Math.max(0, (parent.width - VLCStyle.dp(4)) * Player.position)
@@ -274,12 +291,13 @@ Item {
                     color: VLCStyle.palette.rdBgAccentBright
                 }
 
+                // Figma: 8 x 12, its right edge 1 px past the end of the fill
                 Rectangle {
                     visible: seekArea.containsMouse || pictureHover.hovered
-                    x: Math.max(0, (parent.width - width) * Player.position)
+                    x: Math.max(seekFill.x, seekFill.x + seekFill.width - VLCStyle.dp(7))
                     anchors.verticalCenter: parent.verticalCenter
                     width: VLCStyle.dp(8)
-                    height: VLCStyle.dp(16)
+                    height: VLCStyle.dp(12)
                     radius: VLCStyle.rd_radius_small
                     color: VLCStyle.palette.rdAccentMain
                 }
@@ -304,13 +322,14 @@ Item {
                 anchors.left: picture.left
                 anchors.leftMargin: VLCStyle.dp(8)
                 anchors.right: picture.right
+                anchors.rightMargin: VLCStyle.dp(8)
                 anchors.top: seek.bottom
-                anchors.topMargin: VLCStyle.dp(16)
+                anchors.topMargin: VLCStyle.dp(23)
                 elide: Text.ElideRight
                 text: root.fileName
                 font.family: VLCStyle.rd_fontFamily
                 font.pixelSize: VLCStyle.rd_fontSize_header
-                color: VLCStyle.palette.rdFgA2
+                color: VLCStyle.palette.rdFgA1
             }
 
             Row {
@@ -334,15 +353,17 @@ Item {
                 }
             }
 
+            // Figma: 30 x 32 at card x 345, centred 30 px below the title, "lists" state=active
+            // (accent, 2 px) while the queue shows, the #FFFFFF 6 % wrapper on hover
             OverlayButton {
                 anchors.right: picture.right
-                anchors.rightMargin: VLCStyle.dp(4)
+                anchors.rightMargin: VLCStyle.dp(8)
                 anchors.verticalCenter: titleText.bottom
-                anchors.verticalCenterOffset: VLCStyle.dp(26)
-                iconName: "lists"
+                anchors.verticalCenterOffset: VLCStyle.dp(30)
+                iconName: root.queueOpen ? "lists_state-active" : "lists"
                 description: qsTr("Queue")
-                iconColor: root.queueOpen ? VLCStyle.palette.rdAccentMain
-                                          : (hovered ? VLCStyle.palette.rdFgA1 : VLCStyle.palette.rdFgA2)
+                iconColor: root.queueOpen ? VLCStyle.palette.rdAccentMain : VLCStyle.palette.rdFgA2
+                showHoverBackground: true
                 onClicked: root.queueOpen = !root.queueOpen
             }
         }
@@ -354,10 +375,19 @@ Item {
         property string iconName: ""
         property string description: ""
         property color iconColor: VLCStyle.palette.rdFg1
+        property real iconSize: VLCStyle.rd_iconSize
+        property bool showHoverBackground: false
 
-        implicitWidth: VLCStyle.rd_iconButtonWidth
-        implicitHeight: VLCStyle.rd_iconButtonHeight
+        // the 30 x 32 Figma icon wrapper, or exactly the icon when it is larger
+        implicitWidth: Math.max(VLCStyle.rd_iconButtonWidth, iconSize)
+        implicitHeight: Math.max(VLCStyle.rd_iconButtonHeight, iconSize)
         hoverEnabled: true
+
+        background: Rectangle {
+            visible: overlayButton.showHoverBackground && overlayButton.hovered
+            radius: VLCStyle.rd_radius_small
+            color: VLCStyle.palette.rdHoverOverlay
+        }
 
         Accessible.role: Accessible.Button
         Accessible.name: description
@@ -370,6 +400,7 @@ Item {
             Widgets.RdIcon {
                 anchors.centerIn: parent
                 name: overlayButton.iconName
+                size: overlayButton.iconSize
                 color: overlayButton.iconColor
             }
         }
@@ -386,7 +417,8 @@ Item {
 
         property string iconName: ""
 
-        implicitHeight: VLCStyle.dp(28)
+        // Figma "Frame 114": 32 high, the 24 px chips centred
+        implicitHeight: VLCStyle.dp(32)
         implicitWidth: chipRow.implicitWidth
         hoverEnabled: true
 
@@ -411,7 +443,7 @@ Item {
                 elide: Text.ElideRight
                 font.family: VLCStyle.rd_fontFamily
                 font.pixelSize: VLCStyle.rd_fontSize_header
-                color: chip.hovered && chip.enabled ? VLCStyle.palette.rdFg2 : VLCStyle.palette.rdFgA2
+                color: chip.hovered && chip.enabled ? VLCStyle.palette.rdFg2 : VLCStyle.palette.rdFgA1
             }
         }
     }

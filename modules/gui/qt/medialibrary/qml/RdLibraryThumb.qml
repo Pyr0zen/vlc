@@ -34,14 +34,20 @@ Item {
     // shown instead of a picture, and while it loads
     property string iconName: ""
     property real iconSize: VLCStyle.rd_iconSize
+    property color iconColor: VLCStyle.palette.rdFgA2
+    // Figma picture base: #303030 in rows, #171717 / #1E1E1E (folders) on cards
+    property color baseColor: VLCStyle.palette.rdMediaBase
+    // Figma cards: a #000000 20 % layer over the picture
+    property bool shaded: false
     // picture box: false = the icon alone (folder, playlist, artist rows)
     property bool boxed: true
     property real radius: VLCStyle.rd_radius_xsmall
     property real progress: -1
     property bool watched: false
     property bool playing: false
-    // the watched bar is inset like the Figma row thumbnail (28x3 in a 32x32 box)
-    property real barInset: VLCStyle.dp(2)
+    // Figma watched bar: from the left edge, along the bottom; 28 of 32 wide in a row
+    // thumbnail (barTrim 4), the whole width on cards; cut by the picture's rounded corners
+    property real barTrim: VLCStyle.dp(4)
     property real barHeight: VLCStyle.dp(3)
 
     readonly property bool _hasPicture: source.toString() !== "" && picture.status === Image.Ready
@@ -50,7 +56,7 @@ Item {
         anchors.fill: parent
         visible: root.boxed
         radius: root.radius
-        color: VLCStyle.palette.rdBgA1
+        color: root.baseColor
 
         // VLC's rounded image (corner shader); decoded off the UI thread at twice the shown size
         Widgets.ImageExt {
@@ -68,9 +74,23 @@ Item {
 
         Rectangle {
             anchors.fill: parent
+            visible: root.shaded && picture.visible
+            radius: root.radius
+            color: VLCStyle.palette.rdCardShade
+        }
+
+        // Figma playing row: #000000 70 % then #958069 20 % over the picture
+        Rectangle {
+            anchors.fill: parent
             visible: root.playing
             radius: root.radius
-            color: VLCStyle.palette.rdBgB2Transparent
+            color: VLCStyle.palette.rdPlayingShade
+
+            Rectangle {
+                anchors.fill: parent
+                radius: root.radius
+                color: VLCStyle.palette.rdPlayingTint
+            }
         }
     }
 
@@ -79,7 +99,7 @@ Item {
         visible: !root._hasPicture && root.iconName !== "" && !root.playing
         name: root.iconName
         size: root.iconSize
-        color: VLCStyle.palette.rdFgA2
+        color: root.iconColor
     }
 
     Widgets.RdIcon {
@@ -91,15 +111,22 @@ Item {
         color2: VLCStyle.palette.rdAccentMain
     }
 
-    Rectangle {
+    Item {
         readonly property real fraction: root.progress >= 0 ? root.progress : (root.watched ? 1 : 0)
 
         visible: fraction > 0 && root.boxed
-        x: root.barInset
         anchors.bottom: parent.bottom
-        width: (root.width - 2 * root.barInset) * fraction
+        width: (root.width - root.barTrim) * fraction
         height: root.barHeight
-        radius: root.barHeight / 2
-        color: VLCStyle.palette.rdAccentMain
+        clip: true
+
+        // the picture's rounded shape cut to the bar, so the bar follows its corners
+        Rectangle {
+            anchors.bottom: parent.bottom
+            width: root.width
+            height: Math.max(root.barHeight, 2 * root.radius)
+            radius: root.radius
+            color: VLCStyle.palette.rdAccentMain
+        }
     }
 }

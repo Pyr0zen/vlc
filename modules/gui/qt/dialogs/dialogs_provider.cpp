@@ -339,6 +339,20 @@ void DialogsProvider::legacyPrefsDialog()
 
 void DialogsProvider::firstRunDialog()
 {
+    /* redesign (W8.3): the main interface hosts the onboarding (it listens to
+     * showOnboarding); without it (dialogs provider mode, skins2), the wizard. */
+    MainCtx* const mainCtx = p_intf->p_mi;
+    if( mainCtx && mainCtx->intfMainWindow()
+     && isSignalConnected( QMetaMethod::fromSignal( &DialogsProvider::showOnboarding ) ) )
+    {
+        emit showOnboarding();
+        return;
+    }
+    firstRunWizard();
+}
+
+void DialogsProvider::firstRunWizard()
+{
     ensureDialog(m_firstRunDialog);
     QVLCDialog::setWindowTransientParent(m_firstRunDialog.get(), nullptr, p_intf);
     m_firstRunDialog->show();

@@ -1,6 +1,6 @@
 # STATUS
 
-- Updated: 2026-10-15 00:00 Central Europe Daylight Time
+- Updated: 2026-10-15 00:16 Central Europe Daylight Time
 - Current work: UX pass on everything built (Sticky's reports), library + settings integrations, W8.1a, W8.3 done; build 38644265811 (light theme + control bar fix) running
 
 ## Last 10 commits
@@ -17,14 +17,15 @@ a3d60c6554 redesign: rule: UX logic checklist for every package (Sticky)
 53e9b07753 qt: player: no line on top of the control bar in the dark theme
 ```
 
-## Agents (pacing rule: start a new one only when fewer than 4 are running)
-Running: library integration (review fixes H1-H3/M1-M10, Sticky's rail marker, merge redesign), settings integration (all review findings, section 5), W8.1a Customize Player, UX interaction audit + fixes (dismissal, mouse, hotkeys, tracks popup header, fullscreen bar), playback-stall fixes (subtitle speed/timing freeze, all live controls), visual Figma audit (read-only list).
+## Agents (rule: at most 4 alive in total, sub-agents counted; agents never start sub-agents)
+Alive: library integration, settings integration, UX interaction fixes, visual audit (finishing its sub-agents).
+Merged since the last status (pushed, build 38646392092): W8.3 onboarding, W8.1a Customize Player (both reviewed by the main session on the shared files; their own in-agent reviews done), playback-stall Qt fixes (subtitle speed on release, delay at most 10/s, pitch/blur/audio delay on release, no chain rebuild when unchanged). Merge fix 9291b80fdd (MainInterface loaders).
 Queue, in order:
-1. Independent review of W8.3 onboarding (worktree-agent-aac3dd02cc9c78a37, done, not merged).
-2. After the library merge: UX pass on the library (same checklist).
-3. After the settings merge: UX pass on the Settings dialog pages.
-4. Fixes from the visual audit list (scratchpad visual_audit.md), grouped by area.
-5. Step 2: the 12 Settings rows (VIDEO_INDEX 350-361, Decisions 34-38).
+1. Core build (Decision 27, its own build): cherry-pick 3553e146bc "input: flush only the subtitle slave when its rate changes" from wip/a839e9d9ddb97595a after build 38646392092 is tested.
+2. Library merge (after its fixes), then settings merge; UX pass on each.
+3. Fixes from the visual audit list (scratchpad visual_audit.md), grouped by area.
+4. Step 2: the 12 Settings rows (VIDEO_INDEX 350-361, Decisions 34-38).
+Backups: every agent branch is pushed to origin wip/<agent id> (no CI on those branches).
 
 ## Latest report
 ```

@@ -153,6 +153,8 @@ libqt_plugin_la_SOURCES = \
 	dialogs/preferences/simple_preferences.hpp \
 	dialogs/redesign/hotkeys_model.cpp \
 	dialogs/redesign/hotkeys_model.hpp \
+	dialogs/redesign/onboarding_helper.cpp \
+	dialogs/redesign/onboarding_helper.hpp \
 	dialogs/redesign/settings/settings_catalog.cpp \
 	dialogs/redesign/settings/settings_catalog.hpp \
 	dialogs/sout/convert.cpp dialogs/sout/convert.hpp \
@@ -456,6 +458,7 @@ nodist_libqt_plugin_la_SOURCES = \
 	dialogs/preferences/preferences_widgets.moc.cpp \
 	dialogs/preferences/simple_preferences.moc.cpp \
 	dialogs/redesign/hotkeys_model.moc.cpp \
+	dialogs/redesign/onboarding_helper.moc.cpp \
 	dialogs/redesign/settings/settings_catalog.moc.cpp \
 	dialogs/sout/convert.moc.cpp \
 	dialogs/sout/profile_selector.moc.cpp \
@@ -1283,6 +1286,8 @@ libqml_module_dialogs_a_QML = \
 	dialogs/redesign/OpenNetworkStreamDialog.qml \
 	dialogs/redesign/HotkeyField.qml \
 	dialogs/redesign/KeyboardShortcutsDialog.qml \
+	dialogs/redesign/Onboarding.qml \
+	dialogs/redesign/OnboardingPreview.qml \
 	dialogs/toolbar/qml/EditorDNDDelegate.qml \
 	dialogs/toolbar/qml/EditorDNDView.qml\
 	dialogs/toolbar/qml/EditorDummyButton.qml \
@@ -1290,6 +1295,13 @@ libqml_module_dialogs_a_QML = \
 	dialogs/toolbar/qml/ToolbarEditor.qml \
 	dialogs/toolbar/qml/ToolbarEditorDialog.qml \
 	dialogs/toolbar/qml/ToolbarEditorButtonList.qml \
+	dialogs/toolbar/qml/CustomizePlayerDialog.qml \
+	dialogs/toolbar/qml/CustomizePalette.qml \
+	dialogs/toolbar/qml/CustomizePaletteTile.qml \
+	dialogs/toolbar/qml/CustomizeBar.qml \
+	dialogs/toolbar/qml/CustomizeZone.qml \
+	dialogs/toolbar/qml/CustomizeZoneItem.qml \
+	dialogs/toolbar/qml/CustomizeNamePrompt.qml \
 	dialogs/redesign/settings/SettingsAdvancedBar.qml \
 	dialogs/redesign/settings/SettingsCategoryButton.qml \
 	dialogs/redesign/settings/SettingsDialog.qml \
@@ -1490,6 +1502,7 @@ libqml_module_player_a_QML = \
 	player/qml/VideoSettingsPage.qml \
 	player/qml/AudioSettingsPage.qml \
 	player/qml/SubtitleSettingsPage.qml \
+	player/qml/RdSliderCommit.qml \
 	player/qml/TracksPage.qml \
 	player/qml/TracksPageAudio.qml \
 	player/qml/TracksPageSpeed.qml \
@@ -1721,6 +1734,7 @@ libqml_module_widgets_a_QML = \
 	widgets/qml/RdPanel.qml \
 	widgets/qml/RdTooltip.qml \
 	widgets/qml/RdIcon.qml \
+	widgets/qml/RdDashedFrame.qml \
 	widgets/qml/RdValueBox.qml \
 	widgets/qml/RdSettingRow.qml \
 	widgets/qml/RdSettingsSection.qml \
@@ -1811,7 +1825,8 @@ libqt_plugin_la_SHADER_FRAG = shaders/FadingEdge.frag \
                               shaders/DualKawaseBlur_upsample.frag \
                               shaders/DualKawaseBlur_downsample.frag \
                               shaders/DualKawaseBlur_upsample_postprocess.frag \
-                              shaders/VolumeCone.frag
+                              shaders/VolumeCone.frag \
+                              shaders/RdDashedFrame.frag
 
 libqt_plugin_la_SHADER_VERT = shaders/FadingEdgeX.vert \
                               shaders/FadingEdgeY.vert \

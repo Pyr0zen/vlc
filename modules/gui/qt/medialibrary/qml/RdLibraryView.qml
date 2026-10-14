@@ -89,12 +89,13 @@ FocusScope {
         RdLibraryHeader {
             id: header
 
+            // Figma "Frame 20" (Player-1..5): padding 20
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.top: parent.top
-            anchors.leftMargin: VLCStyle.dp(24)
-            anchors.rightMargin: VLCStyle.dp(24)
-            anchors.topMargin: VLCStyle.dp(14)
+            anchors.leftMargin: VLCStyle.dp(20)
+            anchors.rightMargin: VLCStyle.dp(20)
+            anchors.topMargin: VLCStyle.dp(20)
 
             compact: false
             page: content.page
@@ -105,8 +106,9 @@ FocusScope {
 
             anchors.left: header.left
             anchors.right: header.right
+            // Figma: 17 below the header
             anchors.top: header.bottom
-            anchors.topMargin: VLCStyle.dp(14)
+            anchors.topMargin: VLCStyle.dp(17)
             height: VLCStyle.dp(1)
             color: VLCStyle.palette.rdDividerDim
         }
@@ -116,7 +118,8 @@ FocusScope {
 
             anchors.left: header.left
             anchors.right: header.right
-            anchors.top: divider.bottom
+            // Figma: the content starts 20 below the divider's line (17 + 20 below the header)
+            anchors.top: divider.top
             anchors.topMargin: VLCStyle.dp(20)
             anchors.bottom: parent.bottom
             anchors.bottomMargin: root.bottomInset

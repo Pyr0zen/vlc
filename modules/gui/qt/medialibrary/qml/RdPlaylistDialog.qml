@@ -101,15 +101,22 @@ RdLibraryDialog {
                 hint: qsTr("The playlist will be saved and displayed with this title and thumbnail.")
             }
 
-            Widgets.RdTextField {
-                id: nameField
-
+            // Figma "Frame 328": a 41 px slot, the 37 px field centred
+            Item {
                 width: parent.width
-                placeholderText: qsTr("e.g., Favorite Videos")
-                onAccepted: {
-                    if (dialog.canSave) {
-                        dialog.saved()
-                        dialog.close()
+                height: VLCStyle.dp(41)
+
+                Widgets.RdTextField {
+                    id: nameField
+
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: parent.width
+                    placeholderText: qsTr("e.g., Favorite Videos")
+                    onAccepted: {
+                        if (dialog.canSave) {
+                            dialog.saved()
+                            dialog.close()
+                        }
                     }
                 }
             }
@@ -170,6 +177,13 @@ RdLibraryDialog {
         }
     }
 
+    // Figma: a Divider/Dim line between the details and the files
+    Rectangle {
+        width: dialog.bodyWidth
+        height: VLCStyle.dp(1)
+        color: VLCStyle.palette.rdDividerDim
+    }
+
     RdLibraryDialog.Section {
         width: dialog.bodyWidth
         title: qsTr("Select Files")
@@ -194,8 +208,9 @@ RdLibraryDialog {
 
             RdDashedBorder {
                 anchors.fill: parent
+                cornerInset: VLCStyle.rd_radius_normal
                 color: dropArea.containsDrag || dropZone.hovered ? VLCStyle.palette.rdFgA4
-                                                                 : VLCStyle.palette.rdDividerBright
+                                                                 : VLCStyle.palette.rdDropZoneDash
             }
         }
 

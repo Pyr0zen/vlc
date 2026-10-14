@@ -117,8 +117,11 @@ Item {
         }
     }
 
+    // Figma: an 8 px wide box, the glyph centred
     component Separator: Text {
         anchors.verticalCenter: parent ? parent.verticalCenter : undefined
+        width: VLCStyle.dp(8)
+        horizontalAlignment: Text.AlignHCenter
         text: "▶"
         font.family: VLCStyle.rd_fontFamily
         font.pixelSize: VLCStyle.dp(8)
@@ -151,7 +154,8 @@ Item {
             font.family: VLCStyle.rd_fontFamily
             font.pixelSize: VLCStyle.rd_fontSize_header
             font.weight: crumb.last && crumb.bold ? Font.DemiBold : Font.Normal
-            color: crumb.last ? (crumb.bold ? VLCStyle.palette.rdFg2 : VLCStyle.palette.rdFgA2)
+            // Figma: the bold last crumb (full library) is FG/A1
+            color: crumb.last ? (crumb.bold ? VLCStyle.palette.rdFgA1 : VLCStyle.palette.rdFgA2)
                  : (crumb.hovered || crumb.visualFocus) ? VLCStyle.palette.rdFg2
                  : VLCStyle.palette.rdFgA2
         }

@@ -62,7 +62,8 @@ Widgets.RdMenuPanel {
         keyboard = !!row.visualFocus
         parent = row.Window.contentItem
         const p = row.mapToItem(parent, row.width, 0)
-        x = p.x + VLCStyle.dp(4)
+        // Figma "Profiles": 11 right of the parent menu's edge (its row + padding 4)
+        x = p.x + VLCStyle.dp(4) + VLCStyle.rd_submenuGap
         y = p.y - VLCStyle.dp(4)
         open()
     }

@@ -39,6 +39,9 @@ T.Button {
 
     property int style: RdButton.Style.Standard
     property string rdIcon: ""            // optional Figma icon (Widgets.RdIcon) shown before the text
+    // Figma dialog buttons use Inter 14; onboarding buttons Inter 16 (Next 600, Browse 400)
+    property int fontPixelSize: VLCStyle.rd_fontSize_label
+    property int fontWeight: style === RdButton.Style.Bar ? Font.Normal : Font.DemiBold
 
     readonly property SystemPalette rdPalette: VLCStyle.palette
 
@@ -113,8 +116,8 @@ T.Button {
                 anchors.verticalCenter: parent.verticalCenter
                 text: control.text
                 font.family: VLCStyle.rd_fontFamily
-                font.pixelSize: VLCStyle.rd_fontSize_label
-                font.weight: control.style === RdButton.Style.Bar ? Font.Normal : Font.DemiBold
+                font.pixelSize: control.fontPixelSize
+                font.weight: control.fontWeight
                 color: control._fg
             }
         }

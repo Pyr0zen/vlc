@@ -235,6 +235,9 @@ T.Popup {
             text: parent.hint
             font.family: VLCStyle.rd_fontFamily
             font.pixelSize: VLCStyle.rd_fontSize_label
+            // Figma: line height 24.5
+            lineHeight: VLCStyle.dp(24.5)
+            lineHeightMode: Text.FixedHeight
             color: VLCStyle.palette.rdFgA3
         }
     }

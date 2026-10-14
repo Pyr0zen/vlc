@@ -58,15 +58,20 @@ Widgets.RdMenuPanel {
     // below `item`, its left edge 11 px left of the item (sort and view menus), or its right
     // edge on the item's right edge (the "..." menus)
     function openBelow(item, alignRight) {
+        openOffset(item, alignRight ? item.width - width : -VLCStyle.dp(11), item.height + VLCStyle.dp(6))
+    }
+
+    // at the Figma overlay offset (dx, dy) from the button; above it when the window has no
+    // room below
+    function openOffset(item, dx, dy) {
         parent = item
         keyboard = !!item.visualFocus
-        x = alignRight ? item.width - width : -VLCStyle.dp(11)
-        // above the item when the window has no room below it
+        x = dx
         const window = item.Window.window
-        const below = item.mapToItem(null, 0, item.height + VLCStyle.dp(6)).y
+        const below = item.mapToItem(null, 0, dy).y
         y = (window && below + implicitHeight > window.height - margins)
-            ? -implicitHeight - VLCStyle.dp(6)
-            : item.height + VLCStyle.dp(6)
+            ? -implicitHeight - (dy - item.height)
+            : dy
         open()
     }
 
@@ -88,6 +93,7 @@ Widgets.RdMenuPanel {
             rdIcon: modelData.icon ?? ""
             selected: !!modelData.selected
             hasSubmenu: !!modelData.submenu
+            showChevron: modelData.chevron ?? true
             enabled: modelData.enabled ?? true
 
             onClicked: {

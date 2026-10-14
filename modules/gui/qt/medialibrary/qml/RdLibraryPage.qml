@@ -189,8 +189,13 @@ FocusScope {
     // rows above the items: "+ Add" rows (isAction) and the fixed entries of Music and Network
     readonly property var fixedRows: {
         switch (location.page) {
-        case "videos":
         case "folder":
+            // Figma: a folder of media has no Add row, a level of folders has it
+            if (!(page.subfolderModel && page.subfolderModel.count > 0))
+                return []
+            return [{ kind: "action", isAction: true, title: qsTr("Add"), icon: "add",
+                      run: () => RdLibraryActions.addFolder(page.category) }]
+        case "videos":
         case "songs":
         case "albums":
         case "artists":
@@ -590,13 +595,27 @@ FocusScope {
     readonly property bool wideCards: category === "video" || location.page === "recent"
                                       || (location.page === "section" && location.section === "continueWatching")
 
-    readonly property real _gap: VLCStyle.dp(compact ? 10 : 14)
+    // grid geometry. Next to the video: one column of rows, or cards of at least 150, 10 apart.
+    // Full library (Figma Player-1..4): list rows 406 wide, 10 apart both ways; cards 316 wide
+    // (16:9) or 200 (square), 20 apart, rows of cards 40 apart
+    readonly property real _gapX: (compact || listMode) ? VLCStyle.dp(10) : VLCStyle.dp(20)
+    readonly property real _gapY: (compact || listMode) ? VLCStyle.dp(10) : VLCStyle.dp(40)
+    readonly property real _itemWidth: listMode ? VLCStyle.dp(406) : (wideCards ? VLCStyle.dp(316) : VLCStyle.dp(200))
     readonly property int _columns: {
         const w = grid.width
-        if (listMode)
-            return compact ? 1 : Math.max(1, Math.floor((w + _gap) / (VLCStyle.dp(280) + _gap)))
-        const minCard = compact ? VLCStyle.dp(150) : VLCStyle.dp(200)
-        return Math.max(1, Math.floor((w + _gap) / (minCard + _gap)))
+        if (compact)
+            return listMode ? 1 : Math.max(1, Math.floor((w + _gapX) / (VLCStyle.dp(150) + _gapX)))
+        return Math.max(1, Math.floor((w + _gapX) / (_itemWidth + _gapX)))
+    }
+    // songs and albums show their artist on a second line
+    readonly property bool _cardSubtitles: !wideCards && (modelKind === "audio" || modelKind === "album"
+                                                          || modelKind === "collection")
+
+    FontMetrics {
+        id: cardTitleMetrics
+
+        font.family: VLCStyle.rd_fontFamily
+        font.pixelSize: VLCStyle.rd_fontSize_header
     }
 
     GridView {
@@ -606,10 +625,13 @@ FocusScope {
         clip: true
         focus: true
 
-        cellWidth: Math.floor(width / page._columns)
-        cellHeight: page.listMode ? VLCStyle.rd_rowHeight + page._gap
-                                  : (cellWidth - page._gap) * (page.wideCards ? 9 / 16 : 1)
-                                    + VLCStyle.dp(8) + VLCStyle.rd_fontSize_label * 1.3 * 2 + page._gap
+        cellWidth: page.compact ? Math.floor(width / page._columns) : page._itemWidth + page._gapX
+        // a card: picture, 20, title (and 10, artist), then the row gap
+        cellHeight: page.listMode ? VLCStyle.rd_rowHeight + page._gapY
+                                  : (cellWidth - page._gapX) * (page.wideCards ? 9 / 16 : 1)
+                                    + VLCStyle.dp(20) + cardTitleMetrics.height
+                                    + (page._cardSubtitles ? VLCStyle.dp(10) + cardTitleMetrics.height : 0)
+                                    + page._gapY
         // a few rows ahead of the view, no more
         cacheBuffer: cellHeight * 2
 
@@ -619,8 +641,10 @@ FocusScope {
 
         header: Column {
             width: grid.width
-            spacing: page._gap
-            bottomPadding: page.fixedRows.length > 0 ? page._gap : 0
+            spacing: VLCStyle.dp(10)
+            // Figma Player-1: list rows start 30 below the divider in the full library
+            topPadding: !page.compact && page.listMode ? VLCStyle.dp(10) : 0
+            bottomPadding: page.fixedRows.length > 0 ? page._gapY : 0
 
             Repeater {
                 model: page.fixedRows
@@ -628,9 +652,11 @@ FocusScope {
                 delegate: RdLibraryRow {
                     required property var modelData
 
-                    width: Math.min(parent.width, VLCStyle.dp(480))
+                    width: page.compact ? parent.width : Math.min(parent.width, VLCStyle.dp(406))
                     title: modelData.title
                     iconName: modelData.icon
+                    // Figma: the "+" of Add rows is FG/A3, other icons FG/A2
+                    iconColor: modelData.isAction ? VLCStyle.palette.rdFgA3 : VLCStyle.palette.rdFgA2
                     boxed: false
                     secondary: true
                     showMore: modelData.kind === "streamList"
@@ -710,7 +736,7 @@ FocusScope {
 
                 RdLibraryRow {
                     focus: true
-                    width: cell.width - (page._columns > 1 ? page._gap : 0)
+                    width: page.compact && page._columns === 1 ? cell.width : cell.width - page._gapX
                     title: page.titleOf(cell.item)
                     iconName: page.iconOf(cell.item)
                     thumbnail: page.thumbnailOf(cell.item)
@@ -719,7 +745,9 @@ FocusScope {
                     progress: cell.item.progress ?? -1
                     watched: cell.item.watched ?? false
                     playing: page.isPlaying(cell.item.mrl)
+                    // Figma: playlist rows are FG/A1 like media, folders and categories FG/A3
                     secondary: cell.item.kind !== "media" && cell.item.kind !== "stream"
+                               && cell.item.kind !== "playlist"
                     dragUrls: page.dragUrlsOf(cell.item)
                     // VLC's Navigation takes the arrows and Escape first: move in the grid,
                     // Escape goes back in the library
@@ -741,7 +769,7 @@ FocusScope {
 
                 RdLibraryCard {
                     focus: true
-                    width: cell.width - page._gap
+                    width: cell.width - page._gapX
                     title: cell.item.title
                     subtitle: (cell.item.kind === "media" && !cell.item.isVideo) || cell.item.kind === "album"
                               ? (cell.item.subtitle ?? "") : ""

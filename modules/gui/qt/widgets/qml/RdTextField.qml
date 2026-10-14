@@ -38,7 +38,7 @@ T.TextField {
     topPadding: VLCStyle.dp(8)
     bottomPadding: VLCStyle.dp(8)
     leftPadding: VLCStyle.dp(14)    // Figma 12 inside the 2 px stroke (text at x 14)
-    rightPadding: VLCStyle.dp(18)
+    rightPadding: VLCStyle.dp(20)   // Figma 18 inside the 2 px stroke
 
     font.family: VLCStyle.rd_fontFamily
     font.pixelSize: VLCStyle.rd_fontSize_label

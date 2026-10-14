@@ -342,6 +342,7 @@ QtObject {
     readonly property int rd_fontSize_label: MainCtx.dp(14, scale)      // Inter 400 14 / 16.9
     readonly property int rd_fontSize_time: MainCtx.dp(15, scale)       // time labels 400 15 / 18.2
     readonly property int rd_fontSize_header: MainCtx.dp(16, scale)     // section headers 500 16
+    readonly property int rd_fontSize_section: MainCtx.dp(20, scale)    // full library Home section titles 400 20
     readonly property int rd_fontSize_toggle: MainCtx.dp(12, scale)     // toggle ON/OFF 400 12
     readonly property int rd_fontSize_title: MainCtx.dp(24, scale)      // onboarding titles
     readonly property int rd_fontSize_display: MainCtx.dp(32, scale)    // "Welcome to VLC!"
@@ -353,6 +354,7 @@ QtObject {
     readonly property int rd_radius_toast: MainCtx.dp(16, scale)        // resume toast
     readonly property int rd_radius_video: MainCtx.dp(19, scale)        // inset video area
     readonly property int rd_radius_cover: MainCtx.dp(20, scale)        // music player cover (Figma "Player - Music")
+    readonly property int rd_radius_card: MainCtx.dp(12, scale)         // full library card picture (Figma Player-3)
     readonly property int rd_topBarHeight: MainCtx.dp(40, scale)
     readonly property int rd_controlBarHeight: MainCtx.dp(54, scale)
     readonly property int rd_controlBarSpacing: MainCtx.dp(20, scale)
@@ -375,6 +377,7 @@ QtObject {
     readonly property int rd_sidePanelWidth: MainCtx.dp(400, scale)
     readonly property int rd_sidePanelTabHeight: MainCtx.dp(50, scale)
     readonly property int rd_libraryRailWidth: MainCtx.dp(50, scale)
+    readonly property int rd_libraryRailFullWidth: MainCtx.dp(217, scale)  // full library rail (Figma Player-1..5)
     readonly property int rd_libraryPanelWidth: MainCtx.dp(377, scale)
     readonly property int rd_librarySlideDuration: 208                   // compact library open / close, Figma smart animate "slow"
     readonly property int rd_menuRowHeight: MainCtx.dp(48, scale)
@@ -399,6 +402,23 @@ QtObject {
     readonly property int rd_dialogHeight: MainCtx.dp(800, scale)
     readonly property int rd_dialogHeaderHeight: MainCtx.dp(96, scale)
     readonly property int rd_dialogFooterHeight: MainCtx.dp(72, scale)
+    // onboarding (Figma "Onboarding" 1090x759, radius 14, video 19:47-19:54)
+    readonly property int rd_onboardingWidth: MainCtx.dp(1090, scale)
+    readonly property int rd_onboardingHeight: MainCtx.dp(759, scale)
+    // accent color options in the order of the Figma onboarding dots (Decision 15)
+    readonly property var rd_accentOptions: ["#D37918", "#E15032", "#C49E23", "#19A234", "#18AAD3",
+                                             "#185DD3", "#8E42FF", "#F052B3", "#AFAFAF"]
+    // pictures of the light and dark themes on the onboarding theme tiles, the same in every theme
+    readonly property color rd_themeTileLight: "#AFAFAF"
+    readonly property color rd_themeTileDark: "#222222"
+    // Customize Player (Figma "Player - customize", 1048 wide, header 94 = title row + description
+    // row; palette items 86 wide, columns 24 apart, rows 38 apart; drags smart animate 50 ms)
+    readonly property int rd_customizeHeaderHeight: MainCtx.dp(94, scale)
+    readonly property int rd_customizeBodyPadding: MainCtx.dp(34, scale)
+    readonly property int rd_customizeItemWidth: MainCtx.dp(86, scale)
+    readonly property int rd_customizeColumnGap: MainCtx.dp(24, scale)
+    readonly property int rd_customizeRowGap: MainCtx.dp(38, scale)
+    readonly property int rd_customizeDragDuration: 50
 
     // Scroll bar (size means width or height, depending on the orientation):
     readonly property real scrollBarInteractingSize: MainCtx.dp(8, scale)

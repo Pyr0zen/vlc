@@ -72,12 +72,12 @@ FocusScope {
         { section: "latestStreams", title: qsTr("Latest Streams"), wide: false }
     ]
 
-    // full library: one row of cards per section, as many as fit (Continue Watching cards are
-    // wider)
-    readonly property real _cardGap: VLCStyle.dp(14)
+    // full library (Figma Player-5): one row of cards per section, as many as fit, 20 apart;
+    // Continue Watching cards 316 wide (16:9), the others 200 (square)
+    readonly property real _cardGap: VLCStyle.dp(20)
 
     function _cardWidth(wide) {
-        return wide ? VLCStyle.dp(240) : VLCStyle.dp(150)
+        return wide ? VLCStyle.dp(316) : VLCStyle.dp(200)
     }
 
     function _limit(wide) {
@@ -124,11 +124,14 @@ FocusScope {
             }
         }
 
+        // Figma: next to the video sections 30 apart; in the full library the first title 37 below
+        // the divider (17 here) and 77 from a row of cards to the next title
         Column {
             id: column
 
             width: flick.width
-            spacing: VLCStyle.dp(30)
+            topPadding: home.compact ? 0 : VLCStyle.dp(17)
+            spacing: home.compact ? VLCStyle.dp(30) : VLCStyle.dp(77)
 
             Repeater {
                 id: sectionRepeater
@@ -143,7 +146,7 @@ FocusScope {
                     readonly property alias model: sectionModel
 
                     width: column.width
-                    spacing: VLCStyle.dp(15)
+                    spacing: home.compact ? VLCStyle.dp(15) : VLCStyle.dp(20)
                     visible: sectionModel.count > 0
 
                     RdCollectionModel {
@@ -192,11 +195,13 @@ FocusScope {
                                 title: home.titleOf(item)
                                 iconName: home.iconOf(item)
                                 thumbnail: home.thumbnailOf(item)
-                                boxed: item.kind === "media" || item.kind === "stream"
+                                // Figma: songs and videos boxed, streams a bare icon
+                                boxed: item.kind === "media"
                                        || (item.kind === "playlist" && thumbnail.toString() !== "")
                                 progress: item.progress
                                 // Home rows are secondary (Figma: FG/A3)
-                                watched: true
+                                secondary: true
+                                watched: item.watched
                                 playing: home.isPlaying(item.mrl)
                                 dragUrls: home.dragUrlsOf(item)
                                 onClicked: home.activate(item)
@@ -241,8 +246,10 @@ FocusScope {
             Column {
                 visible: home.itemCount === 0 && !home.anyLoading && home.searchText === ""
                 width: parent.width
-                spacing: VLCStyle.dp(15)
+                spacing: home.compact ? VLCStyle.dp(15) : VLCStyle.dp(20)
 
+                // no Figma node (Decision 21): the video's white title (20:52) over an empty
+                // card in the Figma card style (316 x 177.75, radius 12, #171717)
                 SectionHeader {
                     width: parent.width
                     text: qsTr("Watch Next")
@@ -252,10 +259,10 @@ FocusScope {
                 }
 
                 Rectangle {
-                    width: Math.min(parent.width, VLCStyle.dp(368))
+                    width: Math.min(parent.width, VLCStyle.dp(316))
                     height: width * 9 / 16
-                    radius: VLCStyle.dp(12)
-                    color: VLCStyle.palette.rdBgA2
+                    radius: VLCStyle.rd_radius_card
+                    color: VLCStyle.palette.rdCardBase
                 }
             }
         }
@@ -282,7 +289,7 @@ FocusScope {
         case "folder": return "folder"
         case "playlist": return "playlist"
         case "artist": return "artist"
-        case "stream": return "tv"
+        case "stream": return "streaming"
         default: return item.isVideo ? "" : "music"
         }
     }
@@ -330,14 +337,16 @@ FocusScope {
         location: home.location
     }
 
-    // section title (Figma: Inter 400 16 FG/A1, 32 px row) with its ">" link
+    // section title with its ">" link (Figma: next to the video Inter 400 16 FG/A1 in a 32 px
+    // row, the chevron at the edge; in the full library Inter 400 20 in a 24 px row, the 24 px
+    // chevron 5 after the title)
     component SectionHeader: T.AbstractButton {
         id: header
 
         property bool chevronAtEdge: true
         property color textColor: VLCStyle.palette.rdFgA1
 
-        implicitHeight: VLCStyle.dp(32)
+        implicitHeight: chevronAtEdge ? VLCStyle.dp(32) : VLCStyle.dp(24)
         hoverEnabled: true
         focusPolicy: Qt.TabFocus
 
@@ -353,11 +362,11 @@ FocusScope {
 
                 anchors.left: parent.left
                 anchors.verticalCenter: parent.verticalCenter
-                width: Math.min(implicitWidth, parent.width - chevron.width - VLCStyle.dp(8))
+                width: Math.min(implicitWidth, parent.width - chevron.width - VLCStyle.dp(10))
                 text: header.text
                 elide: Text.ElideRight
                 font.family: VLCStyle.rd_fontFamily
-                font.pixelSize: VLCStyle.rd_fontSize_header
+                font.pixelSize: header.chevronAtEdge ? VLCStyle.rd_fontSize_header : VLCStyle.rd_fontSize_section
                 color: header.hovered || header.visualFocus ? VLCStyle.palette.rdFg2 : header.textColor
             }
 
@@ -365,9 +374,9 @@ FocusScope {
                 id: chevron
 
                 anchors.verticalCenter: parent.verticalCenter
-                x: header.chevronAtEdge ? parent.width - width : label.width + VLCStyle.dp(4)
+                x: header.chevronAtEdge ? parent.width - width : label.width + VLCStyle.dp(5)
                 name: "chevron_direction-right"
-                size: header.chevronAtEdge ? VLCStyle.rd_iconSize : VLCStyle.dp(16)
+                size: VLCStyle.rd_iconSize
                 color: header.hovered || header.visualFocus ? VLCStyle.palette.rdFg2 : VLCStyle.palette.rdFgA2
             }
         }
