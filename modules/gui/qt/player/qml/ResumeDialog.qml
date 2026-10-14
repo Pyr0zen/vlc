@@ -128,7 +128,8 @@ FocusScope {
     Rectangle {
         anchors.fill: parent
         radius: VLCStyle.rd_radius_toast
-        color: VLCStyle.palette.rdBgA3Transparent
+        // opaque: the bg blur cannot run over the native video (Decision: opaque popups)
+        color: Qt.alpha(VLCStyle.palette.rdBgA3Transparent, 1.0)
     }
 
     RowLayout {
@@ -139,25 +140,57 @@ FocusScope {
         anchors.rightMargin: VLCStyle.dp(10, VLCStyle.scale)
         spacing: VLCStyle.dp(10, VLCStyle.scale)
 
-        T.Label {
-            id: label
+        // Figma 1922:9584: Inter 400 16 FG/2 with the time in Inter 600. StyledText has no 600
+        // weight and RichText cannot elide, so the sentence is split around the time.
+        Row {
+            id: labelRow
 
             Layout.fillWidth: true
             Layout.alignment: Qt.AlignVCenter
-
-            textFormat: Text.StyledText
-            elide: Text.ElideRight
-            color: VLCStyle.palette.rdFg2
-            font.family: VLCStyle.rd_fontFamily
-            font.pixelSize: VLCStyle.rd_fontSize_header
+            Layout.preferredWidth: label.implicitWidth + timeLabel.implicitWidth + suffixLabel.implicitWidth
 
             // the saved progress times the file length (known once playback starts)
             readonly property bool _hasRestoreTime: resumePanel._lengthKnown && Player.restoreProgress > 0
+            readonly property var _parts: qsTr("You already watched till %1").split("%1")
 
-            text: _hasRestoreTime
-                  ? qsTr("You already watched till %1")
-                        .arg("<b>" + Player.length.scale(Player.restoreProgress).formatHHMMSS() + "</b>")
-                  : qsTr("Do you want to restart the playback where you left off?")
+            T.Label {
+                id: label
+
+                width: Math.max(0, Math.min(implicitWidth,
+                                            labelRow.width - timeLabel.implicitWidth - suffixLabel.implicitWidth))
+                textFormat: Text.PlainText
+                elide: Text.ElideRight
+                color: VLCStyle.palette.rdFg2
+                font.family: VLCStyle.rd_fontFamily
+                font.pixelSize: VLCStyle.rd_fontSize_header
+
+                text: labelRow._hasRestoreTime
+                      ? labelRow._parts[0]
+                      : qsTr("Do you want to restart the playback where you left off?")
+            }
+
+            T.Label {
+                id: timeLabel
+
+                visible: labelRow._hasRestoreTime
+                width: visible ? implicitWidth : 0
+                color: VLCStyle.palette.rdFg2
+                font.family: VLCStyle.rd_fontFamily
+                font.pixelSize: VLCStyle.rd_fontSize_header
+                font.weight: Font.DemiBold
+                text: visible ? Player.length.scale(Player.restoreProgress).formatHHMMSS() : ""
+            }
+
+            T.Label {
+                id: suffixLabel
+
+                visible: text.length > 0
+                width: visible ? implicitWidth : 0
+                color: VLCStyle.palette.rdFg2
+                font.family: VLCStyle.rd_fontFamily
+                font.pixelSize: VLCStyle.rd_fontSize_header
+                text: labelRow._hasRestoreTime && labelRow._parts.length > 1 ? labelRow._parts[1] : ""
+            }
         }
 
         Widgets.RdButton {

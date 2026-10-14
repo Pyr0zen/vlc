@@ -53,7 +53,8 @@ T.Popup {
 
     background: Rectangle {
         radius: VLCStyle.rd_radius_normal
-        color: VLCStyle.palette.rdBgB1Transparent
+        // opaque: the bg blur cannot run over the native video (Decision: opaque popups)
+        color: Qt.alpha(VLCStyle.palette.rdBgB1Transparent, 1.0)
 
         RdShadow { }
     }
