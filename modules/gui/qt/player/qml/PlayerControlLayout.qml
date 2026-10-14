@@ -33,6 +33,8 @@ FocusScope {
     property real spacing: VLCStyle.margin_normal // spacing between controls
 
     property real layoutSpacing: VLCStyle.margin_xxlarge // spacing between layouts (left, center, and right)
+    // redesign: Figma gaps between the controls (see ControlRepeater)
+    property bool figmaGaps: false
 
     property int identifier: -1
 
@@ -213,6 +215,7 @@ FocusScope {
             alignment: (Qt.AlignVCenter | Qt.AlignLeft)
 
             spacing: playerControlLayout.spacing
+            figmaGaps: playerControlLayout.figmaGaps
 
             focus: true
 
@@ -277,6 +280,7 @@ FocusScope {
             focus: true
 
             spacing: playerControlLayout.spacing
+            figmaGaps: playerControlLayout.figmaGaps
 
             altFocusAction: () => Navigation.defaultNavigationUp()
 
@@ -321,6 +325,7 @@ FocusScope {
             alignment: (Qt.AlignVCenter | Qt.AlignRight)
 
             spacing: playerControlLayout.spacing
+            figmaGaps: playerControlLayout.figmaGaps
 
             focus: true
 
