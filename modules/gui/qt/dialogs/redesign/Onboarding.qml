@@ -49,6 +49,8 @@ T.Popup {
 
     property bool _finished: false
     property bool _holdsModal: false
+    // item to give the keyboard focus back to when the onboarding closes
+    property Item _restoreFocusItem: null
 
     readonly property real _windowMargin: VLCStyle.dp(20, VLCStyle.scale)
     readonly property real _outerMargin: _windowMargin + MainCtx.windowExtendedMargin
@@ -69,6 +71,8 @@ T.Popup {
                          VLCStyle.rd_onboardingHeight + 2 * _outerMargin)
         mediaFolder = helper.defaultMediaFolder()
         page = 0
+        const window = MainCtx.intfMainWindow
+        _restoreFocusItem = (window && window.activeFocusItem) ? window.activeFocusItem : null
         open()
     }
 
@@ -131,7 +135,12 @@ T.Popup {
         }
     }
 
-    onClosed: done()
+    onClosed: {
+        if (_restoreFocusItem && _restoreFocusItem.visible)
+            _restoreFocusItem.forceActiveFocus(Qt.PopupFocusReason)
+        _restoreFocusItem = null
+        done()
+    }
 
     Component.onDestruction: {
         if (_holdsModal)
@@ -139,7 +148,7 @@ T.Popup {
     }
 
     onPageChanged: {
-        if (!nextButton.activeFocus && !(backButton.visible && backButton.activeFocus))
+        if (!nextButton.activeFocus && !(page > 0 && backButton.activeFocus))
             nextButton.forceActiveFocus(Qt.OtherFocusReason)
     }
 
@@ -165,6 +174,9 @@ T.Popup {
                     || (event.modifiers & ~Qt.KeypadModifier))
                 return
             event.accepted = true
+            // holding Enter must not run through the screens
+            if (event.isAutoRepeat)
+                return
             const item = root.contentItem.Window.activeFocusItem
             if (item && item.visible && item.enabled && typeof item.clicked === "function")
                 item.clicked()
@@ -224,6 +236,9 @@ T.Popup {
                 text: qsTr("Back")
                 fontPixelSize: VLCStyle.rd_fontSize_header
 
+                // RdButton's navigation takes Escape: close like the popup's Escape
+                Navigation.cancelAction: () => root.close()
+
                 onClicked: root.back()
             }
 
@@ -236,6 +251,8 @@ T.Popup {
                 style: Widgets.RdButton.Style.Primary
                 text: root.page === 2 ? qsTr("Finish") : qsTr("Next")
                 fontPixelSize: VLCStyle.rd_fontSize_header
+
+                Navigation.cancelAction: () => root.close()
 
                 onClicked: root.next()
             }
@@ -367,6 +384,8 @@ T.Popup {
                     text: qsTr("Browse")
                     fontPixelSize: VLCStyle.rd_fontSize_header
                     fontWeight: Font.Normal
+
+                    Navigation.cancelAction: () => root.close()
 
                     onClicked: root.browse()
                 }
@@ -757,13 +776,12 @@ T.Popup {
                 if (row.key !== undefined)
                     return [helper.keycapsForKey(row.key)]
                 const first = helper.keycaps(row.options[0])
-                if (row.options.length < 2)
-                    return [first]
-                const second = helper.keycaps(row.options[1])
+                const second = row.options.length > 1 ? helper.keycaps(row.options[1]) : []
                 if (first.length > 1 && first.length === second.length
                         && first.slice(0, -1).join("+") === second.slice(0, -1).join("+"))
                     return [first, second.slice(-1)]
-                return [first, second]
+                // an action without a key is left out
+                return [first, second].filter((keys) => keys.length > 0)
             }
 
             // the rows of the design with VLC's actions; "Show / Hide Queue" is VLC's play queue

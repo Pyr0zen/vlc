@@ -162,16 +162,16 @@ QStringList OnboardingHelper::keycapsForKey(const QString& key) const
     switch (code & ~KEY_MODIFIER)
     {
     case KEY_LEFT:
-        caps << QStringLiteral("←");
+        caps << QString(QChar(0x2190));
         break;
     case KEY_RIGHT:
-        caps << QStringLiteral("→");
+        caps << QString(QChar(0x2192));
         break;
     case KEY_UP:
-        caps << QStringLiteral("↑");
+        caps << QString(QChar(0x2191));
         break;
     case KEY_DOWN:
-        caps << QStringLiteral("↓");
+        caps << QString(QChar(0x2193));
         break;
     default:
     {
