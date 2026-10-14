@@ -65,7 +65,8 @@ T.Popup {
 
     background: Rectangle {
         radius: VLCStyle.rd_radius_panel
-        color: control.rdPalette.rdBgA3Transparent
+        // opaque over the native video (Figma's 95 % assumes a background blur)
+        color: Qt.alpha(control.rdPalette.rdBgA3Transparent, 1.0)
 
         RdShadow {
             visible: control.withShadow
