@@ -132,7 +132,7 @@ T.Control {
             radius: VLCStyle.rd_radius_xsmall
             color: control.swatch
             // Figma: #FFFFFF 21 %, 1.5 px
-            border.width: VLCStyle.dp(1.5)
+            border.width: 1.5 * VLCStyle.scale
             border.color: control.rdPalette.rdSwatchStroke
         }
     }
