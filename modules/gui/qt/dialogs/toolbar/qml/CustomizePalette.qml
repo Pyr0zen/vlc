@@ -144,17 +144,36 @@ GridView {
         return first.concat(list.filter((e) => _figmaOrder.indexOf(e.id) < 0))
     }
 
-    // height of the items from index `first` on (the last row): one or two label lines
-    function itemsHeightFrom(first) {
-        let lines = 1
-        for (let i = first; i < paletteModel.count; ++i) {
-            const text = paletteModel.get(i).text
-            if (text.indexOf("\n") >= 0 || fontMetrics.advanceWidth(text) > VLCStyle.rd_customizeItemWidth) {
-                lines = 2
-                break
-            }
+    // the dashed outline of an item, as Figma draws it per icon: the spacers 24x32, the icons
+    // outlined on the Icon instance itself 28x28 (quit, info, bookmarks, thumbnail, ...), the
+    // others on their Icon Wrapper 30x32
+    function frameSizeFor(id) {
+        if (isRepeatable(id))
+            return Qt.size(VLCStyle.rd_iconSize, VLCStyle.rd_iconButtonHeight)
+        switch (rdIconFor(id)) {
+        case "quit":
+        case "info":
+        case "bookmarks":
+        case "thumbnail":
+            return Qt.size(VLCStyle.dp(28), VLCStyle.dp(28))
+        default:
+            return Qt.size(VLCStyle.rd_iconButtonWidth, VLCStyle.rd_iconButtonHeight)
         }
-        return VLCStyle.rd_iconButtonHeight + VLCStyle.dp(16) + lines * _labelLineHeight
+    }
+
+    function labelLines(text) {
+        return (text.indexOf("\n") >= 0 || fontMetrics.advanceWidth(text) > VLCStyle.rd_customizeItemWidth) ? 2 : 1
+    }
+
+    // height of the tallest item from index `first` on (the last row)
+    function itemsHeightFrom(first) {
+        let height = 0
+        for (let i = first; i < paletteModel.count; ++i) {
+            const item = paletteModel.get(i)
+            height = Math.max(height, frameSizeFor(item.controlId).height + VLCStyle.dp(16)
+                                      + labelLines(item.text) * _labelLineHeight)
+        }
+        return height > 0 ? height : _itemHeight
     }
 
     function isRepeatable(id) {
@@ -277,6 +296,9 @@ GridView {
                 const pos = tileContent.mapToItem(ghost.parent, 0, 0)
                 ghost.x = pos.x
                 ghost.y = pos.y
+                // drops happen where the cursor is
+                ghost.Drag.hotSpot.x = mouse.x
+                ghost.Drag.hotSpot.y = mouse.y
             }
 
             drag.onActiveChanged: {

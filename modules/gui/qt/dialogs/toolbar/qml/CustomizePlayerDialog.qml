@@ -515,11 +515,9 @@ T.Popup {
             id: ghost
 
             box: paletteGrid
+            // (the palette puts the drag hot spot where the item was grabbed)
             visible: Drag.active
             z: 100
-
-            Drag.hotSpot.x: width / 2
-            Drag.hotSpot.y: VLCStyle.rd_iconButtonHeight / 2
         }
 
         // -------------------------------------------------------------- popups
@@ -702,7 +700,9 @@ T.Popup {
 
                     background: Rectangle {
                         radius: VLCStyle.rd_radius_small
-                        color: tab.current ? VLCStyle.palette.rdBgAccentBright
+                        // as RdSegmented: the light theme selects with a solid accent fill
+                        color: tab.current ? (VLCStyle.palette.isDark ? VLCStyle.palette.rdBgAccentBright
+                                                                      : VLCStyle.palette.rdAccentMain)
                                            : (tab.hovered ? VLCStyle.palette.rdBgA2 : VLCStyle.palette.rdBgA4)
                         border.width: tab.visualFocus ? VLCStyle.dp(1) : 0
                         border.color: VLCStyle.palette.rdFgA3
@@ -717,7 +717,9 @@ T.Popup {
                         elide: Text.ElideRight
                         font.family: VLCStyle.rd_fontFamily
                         font.pixelSize: VLCStyle.rd_fontSize_label
-                        color: tab.current ? VLCStyle.palette.rdAccentMain : VLCStyle.palette.rdFgA2
+                        color: tab.current ? (VLCStyle.palette.isDark ? VLCStyle.palette.rdAccentMain
+                                                                      : VLCStyle.palette.rdBgA1)
+                                           : VLCStyle.palette.rdFgA2
                     }
 
                     DropArea {

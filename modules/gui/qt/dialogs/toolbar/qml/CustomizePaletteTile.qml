@@ -17,7 +17,7 @@
  *****************************************************************************/
 
 // redesign (W8.1a, Figma "Player - customize" palette item, e.g. "Frame 232"): the control's icon
-// in a dashed outline (Icon Wrapper 30x32; the spacers an empty 24x32 outline, Figma "Spacer"),
+// in a dashed outline (sized per icon as in Figma: CustomizePalette.frameSizeFor),
 // its name 16 below, Inter 14 FG/A2, centered, at most two lines in the 86 wide item. Also drawn
 // under the cursor while the item is dragged (video 19:22, P8-47).
 import QtQuick
@@ -48,9 +48,12 @@ Item {
     Item {
         id: frame
 
+        readonly property size _size: root.box ? root.box.frameSizeFor(root.controlId)
+                                               : Qt.size(VLCStyle.rd_iconButtonWidth, VLCStyle.rd_iconButtonHeight)
+
         anchors.horizontalCenter: parent.horizontalCenter
-        width: root._spacer ? VLCStyle.rd_iconSize : VLCStyle.rd_iconButtonWidth
-        height: VLCStyle.rd_iconButtonHeight
+        width: _size.width
+        height: _size.height
 
         Widgets.RdDashedFrame {
             anchors.fill: parent

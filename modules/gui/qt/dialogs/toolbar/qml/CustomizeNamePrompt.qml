@@ -49,7 +49,7 @@ T.Popup {
     modal: true
     dim: false
     focus: true
-    closePolicy: T.Popup.CloseOnEscape
+    closePolicy: T.Popup.CloseOnEscape | T.Popup.CloseOnPressOutside
 
     onOpened: {
         nameField.selectAll()

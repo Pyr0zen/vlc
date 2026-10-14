@@ -64,13 +64,12 @@ Item {
 
         // the control's place in the bar, as in the live bar (the outline may reach into the gaps)
         width: Math.max(loader.width, VLCStyle.rd_iconButtonWidth)
-        height: loader.height
+        height: Math.max(loader.height, VLCStyle.rd_iconSize)
 
         z: Drag.active ? 100 : 0
 
+        // (the hot spot is set where the control is grabbed: drops happen under the cursor)
         Drag.source: control
-        Drag.hotSpot.x: width / 2
-        Drag.hotSpot.y: height / 2
 
         // Figma's outlines around the bar controls ("Player - customize"): icon buttons 30x32
         // (Icon Wrapper), previous / next 30x28, the play button 3 px around it, the volume
@@ -125,6 +124,12 @@ Item {
 
         drag.target: frameItem
         drag.smoothed: false
+
+        onPressed: (mouse) => {
+            const p = mouseArea.mapToItem(frameItem, mouse.x, mouse.y)
+            frameItem.Drag.hotSpot.x = p.x
+            frameItem.Drag.hotSpot.y = p.y
+        }
 
         drag.onActiveChanged: {
             if (drag.active) {
