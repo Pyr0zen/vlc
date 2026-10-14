@@ -43,6 +43,17 @@ T.Popup {
     focus: true
     closePolicy: T.Popup.CloseOnEscape | T.Popup.CloseOnPressOutsideParent
 
+    // as RdCascadeMenu: fades in (video 5:08, 60 fps), closes at once
+    enter: Transition {
+        NumberAnimation {
+            property: "opacity"
+            from: 0.0
+            to: 1.0
+            duration: VLCStyle.rd_menuFadeDuration
+            easing.type: Easing.OutQuad
+        }
+    }
+
     contentItem: Column {
         id: column
 
