@@ -3146,8 +3146,17 @@ static void SlaveDemux( input_thread_t *p_input )
         {
             if( in->b_slave_sub && in->b_can_rate_control )
             {
-                if( in->sub_rate != 0 ) /* Don't reset when it's the first time */
-                    es_out_Control(&priv->p_es_out->out, ES_OUT_RESET_PCR);
+                /* Don't flush when it's the first time. Only the subtitles
+                 * decoded at the previous rate are dropped: resetting the
+                 * PCR would flush every decoder and stall the video until
+                 * its next keyframe. */
+                if( in->sub_rate != 0 )
+                {
+                    if( in->p_slave_es_out != NULL )
+                        es_out_FlushSource( in->p_slave_es_out );
+                    else
+                        es_out_Control(&priv->p_es_out->out, ES_OUT_RESET_PCR);
+                }
                 float new_rate = priv->slave_subs_rate;
                 demux_Control( in->p_demux, DEMUX_SET_RATE, &new_rate );
             }

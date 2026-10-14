@@ -4331,6 +4331,23 @@ static int EsOutVaPrivControlLocked(es_out_sys_t *p_sys, input_source_t *source,
         EsOutDrain(p_sys);
         return VLC_SUCCESS;
     }
+    case ES_OUT_PRIV_FLUSH_SOURCE:
+    {
+        /* Unlike ES_OUT_RESET_PCR, the other sources keep playing: no
+         * clock reset and no rebuffering */
+        es_out_id_t *es;
+        foreach_es_then_es_slaves(es)
+        {
+            if (es->id.source != source)
+                continue;
+            if (es->p_dec != NULL)
+                vlc_input_decoder_Flush(es->p_dec);
+            if (es->p_dec_record != NULL)
+                vlc_input_decoder_Flush(es->p_dec_record);
+            es->i_pts_level = VLC_TICK_INVALID;
+        }
+        return VLC_SUCCESS;
+    }
     case ES_OUT_PRIV_SET_VBI_PAGE:
     case ES_OUT_PRIV_SET_VBI_TRANSPARENCY:
     {

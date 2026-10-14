@@ -769,6 +769,7 @@ static int PrivControlLocked(struct vlc_input_es_out *p_tsout,
     case ES_OUT_PRIV_SET_TIMES:
     case ES_OUT_PRIV_SET_JITTER:
     case ES_OUT_PRIV_SET_EOS:
+    case ES_OUT_PRIV_FLUSH_SOURCE:
     {
         ts_cmd_t cmd;
         if( CmdInitPrivControl( &cmd.privcontrol, in, i_query, args, p_sys->b_delayed ) )
@@ -1903,6 +1904,7 @@ static int CmdInitPrivControl( ts_cmd_privcontrol_t *p_cmd, input_source_t *in, 
         break;
     }
     case ES_OUT_PRIV_SET_EOS: /* no arg */
+    case ES_OUT_PRIV_FLUSH_SOURCE: /* no arg */
         break;
     default: vlc_assert_unreachable();
     }
@@ -1932,6 +1934,7 @@ static int CmdExecutePrivControl(struct es_out_timeshift *p_sys, ts_cmd_privcont
                                       p_cmd->u.times.i_length,
                                       p_cmd->u.times.b_live );
     case ES_OUT_PRIV_SET_EOS: /* no arg */
+    case ES_OUT_PRIV_FLUSH_SOURCE: /* no arg */
         return es_out_in_PrivControl( p_sys->p_out, in, i_query );
     default: vlc_assert_unreachable();
     }

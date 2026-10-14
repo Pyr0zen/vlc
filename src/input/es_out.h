@@ -110,7 +110,10 @@ enum es_out_query_private_e
     ES_OUT_PRIV_SET_VBI_PAGE,                       /* arg1=unsigned res=can fail */
 
     /* Set VBI/Teletext menu transparent */
-    ES_OUT_PRIV_SET_VBI_TRANSPARENCY                /* arg1=bool res=can fail */
+    ES_OUT_PRIV_SET_VBI_TRANSPARENCY,               /* arg1=bool res=can fail */
+
+    /* Flush the decoders of the ES of the calling source only */
+    ES_OUT_PRIV_FLUSH_SOURCE                        /* res=cannot fail */
 };
 
 struct vlc_input_es_out;
@@ -322,6 +325,13 @@ static inline void
 es_out_Eos(struct vlc_input_es_out *out)
 {
     int i_ret = es_out_PrivControl(out, ES_OUT_PRIV_SET_EOS);
+    assert( !i_ret );
+}
+
+static inline void
+es_out_FlushSource(struct vlc_input_es_out *out)
+{
+    int i_ret = es_out_PrivControl(out, ES_OUT_PRIV_FLUSH_SOURCE);
     assert( !i_ret );
 }
 
