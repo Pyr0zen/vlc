@@ -268,8 +268,12 @@ void VLCMenuBar::ToolsMenu( qt_intf_t *p_intf, QMenu *menu )
     menu->addSeparator();
 
     if( !p_intf->b_isDialogProvider )
+    {
         addDPStaticEntry( menu, qtr( "Customi&ze Interface..." ),
             ":/menu/preferences.svg", &DialogsProvider::showToolbarEditorDialog);
+        addDPStaticEntry( menu, qtr( "&Keyboard Shortcuts..." ),
+            "", &DialogsProvider::keyboardShortcutsDialog );
+    }
 
     addDPStaticEntry( menu, qtr( "&Preferences" ),
         ":/menu/preferences.svg", &DialogsProvider::prefsDialog, "Ctrl+P", QAction::PreferencesRole );

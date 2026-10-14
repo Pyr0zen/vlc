@@ -34,8 +34,15 @@ RdSidePanelPage {
 
     key: "audioSettings"
 
+    // values may have changed elsewhere (VLC's effects dialog, hotkeys) while the page was hidden
+    onActiveChanged: {
+        if (active)
+            RdEffects.refresh()
+    }
+
+    // a binding reading RdEffects.values[key] follows only that value
     function opt(name) {
-        return (RdEffects.revision, RdEffects.option(name))
+        return RdEffects.values[RdEffects.optionKey(name)]
     }
 
     // editing a band or the preamp while the preset is "None" turns the equalizer on
@@ -48,9 +55,9 @@ RdSidePanelPage {
         return parseFloat(String(text).replace(",", ".").replace(/[^0-9.+-]/g, ""))
     }
 
-    readonly property int _eqPreset: (RdEffects.revision, RdEffects.equalizerPreset())
-    readonly property var _eqBands: (RdEffects.revision, RdEffects.equalizerBands())
-    readonly property real _eqPreamp: (RdEffects.revision, RdEffects.audioValue("equalizer-preamp"))
+    readonly property int _eqPreset: RdEffects.values.equalizerPreset
+    readonly property var _eqBands: RdEffects.values.equalizerBands
+    readonly property real _eqPreamp: RdEffects.values[RdEffects.audioKey("equalizer-preamp")]
 
     Widgets.RdSettingsSection {
         title: qsTr("Defaults")
@@ -227,7 +234,7 @@ RdSidePanelPage {
             text: qsTr("2 Pass")
 
             Widgets.RdToggle {
-                checked: (RdEffects.revision, RdEffects.audioFlag("equalizer-2pass"))
+                checked: RdEffects.values[RdEffects.audioFlagKey("equalizer-2pass")]
                 Accessible.name: qsTr("2 Pass")
                 onToggled: RdEffects.setAudioFlag("equalizer-2pass", checked)
             }
@@ -275,8 +282,8 @@ RdSidePanelPage {
     Widgets.RdSettingsSection {
         id: pitchSection
 
-        readonly property real pitch: (RdEffects.revision, RdEffects.audioFilterEnabled("scaletempo_pitch")
-                                       ? RdEffects.audioValue("pitch-shift") : 0)
+        readonly property real pitch: RdEffects.values[RdEffects.audioFilterKey("scaletempo_pitch")]
+                                      ? RdEffects.values[RdEffects.audioKey("pitch-shift")] : 0
 
         Widgets.RdParamSlider {
             text: qsTr("Adjust Pitch")
@@ -302,7 +309,7 @@ RdSidePanelPage {
         property string module
         property var params: []
 
-        readonly property bool filterEnabled: (RdEffects.revision, RdEffects.audioFilterEnabled(module))
+        readonly property bool filterEnabled: RdEffects.values[RdEffects.audioFilterKey(module)]
 
         Widgets.RdSettingRow {
             text: filter.title
@@ -327,7 +334,7 @@ RdSidePanelPage {
                     delegate: Widgets.RdParamSlider {
                         required property var modelData
 
-                        readonly property real current: (RdEffects.revision, RdEffects.audioValue(modelData.name))
+                        readonly property real current: RdEffects.values[RdEffects.audioKey(modelData.name)]
 
                         text: modelData.label
                         valueText: (current * modelData.scale).toFixed(1) + (modelData.unit !== "" ? " " + modelData.unit : "")

@@ -45,6 +45,8 @@ Item {
     ShortcutExt{ sequence:"Ctrl+L"; onActivated: MainCtx.playqueuePanel.visible = !MainCtx.playqueuePanel.visible; }
 
     ShortcutExt{ sequence:"F1"; onActivated: DialogsProvider.helpDialog() }
+    // redesign: the main menu's About entry shows Shift + F1 (Figma "menu")
+    ShortcutExt{ sequence:"Shift+F1"; onActivated: DialogsProvider.aboutDialog() }
     ShortcutExt{ sequence:"F10"; onActivated: MainCtx.toggleToolbarMenu() }
     ShortcutExt{ sequence:"F11"; onActivated: MainCtx.toggleInterfaceFullScreen() }
     ShortcutExt{ sequence:"Ctrl+H"; onActivated: MainCtx.minimalView = !MainCtx.minimalView; }

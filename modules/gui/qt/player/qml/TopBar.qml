@@ -128,7 +128,9 @@ FocusScope{
             anchors.leftMargin: VLCStyle.dp(6, VLCStyle.scale) + root.sideMargin
             anchors.verticalCenter: parent.verticalCenter
 
-            spacing: VLCStyle.dp(7, VLCStyle.scale)
+            // Figma "topbar" (1920x40, padding 6): cone cell 38, gap 7, "..." and sidebar icons 28
+            // wide 10 apart ("Frame 50"), the divider in a 24 wide cell ("Frame 6"), folder chip
+            spacing: 0
 
             // cone (Figma "Frame 8", 38x28 cell, Figma "vlc" icon, accent colored so it follows
             // the live accent: video 17:46)
@@ -143,11 +145,16 @@ FocusScope{
                 }
             }
 
+            Item {
+                width: VLCStyle.dp(7, VLCStyle.scale)
+                height: 1
+            }
+
             Widgets.IconToolButton {
                 id: menuSelector
 
                 anchors.verticalCenter: parent.verticalCenter
-                width: VLCStyle.rd_iconButtonWidth
+                width: VLCStyle.dp(28, VLCStyle.scale)
                 height: VLCStyle.rd_iconButtonHeight
                 font.pixelSize: VLCStyle.rd_iconSize
 
@@ -158,19 +165,18 @@ FocusScope{
                 AccessibleCompat.id: "topBarMenuButton"
 
                 focus: true
-                checked: contextMenu.shown
+                checked: contextMenu.visible
 
                 Navigation.parentItem: root
                 Navigation.rightItem: sidebarButton
 
-                onClicked: contextMenu.popup(this.mapToGlobal(0, height))
+                onClicked: contextMenu.popupBelow(menuSelector, visualFocus)
 
                 onHoveredChanged: root.requestLockUnlockAutoHide(hovered)
 
-                Menus.QmlGlobalMenu {
+                // redesign: the main menu in the Figma style (W4.9)
+                Menus.RdMainMenu {
                     id: contextMenu
-
-                    ctx: MainCtx
 
                     onAboutToShow: root.requestLockUnlockAutoHide(true)
                     onAboutToHide: root.requestLockUnlockAutoHide(false)
@@ -187,11 +193,16 @@ FocusScope{
 
             // sidebar toggle (video 11:37): opens the library. Until the compact library sidebar
             // exists (BUILD_PLAN W5.1) this uses VLC's library view.
+            Item {
+                width: VLCStyle.dp(10, VLCStyle.scale)
+                height: 1
+            }
+
             Widgets.IconToolButton {
                 id: sidebarButton
 
                 anchors.verticalCenter: parent.verticalCenter
-                width: VLCStyle.rd_iconButtonWidth
+                width: VLCStyle.dp(28, VLCStyle.scale)
                 height: VLCStyle.rd_iconButtonHeight
                 font.pixelSize: VLCStyle.rd_iconSize
 
@@ -209,12 +220,18 @@ FocusScope{
                 onHoveredChanged: root.requestLockUnlockAutoHide(hovered)
             }
 
-            Rectangle {
+            Item {
                 visible: folderChip.visible
                 anchors.verticalCenter: parent.verticalCenter
-                width: VLCStyle.dp(1, VLCStyle.scale)
-                height: VLCStyle.dp(20, VLCStyle.scale)
-                color: VLCStyle.palette.rdDividerBright
+                width: VLCStyle.dp(24, VLCStyle.scale)
+                height: VLCStyle.dp(28, VLCStyle.scale)
+
+                Rectangle {
+                    anchors.centerIn: parent
+                    width: VLCStyle.dp(1, VLCStyle.scale)
+                    height: VLCStyle.dp(20, VLCStyle.scale)
+                    color: VLCStyle.palette.rdDividerBright
+                }
             }
 
             // folder chip (Figma "Frame 12": 82x28 min, radius 6, gap 4): folder icon + folder name
@@ -289,7 +306,8 @@ FocusScope{
             id: rightGroup
 
             anchors.right: parent.right
-            anchors.rightMargin: root.sideMargin
+            // Figma: the window buttons end 6 from the edge (topbar padding)
+            anchors.rightMargin: root.sideMargin + (root.showCSD ? VLCStyle.dp(6, VLCStyle.scale) : 0)
             anchors.top: parent.top
             anchors.bottom: parent.bottom
 

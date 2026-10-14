@@ -151,6 +151,8 @@ libqt_plugin_la_SOURCES = \
 	dialogs/preferences/preferences_widgets.hpp \
 	dialogs/preferences/simple_preferences.cpp \
 	dialogs/preferences/simple_preferences.hpp \
+	dialogs/redesign/hotkeys_model.cpp \
+	dialogs/redesign/hotkeys_model.hpp \
 	dialogs/sout/convert.cpp dialogs/sout/convert.hpp \
 	dialogs/sout/profile_selector.cpp \
 	dialogs/sout/profile_selector.hpp \
@@ -261,6 +263,8 @@ libqt_plugin_la_SOURCES = \
 	menus/qml_menu_wrapper.cpp \
 	menus/qml_menu_wrapper.hpp \
 	menus/menus.cpp menus/menus.hpp \
+	menus/rd_menu_model.cpp \
+	menus/rd_menu_model.hpp \
 	network/addonsmodel.cpp \
 	network/addonsmodel.hpp \
 	network/mediatreelistener.cpp \
@@ -285,6 +289,7 @@ libqt_plugin_la_SOURCES = \
 	style/systempalette.hpp \
 	style/vlcicons.cpp 	style/vlcicons.hpp \
 	style/rdfonts.cpp style/rdfonts.hpp \
+	style/rdwidgetstyle.cpp style/rdwidgetstyle.hpp \
 	style/defaultthemeproviders.hpp \
 	style/systempalettethemeprovider.cpp \
 	player/input_models.cpp player/input_models.hpp \
@@ -438,6 +443,7 @@ nodist_libqt_plugin_la_SOURCES = \
 	dialogs/preferences/preferences.moc.cpp \
 	dialogs/preferences/preferences_widgets.moc.cpp \
 	dialogs/preferences/simple_preferences.moc.cpp \
+	dialogs/redesign/hotkeys_model.moc.cpp \
 	dialogs/sout/convert.moc.cpp \
 	dialogs/sout/profile_selector.moc.cpp \
 	dialogs/sout/sout.moc.cpp \
@@ -482,6 +488,7 @@ nodist_libqt_plugin_la_SOURCES = \
 	menus/custom_menus.moc.cpp \
 	menus/qml_menu_wrapper.moc.cpp \
 	menus/menus.moc.cpp \
+	menus/rd_menu_model.moc.cpp \
 	network/addonsmodel.moc.cpp \
 	network/devicesourceprovider.moc.cpp \
 	network/networkdevicemodel.moc.cpp \
@@ -1255,13 +1262,37 @@ libqml_module_dialogs_a_QML = \
 	dialogs/dialogs/qml/Dialogs.qml \
 	dialogs/dialogs/qml/ModalDialog.qml \
 	dialogs/dialogs/qml/WindowDialog.qml \
+	dialogs/redesign/OpenNetworkStreamDialog.qml \
+	dialogs/redesign/HotkeyField.qml \
+	dialogs/redesign/KeyboardShortcutsDialog.qml \
 	dialogs/toolbar/qml/EditorDNDDelegate.qml \
 	dialogs/toolbar/qml/EditorDNDView.qml\
 	dialogs/toolbar/qml/EditorDummyButton.qml \
 	dialogs/toolbar/qml/EditorTabButton.qml \
 	dialogs/toolbar/qml/ToolbarEditor.qml \
 	dialogs/toolbar/qml/ToolbarEditorDialog.qml \
-	dialogs/toolbar/qml/ToolbarEditorButtonList.qml
+	dialogs/toolbar/qml/ToolbarEditorButtonList.qml \
+	dialogs/redesign/settings/SettingsAdvancedBar.qml \
+	dialogs/redesign/settings/SettingsCategoryButton.qml \
+	dialogs/redesign/settings/SettingsDialog.qml \
+	dialogs/redesign/settings/SettingsPage.qml \
+	dialogs/redesign/settings/SettingsPlaceholder.qml \
+	dialogs/redesign/settings/SettingsRow.qml \
+	dialogs/redesign/settings/SettingsSearchField.qml \
+	dialogs/redesign/settings/SettingsSection.qml \
+	dialogs/redesign/settings/pages/SettingsGeneralPage.qml \
+	dialogs/redesign/settings/pages/SettingsInterfacePage.qml \
+	dialogs/redesign/settings/pages/SettingsPrivacyPage.qml \
+	dialogs/redesign/settings/pages/SettingsControlsPage.qml \
+	dialogs/redesign/settings/pages/SettingsPlaybackPage.qml \
+	dialogs/redesign/settings/pages/SettingsVideoPage.qml \
+	dialogs/redesign/settings/pages/SettingsAudioPage.qml \
+	dialogs/redesign/settings/pages/SettingsSubtitlesPage.qml \
+	dialogs/redesign/settings/pages/SettingsLibraryPage.qml \
+	dialogs/redesign/settings/pages/SettingsNetworkPage.qml \
+	dialogs/redesign/settings/pages/SettingsPerformancePage.qml \
+	dialogs/redesign/settings/pages/SettingsRecordingPage.qml \
+	dialogs/redesign/settings/pages/SettingsExtensionsPage.qml
 libqml_module_dialogs_a_Singleton_QML =
 libqml_module_dialogs_a_SOURCES = $(QML_MODULE_dialogs_SRC)
 nodist_libqml_module_dialogs_a_SOURCES = dialogs/qmlassets.cpp $(QML_MODULE_dialogs_NODIST_EXTRA)
@@ -1348,7 +1379,9 @@ libqml_module_menus_a_CPPFLAGS = $(libqt_plugin_la_CPPFLAGS)
 libqml_module_menus_a_QML = \
 	menus/qml/GlobalShortcuts.qml \
 	menus/qml/Menubar.qml \
-	menus/qml/ShortcutExt.qml
+	menus/qml/ShortcutExt.qml \
+	menus/qml/RdCascadeMenu.qml \
+	menus/qml/RdMainMenu.qml
 libqml_module_menus_a_Singleton_QML =
 libqml_module_menus_a_SOURCES = $(QML_MODULE_menus_SRC)
 nodist_libqml_module_menus_a_SOURCES = menus/qmlassets.cpp $(QML_MODULE_menus_NODIST_EXTRA)
@@ -1413,7 +1446,8 @@ libqml_module_player_a_QML = \
 	player/qml/TracksListPage.qml \
 	player/qml/ControlLayout.qml \
 	player/qml/ControlRepeater.qml \
-	player/qml/NavigationBox.qml
+	player/qml/NavigationBox.qml \
+	player/qml/RdPlayerMenu.qml
 
 libqml_module_player_a_Singleton_QML = \
 	player/qml/PlayerControlbarControls.qml \

@@ -21,12 +21,15 @@
 //   tracks popup:      "video", "audio", "subtitles"
 //   settings sidebar:  "playback", "videoSettings", "audioSettings", "subtitleSettings"
 //   queue sidebar:     "queue", "bookmarks", "chapters"
+// It also holds the player's Hide UI state (video 5:25-5:30, Ctrl + \ and the right-click menu):
+// no bars and no panel, only the video.
 pragma Singleton
 
 import QtQml
 
 QtObject {
     property string current: ""
+    property bool uiHidden: false
 
     readonly property bool tracksOpen: current === "video" || current === "audio" || current === "subtitles"
     readonly property bool settingsOpen: current === "playback" || current === "videoSettings"
@@ -59,5 +62,12 @@ QtObject {
 
     function releaseModal() {
         modalCount = Math.max(0, modalCount - 1)
+    }
+
+    // hiding the UI closes every panel; showing it again brings the bars back, not the panels
+    function toggleUi() {
+        if (!uiHidden)
+            current = ""
+        uiHidden = !uiHidden
     }
 }

@@ -33,6 +33,7 @@
 
 #include "dialogs/toolbar/controlbar_profile_model.hpp"
 #include "dialogs/toolbar/controlbar_profile.hpp"
+#include "dialogs/redesign/hotkeys_model.hpp"
 
 #include "playlist/playlist_model.hpp"
 #include "playlist/playlist_controller.hpp"
@@ -74,6 +75,7 @@
 #include "network/standardpathmodel.hpp"
 
 #include "menus/qml_menu_wrapper.hpp"
+#include "menus/rd_menu_model.hpp"
 
 #include "widgets/native/csdthemeimage.hpp"
 #include "widgets/native/navigation_attached.hpp"
@@ -281,6 +283,8 @@ void MainUI::registerQMLTypes()
         qmlRegisterSingletonInstance<DialogsProvider>(uri, versionMajor, versionMinor, "DialogsProvider", DialogsProvider::getInstance());
         assert(DialogErrorModel::getInstance<false>());
         qmlRegisterSingletonInstance<DialogErrorModel>(uri, versionMajor, versionMinor, "DialogErrorModel", DialogErrorModel::getInstance<false>());
+        // redesign: hotkey configuration of the Keyboard Shortcuts dialog
+        qmlRegisterType<HotkeysModel>( uri, versionMajor, versionMinor, "HotkeysModel" );
 
         qmlRegisterModule(uri, versionMajor, versionMinor);
         qmlProtectModule(uri, versionMajor);
@@ -298,6 +302,8 @@ void MainUI::registerQMLTypes()
         qmlRegisterType<SortMenuAlbums>( uri, versionMajor, versionMinor, "SortMenuAlbums" );
         qmlRegisterType<QmlGlobalMenu>( uri, versionMajor, versionMinor, "QmlGlobalMenu" );
         qmlRegisterType<QmlMenuBar>( uri, versionMajor, versionMinor, "QmlMenuBar" );
+        // redesign: VLC's menus drawn by the QML main menu and right-click menu
+        qmlRegisterType<RdMenuModel>( uri, versionMajor, versionMinor, "RdMenuModel" );
 
         qmlRegisterModule(uri, versionMajor, versionMinor);
         qmlProtectModule(uri, versionMajor);

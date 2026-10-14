@@ -1,0 +1,55 @@
+name: Bug report
+description: Something in the redesign build does not work or does not look right
+labels: ["bug"]
+body:
+  - type: input
+    id: build
+    attributes:
+      label: Build (run number)
+      description: The folder name under "<TEST_MEDIA_DIR>\builds", e.g. 38435859498
+    validations:
+      required: false
+  - type: textarea
+    id: did
+    attributes:
+      label: What I did
+      description: Step by step, so it can be repeated
+    validations:
+      required: true
+  - type: textarea
+    id: happened
+    attributes:
+      label: What happened
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What I expected
+    validations:
+      required: true
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Screenshot
+      description: Paste or drag a screenshot here
+    validations:
+      required: false
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Windowed or fullscreen
+      options:
+        - Windowed
+        - Fullscreen
+        - Both
+        - Not related
+    validations:
+      required: true
+  - type: input
+    id: file
+    attributes:
+      label: Which file
+      description: The file you played (name, and format if known), or "none"
+    validations:
+      required: false

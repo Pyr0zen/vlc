@@ -405,6 +405,10 @@ public:
     MainInterfaceMode getInitialEffectiveMainInterfaceMode() const { return m_initialEffectiveMainInterfaceMode; }
 
     Q_INVOKABLE static double dp(const double px, const double scale);
+
+    // redesign: mouse cursor position in item coordinates, read once when the player's
+    // right-click menu opens (the request comes through DialogsProvider without a position)
+    Q_INVOKABLE static QPointF cursorPosition(const QQuickItem* item);
     Q_INVOKABLE double dp(const double px) const;
 
     Q_INVOKABLE bool useXmasCone() const;

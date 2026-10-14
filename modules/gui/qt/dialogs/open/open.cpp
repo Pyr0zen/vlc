@@ -28,9 +28,10 @@
 #include "dialogs/dialogs_provider.hpp"
 #include "util/qt_dirs.hpp"
 #include "playlist/playlist_controller.hpp"
+#include "style/rdwidgetstyle.hpp"
 
 #include <QRegularExpression>
-#include <QMenu>
+#include <QTabBar>
 
 #include <vlc_url.h>
 
@@ -48,6 +49,9 @@ OpenDialog::OpenDialog(qt_intf_t *_p_intf, QWindow* parent )
     setWindowTitle( qtr( "Open Media" ) );
     setWindowRole( "vlc-open-media" );
     setWindowModality( Qt::WindowModal );
+
+    /* redesign (W6.4): Figma dialog colors, fonts and radii, following the theme */
+    RdWidgetStyle::apply( this, p_intf );
 
     /* Tab definition and creation */
     fileOpenPanel    = new FileOpenPanel( this, p_intf );
@@ -80,18 +84,12 @@ OpenDialog::OpenDialog(qt_intf_t *_p_intf, QWindow* parent )
     /* Select Button */
     selectButton = new QPushButton( qtr( "&Select" ) );
 
-    /* Menu for the Play button */
-    QMenu * openButtonMenu = new QMenu( "Open", playButton );
-    openButtonMenu->addAction( qtr( "&Enqueue" ), this, &OpenDialog::enqueue
-                                    )->setShortcut( QKeySequence( "Alt+E" ) );
-    openButtonMenu->addAction( qtr( "&Play" ), this, &OpenDialog::play
-                                    )->setShortcut( QKeySequence( "Alt+P" ) );
-    openButtonMenu->addAction( qtr( "&Stream" ), this, &OpenDialog::stream
-                                    )->setShortcut( QKeySequence( "Alt+S" ) );
-    openButtonMenu->addAction( qtr( "C&onvert" ), this, &OpenDialog::transcode
-                                    )->setShortcut( QKeySequence( "Alt+O" ) );
-
-    playButton->setMenu( openButtonMenu );
+    /* redesign (W6.4, video 12:37-13:08): one action per dialog, no Enqueue / Play /
+     * Stream / Convert drop-down; enqueue is the queue's job, Stream and Convert have
+     * their own entries (Ctrl+S, Ctrl+R) */
+    playButton->setPopupMode( QToolButton::DelayedPopup );
+    RdWidgetStyle::setPrimary( playButton );
+    RdWidgetStyle::setPrimary( selectButton );
 
     /* Add the three Buttons */
     ui.buttonsBox->addButton( selectButton, QDialogButtonBox::AcceptRole );
@@ -183,7 +181,7 @@ void OpenDialog::setMenuAction()
             playButton->setText( qtr( "&Stream" ) );
             break;
         case OPEN_AND_SAVE:
-            playButton->setText( qtr( "C&onvert / Save" ) );
+            playButton->setText( qtr( "C&onvert" ) );
             break;
         case OPEN_AND_ENQUEUE:
             playButton->setText( qtr( "&Enqueue" ) );
@@ -223,11 +221,51 @@ QString OpenDialog::getOptions()
     return ui.advancedLineInput->text();
 }
 
-void OpenDialog::showTab( OpenDialog::OpenTab i_tab, OpenDialog::ActionFlag i_action )
+void OpenDialog::showTab( OpenDialog::OpenTab i_tab, OpenDialog::ActionFlag i_action,
+                          bool b_single_source )
 {
     setActionFlag(i_action);
+
+    /* redesign (W6.4, video 13:07-13:10): an open entry shows only its own source;
+     * Convert, Stream and the advanced enqueue keep the source tabs */
     if( i_tab == OPEN_CAPTURE_TAB ) captureOpenPanel->initialize();
+    /* select the source first: disabling the current tab would walk through the others */
+    ui.Tab->setTabEnabled( i_tab, true );
     ui.Tab->setCurrentIndex( i_tab );
+
+    QTabBar *tabBar = ui.Tab->findChild<QTabBar*>( QString(), Qt::FindDirectChildrenOnly );
+    if( tabBar )
+        tabBar->setVisible( !b_single_source );
+    /* no Ctrl+Tab to the hidden sources either */
+    for( int i = 0; i < OPEN_TAB_MAX; i++ )
+        if( i != i_tab )
+            ui.Tab->setTabEnabled( i, !b_single_source );
+    if( b_single_source )
+    {
+        switch( i_tab )
+        {
+        case OPEN_DISC_TAB:
+            setWindowTitle( qtr( "Open Disc" ) );
+            break;
+        case OPEN_NETWORK_TAB:
+            setWindowTitle( qtr( "Open Network Stream" ) );
+            break;
+        case OPEN_CAPTURE_TAB:
+            setWindowTitle( qtr( "Open Capture Device" ) );
+            break;
+        case OPEN_FILE_TAB:
+        default:
+            setWindowTitle( qtr( "Open File(s)" ) );
+            break;
+        }
+    }
+    else if( i_action == OPEN_AND_SAVE )
+        setWindowTitle( qtr( "Convert" ) );
+    else if( i_action == OPEN_AND_STREAM )
+        setWindowTitle( qtr( "Stream" ) );
+    else
+        setWindowTitle( qtr( "Open Media" ) );
+
     show();
     if( ui.Tab->currentWidget() != NULL )
     {

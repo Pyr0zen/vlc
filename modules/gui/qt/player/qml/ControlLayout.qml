@@ -54,6 +54,7 @@ FocusScope {
                     size += item.implicitWidth
                 else
                     size += item.Layout.minimumWidth
+                size += item.Layout.leftMargin
             }
 
             return size + ((count - 1 + ((controlLayout.alignment & (Qt.AlignLeft | Qt.AlignRight)) ? 1 : 0)) * playerControlLayout.spacing)
@@ -69,7 +70,7 @@ FocusScope {
 
             for (let i = 0; i < count; ++i) {
                 const item = repeater.itemAt(i)
-                maximumWidth += item.implicitWidth
+                maximumWidth += item.implicitWidth + item.Layout.leftMargin
             }
 
             maximumWidth += ((count - 1 + ((alignment & (Qt.AlignLeft | Qt.AlignRight)) ? 1 : 0)) * playerControlLayout.spacing)
@@ -96,6 +97,8 @@ FocusScope {
     property alias model: repeater.model
 
     property alias spacing: rowLayout.spacing
+    // redesign: Figma gaps in the player's control bar (ControlRepeater)
+    property alias figmaGaps: repeater.figmaGaps
 
     // Signals
 
@@ -156,6 +159,7 @@ FocusScope {
 
             Navigation.parentItem: controlLayout
 
+            baseSpacing: rowLayout.spacing
             availableWidth: rowLayout.width
             availableHeight: rowLayout.height
 
