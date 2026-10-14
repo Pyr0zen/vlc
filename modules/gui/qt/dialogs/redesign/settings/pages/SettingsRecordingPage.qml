@@ -17,7 +17,7 @@
  *****************************************************************************/
 // redesign: Settings > Recording ("Recording, Casting & Streaming Out", video 18:23-18:25, Figma
 // "Settings - recording"); rows: P8-17. The encoder settings are x264's, which VLC uses when it
-// converts video for streaming and casting.
+// converts video for streaming (casting uses its own fast settings, from Cast quality).
 import QtQuick
 
 import VLC.Style
@@ -99,7 +99,7 @@ SettingsPage {
 
         SettingsRow {
             text: qsTr("Encoding preset")
-            description: qsTr("How hard the encoder works when VLC converts video for streaming or casting. Slower presets give a smaller stream at the same quality but use more processor time.")
+            description: qsTr("How hard the encoder works when VLC converts video for streaming (casting uses its own fast settings). Slower presets give a smaller stream at the same quality but use more processor time.")
             keywords: "sout-x264-preset x264 encoder speed"
             shown: SettingsCatalog.exists("sout-x264-preset")
 

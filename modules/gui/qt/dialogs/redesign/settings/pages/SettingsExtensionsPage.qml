@@ -39,11 +39,12 @@ SettingsPage {
 
     // false: the installed add-ons; true: VLC's online catalog (and read packages) as well
     property bool _catalog: false
-    property bool _catalogLoaded: false
     // a repository or a package is being read
     property bool _gathering: false
     // a message about the last package the user tried to add
     property string _notice: ""
+    // the list has its count for the current search (the model resets on every keystroke)
+    property bool _countKnown: true
 
     // the selection follows its add-on when the list reloads (rows move, states change)
     property int _selectedRow: -1
@@ -60,7 +61,7 @@ SettingsPage {
             return qsTr("Looking for add-ons...")
         if (_notice !== "")
             return _notice
-        if (addons.loading)
+        if (addons.loading || !_countKnown)
             return ""
         if (searchField.text !== "")
             return qsTr("No add-on matches \"%1\"").arg(searchField.text)
@@ -80,7 +81,8 @@ SettingsPage {
         }
         _selectedRow = row
         _selected = addons.getDataAt(row)
-        _selectedKey = _keyOf(_selected)
+        // a row not loaded yet (the list loads 100 at a time) gets its key once it is
+        _selectedKey = _selected.name === undefined ? "" : _keyOf(_selected)
         list.positionViewAtIndex(row, ListView.Contain)
     }
 
@@ -91,8 +93,14 @@ SettingsPage {
     }
 
     function _refreshSelection() {
-        if (_selectedKey === "")
+        if (_selectedKey === "") {
+            if (_selectedRow >= 0 && _selectedRow < addons.count) {
+                _selected = addons.getDataAt(_selectedRow)
+                if (_selected.name !== undefined)
+                    _selectedKey = _keyOf(_selected)
+            }
             return
+        }
         let row = _selectedRow
         if (row < 0 || row >= addons.count || _keyOf(addons.getDataAt(row)) !== _selectedKey) {
             row = -1
@@ -114,9 +122,10 @@ SettingsPage {
     function _showCatalog(show) {
         _notice = ""
         _catalog = show
-        if (!show || _catalogLoaded || _gathering)
+        // fetched each time: a catalog that failed (offline) can be fetched again, and VLC
+        // merges what it already has
+        if (!show || _gathering)
             return
-        _catalogLoaded = true
         _gathering = true
         addons.loadFromDefaultRepository()
     }
@@ -174,11 +183,17 @@ SettingsPage {
         stateFilter: root._catalog ? ServicesDiscoveryModel.STATE_NONE : ServicesDiscoveryModel.STATE_INSTALLED
         searchPattern: searchField.text
 
+        // every state change of an add-on reloads the list (a lost row update included)
         onLoadingChanged: {
             if (!loading)
                 root._gathering = false
+            root._refreshSelection()
         }
-        onCountChanged: root._refreshSelection()
+        onCountChanged: {
+            root._countKnown = true
+            root._refreshSelection()
+        }
+        onSearchPatternChanged: root._countKnown = false
     }
 
     // install and remove progress changes the rows in place
@@ -391,10 +406,17 @@ SettingsPage {
                 Accessible.description: root._canInstall ? qsTr("Install \"%1\"").arg(root._selected.name)
                                                          : qsTr("Add an add-on package (.vlp) from this computer")
                 onClicked: {
-                    if (root._canInstall)
-                        addons.installService(root._selectedRow)
-                    else
+                    if (!root._canInstall) {
                         root._addPackage()
+                        return
+                    }
+                    // VLC's install request removes an add-on that is installed or being
+                    // installed: act on the live state of the row, not the remembered one
+                    const live = addons.getDataAt(root._selectedRow)
+                    if (root._keyOf(live) === root._selectedKey
+                            && live.state === ServicesDiscoveryModel.STATE_NOTINSTALLED)
+                        addons.installService(root._selectedRow)
+                    root._refreshSelection()
                 }
             }
 

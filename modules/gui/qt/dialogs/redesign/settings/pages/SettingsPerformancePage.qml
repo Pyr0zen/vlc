@@ -20,10 +20,18 @@
 // settings under "Developer" in the Advanced Options.
 import QtQuick
 
+import VLC.MainInterface
+import VLC.Style
+import VLC.Player
+import VLC.Widgets as Widgets
 import VLC.Dialogs
 
 SettingsPage {
     id: root
+
+    function _option(name) {
+        return RdEffects.values[RdEffects.optionKey(name)]
+    }
 
     // VLC tries the listed decoders first, then all the others ("codec" is not strict)
     readonly property var _decoderChoices: {
@@ -48,23 +56,68 @@ SettingsPage {
     SettingsSection {
         title: qsTr("Decoding")
 
-        SettingsOption {
-            option: "dec-dev"
+        // VLC's "hw-dec" turns hardware decoding on, "dec-dev" picks the device: Automatic,
+        // a device, or Off in one list (Figma: one dropdown, "Automatic")
+        SettingsRow {
             text: qsTr("Hardware-accelerated decoding")
+            description: RdEffects.optionDescription("hw-dec")
+            keywords: "hw-dec dec-dev hardware gpu dxva d3d11"
+            shown: SettingsCatalog.exists("hw-dec")
+
+            Widgets.RdDropdown {
+                readonly property bool _enabled: root._option("hw-dec") !== false
+                readonly property string _device: String(root._option("dec-dev") ?? "any")
+                readonly property var entries: {
+                    const list = [{ device: "any", text: qsTr("Automatic") }]
+                    for (const c of RdEffects.optionChoices("dec-dev")) {
+                        if (c.value !== "any" && c.value !== "none" && c.value !== "")
+                            list.push({ device: c.value, text: c.text })
+                    }
+                    list.push({ device: "", text: qsTr("Off") })
+                    return list
+                }
+
+                implicitWidth: VLCStyle.dp(320)
+                implicitHeight: VLCStyle.dp(36)
+                model: entries.map((e) => e.text)
+                currentIndex: !_enabled ? entries.length - 1
+                                        : Math.max(0, entries.findIndex((e) => e.device === _device))
+                Accessible.name: qsTr("Hardware-accelerated decoding")
+                onActivated: (index) => {
+                    const device = entries[index].device
+                    RdEffects.setOption("hw-dec", device !== "")
+                    if (device !== "")
+                        RdEffects.setOption("dec-dev", device)
+                }
+            }
         }
 
-        SettingsOption {
-            option: "postproc-q"
+        // the quality is read by VLC's post-processing filter, which runs while it is in the
+        // video filters: Off takes it out
+        SettingsRow {
             text: qsTr("Video post-processing")
-            choices: [
-                { value: 0, text: qsTr("Off") },
-                { value: 1, text: qsTr("Lowest") },
-                { value: 2, text: qsTr("Low") },
-                { value: 3, text: qsTr("Medium") },
-                { value: 4, text: qsTr("High") },
-                { value: 5, text: qsTr("Very high") },
-                { value: 6, text: qsTr("Highest") }
-            ]
+            description: RdEffects.optionDescription("postproc-q")
+            keywords: "postproc-q postproc post-processing"
+            shown: SettingsCatalog.exists("postproc-q")
+
+            Widgets.RdDropdown {
+                readonly property bool _on: RdEffects.values[RdEffects.videoFilterKey("postproc")] === true
+                readonly property int _quality: Number(root._option("postproc-q") ?? 6)
+                readonly property var levels: [qsTr("Off"), qsTr("Lowest"), qsTr("Low"), qsTr("Medium"),
+                                               qsTr("High"), qsTr("Very high"), qsTr("Highest")]
+
+                implicitWidth: VLCStyle.dp(320)
+                implicitHeight: VLCStyle.dp(36)
+                model: levels
+                currentIndex: _on ? Math.max(1, Math.min(6, _quality)) : 0
+                Accessible.name: qsTr("Video post-processing")
+                onActivated: (index) => {
+                    if (index > 0)
+                        RdEffects.setOption("postproc-q", index)
+                    if (RdEffects.videoFilterEnabled("postproc") !== (index > 0))
+                        RdEffects.setVideoFilterEnabled("postproc", index > 0)
+                }
+            }
         }
 
         SettingsOption {
