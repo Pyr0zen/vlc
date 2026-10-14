@@ -114,14 +114,16 @@ T.AbstractButton {
     Item {
         id: ghost
 
-        parent: row.Window.contentItem
+        // over the whole window only while dragging
+        parent: dragHandler.active ? row.Window.contentItem : row
         visible: dragHandler.active
         width: row.width
         height: row.height
         opacity: 0.5
         z: 1000
 
-        Drag.active: dragHandler.active
+        // started and dropped by the handler below (a binding could turn the drag off before
+        // the drop, losing it)
         Drag.dragType: Drag.Internal
         Drag.hotSpot.x: VLCStyle.dp(16)
         Drag.hotSpot.y: height / 2
@@ -161,8 +163,11 @@ T.AbstractButton {
         id: dragHandler
 
         enabled: row.dragUrls.length > 0
+        // as VLC's own list and grid items: touch flicks the list, the mouse drags; lists may
+        // take the gesture over
+        acceptedDevices: PointerDevice.AllDevices & ~(PointerDevice.TouchScreen)
+        grabPermissions: PointerHandler.CanTakeOverFromHandlersOfDifferentType | PointerHandler.ApprovesTakeOverByAnything
         target: null
-        dragThreshold: VLCStyle.dp(8)
 
         onCentroidChanged: {
             if (!active || !ghost.parent)
@@ -173,7 +178,9 @@ T.AbstractButton {
         }
 
         onActiveChanged: {
-            if (!active)
+            if (active)
+                ghost.Drag.active = true
+            else
                 ghost.Drag.drop()
         }
     }

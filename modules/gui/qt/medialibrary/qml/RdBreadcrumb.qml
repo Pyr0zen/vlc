@@ -103,7 +103,8 @@ Item {
                 }
 
                 Crumb {
-                    text: root.crumbs[crumbIndex].title
+                    // the crumbs may shrink before the repeater drops this one
+                    text: root.crumbs[crumbIndex]?.title ?? ""
                     last: isLast
                     bold: root.boldLast
                     width: isLast ? Math.min(implicitWidth, Math.max(0, root.width - parent.x)) : implicitWidth
