@@ -1644,13 +1644,14 @@ FocusScope {
                 }
             }
 
-            // redesign: Figma BG/A3 Transparent made opaque, like the panels and menus: the 95 %
-            // assumes a background blur, and over the native video (fullscreen, where no frame
-            // is drawn behind the bar) the 5 % shows the picture through and dims the bar; a 1 px
-            // Divider/Dim top line only in the light theme (Figma "Player - Light" has it, the
-            // dark "Player" frame has none)
-            color: (controlBar.textPosition === ControlBar.TimeTextPosition.Inline) ? Qt.alpha(VLCStyle.palette.rdBgA3Transparent, 1.0)
-                                                                                    : windowTheme.bg.primary
+            // redesign: opaque, like the panels and menus, so the fullscreen bar over the native
+            // video looks like the windowed one: BG/A3 in Dark (the dark Player frames override
+            // the bar fill to BG/A3, visual audit A2, like the top bar), BG/A3 Transparent made
+            // opaque in Light (its 95 % assumes a background blur); a 1 px Divider/Dim top line
+            // only in the light theme (Figma "Player - Light" has it, the dark frames have none)
+            color: (controlBar.textPosition !== ControlBar.TimeTextPosition.Inline) ? windowTheme.bg.primary
+                   : VLCStyle.palette.isDark ? VLCStyle.palette.rdBgA3
+                                             : Qt.alpha(VLCStyle.palette.rdBgA3Transparent, 1.0)
 
             Rectangle {
                 visible: controlBar.textPosition === ControlBar.TimeTextPosition.Inline && !VLCStyle.palette.isDark
@@ -1803,7 +1804,8 @@ FocusScope {
 
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: controlBar.top
-        anchors.bottomMargin: VLCStyle.margin_small
+        // Figma "continue": 24 px above the control bar (visual audit A21)
+        anchors.bottomMargin: VLCStyle.dp(24, VLCStyle.scale)
         z: 2
 
         maxWidth: Math.min(VLCStyle.dp(552, VLCStyle.scale), rootPlayer.width - 2 * VLCStyle.margin_normal)
