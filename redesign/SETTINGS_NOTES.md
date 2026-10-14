@@ -35,7 +35,7 @@ Branch `redesign-settings`, branched from `redesign` (10b542199c). Built by the 
 - Subtitles: enable, language, encoding; automatic loading and file name matching in words (P7-17); font, Size values (Relative words / Precise percent), font size, bold, colors, opacities, outline, shadow, background, vertical position; delay (bipolar slider); on-screen messages; Advanced: folders, shadow angle, text direction, monospace font, title position, alignment, second subtitles.
 - Library: one window and its two dependent rows (dimmed while off, video 18:15), folders in words, hidden files, metadata, media library; Advanced: preparsing, ignored extensions.
 - Network: Buffering in words (Low latency / Normal / More buffering / Custom; the four sizes dimmed until Custom), proxy, certificates, ciphers in words; Advanced: connection timeout, MTU.
-- Performance: hardware decoding, post-processing and loop filter in words, threads; late frames, priority; Advanced "Developer": decoder, clock options.
+- Performance: hardware decoding (VLC's on/off and device in one list: Automatic / the devices / Off), post-processing (Off takes VLC's post-processing filter out) and loop filter in words, threads; late frames, priority; Advanced "Developer": decoder, clock options.
 - Recording: recording folder and native recording, cast quality, stream out tracks, x264 preset and tuning in words; Advanced: keep / all tracks, H.264 profile and level.
 - Extensions: the add-ons VLC manages (VLC's add-ons model, `ServicesDiscoveryModel`): installed list, search, Find more extensions (VLC's online catalog), Add (selected catalog add-on, or a `.vlp` package file / drop), Remove (with confirmation), Load extensions on startup; Advanced: plugins list (P8-20).
 - Every page ends its Advanced Options with "All Other Options" (except Privacy, which has none).
@@ -90,6 +90,11 @@ Rows of the dialog shell (P7-18, IB-42, P8-02, P8-39, P8-40) and the Keyboard Sh
 - Accent: the first swatch writes VLC's orange explicitly.
 - Extensions page keeps the video's words ("Extensions", "Load extensions on startup", Decision 11).
 - Performance: "Give VLC high priority" (VLC's "high-priority" raises the process priority, it is not real-time).
+- Hardware-accelerated decoding = "hw-dec" (on/off) and "dec-dev" (device) in one dropdown, as Figma's single "Automatic" list.
+- Video post-processing: Off = VLC's post-processing filter not in the video filters; Lowest to Highest = the filter with that quality ("postproc-q").
+- Interface options MainCtx caches (maximum volume, hide timeout, pinned controls, opacity, menu bar...) apply at once: MainCtx reads its options again after the write, as after VLC's preferences.
+- The generated "All Other Options" lists are built once Advanced Options opens; before that, a search of three letters or more lists only the matching plugins (one or two letters match nearly everything).
+- Snapshot sizes are widths that keep the video's proportions.
 - Recording: Cast quality uses VLC's levels (High / Medium / Low / Low processor use); there is no "Automatic".
 
 ## 5. What the PC session must change in shared files
@@ -97,9 +102,10 @@ Rows of the dialog shell (P7-18, IB-42, P8-02, P8-39, P8-40) and the Keyboard Sh
 1. `maininterface/mainui.cpp`: this branch adds one include and one registration line (`SettingsCatalog` singleton in the VLC.Dialogs block); without it no page can list VLC's options or plugins. Review it with the merge. Build lists (`Makefile.am`, `meson.build`) register the new C++ and QML files.
 2. `widgets/qml/RdTooltip.qml` (the info popover) still uses `rdBgB1Transparent`: make it opaque like the other popups (`Qt.alpha(..., 1.0)`), so it never shows the video through where it passes the dialog's edge.
 3. Palette: a red text token for the "Reset all settings" button (Figma red text, P8-43); until then it uses the standard button.
-4. `widgets/qml/RdSegmented.qml` (Theme, Size values, sensitivity) is mouse-only: give it keyboard focus and arrow keys.
-5. When the seek-bar thumbnails (P2-04) are built, add their option and a "Show thumbnail while scrubbing" SettingsOption row to Playback > Seeking.
-6. VIDEO_INDEX.md: set the rows of section 3 to "in progress" (built, unverified) at the merge; add the decisions of section 4.
+4. `widgets/qml/RdSegmented.qml` is mouse-only. The settings pages wrap it in `SettingsSegmented` (Tab, Left / Right); the kit widget itself could take that over for its other users.
+5. `network/addonsmodel.cpp` / `util/listcache.hxx`: a row state update can be lost when two add-on events come back to back (section 8).
+6. When the seek-bar thumbnails (P2-04) are built, add their option and a "Show thumbnail while scrubbing" SettingsOption row to Playback > Seeking.
+7. VIDEO_INDEX.md: set the rows of section 3 to "in progress" (built, unverified) at the merge; add the decisions of section 4.
 
 ## 6. Not done / limits
 
@@ -120,11 +126,41 @@ Rows of the design without a VLC option behind them (left out rather than shown 
 ## 7. Files
 
 New C++: `dialogs/redesign/settings/settings_catalog.{hpp,cpp}`.
-New QML: `dialogs/redesign/settings/SettingsOption.qml`, `SettingsOptionGroup.qml`, `SettingsMoreOptions.qml`, `SettingsPluginList.qml`, `SettingsAccentPicker.qml`, `SettingsEqualizer.qml`, `SettingsLanguageOption.qml`, `SettingsInterfaceToggle.qml`.
+New QML: `dialogs/redesign/settings/SettingsOption.qml`, `SettingsOptionGroup.qml`, `SettingsMoreOptions.qml`, `SettingsPluginList.qml`, `SettingsAccentPicker.qml`, `SettingsEqualizer.qml`, `SettingsLanguageOption.qml`, `SettingsInterfaceToggle.qml`, `SettingsSegmented.qml`.
 Rewritten pages: all 13 in `dialogs/redesign/settings/pages/`.
 Changed shared files: `maininterface/mainui.cpp` (registration), `Makefile.am`, `meson.build`.
 Not touched: the dialog shell (SettingsDialog, SettingsPage, SettingsRow, SettingsSection, ...), the palette, MainCtx, RdEffects, the widgets.
 
 ## 8. Independent review
 
-REVIEW_PLACEHOLDER
+Three fresh subagents that did not write the code reviewed the branch (the C++ catalog, the components and ten pages; then the three pages built by two parallel agents; then the fixes). Fixed:
+
+- Reset all shortcuts did nothing (the shortcuts were not loaded before the reset).
+- Options the interface caches (maximum volume, hide timeout, pinned controls...) only applied after a restart; now MainCtx reads them again once written. Reset all settings left the interface and the accent stale; it now refreshes both.
+- Snapshot width presets stretched the picture (height -1 keeps the video's height; 0 keeps the proportions).
+- English users saw "System language" when choosing English; the system language is now listed once, with its name.
+- The plugin list message was cut in half (it lived inside the list).
+- The first search keystroke built every plugin row of all 13 pages; the full lists are now built only once Advanced Options opens, and searches of 3+ letters list only matching plugins.
+- Spatial audio mode stopped following the filters after a choice; it now follows the filters and Off turns both off.
+- The value scale of option rows shadowed Item.scale (qmllint warning); renamed.
+- The audio effect toggles had no description (a module name was passed as an option).
+- The start volume was capped at 125% for waveout; it uses the option's range.
+- Obsolete options counted as existing (hidden HTTP proxy rows showed on other platforms); options a plugin declares before its first subcategory were dropped from the lists.
+- The segmented controls (Theme, Size values, sensitivity) could not be used from the keyboard; a focusable wrapper adds Tab and Left / Right.
+- The font size row could misalign the Precise box (two controls in one slot); one control at a time now.
+- Hardware-accelerated decoding showed the device option instead of VLC's on/off; both are in one list now, and "hw-dec" is no longer duplicated in the generated list.
+- Extensions: the online catalog could not be fetched again after an offline attempt; "Add" could uninstall an add-on whose install was still running (VLC's install request is a toggle) and now acts on the live state; the selection follows rows loaded later and every reload; the "no match" message no longer flashes while the search reloads.
+- Video post-processing "Off" changed nothing (the quality is only read by the post-processing filter); Off now takes the filter out.
+- The x264 preset text claimed to set casting (casting uses its own fast settings).
+
+Not changed, with reasons:
+- Opening the Extensions page creates VLC's add-ons model, which reads the local add-ons catalog on the UI thread (VLC's own model). Only noticeable with many installed add-ons; measure on the PC.
+- VLC's add-ons model can miss a row update when two state changes arrive back to back (util/listcache.hxx); the page re-reads the selected add-on on every reload, but a list row may show a stale state until the next reload. A fix belongs in VLC's AddonsModel (C++, shared).
+
+## 9. Performance-sensitive: measure first on the PC
+
+1. Opening Advanced Options of Video or Audio for the first time: the "All Other Options" list (one row per plugin, built asynchronously). The catalog itself is read once on a worker thread.
+2. The dialog's first search: all 13 pages load (dialog shell); the generated lists add only the plugins a 3+ letter search matches.
+3. Opening a plugin with many settings (e.g. x264 under Recording, about 70 rows).
+4. Extensions page: VLC's add-ons model reads the local catalog when the page is created; Find more extensions downloads the online catalog.
+5. Interface rows (maximum volume, hide timeout...): each change makes MainCtx read its options again once.
