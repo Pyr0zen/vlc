@@ -38,11 +38,13 @@
 #include <vlc_plugin.h>
 
 #ifdef _WIN32
+#include <windows.h>
 #include "util/registry.hpp"
 #endif
 
 #include "maininterface/mainctx.hpp"
 #include "medialibrary/medialib.hpp"
+#include "util/color_scheme_model.hpp"
 
 namespace {
 
@@ -233,7 +235,7 @@ SettingsCatalog::Catalog readCatalog()
         if (!config)
             continue;
 
-        const QString override = core ? QString() : categoryOfPlugin(object, capability);
+        const QString forcedCategory = core ? QString() : categoryOfPlugin(object, capability);
         // a plugin's options declared before its first set_subcategory belong to that one
         int subcat = SUBCAT_UNKNOWN;
         if (!core)
@@ -265,7 +267,7 @@ SettingsCatalog::Catalog readCatalog()
             if (subcat == SUBCAT_HIDDEN)
                 continue;
 
-            QString category = override;
+            QString category = forcedCategory;
             if (category.isEmpty())
             {
                 if (!core && !pluginCategory.isEmpty())
@@ -347,6 +349,14 @@ SettingsCatalog::SettingsCatalog(qt_intf_t* intf, QObject* parent)
     , p_intf(intf)
 {
     m_pool.setMaxThreadCount(1);
+
+#ifdef _WIN32
+    // VLC raises its priority in vlc_threads_setup() (src/win32/thread.c), before it reads its
+    // configuration file, so only "--high-priority" on the command line had an effect: the saved
+    // option applies here, when the interface starts (created once, from MainUI)
+    if (var_InheritBool(p_intf, "high-priority"))
+        setHighPriority(true);
+#endif
 }
 
 SettingsCatalog::~SettingsCatalog()
@@ -374,6 +384,11 @@ void SettingsCatalog::load()
             emit self->readyChanged();
         }, Qt::QueuedConnection);
     });
+}
+
+bool SettingsCatalog::moduleExists(const QString& name) const
+{
+    return !name.isEmpty() && module_exists(qtu(name));
 }
 
 bool SettingsCatalog::exists(const QString& name) const
@@ -443,7 +458,11 @@ QVariantList SettingsCatalog::groups(const QString& category, const QString& fil
         QString keywords;
         for (const QString& name : group.options)
         {
-            const Option& option = m_catalog.options[name];
+            // constFind: no copy of the option per lookup (const operator[] returns one)
+            const auto it = m_catalog.options.constFind(name);
+            if (it == m_catalog.options.constEnd())
+                continue;
+            const Option& option = *it;
             if (!words.isEmpty() && !matches(option, group, words))
                 continue;
             names.append(name);
@@ -474,7 +493,8 @@ int SettingsCatalog::matchCount(const QString& category, const QString& filter) 
             continue;
         for (const QString& name : group.options)
         {
-            if (matches(m_catalog.options.value(name), group, words))
+            const auto it = m_catalog.options.constFind(name);
+            if (it != m_catalog.options.constEnd() && matches(*it, group, words))
                 ++count;
         }
     }
@@ -507,11 +527,14 @@ QVariantList SettingsCatalog::plugins(const QString& filter) const
     return result;
 }
 
-QString SettingsCatalog::pickFile(const QString& title, const QString& current, bool save) const
+QString SettingsCatalog::pickFile(const QString& title, const QString& current, bool save,
+                                  const QString& filter) const
 {
+    // no parent, as VLC's own file dialogs (dialogs_provider.cpp): the main window is a QML
+    // window, not a widget
     const QString dir = current.isEmpty() ? QDir::homePath() : QFileInfo(current).absolutePath();
-    const QString file = save ? QFileDialog::getSaveFileName(nullptr, title, current.isEmpty() ? dir : current)
-                              : QFileDialog::getOpenFileName(nullptr, title, dir);
+    const QString file = save ? QFileDialog::getSaveFileName(nullptr, title, current.isEmpty() ? dir : current, filter)
+                              : QFileDialog::getOpenFileName(nullptr, title, dir, filter);
     return QDir::toNativeSeparators(file);
 }
 
@@ -536,18 +559,29 @@ void SettingsCatalog::openConfigFolder() const
 void SettingsCatalog::resetAll()
 {
     // VLC's "Reset Preferences" (dialogs/preferences/preferences.cpp): every option back to its
-    // default and saved; the interface's own state (window, library) stays
+    // default and saved; the interface's own state (window, library) stays. The caller drops
+    // the settings bridge's pending writes first (RdEffects.discardPending()), so none of them
+    // lands after the reset
     config_ResetAll();
-    config_SaveConfigFile(p_intf);
-    // the interface reads its options again (as VLC's preferences); the accent goes back to
-    // the theme's own
-    if (p_intf->p_mi)
+    MainCtx* mainCtx = p_intf->p_mi;
+    if (mainCtx)
     {
-        p_intf->p_mi->setAccentColor(QColor());
-        p_intf->p_mi->reloadPrefs();
+        // the accent goes back to the theme's own (written before the save); the theme and the
+        // interface size of the General and Interface pages are reset too (kept outside VLC's
+        // options, in the interface's settings)
+        mainCtx->setAccentColor(QColor());
+        // dark, the redesign's default (MainCtx::loadPrefs); the list is System, Day, Night,
+        // so a scheme is its row
+        mainCtx->getColorScheme()->setCurrentIndex(ColorSchemeModel::Night);
+        mainCtx->setIntfUserScaleFactor(1.0);
     }
+    config_SaveConfigFile(p_intf);
+    // the interface reads its options again (as VLC's preferences)
+    if (mainCtx)
+        mainCtx->reloadPrefs();
 #ifdef _WIN32
     setLanguage(QStringLiteral("auto"));
+    setHighPriority(false);
 #endif
     emit resetDone();
 }
@@ -617,6 +651,23 @@ QString SettingsCatalog::language() const
     return result.isEmpty() ? QStringLiteral("auto") : result;
 #else
     return QStringLiteral("auto");
+#endif
+}
+
+void SettingsCatalog::setHighPriority(bool high) const
+{
+#ifdef _WIN32
+    // as vlc_threads_setup(): above normal, else high; normal again when turned off
+    const HANDLE process = GetCurrentProcess();
+    if (!high)
+        SetPriorityClass(process, NORMAL_PRIORITY_CLASS);
+    else if (SetPriorityClass(process, ABOVE_NORMAL_PRIORITY_CLASS)
+             || SetPriorityClass(process, HIGH_PRIORITY_CLASS))
+        msg_Dbg(p_intf, "raised process priority");
+    else
+        msg_Dbg(p_intf, "could not raise process priority");
+#else
+    Q_UNUSED(high);
 #endif
 }
 

@@ -65,6 +65,8 @@ public:
 
     // the option exists in this build of VLC (platform and plugins differ)
     Q_INVOKABLE bool exists(const QString& name) const;
+    // the plugin exists in this build of VLC (the filters the pages turn on and off)
+    Q_INVOKABLE bool moduleExists(const QString& name) const;
     // { name, type, text, description, min, max, default } of an option; type is one of
     // bool, integer, color, float, string, password, module, modules, file, savefile,
     // directory, font
@@ -79,8 +81,9 @@ public:
     // every plugin of VLC: [{ name, title, capability, score }], sorted by title
     Q_INVOKABLE QVariantList plugins(const QString& filter = {}) const;
 
-    // dialogs (empty when cancelled)
-    Q_INVOKABLE QString pickFile(const QString& title, const QString& current = {}, bool save = false) const;
+    // dialogs (empty when cancelled); `filter` as QFileDialog's ("Add-on packages (*.vlp)")
+    Q_INVOKABLE QString pickFile(const QString& title, const QString& current = {}, bool save = false,
+                                 const QString& filter = {}) const;
     Q_INVOKABLE QString pickDirectory(const QString& title, const QString& current = {}) const;
 
     // opens VLC's configuration folder in the file manager
@@ -94,6 +97,9 @@ public:
     Q_INVOKABLE QVariantList languages() const;
     Q_INVOKABLE QString language() const;
     Q_INVOKABLE void setLanguage(const QString& iso);
+
+    // Windows: VLC's process priority raised ("high-priority") or back to normal
+    Q_INVOKABLE void setHighPriority(bool high) const;
 
 signals:
     void readyChanged();
