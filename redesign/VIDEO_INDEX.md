@@ -143,6 +143,7 @@ Approved by Decision 27 (minimal and isolated); reverse playback postponed (Deci
 - Profiles that switch every setting plus the layout (P8-27): restart notice where needed (Decision 29).
 - Reverse playback (P4-33): postponed.
 - Pixel-exact subtitle outline (P3-23): not done; VLC's existing outline sizes (Decision 28).
+- Subtitle speed without a video stall (P3-19/P3-20, Sticky's bug 2026-10-15): `src/input/input.c` SlaveDemux, `src/input/es_out.c/.h`, `src/input/es_out_timeshift.c`: a sub-fps change flushes only the subtitle file's own decoders (new ES_OUT_PRIV_FLUSH_SOURCE) instead of ES_OUT_RESET_PCR, which flushed the video and audio decoders too. Written (separate commit, own build), not yet built.
 
 ## Index
 
