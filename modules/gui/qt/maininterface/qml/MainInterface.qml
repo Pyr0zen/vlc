@@ -412,6 +412,27 @@ Item {
             }
         }
 
+        // redesign (W8.1a): Customize Player (VLC's toolbar editor, video 19:12-19:28), over every
+        // view so a view switch does not lose unsaved edits; created on its first open
+        Loader {
+            id: customizePlayerDialogLoader
+
+            active: false
+            sourceComponent: Component {
+                CustomizePlayerDialog { }
+            }
+
+            Connections {
+                target: DialogsProvider
+
+                function onShowToolbarEditorDialog() {
+                    MainCtx.emitRaise()
+                    customizePlayerDialogLoader.active = true
+                    customizePlayerDialogLoader.item.openDialog()
+                }
+            }
+        }
+
         Loader {
             active: {
                 const windowVisibility = MainCtx.intfMainWindow.visibility

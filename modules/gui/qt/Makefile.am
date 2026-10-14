@@ -1272,6 +1272,13 @@ libqml_module_dialogs_a_QML = \
 	dialogs/toolbar/qml/ToolbarEditor.qml \
 	dialogs/toolbar/qml/ToolbarEditorDialog.qml \
 	dialogs/toolbar/qml/ToolbarEditorButtonList.qml \
+	dialogs/toolbar/qml/CustomizePlayerDialog.qml \
+	dialogs/toolbar/qml/CustomizePalette.qml \
+	dialogs/toolbar/qml/CustomizePaletteTile.qml \
+	dialogs/toolbar/qml/CustomizeBar.qml \
+	dialogs/toolbar/qml/CustomizeZone.qml \
+	dialogs/toolbar/qml/CustomizeZoneItem.qml \
+	dialogs/toolbar/qml/CustomizeNamePrompt.qml \
 	dialogs/redesign/settings/SettingsAdvancedBar.qml \
 	dialogs/redesign/settings/SettingsCategoryButton.qml \
 	dialogs/redesign/settings/SettingsDialog.qml \

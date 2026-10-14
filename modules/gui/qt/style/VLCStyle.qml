@@ -394,6 +394,14 @@ QtObject {
     readonly property int rd_dialogHeight: MainCtx.dp(800, scale)
     readonly property int rd_dialogHeaderHeight: MainCtx.dp(96, scale)
     readonly property int rd_dialogFooterHeight: MainCtx.dp(72, scale)
+    // Customize Player (Figma "Player - customize", 1048 wide, header 94 = title row + description
+    // row; palette items 86 wide, columns 24 apart, rows 38 apart; drags smart animate 50 ms)
+    readonly property int rd_customizeHeaderHeight: MainCtx.dp(94, scale)
+    readonly property int rd_customizeBodyPadding: MainCtx.dp(34, scale)
+    readonly property int rd_customizeItemWidth: MainCtx.dp(86, scale)
+    readonly property int rd_customizeColumnGap: MainCtx.dp(24, scale)
+    readonly property int rd_customizeRowGap: MainCtx.dp(38, scale)
+    readonly property int rd_customizeDragDuration: 50
 
     // Scroll bar (size means width or height, depending on the orientation):
     readonly property real scrollBarInteractingSize: MainCtx.dp(8, scale)
