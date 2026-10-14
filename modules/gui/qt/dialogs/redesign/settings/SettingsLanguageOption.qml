@@ -30,10 +30,7 @@ SettingsOption {
 
     readonly property string _systemCode: Qt.locale().name.split(/[_-]/)[0]
 
-    kind: "dropdown"
-    choices: [
-        { value: "", text: qsTr("Automatic") },
-        { value: _systemCode, text: qsTr("System language") },
+    readonly property var _languages: [
         { value: "en", text: qsTr("English") },
         { value: "ar", text: qsTr("Arabic") },
         { value: "bg", text: qsTr("Bulgarian") },
@@ -75,4 +72,13 @@ SettingsOption {
         { value: "uk", text: qsTr("Ukrainian") },
         { value: "vi", text: qsTr("Vietnamese") }
     ]
+
+    kind: "dropdown"
+    // the system's language is listed once, as "System language (English)"
+    choices: {
+        const system = _languages.find((l) => l.value === _systemCode)
+        return [{ value: "", text: qsTr("Automatic") },
+                { value: _systemCode, text: system ? qsTr("System language (%1)").arg(system.text) : qsTr("System language") }]
+               .concat(_languages.filter((l) => l.value !== _systemCode))
+    }
 }

@@ -57,6 +57,14 @@ SettingsPage {
                     current = languages[index].value
                     SettingsCatalog.setLanguage(current)
                 }
+
+                Connections {
+                    target: SettingsCatalog
+
+                    function onResetDone() {
+                        languageDropdown.current = SettingsCatalog.language()
+                    }
+                }
             }
         }
 
@@ -66,7 +74,7 @@ SettingsPage {
             text: qsTr("Theme")
             keywords: "dark light night day color scheme"
 
-            Widgets.RdSegmented {
+            SettingsSegmented {
                 readonly property var schemes: [ColorSchemeModel.Night, ColorSchemeModel.Day, ColorSchemeModel.System]
                 readonly property var rows: [2, 1, 0]
 

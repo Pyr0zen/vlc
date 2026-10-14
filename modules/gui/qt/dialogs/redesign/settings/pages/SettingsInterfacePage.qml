@@ -125,7 +125,7 @@ SettingsPage {
             option: "mouse-hide-timeout"
             text: qsTr("Hide after")
             kind: "slider"
-            scale: 1000
+            valueScale: 1000
             from: 0
             to: 10
             step: 0.5
@@ -180,7 +180,7 @@ SettingsPage {
                 option: "qt-opacity"
                 text: qsTr("Window opacity")
                 kind: "slider"
-                scale: 0.01
+                valueScale: 0.01
                 from: 10
                 to: 100
                 step: 5
@@ -216,7 +216,7 @@ SettingsPage {
                 option: "qt-fs-opacity"
                 text: qsTr("Fullscreen controls opacity")
                 kind: "slider"
-                scale: 0.01
+                valueScale: 0.01
                 from: 10
                 to: 100
                 step: 5
@@ -228,7 +228,7 @@ SettingsPage {
                 text: qsTr("Fullscreen controls sensitivity")
                 keywords: "qt-fs-sensitivity"
 
-                Widgets.RdSegmented {
+                SettingsSegmented {
                     readonly property var pixels: [10, 3, 1]
                     readonly property int current: Number(root._option("qt-fs-sensitivity"))
 
