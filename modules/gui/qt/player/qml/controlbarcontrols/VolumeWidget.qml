@@ -133,8 +133,8 @@ T.Pane {
 
             // redesign: cone-shaped track. 0-100% fills the first 63 px of 88, 100-200% the rest
             // (Figma volume variants 50%=33, 100%=63, 200%=88). Gradient #95D318 > #B2A918 > #D37918 >
-            // #FF3737 across the whole cone, darkened 20%, in every theme and accent (video 17:44-17:49);
-            // unfilled part BG/B2.
+            // #FF3737 across the whole cone in every theme and accent (video 17:44-17:49), under the
+            // theme's tint; unfilled part and tint from the theme's Figma Player frame (rdVolume*).
             background: ShaderEffect {
                 id: cone
 
@@ -145,7 +145,8 @@ T.Pane {
 
                 readonly property size size: Qt.size(width, height)
                 readonly property real tipRadius: height * 0.12
-                readonly property color emptyColor: VLCStyle.palette.rdBgB2
+                readonly property color emptyColor: VLCStyle.palette.rdVolumeEmpty
+                readonly property color tint: VLCStyle.palette.rdVolumeTint
                 readonly property real level: {
                     const v = volControl.value
                     const knee = 63 / 88
