@@ -229,6 +229,29 @@ QtObject {
         return key.replace(/\/+$/, "")
     }
 
+    // length of the deepest folder of `folders` that holds `mrl` (0: none)
+    function _depthIn(folders, mrl) {
+        const key = mrlKey(mrl)
+        let depth = 0
+        for (const folder of folders) {
+            const folderKey = mrlKey(folder)
+            if ((key === folderKey || key.startsWith(folderKey + "/")) && folderKey.length > depth)
+                depth = folderKey.length
+        }
+        return depth
+    }
+
+    // the category of an item shown outside its category's pages (Home sections, Recent,
+    // playlists): media by their type, folders by the deepest folder added to a category that
+    // holds them, music on a tie (as RdLibraryStore.resolveFolder)
+    function itemCategory(item) {
+        if (item.kind === "folder") {
+            const music = _depthIn(RdLibraryStore.musicFolders, item.mrl)
+            return music > 0 && music >= _depthIn(RdLibraryStore.videoFolders, item.mrl) ? "music" : "video"
+        }
+        return item.isVideo ? "video" : "music"
+    }
+
     function openFolderPath(result) {
         if (!result || result.crumbs.length === 0)
             return

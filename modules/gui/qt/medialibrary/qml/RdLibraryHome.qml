@@ -309,25 +309,9 @@ FocusScope {
     }
 
     // length of the deepest folder of `folders` that holds `mrl` (0: none)
-    function _depthIn(folders, mrl) {
-        const key = RdLibraryNav.mrlKey(mrl)
-        let depth = 0
-        for (const folder of folders) {
-            const folderKey = RdLibraryNav.mrlKey(folder)
-            if ((key === folderKey || key.startsWith(folderKey + "/")) && folderKey.length > depth)
-                depth = folderKey.length
-        }
-        return depth
-    }
-
-    // the category of a Home row: media by their type, folders by the deepest folder added to a
-    // category that holds them, music on a tie (as RdLibraryStore.resolveFolder)
+    // the category of a Home row (RdLibraryNav.itemCategory)
     function categoryOf(item) {
-        if (item.kind === "folder") {
-            const music = _depthIn(RdLibraryStore.musicFolders, item.mrl)
-            return music > 0 && music >= _depthIn(RdLibraryStore.videoFolders, item.mrl) ? "music" : "video"
-        }
-        return item.isVideo ? "video" : "music"
+        return RdLibraryNav.itemCategory(item)
     }
 
     // a frequent folder opens with its whole address line

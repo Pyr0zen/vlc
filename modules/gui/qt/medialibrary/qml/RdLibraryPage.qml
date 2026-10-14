@@ -65,6 +65,15 @@ FocusScope {
         }
     }
 
+    // the pages of a category; elsewhere (Home sections, Recent, playlists, streams) an item
+    // belongs to its own category
+    readonly property bool _categoryPage: ["folder", "videos", "music", "songs", "albums", "artists",
+                                           "genres", "collection"].indexOf(location.page) >= 0
+
+    function categoryOf(item) {
+        return _categoryPage ? category : RdLibraryNav.itemCategory(item)
+    }
+
     // sort: one remembered order per kind of page (IB-03, P5-13)
     readonly property string sortPage: {
         switch (location.page) {
@@ -108,10 +117,7 @@ FocusScope {
         { key: "track", text: qsTr("Track Number Ascending"), criteria: "track_number", desc: false },
         { key: "trackDesc", text: qsTr("Track Number Descending"), criteria: "track_number", desc: true },
         { key: "uri", text: qsTr("URI Ascending"), criteria: "filename", desc: false },
-        { key: "uriDesc", text: qsTr("URI Descending"), criteria: "filename", desc: true },
-        // the media library's track order already goes disc by disc
-        { key: "disc", text: qsTr("Disc Number Ascending"), criteria: "track_number", desc: false },
-        { key: "discDesc", text: qsTr("Disc Number Descending"), criteria: "track_number", desc: true }
+        { key: "uriDesc", text: qsTr("URI Descending"), criteria: "filename", desc: true }
     ]
     readonly property var _albumOptions: [
         { key: "title", text: qsTr("Title A-Z"), criteria: "title", desc: false },
@@ -490,8 +496,10 @@ FocusScope {
                      tree: model.tree, progress: -1, watched: false, isVideo: true }
         }
         default: {
-            // media of VLC's media models (MLMediaModel roles)
-            const isVideo = model.isVideo ?? (modelKind !== "audio")
+            // media of VLC's media models (MLMediaModel roles); a playlist's media
+            // (MLPlaylistModel) have no isVideo or artist role: a video track tells a video
+            const isVideo = model.isVideo ?? (modelKind === "playlistMedia" ? !!model.videoDesc
+                                                                             : modelKind !== "audio")
             const progress = model.progress ?? -1
             return {
                 kind: "media",
@@ -550,7 +558,14 @@ FocusScope {
             dataModel.addAndPlay(item.index)
             return
         }
-        RdLibraryActions.activate(item, category)
+        // a folder listed outside its category (Frequently Visited Folders) opens in its own
+        // category with its whole address line, as on Home
+        if (item.kind === "folder" && !_categoryPage) {
+            RdLibraryStore.noteVisit("folder", item.id)
+            RdLibraryStore.resolveFolder(item.mrl, (result) => RdLibraryNav.openFolderPath(result))
+            return
+        }
+        RdLibraryActions.activate(item, categoryOf(item))
     }
 
     function activateFixed(row) {
@@ -682,7 +697,7 @@ FocusScope {
                     secondary: cell.item.kind !== "media" && cell.item.kind !== "stream"
                     dragUrls: page.dragUrlsOf(cell.item)
                     onClicked: page.activate(cell.item)
-                    onMoreClicked: (button) => itemMenu.openForItem(cell.item, button, page.category)
+                    onMoreClicked: (button) => itemMenu.openForItem(cell.item, button, page.categoryOf(cell.item))
                 }
             }
 
@@ -702,7 +717,7 @@ FocusScope {
                     playing: page.isPlaying(cell.item.mrl)
                     dragUrls: page.dragUrlsOf(cell.item)
                     onClicked: page.activate(cell.item)
-                    onMoreClicked: (button) => itemMenu.openForItem(cell.item, button, page.category)
+                    onMoreClicked: (button) => itemMenu.openForItem(cell.item, button, page.categoryOf(cell.item))
                 }
             }
         }
