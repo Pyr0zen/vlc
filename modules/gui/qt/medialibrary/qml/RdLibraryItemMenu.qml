@@ -132,7 +132,7 @@ Item {
             entries.push({ text: qsTr("Remove from Library"), icon: "close",
                            action: () => RdLibraryNav.confirmRequested({
                                title: qsTr("Remove from Library"),
-                               message: qsTr("Remove \"%1\" from the library? The files stay on disk.").arg(folder.title ?? ""),
+                               message: qsTr("Remove \"%1\" from the library? The files stay on disk, and the folders inside it that you added to the library stay in it.").arg(folder.title ?? ""),
                                button: qsTr("Remove"),
                                action: () => RdLibraryStore.removeFolder(category, folder.mrl)
                            }) })

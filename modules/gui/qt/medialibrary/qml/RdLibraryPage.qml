@@ -309,7 +309,10 @@ FocusScope {
             ml: MediaLib
             parentId: page.location.page === "folder" ? page.location.id : page._noParent
             categoryMrls: page.category === "music" ? RdLibraryStore.musicFolders : RdLibraryStore.videoFolders
-            otherMrls: page.category === "music" ? RdLibraryStore.videoFolders : RdLibraryStore.musicFolders
+            // hidden library folders count as the other category's: not listed here, their
+            // folders of this category are
+            otherMrls: (page.category === "music" ? RdLibraryStore.videoFolders : RdLibraryStore.musicFolders)
+                       .concat(RdLibraryStore.hiddenRoots)
             sortCriteria: "title"
             sortOrder: page.location.page === "folder" || page.sortKey !== "titleDesc" ? Qt.AscendingOrder : Qt.DescendingOrder
             searchPattern: page.searchText

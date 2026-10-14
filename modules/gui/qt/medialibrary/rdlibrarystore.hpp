@@ -46,6 +46,9 @@ class RdLibraryStore : public QObject
 
     Q_PROPERTY(QStringList videoFolders READ videoFolders NOTIFY foldersChanged FINAL)
     Q_PROPERTY(QStringList musicFolders READ musicFolders NOTIFY foldersChanged FINAL)
+    // library folders removed from both categories that stay in the media library because
+    // folders of a category are inside them (their media keep their data); shown nowhere
+    Q_PROPERTY(QStringList hiddenRoots READ hiddenRoots NOTIFY foldersChanged FINAL)
     // [{ kind, title, image, location }], see addPin()
     Q_PROPERTY(QVariantList pins READ pins NOTIFY pinsChanged FINAL)
     // [{ name, url }]
@@ -64,6 +67,7 @@ public:
 
     QStringList videoFolders() const { return m_videoFolders; }
     QStringList musicFolders() const { return m_musicFolders; }
+    QStringList hiddenRoots() const { return m_hiddenRoots; }
     QVariantList pins() const { return m_pins; }
     QVariantList streamLists() const { return m_streamLists; }
     QVariantMap playlistCovers() const { return m_playlistCovers; }
@@ -169,6 +173,7 @@ private:
     QVariantMap m_sortKeys;
     QString m_viewMode;
     QString m_compactViewMode;
+    QStringList m_hiddenRoots;
 };
 
 #endif // RDLIBRARYSTORE_HPP
