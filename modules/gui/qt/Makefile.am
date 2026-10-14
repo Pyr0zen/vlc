@@ -1283,6 +1283,10 @@ libqml_module_dialogs_a_QML = \
 	dialogs/redesign/settings/SettingsRow.qml \
 	dialogs/redesign/settings/SettingsSearchField.qml \
 	dialogs/redesign/settings/SettingsSection.qml \
+	dialogs/redesign/settings/SettingsOption.qml \
+	dialogs/redesign/settings/SettingsOptionGroup.qml \
+	dialogs/redesign/settings/SettingsMoreOptions.qml \
+	dialogs/redesign/settings/SettingsPluginList.qml \
 	dialogs/redesign/settings/pages/SettingsGeneralPage.qml \
 	dialogs/redesign/settings/pages/SettingsInterfacePage.qml \
 	dialogs/redesign/settings/pages/SettingsPrivacyPage.qml \
