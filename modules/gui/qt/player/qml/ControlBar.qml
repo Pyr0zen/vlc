@@ -120,6 +120,15 @@ T.Pane {
     // PlayerControlLayout moves it into its middle slot
     readonly property Item inlineSeekRow: inlineSeekRowItem
 
+    // redesign: narrow window. The right controls are hidden first (from the queue button
+    // inwards, VLC's ControlRepeater rule) while the seek row keeps both times; when even the
+    // room left with no right control is too small, the duration goes, then the current time.
+    // The seek bar itself never gets narrower than rd_seekBarMinimumWidth.
+    readonly property real _inlineSpacing: VLCStyle.dp(8, VLCStyle.scale)
+    readonly property real _inlineTimeSlot: VLCStyle.rd_timeLabelWidth + _inlineSpacing
+    readonly property bool _inlineShowsTime: playerControlLayout.middleRoom >= VLCStyle.rd_seekBarMinimumWidth + _inlineTimeSlot
+    readonly property bool _inlineShowsLength: playerControlLayout.middleRoom >= VLCStyle.rd_seekBarMinimumWidth + 2 * _inlineTimeSlot
+
     // redesign: Figma "Controls": BG/A3, no stroke (the 1 px top line was not in the design)
     background: Rectangle {
         color: root.textPosition === ControlBar.TimeTextPosition.Inline ? VLCStyle.palette.rdBgA3Transparent
@@ -135,7 +144,7 @@ T.Pane {
             id: inlineSeekRowItem
 
             visible: root.textPosition === ControlBar.TimeTextPosition.Inline
-            spacing: VLCStyle.dp(8, VLCStyle.scale)
+            spacing: root._inlineSpacing
             anchors.verticalCenter: parent ? parent.verticalCenter : undefined
             width: parent ? parent.width : 0
             height: VLCStyle.rd_seekBarHeight
@@ -161,8 +170,12 @@ T.Pane {
 
                 Layout.preferredWidth: (textPosition === ControlBar.TimeTextPosition.Inline) ? VLCStyle.rd_timeLabelWidth
                                      : (textPosition === ControlBar.TimeTextPosition.LeftRightSlider) ? timeTextMetrics.width : -1
+                // redesign: Figma "Current Time" is a fixed 76 px box, the text centered in it
+                Layout.minimumWidth: (textPosition === ControlBar.TimeTextPosition.Inline) ? VLCStyle.rd_timeLabelWidth : -1
                 Layout.preferredHeight: (textPosition === ControlBar.TimeTextPosition.Inline) ? VLCStyle.rd_seekBarHeight : -1
                 verticalAlignment: Text.AlignVCenter
+
+                visible: (textPosition !== ControlBar.TimeTextPosition.Inline) || root._inlineShowsTime
 
                 text: {
                     const length = Player.length
@@ -262,6 +275,8 @@ T.Pane {
 
                 Layout.preferredWidth: (textPosition === ControlBar.TimeTextPosition.Inline) ? VLCStyle.rd_timeLabelWidth
                                      : (textPosition === ControlBar.TimeTextPosition.LeftRightSlider) ? timeTextMetrics.width : -1
+                // redesign: Figma "Duration" is a fixed 76 px box, the text centered in it
+                Layout.minimumWidth: (textPosition === ControlBar.TimeTextPosition.Inline) ? VLCStyle.rd_timeLabelWidth : -1
                 Layout.preferredHeight: (textPosition === ControlBar.TimeTextPosition.Inline) ? VLCStyle.rd_seekBarHeight : -1
                 verticalAlignment: Text.AlignVCenter
 
@@ -276,7 +291,8 @@ T.Pane {
                 font: timeTextMetrics.font
                 horizontalAlignment: Text.AlignHCenter
 
-                visible: root.showRemainingTime || textPosition === ControlBar.TimeTextPosition.Inline
+                visible: (textPosition === ControlBar.TimeTextPosition.Inline) ? root._inlineShowsLength
+                                                                               : root.showRemainingTime
 
                 // redesign: hover background BG/B2 like the current time label
                 background: Rectangle {
@@ -341,6 +357,7 @@ T.Pane {
                 AccessibleCompat.id: "progressSlider"
 
                 Layout.fillWidth: true
+                Layout.minimumWidth: (textPosition === ControlBar.TimeTextPosition.Inline) ? VLCStyle.rd_seekBarMinimumWidth : -1
                 enabled: Player.playingState === Player.PLAYING_STATE_PLAYING || Player.playingState === Player.PLAYING_STATE_PAUSED
 
                 Navigation.parentItem: root
@@ -441,9 +458,12 @@ T.Pane {
             identifier: root.identifier
 
             middleItem: (textPosition === ControlBar.TimeTextPosition.Inline) ? inlineSeekRow : null
-            spacing: (textPosition === ControlBar.TimeTextPosition.Inline) ? VLCStyle.dp(8, VLCStyle.scale) : VLCStyle.margin_normal
+            middleItemMinimumWidth: VLCStyle.rd_seekBarMinimumWidth + (root._inlineShowsTime ? root._inlineTimeSlot : 0)
+                                    + (root._inlineShowsLength ? root._inlineTimeSlot : 0)
+            spacing: (textPosition === ControlBar.TimeTextPosition.Inline) ? root._inlineSpacing : VLCStyle.margin_normal
             layoutSpacing: (textPosition === ControlBar.TimeTextPosition.Inline) ? VLCStyle.rd_controlBarSpacing : VLCStyle.margin_xxlarge
             figmaGaps: textPosition === ControlBar.TimeTextPosition.Inline
+            trailingIconSpacing: (textPosition === ControlBar.TimeTextPosition.Inline) ? VLCStyle.rd_iconButtonSpacing : spacing
 
             implicitHeight: (textPosition === ControlBar.TimeTextPosition.Inline) ? VLCStyle.rd_controlBarHeight - 2 * VLCStyle.rd_controlBarPaddingV
                           : MainCtx.pinVideoControls ? VLCStyle.controlLayoutHeightPinned
