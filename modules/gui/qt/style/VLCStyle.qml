@@ -352,6 +352,7 @@ QtObject {
     readonly property int rd_radius_large: MainCtx.dp(14, scale)        // dialogs, mini player, thumbnail card
     readonly property int rd_radius_toast: MainCtx.dp(16, scale)        // resume toast
     readonly property int rd_radius_video: MainCtx.dp(19, scale)        // inset video area
+    readonly property int rd_radius_cover: MainCtx.dp(20, scale)        // music player cover (Figma "Player - Music")
     readonly property int rd_topBarHeight: MainCtx.dp(40, scale)
     readonly property int rd_controlBarHeight: MainCtx.dp(54, scale)
     readonly property int rd_controlBarSpacing: MainCtx.dp(20, scale)

@@ -28,9 +28,20 @@ Widgets.IconToolButton {
 
     enabled: Player.seekable
 
+    // redesign: 15 s forward (Figma "Player - Music" and the Customize Player item "Forward
+    // 15s"); a media without a length (stream) uses VLC's short jump
+    readonly property int jumpSeconds: 15
+
     text: VLCIcons.skip_for
-    onClicked: Player.jumpFwd()
-    description: qsTr("Step forward")
+    rdIcon: "forward-15-sec"
+    onClicked: {
+        const length = Player.length.valid() ? Player.length.toSeconds() : 0
+        if (length > 0)
+            Player.jumpToPos(Math.min(1, Player.position + jumpSeconds / length))
+        else
+            Player.jumpFwd()
+    }
+    description: qsTr("Forward %n second(s)", "", jumpSeconds)
 
     AccessibleCompat.id: "skipForwardButton"
 }

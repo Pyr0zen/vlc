@@ -28,9 +28,20 @@ Widgets.IconToolButton {
 
     enabled: Player.seekable
 
+    // redesign: 15 s back (Figma "Player - Music" and the Customize Player item "Backward 15s");
+    // a media without a length (stream) uses VLC's short jump
+    readonly property int jumpSeconds: 15
+
     text: VLCIcons.skip_back
-    onClicked: Player.jumpBwd()
-    description: qsTr("Step back")
+    rdIcon: "backward-15-sec"
+    onClicked: {
+        const length = Player.length.valid() ? Player.length.toSeconds() : 0
+        if (length > 0)
+            Player.jumpToPos(Math.max(0, Player.position - jumpSeconds / length))
+        else
+            Player.jumpBwd()
+    }
+    description: qsTr("Back %n second(s)", "", jumpSeconds)
 
     AccessibleCompat.id: "skipBackButton"
 }

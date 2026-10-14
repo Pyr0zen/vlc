@@ -756,8 +756,13 @@ FocusScope {
 
                             readonly property real sizeConstant: 2.7182
 
+                            // the texture of the cover and of the blurred background, and the cover
+                            // size; shown through roundedCover below (falls back to itself where
+                            // rounding is not available)
                             Image {
                                 id: cover
+
+                                visible: roundedCover.effectiveRadius <= 0
 
                                 //source aspect ratio
                                 readonly property real sar: paintedWidth / paintedHeight
@@ -813,6 +818,17 @@ FocusScope {
                                                                                                                   }
                                                                                                               })
                                 }
+                            }
+
+                            // redesign: the cover with rounded corners (Figma "Player - Music":
+                            // radius 20, P6-04), drawn from the cover's own texture
+                            Widgets.ImageExt {
+                                id: roundedCover
+
+                                anchors.fill: cover
+                                textureProviderItem: cover
+                                fillMode: Image.PreserveAspectFit
+                                radius: VLCStyle.rd_radius_cover
 
                                 Widgets.RoundedRectangleShadow {
                                     color: Qt.rgba(0, 0, 0, .18)
@@ -828,54 +844,39 @@ FocusScope {
                             }
                         }
 
-                        Widgets.SubtitleLabel {
-                            id: albumLabel
+                        // redesign: "title - artist" under the cover (Figma "Player - Music":
+                        // Inter 500 24, FG/A1; P6-04, IB-23)
+                        Text {
+                            id: captionLabel
 
                             Layout.alignment: Qt.AlignHCenter
                             Layout.topMargin: VLCStyle.margin_xxlarge
+                            Layout.maximumWidth: centerContent.width - 2 * VLCStyle.margin_large
 
                             Binding on visible {
                                 delayed: true
-                                when: albumLabel.componentCompleted
-                                value: centerContent.height > (albumLabel.y + albumLabel.height)
+                                when: captionLabel.componentCompleted
+                                value: captionLabel.text !== "" && centerContent.height > (captionLabel.y + captionLabel.height)
                             }
-
-                            text: Player.album
-                            font.pixelSize: VLCStyle.fontSize_xxlarge
-                            horizontalAlignment: Text.AlignHCenter
-                            color: centerTheme.fg.primary
-                            Accessible.description: qsTr("album")
 
                             property bool componentCompleted: false
 
                             Component.onCompleted: {
                                 componentCompleted = true
                             }
-                        }
 
-                        Widgets.MenuLabel {
-                            id: artistLabel
+                            readonly property string _title: Player.title !== "" ? Player.title : Player.name
 
-                            Layout.alignment: Qt.AlignHCenter
-                            Layout.topMargin: VLCStyle.margin_small
-
-                            Binding on visible {
-                                delayed: true
-                                when: artistLabel.componentCompleted
-                                value: centerContent.height > (artistLabel.y + artistLabel.height)
-                            }
-
-                            text: Player.artist
-                            font.weight: Font.Light
+                            text: Player.artist !== "" ? qsTr("%1 - %2").arg(_title).arg(Player.artist) : _title
+                            elide: Text.ElideRight
                             horizontalAlignment: Text.AlignHCenter
-                            color: centerTheme.fg.primary
-                            Accessible.description: qsTr("artist")
+                            font.family: VLCStyle.rd_fontFamily
+                            font.pixelSize: VLCStyle.rd_fontSize_title
+                            font.weight: Font.Medium
+                            color: VLCStyle.palette.rdFgA1
 
-                            property bool componentCompleted: false
-
-                            Component.onCompleted: {
-                                componentCompleted = true
-                            }
+                            Accessible.role: Accessible.StaticText
+                            Accessible.name: text
                         }
 
                         Widgets.SubtitleLabel {
