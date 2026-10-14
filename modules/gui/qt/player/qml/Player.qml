@@ -1773,12 +1773,18 @@ FocusScope {
         }
     }
 
-    // Escape closes the open player panel first. A shortcut runs before the focused control's
-    // own cancel action (the control bar would otherwise leave the player).
+    // Escape closes the open player panel first, then shows the UI again after Hide UI (a second
+    // Escape then leaves fullscreen as usual). A shortcut runs before the focused control's own
+    // cancel action (the control bar would otherwise leave the player).
     Shortcut {
         sequences: [StandardKey.Cancel]
-        enabled: RdPanels.current !== ""
-        onActivated: RdPanels.close()
+        enabled: RdPanels.current !== "" || RdPanels.uiHidden
+        onActivated: {
+            if (RdPanels.current !== "")
+                RdPanels.close()
+            else
+                RdPanels.uiHidden = false
+        }
     }
 
     // the tracks popup belongs to the current file: close it when the media changes
