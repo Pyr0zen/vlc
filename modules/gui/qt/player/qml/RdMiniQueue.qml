@@ -69,8 +69,11 @@ Item {
             color: parent.color
         }
 
+        // Figma: text top 20 px below the card's top
         Text {
-            anchors.centerIn: parent
+            anchors.top: parent.top
+            anchors.topMargin: VLCStyle.dp(20)
+            anchors.horizontalCenter: parent.horizontalCenter
             text: qsTr("Queue")
             font.family: VLCStyle.rd_fontFamily
             font.pixelSize: VLCStyle.rd_fontSize_header
@@ -84,6 +87,8 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.top: header.bottom
+        // Figma queue gap 1
+        anchors.topMargin: VLCStyle.dp(1)
         height: VLCStyle.dp(64)
 
         Text {
@@ -106,10 +111,11 @@ Item {
         Row {
             id: buttons
 
+            // Figma: 24 px icons 20 apart (30 wide buttons 14 apart), the last one ending at 363
             anchors.right: parent.right
-            anchors.rightMargin: VLCStyle.dp(28)
+            anchors.rightMargin: VLCStyle.dp(25)
             anchors.verticalCenter: parent.verticalCenter
-            spacing: VLCStyle.dp(8)
+            spacing: VLCStyle.dp(14)
 
             ToolButton {
                 rdIcon: "sort"
@@ -157,8 +163,11 @@ Item {
 
         anchors.left: parent.left
         anchors.right: parent.right
+        // Figma "Frame 53": 1 below the tools, 215 tall, 20 above the player's picture
         anchors.top: tools.bottom
+        anchors.topMargin: VLCStyle.dp(1)
         anchors.bottom: parent.bottom
+        anchors.bottomMargin: VLCStyle.dp(12)
         anchors.leftMargin: VLCStyle.dp(28)
         anchors.rightMargin: VLCStyle.dp(28)
         clip: true
@@ -177,7 +186,8 @@ Item {
             detail: model.duration && model.duration.valid() ? model.duration.formatHMS() : ""
             current: !!model.isCurrent
             selected: root.selectedIndex === index || drag.active
-            leftPadding: VLCStyle.dp(32)
+            // Figma: the 32 px move icon wrapper and a gap of 10 before the title
+            leftPadding: VLCStyle.dp(38)
 
             onClicked: root.selectedIndex = index
             onDoubleClicked: MainPlaylistController.goTo(index, true)
@@ -192,7 +202,7 @@ Item {
                 x: VLCStyle.dp(4)
                 anchors.verticalCenter: parent.verticalCenter
                 name: queueRow.current ? "play" : "move"
-                color: queueRow.current ? VLCStyle.palette.rdAccentMain : VLCStyle.palette.rdFgA3
+                color: queueRow.current ? VLCStyle.palette.rdAccentMain : VLCStyle.palette.rdFgA2
 
                 DragHandler {
                     id: drag
@@ -229,6 +239,6 @@ Item {
         height: VLCStyle.rd_iconButtonHeight
         font.pixelSize: VLCStyle.rd_iconSize
         text: VLCIcons.more
-        color: checked ? colorContext.accent : (hovered ? VLCStyle.palette.rdFgA1 : VLCStyle.palette.rdFgA2)
+        color: checked ? colorContext.accent : (hovered ? VLCStyle.palette.rdFgA1 : VLCStyle.palette.rdFgA3)
     }
 }

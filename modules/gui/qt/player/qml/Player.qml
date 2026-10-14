@@ -640,7 +640,8 @@ FocusScope {
 
                     postprocess: true
                     tint: bgtheme.palette.isDark ? "black" : "white"
-                    tintStrength: 0.5
+                    // redesign: Figma "Player - Music" blurs the artwork without a tint
+                    tintStrength: 0
                     backgroundColor: bgtheme.bg.primary
 
                     readonly property ColorContext colorContext: ColorContext {
@@ -833,12 +834,15 @@ FocusScope {
 
                         Item {
                             id: coverItem
-                            Layout.preferredHeight: rootPlayer.height / sizeConstant
+                            // no wider than the pane it sits in (a narrow window, lyrics)
+                            Layout.preferredHeight: Math.min(rootPlayer.height / sizeConstant,
+                                                             parent.parent.width - 2 * VLCStyle.margin_large)
                             Layout.preferredWidth: cover.paintedWidth
                             Layout.maximumHeight: centerContent.height
                             Layout.alignment: Qt.AlignHCenter
 
-                            readonly property real sizeConstant: 2.7182
+                            // redesign: Figma "Player - Music": the cover is 737 high in a 1080 high window
+                            readonly property real sizeConstant: 1080 / 737
 
                             // the texture of the cover and of the blurred background, and the cover
                             // size; shown through roundedCover below (falls back to itself where
@@ -914,16 +918,10 @@ FocusScope {
                                 fillMode: Image.PreserveAspectFit
                                 radius: VLCStyle.rd_radius_cover
 
+                                // Figma: one faint glow, #FFFFFF 3 %, no offset, blur 90.5
                                 Widgets.RoundedRectangleShadow {
-                                    color: Qt.rgba(0, 0, 0, .18)
-                                    yOffset: VLCStyle.dp(24, VLCStyle.scale)
-                                    blurRadius: VLCStyle.dp(54, VLCStyle.scale)
-                                }
-
-                                Widgets.RoundedRectangleShadow {
-                                    color: Qt.rgba(0, 0, 0, .22)
-                                    yOffset: VLCStyle.dp(5, VLCStyle.scale)
-                                    blurRadius: VLCStyle.dp(14, VLCStyle.scale)
+                                    color: VLCStyle.palette.rdCoverGlow
+                                    blurRadius: VLCStyle.dp(90.5, VLCStyle.scale)
                                 }
                             }
                         }
@@ -934,7 +932,11 @@ FocusScope {
                             id: captionLabel
 
                             Layout.alignment: Qt.AlignHCenter
-                            Layout.topMargin: VLCStyle.margin_xxlarge
+                            // Figma: the space between the bars is split in three equal gaps:
+                            // above the cover, between cover and caption, below the caption
+                            Layout.topMargin: Math.max(VLCStyle.margin_small,
+                                                       (centerContent.height + 2 * VLCStyle.margin_xsmall
+                                                        - coverItem.Layout.preferredHeight - implicitHeight) / 3)
                             // the column's pane: the whole view, or the right pane with lyrics
                             Layout.maximumWidth: parent.parent.width - 2 * VLCStyle.margin_large
 
