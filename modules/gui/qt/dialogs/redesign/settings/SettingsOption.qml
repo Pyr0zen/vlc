@@ -57,6 +57,8 @@ SettingsRow {
     property real controlWidth: VLCStyle.dp(320)
     // text fields
     property string placeholder: ""
+    // VLC reads the option when it starts: the info popover says so
+    property bool restartRequired: false
 
     readonly property var info: SettingsCatalog.describe(option)
     // a binding reading RdEffects.values[key] follows only this option's value
@@ -108,7 +110,13 @@ SettingsRow {
     }
 
     text: info.text ?? option
-    description: RdEffects.optionDescription(option)
+    description: {
+        const text = RdEffects.optionDescription(option)
+        if (!restartRequired)
+            return text
+        const note = qsTr("VLC uses this setting the next time it starts.")
+        return text !== "" ? text + "\n\n" + note : note
+    }
     keywords: option
     shown: SettingsCatalog.exists(option)
 

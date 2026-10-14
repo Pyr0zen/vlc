@@ -50,8 +50,6 @@ class SettingsCatalog : public QObject
 
     // the option list has been read (groups(), plugins(), matching())
     Q_PROPERTY(bool ready READ ready NOTIFY readyChanged FINAL)
-    // the Developer Options sections of the pages (General > Diagnostics > Developer mode)
-    Q_PROPERTY(bool developerMode READ developerMode WRITE setDeveloperMode NOTIFY developerModeChanged FINAL)
     // the interface language can be chosen (Windows: VLC reads it from the registry)
     Q_PROPERTY(bool languageSupported READ languageSupported CONSTANT FINAL)
 
@@ -60,8 +58,6 @@ public:
     ~SettingsCatalog() override;
 
     bool ready() const { return m_ready; }
-    bool developerMode() const { return m_developerMode; }
-    void setDeveloperMode(bool enabled);
     bool languageSupported() const;
 
     // reads the option list in the background, once
@@ -91,6 +87,8 @@ public:
     Q_INVOKABLE void openConfigFolder() const;
     // every option back to its default, saved (VLC's "Reset Preferences")
     Q_INVOKABLE void resetAll();
+    // forgets what was played (the library's Recent list); false without the media library
+    Q_INVOKABLE bool clearHistory();
 
     // interface language (Windows): [{ value, text }], the current one ("auto" by default)
     Q_INVOKABLE QVariantList languages() const;
@@ -99,7 +97,6 @@ public:
 
 signals:
     void readyChanged();
-    void developerModeChanged();
     // after resetAll(): the pages read their values again
     void resetDone();
 
@@ -144,7 +141,6 @@ private:
     QThreadPool m_pool;
     bool m_loading = false;
     bool m_ready = false;
-    bool m_developerMode = false;
     Catalog m_catalog;
 };
 
