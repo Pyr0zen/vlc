@@ -317,6 +317,7 @@ struct RdThemeColors
     QRgb bgA3Transparent; QRgb bgB1Transparent; QRgb bgB2Transparent;
     const char* dividerBright; const char* dividerDim;
     QRgb hoverOverlay;
+    const char* fgDestructive;
 };
 
 const RdThemeColors rdDarkColors = {
@@ -329,6 +330,7 @@ const RdThemeColors rdDarkColors = {
     qRgba(0x19, 0x19, 0x19, 242), qRgba(0x0E, 0x0E, 0x0E, 242), qRgba(0x00, 0x00, 0x00, 204),
     "#373737", "#222222",
     qRgba(0xFF, 0xFF, 0xFF, 15),
+    "#D33718",
 };
 
 // Light/FG/1 and Light/FG/2 are copies of the dark values in the Figma file (Decision 20);
@@ -343,6 +345,9 @@ const RdThemeColors rdLightColors = {
     qRgba(0xD5, 0xD5, 0xD5, 191), qRgba(0xE7, 0xE7, 0xE7, 204), qRgba(0xDE, 0xDE, 0xDE, 204),
     "#9B9B9B", "#ACACAC",
     qRgba(0x00, 0x00, 0x00, 15),
+    // the red text exists in the dark frames only (a raw fill, no style): the same red darkened
+    // to 4.8:1 on Light BG/A3
+    "#A82A0E",
 };
 
 // derive an accent shade for a user accent: keep its hue and scale saturation and
@@ -382,6 +387,7 @@ void SystemPalette::applyRdColors()
     rdDividerBright = QColor(t.dividerBright);
     rdDividerDim = QColor(t.dividerDim);
     rdHoverOverlay = QColor::fromRgba(t.hoverOverlay);
+    rdFgDestructive = QColor(t.fgDestructive);
 
     // accent: the user's choice (qt-accent-color, live from MainCtx), else the theme's own
     QColor main;

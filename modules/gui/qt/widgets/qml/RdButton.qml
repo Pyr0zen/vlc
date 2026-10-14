@@ -22,6 +22,7 @@
 //   at 50% opacity, as the Figma "Open network stream" export and the video (13:10) show it
 // - Primary: Accent/Main + FG/B1 (Next, Finish, Continue Watching)
 // - Bar: full-width BG/B2 + FG/A3, regular weight (Show Preferences, Open Advanced Settings)
+// - Destructive: Standard with the Figma red text (Settings > General "Reset all settings")
 import QtQuick
 import QtQuick.Templates as T
 
@@ -31,7 +32,7 @@ import VLC.Style
 T.Button {
     id: control
 
-    enum Style { Standard, Save, Primary, Bar }
+    enum Style { Standard, Save, Primary, Bar, Destructive }
 
     property int style: RdButton.Style.Standard
     property string rdIcon: ""            // optional Figma icon (Widgets.RdIcon) shown before the text
@@ -66,6 +67,7 @@ T.Button {
         case RdButton.Style.Save: return enabled ? rdPalette.rdAccentMain : rdPalette.rdFgA2
         case RdButton.Style.Primary: return rdPalette.rdFgB1
         case RdButton.Style.Bar: return hovered ? rdPalette.rdFgA2 : rdPalette.rdFgA3
+        case RdButton.Style.Destructive: return rdPalette.rdFgDestructive
         default: return rdPalette.rdFgA2
         }
     }

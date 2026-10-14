@@ -142,6 +142,7 @@ public:
     COLOR_DEFINITION(rdDividerBright, "#373737");
     COLOR_DEFINITION(rdDividerDim, "#222222");
     COLOR_DEFINITION(rdHoverOverlay, QColor(0xFF, 0xFF, 0xFF, 15)); // hover tint over any background
+    COLOR_DEFINITION(rdFgDestructive, "#D33718"); // Figma red text of a destructive action ("Reset all settings")
     COLOR_DEFINITION(rdShadow, QColor(0x00, 0x00, 0x00, 117)); // Figma effect drop shadow #000000 46%
 
     COLOR_DEFINITION(orange400, "#f89a06"); //FIXME name have been chosen randomly by me
