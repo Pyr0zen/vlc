@@ -808,6 +808,7 @@ qml_modules += {
        'player/qml/VideoSettingsPage.qml',
        'player/qml/AudioSettingsPage.qml',
        'player/qml/SubtitleSettingsPage.qml',
+       'player/qml/RdSliderCommit.qml',
        'player/qml/TracksPage.qml',
        'player/qml/TracksPageAudio.qml',
        'player/qml/TracksPageSpeed.qml',

@@ -46,6 +46,39 @@ RdSidePanelPage {
     // a binding reading RdEffects.values[key] follows only that value
     readonly property real _durationFactor: RdEffects.values.subtitleDurationFactor
 
+    // the delay is cheap to change: it follows a drag ten times a second
+    readonly property RdSliderCommit _delay: RdSliderCommit {
+        pressed: delaySlider.pressed
+        current: Player.subtitleDelayMS / 1000
+        dragInterval: 100
+        keyDelay: 150
+        onCommit: (v) => Player.subtitleDelayMS = Math.round(v * 1000)
+    }
+
+    // every speed change makes VLC re-read the subtitle file at the new rate and flush what was
+    // decoded at the old one: applied once, when the slider is released
+    readonly property RdSliderCommit _speed: RdSliderCommit {
+        pressed: speedSlider.pressed
+        current: Player.subtitleFPS
+        tolerance: 0.001
+        keyDelay: 400
+        onCommit: (v) => Player.subtitleFPS = v
+    }
+
+    // the factor changes live on the running "subsdelay" filter; the filter is switched off only
+    // when the slider is released at 0 (no filter restart while dragging)
+    readonly property RdSliderCommit _duration: RdSliderCommit {
+        pressed: durationSlider.pressed
+        current: root._durationFactor
+        tolerance: 0.001
+        dragInterval: 50
+        keyDelay: 150
+        onCommit: (v, last) => {
+            if (v > 0 || last)
+                RdEffects.setSubtitleDurationFactor(v)
+        }
+    }
+
     function opt(name) {
         return RdEffects.values[RdEffects.optionKey(name)]
     }
@@ -100,17 +133,19 @@ RdSidePanelPage {
         title: qsTr("Synchronization")
 
         Widgets.RdParamSlider {
+            id: delaySlider
+
             text: qsTr("Subtitle Track Delay")
             valueBox: true
-            valueText: qsTr("%1 s").arg((Player.subtitleDelayMS / 1000).toFixed(3))
+            valueText: qsTr("%1 s").arg(root._delay.shown.toFixed(3))
             from: -10
             to: 10
             stepSize: 0.05
             bipolar: true
             showTicks: false
             labels: [qsTr("-10 s"), qsTr("0 s"), qsTr("+10 s")]
-            value: Player.subtitleDelayMS / 1000
-            onMoved: (v) => Player.subtitleDelayMS = Math.round(v * 1000)
+            value: root._delay.shown
+            onMoved: (v) => root._delay.push(v)
             onEdited: (text) => {
                 const s = root.parseNumber(text)
                 if (!isNaN(s))
@@ -118,17 +153,21 @@ RdSidePanelPage {
             }
         }
 
-        // VLC's subtitle speed range: 1 to 100 fps
+        // VLC's subtitle speed ("sub-fps", as in VLC's Synchronization tab and the video 7:16):
+        // the frame rate the subtitle file was timed for, 1 to 100 fps; 1 fps keeps the file's
+        // own timing. It rescales external subtitle files only.
         Widgets.RdParamSlider {
+            id: speedSlider
+
             text: qsTr("Subtitle Speed")
             valueBox: true
-            valueText: qsTr("%1 fps").arg(Player.subtitleFPS.toFixed(3))
+            valueText: qsTr("%1 fps").arg(Math.max(1, root._speed.shown).toFixed(3))
             from: 1
             to: 100
             stepSize: 0.2
             showTicks: false
-            value: Player.subtitleFPS
-            onMoved: (v) => Player.subtitleFPS = v
+            value: root._speed.shown
+            onMoved: (v) => root._speed.push(v)
             onEdited: (text) => {
                 const f = root.parseNumber(text)
                 if (!isNaN(f))
@@ -137,15 +176,17 @@ RdSidePanelPage {
         }
 
         Widgets.RdParamSlider {
+            id: durationSlider
+
             text: qsTr("Subtitle Duration Factor")
             valueBox: true
-            valueText: root._durationFactor.toFixed(3)
+            valueText: root._duration.shown.toFixed(3)
             from: 0
             to: 20
             stepSize: 0.2
             showTicks: false
-            value: root._durationFactor
-            onMoved: (v) => RdEffects.setSubtitleDurationFactor(v)
+            value: root._duration.shown
+            onMoved: (v) => root._duration.push(v)
             onEdited: (text) => {
                 const f = root.parseNumber(text)
                 if (!isNaN(f))
