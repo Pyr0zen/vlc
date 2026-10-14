@@ -105,7 +105,8 @@ T.Popup {
     // the library's stream lists (VLC.MediaLibrary is only there with the media library); not
     // a child of the dialog's content column
     readonly property Loader _streamListSaver: Loader {
-        active: root._showPlaylistName
+        // loaded while the dialog shows
+        active: root._showPlaylistName && root.visible
         source: "qrc:///qt/qml/VLC/MediaLibrary/RdStreamListSaver.qml"
     }
 

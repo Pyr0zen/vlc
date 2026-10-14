@@ -62,13 +62,29 @@ Item {
     // Figma "Miniplayer" smart animate: 300 ms
     readonly property int _snapDuration: 300
 
+    // only the snap after a drag animates: window resizes and the queue opening move the card
+    // at once
+    property bool _snapping: false
+
     Behavior on x {
-        enabled: !dragHandler.active
-        NumberAnimation { duration: root._snapDuration; easing.type: Easing.OutCubic }
+        enabled: root._snapping
+        NumberAnimation {
+            id: snapX
+
+            duration: root._snapDuration
+            easing.type: Easing.OutCubic
+            onRunningChanged: if (!running) root._snapping = false
+        }
     }
     Behavior on y {
-        enabled: !dragHandler.active
-        NumberAnimation { duration: root._snapDuration; easing.type: Easing.OutCubic }
+        enabled: root._snapping
+        NumberAnimation {
+            id: snapY
+
+            duration: root._snapDuration
+            easing.type: Easing.OutCubic
+            onRunningChanged: if (!running) root._snapping = false
+        }
     }
 
     // Parent folder of the playing file (as the top bar's folder chip)
@@ -173,8 +189,12 @@ Item {
                         const top = root.y + root.height / 2 < root.parent.height / 2
                         root.corner = (top ? "top" : "bottom") + (left ? "Left" : "Right")
                         // back to the corner bindings, animated by the Behaviors
+                        root._snapping = true
                         root.x = Qt.binding(() => root._left ? root.margin : root.parent.width - root.width - root.margin)
                         root.y = Qt.binding(() => root.atTop ? root.topInset + root.margin : root.parent.height - root.height - root.margin)
+                        // released right on its corner: nothing to animate
+                        if (!snapX.running && !snapY.running)
+                            root._snapping = false
                     }
                 }
 

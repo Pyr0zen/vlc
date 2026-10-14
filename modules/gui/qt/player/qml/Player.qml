@@ -88,15 +88,21 @@ FocusScope {
     readonly property real _videoInset: (_libraryShown && _libraryProgress >= 1) ? _libraryFullWidth : 0
     // the library is built on its first opening and then kept, so it reopens within a frame
     property bool _libraryActivated: false
+    // built in the background when the player starts with it open (the player shows first)
+    property bool _libraryAsync: false
 
     // open already when the player comes back from the full library
     Component.onCompleted: {
-        if (_libraryShown)
+        if (_libraryShown) {
+            _libraryAsync = true
             _libraryActivated = true
+        }
     }
 
     on_LibraryShownChanged: {
         if (_libraryShown) {
+            // opened by the user: built at once (the folder chip reveals in it right away)
+            _libraryAsync = false
             _libraryActivated = true
         } else if (librarySidebar.activeFocus) {
             // keys must not go on to the hidden library
@@ -1263,6 +1269,7 @@ FocusScope {
 
             enabled: rootPlayer._libraryShown
             active: rootPlayer._libraryActivated
+            asynchronous: rootPlayer._libraryAsync
             source: "qrc:///qt/qml/VLC/MediaLibrary/RdLibrarySidebar.qml"
         }
     }
