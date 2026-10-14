@@ -1214,7 +1214,8 @@ FocusScope {
             MainCtx.playerView = false
         }
 
-        // redesign: no acrylic background behind the top bar, it paints its own opaque BG/A3
+        // redesign: no acrylic background behind the top bar, it paints its own background
+        // (BG/A3 in Dark, BG/A3 Transparent in Light, see TopBar.qml)
 
         FadeControllerStateGroup {
             target: topBar
@@ -1415,6 +1416,9 @@ FocusScope {
         visible: Player.isInteractive && navBox.show
                     && (interactiveAutoHideTimer.running
                     || navBox.hovered || !MainCtx.hasEmbededVideo)
+
+        // drawn on the picture itself (translucent black box): keeps the night colors in every theme
+        colorContext.palette: VLCStyle.darkPalette
 
         x: rootPlayer.x + VLCStyle.margin_normal + VLCStyle.applicationHorizontalMargin
         y: controlBar.y - navBox.height - VLCStyle.margin_normal
