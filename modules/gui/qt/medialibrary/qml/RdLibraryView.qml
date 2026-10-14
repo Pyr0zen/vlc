@@ -47,6 +47,9 @@ FocusScope {
         })
     }
 
+    // the swipe-back gesture (MainInterface.qml) only goes back when there is somewhere to go
+    readonly property bool canGoBack: RdLibraryNav.canGoBack
+
     // mouse back and forward buttons
     function goBack() {
         RdLibraryNav.goBack()

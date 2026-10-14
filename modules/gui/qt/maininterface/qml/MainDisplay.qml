@@ -50,10 +50,20 @@ FocusScope {
             MainPlaylistController.stop()
     }
 
-    // Escape goes back in the library
-    Navigation.cancelAction: function() {
+    // the library's own history (Escape, mouse back, the swipe-back gesture in MainInterface.qml);
+    // VLC's home page without the media library keeps VLC's History
+    readonly property bool canGoBack: library.item?.canGoBack ?? !History.previousEmpty
+
+    function goBack() {
         if (library.item && library.item.goBack)
             library.item.goBack()
+        else
+            History.previous()
+    }
+
+    // Escape goes back in the library
+    Navigation.cancelAction: function() {
+        g_mainDisplay.goBack()
     }
 
     Keys.onPressed: (event) => {
@@ -196,14 +206,13 @@ FocusScope {
                     text: VLCIcons.more
                     rdIcon: "more"
                     description: qsTr("Menu")
-                    checked: globalMenu.shown
+                    checked: mainMenu.visible
 
-                    onClicked: globalMenu.popup(this.mapToGlobal(0, height))
+                    onClicked: mainMenu.popupBelow(menuButton, visualFocus)
 
-                    Menus.QmlGlobalMenu {
-                        id: globalMenu
-
-                        ctx: MainCtx
+                    // the main menu in the Figma style, as on the player's top bar (W4.9)
+                    Menus.RdMainMenu {
+                        id: mainMenu
                     }
                 }
             }

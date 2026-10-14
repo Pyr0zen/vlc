@@ -106,7 +106,9 @@ Item {
             function onXAxisActiveValueChanged(delta) {
                 // We do not want to set enabled based on history condition, because the gesture should be captured
                 // regardless to prevent confusion:
-                if (History.previousEmpty && (MainCtx.effectiveMainInterfaceMode === MainCtx.MAININTERFACE_MODE_MAINDISPLAY))
+                // redesign: the library keeps its own history (MainDisplay.canGoBack / goBack())
+                if ((MainCtx.effectiveMainInterfaceMode === MainCtx.MAININTERFACE_MODE_MAINDISPLAY)
+                        && !(viewLoader.item?.canGoBack ?? !History.previousEmpty))
                     return
 
                 historyDragHandler.accumulatedDelta = Math.min(threshold, historyDragHandler.accumulatedDelta + delta)
@@ -125,6 +127,8 @@ Item {
                             MainCtx.playerView = false
                         else if (MainCtx.minimalView)
                             MainCtx.minimalView = false
+                        else if (viewLoader.item && viewLoader.item.goBack)
+                            viewLoader.item.goBack()
                         else
                             History.previous()
                     }
