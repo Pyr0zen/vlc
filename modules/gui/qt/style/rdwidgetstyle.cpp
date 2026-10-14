@@ -102,7 +102,7 @@ QPlainTextEdit, QTextEdit, QListView, QTreeView {
     border-radius: 6px;
     padding: 4px 8px;
     selection-background-color: {accentDim};
-    selection-color: {fg1};
+    selection-color: {selectionFg};
 }
 QLineEdit:hover, QComboBox:hover, QSpinBox:hover, QDoubleSpinBox:hover, QTimeEdit:hover,
 QPlainTextEdit:hover, QTextEdit:hover, QListView:hover, QTreeView:hover {
@@ -282,6 +282,7 @@ QString makeStyleSheet( const SystemPalette& p )
         { "{bgB2}", p.get_rdBgB2() },
         { "{accentMain}", p.get_rdAccentMain() },
         { "{accentDim}", p.get_rdAccentDim() },
+        { "{selectionFg}", p.get_rdSelectionText() },
         { "{bgAccentBright}", p.get_rdBgAccentBright() },
         /* disabled Save: gray BG/A1 + FG/A2 at 50 % (RdButton) */
         { "{saveDisabledBg}", halfOver( p.get_rdBgA1(), bg ) },

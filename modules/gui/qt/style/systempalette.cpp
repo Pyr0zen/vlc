@@ -392,6 +392,9 @@ void SystemPalette::applyRdColors()
     rdDividerBright = QColor(t.dividerBright);
     rdDividerDim = QColor(t.dividerDim);
     rdHoverOverlay = QColor::fromRgba(t.hoverOverlay);
+    // selected text on Accent/DIm (Figma shows no text selection): FG/1 in Dark; in Light FG/1
+    // (#111111) on #965916 reads badly (3.4:1), BG/A1 gives 4.8:1
+    rdSelectionText = m_isDark ? rdFg1 : rdBgA1;
     rdVolumeEmpty = QColor(t.volumeEmpty);
     rdVolumeTint = QColor::fromRgba(t.volumeTint);
 
@@ -814,7 +817,7 @@ void SystemPalette::makeRdColorSets()
         setColor(CS, C::Decoration, C::Border, C::Disabled, setColorAlpha(Qt::white, 0.0) );
 
         setColor(CS, C::Bg, C::Highlight, C::Normal, rdAccentDim);
-        setColor(CS, C::Fg, C::Highlight, C::Normal, rdFg1);
+        setColor(CS, C::Fg, C::Highlight, C::Normal, rdSelectionText);
     }
 
     //Switch: Figma "Toggle" (OFF knob FG/A4 on BG/A4, ON knob Accent/DIm on BG/Accent Bright)
@@ -837,7 +840,7 @@ void SystemPalette::makeRdColorSets()
         setColor(CS, C::Decoration, C::Border, C::Disabled, setColorAlpha(Qt::white, 0.0) );
 
         setColor(CS, C::Bg, C::Highlight, C::Normal, rdAccentDim);
-        setColor(CS, C::Fg, C::Highlight, C::Normal, rdFg1);
+        setColor(CS, C::Fg, C::Highlight, C::Normal, rdSelectionText);
     }
 }
 
