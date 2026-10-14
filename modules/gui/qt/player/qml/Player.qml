@@ -1238,7 +1238,18 @@ FocusScope {
 
         focus: false
 
-        active: MainCtx.playqueuePanel.docked
+        // redesign: the list button opens the queue sidebar instead of this pane, so the pane (and
+        // its own play queue model) is only created the first time it is shown (VLC's play queue
+        // hotkey, a docked queue left open in the library), then kept for its retract animation
+        property bool _requested: false
+
+        active: MainCtx.playqueuePanel.docked && _requested
+
+        Binding on _requested {
+            when: playlistVisibility.isPlaylistVisible
+            value: true
+            restoreMode: Binding.RestoreNone
+        }
 
         //initial state value is "", using a binding avoid animation on startup
         Binding on state {
@@ -1562,26 +1573,61 @@ FocusScope {
         }
     }
 
-    // redesign: player panels (tracks popup now; settings and queue sidebars follow). An open panel
-    // keeps the bars visible (F-06).
-    TracksPopup {
-        id: tracksPopup
+    // redesign: player panels. An open panel keeps the bars visible (F-06). Each panel is created
+    // the first time it opens and then kept, so it reopens instantly; a moment after the player
+    // shows, the panels are also created in the background, so the first click opens them within
+    // a frame without slowing down the switch to the player (INTERACTIONS.md section 0).
+    property bool _panelsPrewarm: false
+
+    Timer {
+        running: true
+        interval: VLCStyle.duration_veryLong
+        onTriggered: rootPlayer._panelsPrewarm = true
+    }
+
+    component PanelLoader: Loader {
+        id: panelLoader
+
+        // the panel is open
+        property bool open: false
+        property bool prewarm: false
+
+        active: false
+        // a panel that is needed now is created at once (this also completes a background
+        // creation in progress)
+        asynchronous: !panelLoader.open
+
+        Binding on active {
+            when: panelLoader.open || panelLoader.prewarm
+            value: true
+            restoreMode: Binding.RestoreNone
+        }
+    }
+
+    // tracks popup (subtitle and audio buttons), sized by its content
+    PanelLoader {
+        id: tracksPopupLoader
 
         anchors.right: parent.right
         anchors.rightMargin: VLCStyle.dp(20, VLCStyle.scale)
         anchors.bottom: controlBar.top
         anchors.bottomMargin: VLCStyle.dp(12, VLCStyle.scale)
-        width: VLCStyle.rd_sidePanelWidth
-        height: implicitHeight
-        maximumHeight: controlBar.y - anchors.bottomMargin - (topBar.visible ? topBar.y + topBar.height : 0)
         z: 2
+
+        open: RdPanels.tracksOpen
+        prewarm: rootPlayer._panelsPrewarm
+
+        sourceComponent: TracksPopup {
+            width: VLCStyle.rd_sidePanelWidth
+            height: implicitHeight
+            maximumHeight: controlBar.y - tracksPopupLoader.anchors.bottomMargin
+                           - (topBar.visible ? topBar.y + topBar.height : 0)
+        }
     }
 
     // settings sidebar (gear) and queue sidebar (list button): inside the video area at the right,
     // from under the top bar to over the control bar (video 7:12, 9:29; Figma 400 wide)
-    SettingsSidebar {
-        visible: RdPanels.settingsOpen
-
+    PanelLoader {
         anchors.right: parent.right
         anchors.rightMargin: VLCStyle.dp(20, VLCStyle.scale)
         anchors.top: topBar.bottom
@@ -1590,11 +1636,16 @@ FocusScope {
         anchors.bottomMargin: VLCStyle.dp(12, VLCStyle.scale)
         width: VLCStyle.rd_sidePanelWidth
         z: 2
+
+        open: RdPanels.settingsOpen
+        prewarm: rootPlayer._panelsPrewarm
+
+        sourceComponent: SettingsSidebar {
+            visible: RdPanels.settingsOpen
+        }
     }
 
-    QueueSidebar {
-        visible: RdPanels.queueOpen
-
+    PanelLoader {
         anchors.right: parent.right
         anchors.rightMargin: VLCStyle.dp(20, VLCStyle.scale)
         anchors.top: topBar.bottom
@@ -1603,6 +1654,13 @@ FocusScope {
         anchors.bottomMargin: VLCStyle.dp(12, VLCStyle.scale)
         width: VLCStyle.rd_sidePanelWidth
         z: 2
+
+        open: RdPanels.queueOpen
+        prewarm: rootPlayer._panelsPrewarm
+
+        sourceComponent: QueueSidebar {
+            visible: RdPanels.queueOpen
+        }
     }
 
     property bool _panelLocked: false

@@ -19,7 +19,9 @@
 // Redesign "Expand Settings >" / "Collapse Settings v" card (video 8:44-8:52, Figma
 // "Audio - *" / "Video - *" components). Collapsed: full-width near-black bar with a chevron.
 // Expanded: a lighter card whose header collapses it again; content goes inside the card.
-// The expand is instant (no animation seen in the video).
+// The expand is instant (no animation seen in the video). The content is created the first time
+// the card expands, then kept so it expands again instantly; a collapsed card costs nothing
+// (INTERACTIONS.md section 0).
 import QtQuick
 import QtQuick.Templates as T
 
@@ -29,7 +31,8 @@ import VLC.Style
 Item {
     id: root
 
-    default property alias content: inner.data
+    // the card's content, declared inline like children: `RdExpander { ColumnLayout { ... } }`
+    default property Component content
     property bool expanded: false
     property string expandText: qsTr("Expand Settings")
     property string collapseText: qsTr("Collapse Settings")
@@ -43,7 +46,7 @@ Item {
         id: card
 
         width: parent.width
-        height: header.height + (root.expanded ? inner.childrenRect.height + VLCStyle.dp(16) : 0)
+        height: header.height + (root.expanded ? inner.height + VLCStyle.dp(16) : 0)
         radius: VLCStyle.rd_radius_normal
         color: root.expanded ? root.rdPalette.rdBgA2 : root.rdPalette.rdBgB2
 
@@ -96,14 +99,23 @@ Item {
             }
         }
 
-        Item {
+        Loader {
             id: inner
 
             visible: root.expanded
             x: VLCStyle.dp(12)
             y: header.height + VLCStyle.dp(4)
             width: parent.width - VLCStyle.dp(24)
-            height: childrenRect.height
+
+            active: false
+            sourceComponent: root.content
+
+            // first expand: create the content, then keep it
+            Binding on active {
+                when: root.expanded
+                value: true
+                restoreMode: Binding.RestoreNone
+            }
         }
     }
 }
