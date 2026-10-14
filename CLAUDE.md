@@ -65,7 +65,7 @@ READY TO BUILD. Next session: read CLAUDE.md, VIDEO_INDEX.md, FIGMA_FLOWS.md and
 - Step 6 running in agents (worktrees): W8.1a Customize Player restyle, W8.3 onboarding. W8.4 light theme (Decision 33: FG/1 #111111, FG/2 #222222). W6.2 belongs to the redesign-settings web session (review, merge, build, test when Sticky says it pushed).
 - Settings branch (Sticky, 2026-10-14): when the web session's final commit on redesign-settings lands and redesign/SETTINGS_NOTES.md says it is done (all 13 pages), read the notes, then review, merge, build and test it like the library, with the full test loop and the performance rule.
   - Settings branch status: finished (web session stopped, PR #2 ready); independent review running. Merge right after the library. Known from the rows research: its "Fullscreen controls sensitivity" row writes qt-fs-sensitivity which nothing reads (wire it to Player.qml _barHoverZone, row 361), and "Give VLC high priority" does nothing when saved (high-priority is read before vlcrc loads; row 356 can apply it at startup).
-- Decisions waiting for Sticky: Hide UI 300 ms vs the 150-200 ms cap; Light FG/1 #111111 and FG/2 #222222; pixel subtitle size / live style (core); DM Mono font.
+- Decisions waiting for Sticky: Hide UI 300 ms vs the 150-200 ms cap; pixel subtitle size / live style (core); DM Mono font.
 - After verification: rest of Step 1 (BUILD_PLAN.md section 0) in build rounds of 5 work packages, then Step 2.
 - Test media: <TEST_MEDIA_DIR>\<TEST_VIDEO> (landscape) and <TEST_VIDEO_PORTRAIT> (portrait). Never test with the designer's video. Screenshots of them stay local (they show Sticky's screen).
 - Update this section after every item: last completed row/WP with commit hash, next WP, latest green run.
@@ -132,7 +132,7 @@ General rule for anything not listed (updated by Sticky 2026-10-13): the final U
 17. Fix the design typos.
 18. Presets: one preset per show covering all tabs (subtitles, audio, video, playback).
 19. Gear icon: the Figma version.
-20. Dark theme first. Light theme last: propose corrected Light/FG/1 and FG/2 values.
+20. Dark theme first. Light theme last: propose corrected Light/FG/1 and FG/2 values (settled by Decision 33 in VIDEO_INDEX.md: #111111 and #222222).
 21. Features with no Figma frame: build from the video, styled to match the Figma components.
 22. Keep all VLC default shortcuts. F = fullscreen, V = cycle subtitle track. Hide UI = Ctrl+\. Add Ctrl+B = create bookmark. Ignore the prototype's F and V bindings.
 23. Sleep Timer: Off / 15 / 30 / 45 / 60 min / End of current file.
@@ -174,7 +174,7 @@ PROGRESS REPORT
 - Communication: direct and short, bold step headers, no walls of text, no em dashes. For GitHub web steps give exact click paths.
 
 ## Roadmap (high level; the detailed order is BUILD_PLAN.md, run continuously)
-- Phase 2, colors: apply the palette via `modules/gui/qt/style` using `figma/styles.txt`. Dark theme is primary. Light theme second (its FG/1 and FG/2 equal the Dark values, likely a design mistake, ask Sticky before using them).
+- Phase 2, colors: apply the palette via `modules/gui/qt/style` using `figma/styles.txt`. Dark theme is primary. Light theme second (its FG/1 and FG/2 equal the Dark values in Figma; Sticky set them to #111111 and #222222, Decision 33).
 - Phase 3, control bar: everything she shows for it (thin bottom bar, thick seek bar, play button with prev/next around it, cone-shaped volume slider, fullscreen and settings on the right, queue button, subtitle and audio track buttons on the bottom right, hover show/hide). One element at a time, video and PNGs checked before and after.
 - Phase 4, layouts: top bar that shows title on hover in fullscreen, right sidebar (subtitles, audio, video, playback tabs), compact library sidebar, full library, network streams, playlists, home page, recent files, pins, menus, right-click menu, settings screen with her categories, hotkeys dialog, customization screen, onboarding.
 - Phase 5, her new features: everything she shows that VLC does not do today, built to work for real. Examples from the video: subtitle add dialog (file/folder/playlist, from PC or OpenSubtitles, auto-matching per episode), subtitle timeline for syncing, sliders for subtitle timing, precise font sizes, per-show presets, default subtitle and audio track per show, audio and video filter presets with previews, reverse playback, sleep timer, waveform seek bar, seek thumbnails, unwatched/watched sorting, bookmarks sidebar with Ctrl+B, chapters, shortcut shown in on-screen messages, accent color setting, profiles with layouts. Use VIDEO_INDEX.md as the full list. Build one at a time, check each against the video, tell Sticky if one is technically impossible and why.
