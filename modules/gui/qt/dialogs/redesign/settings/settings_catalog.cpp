@@ -91,7 +91,7 @@ const QSet<QString>& curatedOptions()
         "effect-width", "effect-height", "audio-time-stretch", "audio-filter", "stereo-mode", "gain",
         // Subtitles
         "spu", "sub-language", "subsdec-encoding", "sub-autodetect-file", "sub-autodetect-fuzzy",
-        "freetype-font", "freetype-fontsize", "freetype-rel-fontsize", "freetype-bold",
+        "freetype-font", "freetype-bold",
         "freetype-color", "freetype-opacity", "freetype-outline-thickness",
         "freetype-outline-color", "freetype-shadow-opacity", "freetype-shadow-color",
         "freetype-shadow-distance", "freetype-background-opacity", "freetype-background-color",

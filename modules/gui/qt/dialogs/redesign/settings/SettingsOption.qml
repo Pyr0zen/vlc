@@ -54,6 +54,8 @@ SettingsRow {
     property real to: info.max !== undefined ? info.max / scale : 100
     property real step: decimals > 0 ? Math.pow(10, -decimals) : 1
     property var labels: []
+    // slider filled from 0 (delays)
+    property bool bipolar: false
     property real controlWidth: VLCStyle.dp(320)
     // text fields
     property string placeholder: ""
@@ -96,6 +98,13 @@ SettingsRow {
         if (info.max !== undefined)
             v = Math.min(info.max, v)
         apply(_integer ? Math.round(v) : v)
+    }
+
+    // VLC keeps floats in single precision: 0.04 reads back as 0.0399999...
+    function sameValue(a, b) {
+        if (typeof a === "number" && typeof b === "number")
+            return Math.abs(a - b) <= 1e-5 * Math.max(1, Math.abs(a), Math.abs(b))
+        return String(a) === String(b)
     }
 
     function _numberText(v) {
@@ -141,7 +150,7 @@ SettingsRow {
 
         Widgets.RdToggle {
             checked: typeof root.checkedValue === "boolean" ? root.value === root.checkedValue
-                                                           : String(root.value) === String(root.checkedValue)
+                                                           : root.sameValue(root.value, root.checkedValue)
             Accessible.name: root.text
             onToggled: root.apply(checked ? root.checkedValue : root.uncheckedValue)
         }
@@ -156,7 +165,7 @@ SettingsRow {
                 const list = root._choices.slice()
                 const current = root.value
                 if (current !== undefined && current !== ""
-                        && !list.some((c) => String(c.value) === String(current)))
+                        && !list.some((c) => root.sameValue(c.value, current)))
                     list.push({ value: current, text: String(current) })
                 return list
             }
@@ -164,7 +173,7 @@ SettingsRow {
             implicitWidth: root.controlWidth
             implicitHeight: VLCStyle.dp(36)
             model: entries.map((c) => c.text)
-            currentIndex: entries.findIndex((c) => String(c.value) === String(root.value))
+            currentIndex: entries.findIndex((c) => root.sameValue(c.value, root.value))
             Accessible.name: root.text
             onActivated: (index) => root.apply(entries[index].value)
         }
@@ -195,6 +204,7 @@ SettingsRow {
             to: root.to
             stepSize: root.step
             labels: root.labels
+            bipolar: root.bipolar
             value: Number(root.value ?? 0) / root.scale
             Accessible.name: root.text
             onMoved: root.applyNumber(value)
