@@ -253,10 +253,9 @@ FocusScope {
     ColorContext {
         id: windowTheme
 
-        // NOTE: We force the night theme when playing a video.
-        palette: (MainCtx.hasEmbededVideo && MainCtx.pinVideoControls === false)
-                 ? VLCStyle.darkPalette
-                 : VLCStyle.palette
+        // redesign: the player follows the theme over the video too (Figma "Player - Light",
+        // video 17:43), instead of VLC's night theme forced while a video plays
+        palette: VLCStyle.palette
 
         colorSet: ColorContext.Window
     }
@@ -1462,6 +1461,9 @@ FocusScope {
         }
         iconSize: VLCStyle.icon_large
         iconTxt: controlBar.state === "hidden" ? VLCIcons.expand_inverted : VLCIcons.expand
+
+        // drawn on the picture itself (no bar behind it): keeps the night colors in every theme
+        colorContext.palette: VLCStyle.darkPalette
 
         Navigation.parentItem: rootPlayer
         Navigation.upItem: playlistVisibility.isPlaylistVisible ? playlistpopup : (MainCtx.hasEmbededVideo ? playerSpecializationLoader : topBar)
