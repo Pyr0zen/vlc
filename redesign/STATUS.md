@@ -1,28 +1,31 @@
 # STATUS
 
-- Updated: 2026-10-14 18:05 Central Europe Daylight Time
-- Current work package: Sunday plan step 3: performance round
+- Updated: 2026-10-14 18:42 Central Europe Daylight Time
+- Current work package: Sunday plan step 3 (performance round 1 done) and step 4 (redesign-library, agents running)
 
 ## Last 10 commits
 ```
-a2d7d5ef7c qt: popups opaque over the video; upstream Controls types resolvable again
-793f020c00 redesign: the Settings pages go to a web session on redesign-settings
-1658f7a60a redesign: settings segments of the video at 2 frames per second
-b452aac214 redesign: wrap-up until Sunday: test launcher, TESTING.md, bug report template, status
-a5f3c22804 qt: toolbar editor: resolve the Controls types again (Customize Player)
-450f6b27db Merge performance: RdEffects per-key cache, coalesced applies, background save, async resume lookup
-ab35ba4497 redesign: Decision 32: instant dialogs, menus keep the measured 120 ms fade
-ed081a02f9 qt: dialogs open and close instantly (Decision 32)
-4bd46e40c3 redesign: compile shaders locally with Qt 6.8.3 qsb before pushing
-f15f455af6 redesign: current phase for the menus and dialogs build
+cbb2f4c2f5 Merge the event-driven cursor and render-cost branch
+86d57b2155 redesign: rule: never delete anything outside project-created paths
+eb54ec0427 qt: video frame: the original border, split into two moving halves
+1b59a7cb77 qt: player cursor: a hover handler on the video surface
+9f50ed4170 Merge redesign into the event-driven cursor branch
+2593350797 qt: no top line on the control bar (not in Figma); rule: tests anytime, close everything after
+d8c80e720f qt: top bar spacing as in Figma
+e0cc6dd1f3 qt: control bar spacing and time labels as in Figma
+c674ac4f32 redesign: on-PC tests continue while Tony works; close test windows after each test
+10b542199c redesign: ask before using Tony's mouse and keyboard; perf harness input guard
 ```
 
 ## Latest report
 ```
-PROGRESS REPORT (2026-10-14, Sunday plan started early)
-- Done: settings frames for the web session (redesign/reference/frames_settings, 506 frames, pushed); redesign-settings arrangement in CLAUDE.md.
-- Plan step 1 (bug issues): none open.
-- Plan step 2 (test final build 38441433330): done. Figma side-by-sides match for menu, Settings, Keyboard Shortcuts, Open Network Stream. Fixed locally (a2d7d5ef7c, not pushed yet): opaque popup bodies; Customize Player and five more upstream files with a missing Controls import; qmlcheck no longer hides that class of error. Flip does not mirror the picture, but stock VLC 4 behaves the same (upstream limitation, logged).
-- Next: plan step 3, the performance round (stock 38315049322 vs redesign) into PERF.md; then redesign-library; then the two unmerged performance branches; then Step 1.
-- Waiting for Tony: redesign-settings push (web session).
+PROGRESS REPORT (2026-10-14)
+- Steps 1-2 done (no bug issues; build 38441433330 tested; fixes in a2d7d5ef7c).
+- Step 3, performance round 1: numbers in redesign/PERF.md "Rounds". Open file to first frame is about +300 ms slower than stock (stop-everything; expected fix: lazy panels branch). CPU/RAM/GPU close to stock; 4K fullscreen lost frames and the motion method need a clean re-run (a harness fix is in progress offline).
+- Figma detail fixes pushed: control bar gaps and time labels (e0cc6dd1f3), top bar spacing (d8c80e720f), no top line on the control bar (2593350797).
+- Merged: event-driven cursor branch (cbb2f4c2f5): no 100 ms cursor poll, video frame as two fixed halves, no hidden acrylic under the top bar.
+- Build 38600122429 (cbb2f4c2f5) running; then test: Customize Player, opaque popups, bar spacing vs Figma, cursor/bars behaviour, video frame.
+- Running: redesign-library integration and review, lazy panels review, motion harness fix.
+- Rule added: never delete anything outside project-created paths.
+- Waiting for Tony: redesign-settings push (web session); decisions on Hide UI 300 ms, Light FG colors, subtitle size, DM Mono.
 ```

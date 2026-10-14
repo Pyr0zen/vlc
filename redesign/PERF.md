@@ -35,7 +35,42 @@ everything, like a crash.
 | 500+ item queue | open latency, scroll gaps | smooth (as above) |
 
 ## Rounds
-(numbers to be filled by the first quiet-machine round: stock run 38315049322 vs redesign)
+
+### Round 1 (2026-10-14): stock 38315049322 vs redesign 38441433330
+Raw results: `C:\Users\Prem\Desktop\vlc-redesign\perfruns\r1\*.json` (not committed). The first
+redesign pass ran with 29 % background CPU (Tony working), so startup and open were measured again
+back to back, two rounds of three launches each, alternating stock and redesign.
+
+| Measure | Stock | Redesign | Verdict |
+|---|---|---|---|
+| Startup to window (ms, back to back) | 1191/1202/903, 1049/914/893 (median ~1000) | 1124/1021/1222, 1546/1122/1070 (median ~1120) | about +100 ms, within noise of the busy PC; re-measure |
+| Open file to first video frame (ms, back to back) | 1490/1402/1460, 1250/1413/1396 (median ~1400) | 2993/1622/1673, 1661/1681/1784 (median ~1680) | **REGRESSION ~+300 ms** (stop-everything). Likely cause: every player panel is built eagerly on the first video; the lazy panels branch should fix it |
+| Playing: CPU / RAM private / GPU / decoder | 0.2 % / 296 MB / 6.3 % / 20 % | 0.4 % / 321 MB / 8.7 % / 20 % | OK (+25 MB RAM, GPU within noise of the busy PC) |
+| Idle paused: CPU / RAM | 1.1 % / 295 MB | 0.1 % / 317 MB | OK |
+| Seeking: CPU / RAM | 1.4 % / 420 MB | 1.3 % / 442 MB | OK |
+| Panel open while playing: CPU / RAM | 0.2 % / 280 MB | 0.3 % / 300 MB | OK |
+| 4K60 80 Mbit/s windowed: frames lost | 0 of 1335 | 0 of 1351 | OK |
+| 4K60 80 Mbit/s fullscreen: frames lost | 43 of 1289 | 85 of 1250 | **suspect**: redesign ran with 29 % background CPU; re-measure on a quiet PC |
+| 520-entry queue open: RAM | 291 MB | 341 MB | +50 MB; check after the lazy panels branch |
+
+Motion (Desktop Duplication captures, both builds):
+
+| Interaction | Stock median / worst gap | Redesign median / worst gap |
+|---|---|---|
+| Hover across the control bar | 33.5 / 358 ms | 33 / 350 ms |
+| Seek bar drag | 17 / 216 ms | 17 / 233 ms |
+| Volume drag | 33 / 208 ms | 25 / 217 ms |
+| Queue scroll | 100 / 1367 ms | 50 / 325 ms |
+
+The motion method is not valid yet: the medians follow the scripted input rate (a mouse step
+every ~17-33 ms), the worst gaps include the pauses between script steps, and panel/queue open
+found 0 changed frames in both builds (wrong capture region and stock button position). Both
+builds look the same, but the 60 fps target is not proven. Fix the harness (input faster than
+the refresh rate, gaps measured only while the input moves, region checked against the capture)
+before round 2.
+
+Round 2 (next): the lazy panels branch and the event-driven cursor (merged in cbb2f4c2f5),
+on a quiet PC: open file, startup, 4K fullscreen, queue RAM, fixed motion method.
 
 ## Motion measurements
 | Element | Source | Measured | Built |
