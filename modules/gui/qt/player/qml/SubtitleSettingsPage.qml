@@ -37,6 +37,11 @@ RdSidePanelPage {
         if (active)
             RdEffects.refresh()
     }
+    // a page created while its tab is already selected starts active
+    Component.onCompleted: {
+        if (active)
+            RdEffects.refresh()
+    }
 
     // a binding reading RdEffects.values[key] follows only that value
     readonly property real _durationFactor: RdEffects.values.subtitleDurationFactor

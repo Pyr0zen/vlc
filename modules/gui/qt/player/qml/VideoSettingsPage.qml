@@ -41,6 +41,11 @@ RdSidePanelPage {
         if (active)
             RdEffects.refresh()
     }
+    // a page created while its tab is already selected starts active
+    Component.onCompleted: {
+        if (active)
+            RdEffects.refresh()
+    }
 
     function parseNumber(text) {
         return parseFloat(String(text).replace(",", ".").replace(/[^0-9.+-]/g, ""))
