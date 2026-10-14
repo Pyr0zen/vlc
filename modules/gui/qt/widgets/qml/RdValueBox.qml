@@ -35,6 +35,12 @@ T.Control {
     property bool showSwatch: false
     // input validation while typing
     property var validator: null
+    // the 2 px BG/A4 frame (Figma "text_input"); the color fields of Settings ("Frame 87") and
+    // the start volume box have none
+    property bool framed: true
+    property real backgroundRadius: VLCStyle.rd_radius_normal
+    // the text color (Figma shows a value not in use at 40 %)
+    property color textColor: rdPalette.rdFgA2
 
     signal edited(string text)
 
@@ -50,9 +56,10 @@ T.Control {
     hoverEnabled: true
 
     background: Rectangle {
-        radius: VLCStyle.rd_radius_normal
+        radius: control.backgroundRadius
         color: control.rdPalette.rdBgB2
-        border.width: VLCStyle.dp(2)
+        // typing shows the accent frame even on an unframed box
+        border.width: (control.framed || control.editing) ? VLCStyle.dp(2) : 0
         border.color: control.editing ? control.rdPalette.rdAccentMain : control.rdPalette.rdBgA4
     }
 
@@ -73,7 +80,7 @@ T.Control {
             validator: control.validator
             font.family: VLCStyle.rd_fontFamily
             font.pixelSize: VLCStyle.rd_fontSize_label
-            color: control.rdPalette.rdFgA2
+            color: control.textColor
             selectionColor: control.rdPalette.rdAccentMain
             selectedTextColor: control.rdPalette.rdFgB1
             cursorDelegate: Rectangle {
@@ -124,8 +131,9 @@ T.Control {
             height: VLCStyle.dp(22)
             radius: VLCStyle.rd_radius_xsmall
             color: control.swatch
-            border.width: VLCStyle.dp(1)
-            border.color: control.rdPalette.rdDividerBright
+            // Figma: #FFFFFF 21 %, 1.5 px
+            border.width: VLCStyle.dp(1.5)
+            border.color: control.rdPalette.rdSwatchStroke
         }
     }
 }

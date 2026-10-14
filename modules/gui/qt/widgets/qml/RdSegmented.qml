@@ -68,8 +68,10 @@ Rectangle {
                     text: segment.modelData
                     font.family: VLCStyle.rd_fontFamily
                     font.pixelSize: VLCStyle.rd_fontSize_label
+                    // Figma "Values": FG/A3 on the segments not chosen (dark only in Figma; the
+                    // light FG/A3 would be 2.5:1 on BG/A4, so FG/A2 there)
                     color: segment.selected ? (root.rdPalette.isDark ? root.rdPalette.rdAccentMain : root.rdPalette.rdBgA1)
-                                            : root.rdPalette.rdFgA2
+                                            : (root.rdPalette.isDark ? root.rdPalette.rdFgA3 : root.rdPalette.rdFgA2)
                 }
 
                 MouseArea {

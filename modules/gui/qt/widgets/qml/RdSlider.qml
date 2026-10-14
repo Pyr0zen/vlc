@@ -36,12 +36,18 @@ T.Slider {
     property bool showTicks: stepSize > 0 && (to - from) / stepSize <= 40
     // labels under the track, spread from the left end to the right end (Figma "Frame 205")
     property var labels: []
+    // Figma "wrapper" auto layout: the track 4 px down (8 in the Settings rows whose slider is
+    // wrapped twice), then the gap to the labels (10; 8 in some Settings rows)
+    property real trackTop: VLCStyle.dp(4)
+    property real labelSpacing: VLCStyle.dp(10)
 
     readonly property SystemPalette rdPalette: VLCStyle.palette
 
-    // Figma "wrapper": 24 px slider zone, then 10 px and a 15 px label row
+    // Figma "wrapper": the 16 px track (the 24 px thumb overflows it by 4), the gap, the 15 px
+    // label row, 4 px below (360x49 in the sidebar)
     implicitWidth: VLCStyle.dp(360)
-    implicitHeight: labelRow.visible ? VLCStyle.dp(49) : VLCStyle.dp(24)
+    implicitHeight: labelRow.visible ? labelRow.y + labelRow.height + VLCStyle.dp(4)
+                                     : trackTop + VLCStyle.dp(16) + VLCStyle.dp(4)
 
     focusPolicy: Qt.StrongFocus
 
@@ -59,7 +65,7 @@ T.Slider {
         Rectangle {
             id: track
 
-            y: VLCStyle.dp(4)
+            y: control.trackTop
             width: control.availableWidth
             height: VLCStyle.dp(16)
             radius: VLCStyle.rd_radius_normal
@@ -89,10 +95,10 @@ T.Slider {
 
                     x: control._inset + (count > 0 ? index * (fill.span - width) / count : 0)
                     anchors.verticalCenter: parent.verticalCenter
-                    width: VLCStyle.dp(1)
+                    // Figma "degrees": 2 px lines, 6 high, BG/Accent Dark
+                    width: VLCStyle.dp(2)
                     height: VLCStyle.dp(6)
-                    color: (x >= fill.x && x < fill.x + fill.width) ? control.rdPalette.rdAccentDim
-                                                                     : control.rdPalette.rdFgA4
+                    color: control.rdPalette.rdBgAccentDark
                 }
             }
         }
@@ -101,7 +107,7 @@ T.Slider {
             id: labelRow
 
             visible: control.labels.length > 0
-            y: VLCStyle.dp(34)
+            y: control.trackTop + VLCStyle.dp(16) + control.labelSpacing
             width: control.availableWidth
             height: VLCStyle.dp(15)
 
@@ -129,7 +135,7 @@ T.Slider {
     // Figma "thumb": 8x24, radius 4, Accent/DIm (accent while hovered or pressed)
     handle: Rectangle {
         x: control.leftPadding + control._inset + control.visualPosition * (control.availableWidth - 2 * control._inset - width)
-        y: 0
+        y: control.trackTop - VLCStyle.dp(4)
         width: VLCStyle.dp(8)
         height: VLCStyle.dp(24)
         radius: VLCStyle.rd_radius_small

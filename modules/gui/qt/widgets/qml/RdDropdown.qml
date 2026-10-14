@@ -67,8 +67,9 @@ T.ComboBox {
         color: control.rdPalette.rdFgA2
     }
 
+    // Figma "option": 14 px padding inside the 2 px frame
     indicator: RdIcon {
-        x: control.width - width - VLCStyle.dp(14)
+        x: control.width - width - VLCStyle.dp(16)
         y: (control.height - height) / 2
         name: control.openUpward ? "chevron_direction-up" : "chevron_direction-down"
         color: control.rdPalette.rdFgA2
