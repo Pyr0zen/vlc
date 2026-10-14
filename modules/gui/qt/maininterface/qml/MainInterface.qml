@@ -412,6 +412,38 @@ Item {
             }
         }
 
+        // redesign (W8.3): the onboarding instead of VLC's first-run wizard (first start or
+        // --qt-privacy-ask), created only when DialogsProvider.firstRunDialog() asks for it and
+        // destroyed when it closes
+        Loader {
+            id: onboardingLoader
+
+            active: false
+            sourceComponent: Component {
+                Item {
+                    readonly property alias onboarding: onboarding
+
+                    Onboarding {
+                        id: onboarding
+
+                        onDone: Qt.callLater(() => { onboardingLoader.active = false })
+                    }
+                }
+            }
+
+            Connections {
+                target: DialogsProvider
+
+                function onShowOnboarding() {
+                    onboardingLoader.active = true
+                    if (onboardingLoader.item)
+                        onboardingLoader.item.onboarding.openOnboarding()
+                    else
+                        DialogsProvider.firstRunWizard()
+                }
+            }
+        }
+
         Loader {
             active: {
                 const windowVisibility = MainCtx.intfMainWindow.visibility

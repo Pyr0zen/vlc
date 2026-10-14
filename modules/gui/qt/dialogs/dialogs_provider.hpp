@@ -225,7 +225,10 @@ public slots:
     void settingsDialog( const QString& category = QString() );
     // VLC's complete preferences (every module option), shown or raised
     void legacyPrefsDialog();
+    // redesign (W8.3): the onboarding when the main interface hosts it, else the wizard
     void firstRunDialog();
+    // VLC's first-run wizard (the onboarding's fallback)
+    void firstRunWizard();
     void extendedDialog();
     void synchroDialog();
     void messagesDialog( int page = 0 );
@@ -305,6 +308,8 @@ signals:
     void showOpenNetworkStreamDialog();
     void showSettingsDialog( const QString& category );
     void showKeyboardShortcutsDialog();
+    /* redesign (W8.3): shows the QML onboarding instead of the first-run wizard */
+    void showOnboarding();
 
     //visiblity signal
     void openDialogVisibleChanged();
