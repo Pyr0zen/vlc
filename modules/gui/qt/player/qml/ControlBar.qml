@@ -234,6 +234,7 @@ T.Pane {
                     font: mediaTime.font
                     color: VLCStyle.palette.rdFg2
                     selectionColor: VLCStyle.palette.rdAccentDim
+                    selectedTextColor: VLCStyle.palette.rdSelectionText
                     selectByMouse: true
                     inputMethodHints: Qt.ImhPreferNumbers
                     validator: RegularExpressionValidator { regularExpression: /^[0-9:]{0,9}$/ }

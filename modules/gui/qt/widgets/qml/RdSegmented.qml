@@ -17,7 +17,8 @@
  *****************************************************************************/
 
 // Redesign segmented control (Figma component "Values": Relative / Pixels, Dark / Light / System,
-// None / Horizontal / Vertical). Selected segment: BG/Accent Bright fill, Accent/Main text.
+// None / Horizontal / Vertical). Selected segment: BG/Accent Bright fill, Accent/Main text; in the
+// light theme a solid Accent/Main fill with BG/A1 text, like Theme "Light" at video 17:43.
 import QtQuick
 
 import VLC.MainInterface
@@ -59,7 +60,7 @@ Rectangle {
                 width: (row.width - row.spacing * (root.model.length - 1)) / Math.max(1, root.model.length)
                 height: row.height
                 radius: VLCStyle.rd_radius_small
-                color: selected ? root.rdPalette.rdBgAccentBright
+                color: selected ? (root.rdPalette.isDark ? root.rdPalette.rdBgAccentBright : root.rdPalette.rdAccentMain)
                                 : (mouse.containsMouse ? root.rdPalette.rdBgA2 : root.rdPalette.rdBgA4)
 
                 Text {
@@ -67,7 +68,8 @@ Rectangle {
                     text: segment.modelData
                     font.family: VLCStyle.rd_fontFamily
                     font.pixelSize: VLCStyle.rd_fontSize_label
-                    color: segment.selected ? root.rdPalette.rdAccentMain : root.rdPalette.rdFgA2
+                    color: segment.selected ? (root.rdPalette.isDark ? root.rdPalette.rdAccentMain : root.rdPalette.rdBgA1)
+                                            : root.rdPalette.rdFgA2
                 }
 
                 MouseArea {

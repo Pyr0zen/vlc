@@ -253,10 +253,9 @@ FocusScope {
     ColorContext {
         id: windowTheme
 
-        // NOTE: We force the night theme when playing a video.
-        palette: (MainCtx.hasEmbededVideo && MainCtx.pinVideoControls === false)
-                 ? VLCStyle.darkPalette
-                 : VLCStyle.palette
+        // redesign: the player follows the theme over the video too (Figma "Player - Light",
+        // video 17:43), instead of VLC's night theme forced while a video plays
+        palette: VLCStyle.palette
 
         colorSet: ColorContext.Window
     }
@@ -1215,7 +1214,8 @@ FocusScope {
             MainCtx.playerView = false
         }
 
-        // redesign: no acrylic background behind the top bar, it paints its own opaque BG/A3
+        // redesign: no acrylic background behind the top bar, it paints its own background
+        // (BG/A3 in Dark, BG/A3 Transparent in Light, see TopBar.qml)
 
         FadeControllerStateGroup {
             target: topBar
@@ -1417,6 +1417,9 @@ FocusScope {
                     && (interactiveAutoHideTimer.running
                     || navBox.hovered || !MainCtx.hasEmbededVideo)
 
+        // drawn on the picture itself (translucent black box): keeps the night colors in every theme
+        colorContext.palette: VLCStyle.darkPalette
+
         x: rootPlayer.x + VLCStyle.margin_normal + VLCStyle.applicationHorizontalMargin
         y: controlBar.y - navBox.height - VLCStyle.margin_normal
 
@@ -1462,6 +1465,9 @@ FocusScope {
         }
         iconSize: VLCStyle.icon_large
         iconTxt: controlBar.state === "hidden" ? VLCIcons.expand_inverted : VLCIcons.expand
+
+        // drawn on the picture itself (no bar behind it): keeps the night colors in every theme
+        colorContext.palette: VLCStyle.darkPalette
 
         Navigation.parentItem: rootPlayer
         Navigation.upItem: playlistVisibility.isPlaylistVisible ? playlistpopup : (MainCtx.hasEmbededVideo ? playerSpecializationLoader : topBar)

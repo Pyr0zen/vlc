@@ -41,6 +41,9 @@ Image {
     height: size
 
     fillMode: Image.PreserveAspectFit
+    // a new color (theme, accent, hover) loads a new image in the background: keep showing the
+    // current one meanwhile instead of a blank frame, so a theme switch shows no gap (P8-41)
+    retainWhileLoading: true
     // logical size: Image already loads at sourceSize x the window's device pixel ratio
     sourceSize: Qt.size(size, size)
 

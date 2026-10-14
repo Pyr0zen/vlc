@@ -91,8 +91,32 @@ Fixed in the harness (Qt window by class, `--rc-quiet`, window position checked 
 input, pointer not captured, ms timestamps, 4 ms input steps, QPC input log with sync marker,
 gaps only while the input moves); re-measure in round 2.
 
-Round 2 (next): the lazy panels branch and the event-driven cursor (merged in cbb2f4c2f5),
-on a quiet PC: open file, startup, 4K fullscreen, queue RAM, fixed motion method.
+### Round 2 (2026-10-14): stock 38315049322 vs redesign 38600975461 (lazy panels + event-driven cursor)
+Raw results: `perfruns\r2\stock.json` (19:09, background 13 %) and `redesign.json` (19:39,
+background 21 %; Sticky away, the session's own agents running). The fixed harness worked for
+stock: sync spread <= 17 ms, 4 ms input steps, panels and queue detected. For the redesign the
+input scenarios (panel, motion, queue) were skipped: VLC could not take the foreground at that
+moment; they run in round 3.
+
+| Measure | Stock | Redesign | Verdict |
+|---|---|---|---|
+| Startup to window (ms) | 1430/910/1126 | 1135/1087/1248 | equal (noise) |
+| Open file to first video frame (ms) | 1498/1731/1849 | 1466/1032/1291 | **round 1 regression fixed** (lazy panels) |
+| Playing / idle CPU | 0.7 % / 0 % | 0.7 % / 0.6 % | OK |
+| 4K windowed frames lost | 0 of 1335 | 0 of 1335 | OK |
+| 4K fullscreen frames lost | 4 of 1317 | 46 of 1302 | **suspect**, measured 30 min apart under different load: re-measure back to back |
+| RAM and decoder load while playing | 300 MB, NVDEC 20 % (19:09) | 417 MB, NVDEC 42 % (19:39) | **not a regression**: back to back at 19:50 all three builds read the same (stock 429 MB / 42 %, round 1 redesign 437 MB / 42 %, this build 403 MB / 42 %); the machine state changed between the runs |
+
+Stock motion baseline (valid, fixed method): hover latency 6 ms, hover animation gaps median 10 ms
+(worst 21); seek drag 67 updates/s, gap median 15 ms, p95 22, worst 26, 19 stalls; volume drag
+96 updates/s, median 8.5 ms, worst 22; panel open 41 ms to first change, 96 ms animation, worst
+gap 19; panel close 8 ms, 90 ms; queue open 35 ms, 90 ms; queue scroll median 10 ms, worst 30.
+
+Lesson: RAM, GPU and lost frames drift with the machine state, so every comparison runs back to
+back (stock, then redesign, minutes apart) with the same background load.
+
+Round 3 (next): back to back on a quiet PC with Sticky away: redesign input scenarios (panel,
+motion, queue) and 4K fullscreen for both builds, plus the library and settings builds.
 
 ## Motion measurements
 | Element | Source | Measured | Built |
