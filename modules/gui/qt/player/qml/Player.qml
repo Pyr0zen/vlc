@@ -86,12 +86,24 @@ FocusScope {
                                                    || (playerToolbarVisibilityFSM.isLocked && !_mouseNearTop))
 
     // cursor height inside the player, -1 outside, from mouse events (no polling): the hover
-    // handler below sees every move over the player (video, bars, panels), the video surface
-    // reports the moves over the video as in upstream VLC. Hover events reach Qt Quick while
-    // another app is active, so a window also shows its bars then.
+    // handler below sees the moves over the bars and panels; the video surface accepts its hover
+    // events, so the handler is not hovered over the video, where the surface reports the moves
+    // as in upstream VLC and its own hover handler tells when the cursor is over it
+    // (_videoHovered). Hover events reach Qt Quick while another app is active, so a window also
+    // shows its bars then.
     property real _cursorY: -1
+    property bool _videoHovered: false
+
+    // the cursor left the player only when neither the player nor the video is hovered (moving
+    // from a bar onto the video unhovers the player handler)
+    function _cursorMaybeLeft() {
+        if (!playerHover.hovered && !_videoHovered)
+            _cursorY = -1
+    }
 
     HoverHandler {
+        id: playerHover
+
         // only the video player hides its bars and cursor
         enabled: MainCtx.hasEmbededVideo
 
@@ -101,6 +113,11 @@ FocusScope {
         }
         onHoveredChanged: {
             if (!hovered)
+                rootPlayer._cursorMaybeLeft()
+        }
+        // without video nothing is tracked
+        onEnabledChanged: {
+            if (!enabled)
                 rootPlayer._cursorY = -1
         }
     }
@@ -414,6 +431,17 @@ FocusScope {
                         mousePressed.connect(videoSurface.onMouseEvent)
                         mouseReleased.connect(videoSurface.onMouseEvent)
                         mouseDblClicked.connect(videoSurface.onMouseEvent)
+                    }
+
+                    Component.onDestruction: rootPlayer._videoHovered = false
+
+                    // redesign: tells the player when the cursor is over the video (see _cursorY)
+                    HoverHandler {
+                        onHoveredChanged: {
+                            rootPlayer._videoHovered = hovered
+                            if (!hovered)
+                                rootPlayer._cursorMaybeLeft()
+                        }
                     }
 
                     Binding on cursorShape {
