@@ -233,6 +233,11 @@ FocusScope {
 
     function lockUnlockAutoHide(lock) {
         if (lock) {
+            // a hidden FSM ignores lock() (fullscreen bars shown by their edge zone, a panel or the
+            // time field opened from such a bar): show it first, so every lock is counted and the
+            // matching unlock() cannot release another component's lock
+            if (!playerToolbarVisibilityFSM.isVisible)
+                playerToolbarVisibilityFSM.askShow()
             playerToolbarVisibilityFSM.lock()
         } else {
             playerToolbarVisibilityFSM.unlock()
@@ -1804,12 +1809,17 @@ FocusScope {
     RdPlayerMenu {
         id: playerMenu
 
-        // a hidden toolbar FSM ignores lock(): show it first so lock and unlock stay balanced
-        onShownChanged: {
-            if (shown && !playerToolbarVisibilityFSM.isVisible)
-                playerToolbarVisibilityFSM.askShow()
-            rootPlayer.lockUnlockAutoHide(shown)
-        }
+        onShownChanged: rootPlayer.lockUnlockAutoHide(shown)
+    }
+
+    // redesign: a right click on the control bar (its buttons included) opens the right-click
+    // menu too, like a right click on the video; the top bar keeps the window menu of its
+    // client-side decorations
+    TapHandler {
+        parent: controlBar
+        acceptedButtons: Qt.RightButton
+
+        onTapped: playerMenu.popupAtCursor()
     }
 
     TapHandler {
