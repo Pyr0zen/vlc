@@ -156,3 +156,19 @@ To measure first after merging (most sensitive first):
 4. Media library scan of a large folder while the library is open: every ML event restarts the 300 ms reload debounce of the visible Home sections.
 5. Page crossfade (180 ms) between heavy pages.
 6. Background blur: not used anywhere in Phase 5. If the PC session wants the Figma "bg blur" on the library panel, test whether it holds 60 fps over playing video first.
+
+## 10. Integration on the PC (2026-10-14)
+
+Merged into the integration branch with `redesign` (menus, Settings, lazy panels, event-driven cursor). Section 5 items done:
+- 1 / 2: compact library docked in Player.qml (top bar sidebar toggle and folder chip, 208 ms slide over the video; the video area resizes once at the end of the opening and the start of the closing, not every frame; open state in `RdPanels.libraryOpen`; bars kept while open; mouse back / forward; keys go to the library while it has the focus; swipe back and Escape follow `RdLibraryNav` through `MainDisplay.canGoBack / goBack()`).
+- 3: the queue sidebar is an RdListView now: its own drop functions accept library rows (`rdDragUrls`). `RdQueueDropArea` stays for the mini queue.
+- 4: music view: rounded cover (Figma radius 20), "title - artist" caption, 15 s skip buttons. The waveform seek bar waits for Show Waveform (W4.3b).
+- 5: tokens `rd_librarySlideDuration`, `rd_radius_cover`.
+- 6: VIDEO_INDEX rows set to in progress.
+
+Changed after the review of this branch:
+- `RdStreamDialog` removed: the library uses W6.4's Open Network Stream dialog; a Playlist Name saves the links as stream lists (`RdStreamListSaver`).
+- The full library's top bar is the player's `TopBar` (`showLibraryButtons: false`) with the redesigned main menu.
+- Library popups hold `RdPanels.modalCount` and are opaque over the video; RdMenuPanel fades in like RdCascadeMenu.
+- Add to Playlist menu fixed (`mediaItems`; `items` shadowed RdMenuPanel's rows); folders outside their category open in it (`RdLibraryNav.itemCategory`); keyboard focus on grid rows and cards; Home loads at once and hides "Watch Next" while loading; drag ghosts and handlers as VLC's lists; confirmations before Delete Playlist / Remove from Library; scan status in the header count; Ctrl+L toggles the mini queue; folder events coalesced; C++ compile fixes (`Q_MOC_INCLUDE` medialib.hpp, `vlc_ml_playlist_rename`, FOLDER_UPDATED).
+- Known limit: the mini player's video has square corners (the native video surface cannot be clipped by QML).
