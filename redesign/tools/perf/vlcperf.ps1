@@ -118,8 +118,13 @@ function Start-Vlc([string]$media, [switch]$Rc) {
     $tWin = $sw.ElapsedMilliseconds
     return @{ proc = $p; hwnd = $h; sw = $sw; tWin = $tWin }
 }
+# sizes the window; no input, no focus change (pause, seek and fullscreen go through VLC's cli)
 function Place($v) {
     [RdPerf]::MoveWindow($v.hwnd, 0, 0, 2400, 1350, $true) | Out-Null
+}
+# brings VLC to the front for the scenarios that need the mouse (panel, motion, queue); throws
+# when the user keeps another window in front, and the scenario is skipped
+function Engage($v) {
     Focus $v.hwnd
     $script:CurHwnd = $v.hwnd
 }
@@ -262,24 +267,28 @@ try {
         $Results.open_video_ready_ms = $runs
     }
     if ((Want 'play') -or (Want 'idle') -or (Want 'panel') -or (Want 'seek') -or (Want 'motion')) {
-        $v = Start-Vlc $Media; Start-Sleep 3; Place $v; MouseTo 1200 700; Start-Sleep 2
-        if (Want 'play') { MouseTo 1200 700; $Results.play = Sample $v 15 }
-        if (Want 'idle') { Key ' '; Start-Sleep 1; $Results.idle_paused = Sample $v 10; Key ' '; Start-Sleep 1 }
+        $v = Start-Vlc $Media -Rc; Start-Sleep 3; Place $v; Start-Sleep 2
+        if (Want 'play') { $Results.play = Sample $v 15 }
+        if (Want 'idle') { Rc 'pause' | Out-Null; Start-Sleep 1; $Results.idle_paused = Sample $v 10; Rc 'pause' | Out-Null; Start-Sleep 1 }
         if (Want 'panel') {
-            MouseTo 1300 900; Start-Sleep -Milliseconds 300; Click $P.panelBtn[0] $P.panelBtn[1]; Start-Sleep 1
-            $Results.panel_open_playing = Sample $v 10
-            Click $P.panelBtn[0] $P.panelBtn[1]; Start-Sleep 1
+            try {
+                Engage $v
+                MouseTo 1300 900; Start-Sleep -Milliseconds 300; Click $P.panelBtn[0] $P.panelBtn[1]; Start-Sleep 1
+                $Results.panel_open_playing = Sample $v 10
+                Click $P.panelBtn[0] $P.panelBtn[1]; Start-Sleep 1
+            } catch { $Results.panel_open_playing = "skipped: $($_.Exception.Message)" }
         }
         if (Want 'seek') {
             $t0 = Get-Date
             $v.proc.Refresh(); $c0 = $v.proc.TotalProcessorTime
-            for ($i = 0; $i -lt 14; $i++) { Key '{RIGHT}'; Start-Sleep -Milliseconds 700 }
+            for ($i = 0; $i -lt 10; $i++) { Rc ("seek " + (10 + 10 * $i)) | Out-Null }
             $v.proc.Refresh()
             $Results.seek = [ordered]@{ cpu_pct = [math]::Round(($v.proc.TotalProcessorTime - $c0).TotalSeconds / ((Get-Date) - $t0).TotalSeconds / [Environment]::ProcessorCount * 100, 1);
                                        ram_private_mb = [math]::Round($v.proc.PrivateMemorySize64 / 1MB, 0) }
         }
-        if (Want 'motion') {
-            Key ' '; Start-Sleep 1   # pause: only the UI changes on screen
+        if (Want 'motion') { try {
+            Engage $v
+            Rc 'pause' | Out-Null; Start-Sleep 1   # pause: only the UI changes on screen
             $m = [ordered]@{}
             # hover sweep along the control bar, 2.4 s
             $f = Capture 'hover' 4 { MouseTo 40 ($P.barY); Start-Sleep -Milliseconds 300
@@ -308,24 +317,25 @@ try {
                 MouseTo $P.panelBtn[0] $P.panelBtn[1]; Start-Sleep -Milliseconds 15; Down; Start-Sleep -Milliseconds 30; Up }
             $m.panel_close = Motion $f $P.panelRoi "$($P.panelBtn[0]),$($P.panelBtn[1])"
             $Results.motion = $m
-            Key ' '
-        }
+            Rc 'pause' | Out-Null
+        } catch { $Results.motion = "skipped: $($_.Exception.Message)" } }
         Stop-Vlc $v; $v = $null; Start-Sleep 2
     }
     if (Want '4k') {
-        $v = Start-Vlc $Media4k -Rc; Start-Sleep 3; Place $v; MouseTo 1200 700; Start-Sleep 2
+        $v = Start-Vlc $Media4k -Rc; Start-Sleep 3; Place $v; Start-Sleep 2
         $s0 = Stats; $r = Sample $v 20; $s1 = Stats
         $r.frames_displayed = $s1.displayed - $s0.displayed; $r.frames_lost = $s1.lost - $s0.lost
         $Results.k4_windowed = $r
-        Key 'f'; Start-Sleep 3
+        Rc 'fullscreen on' | Out-Null; Start-Sleep 3
         $s0 = Stats; $r = Sample $v 20; $s1 = Stats
         $r.frames_displayed = $s1.displayed - $s0.displayed; $r.frames_lost = $s1.lost - $s0.lost
         $Results.k4_fullscreen = $r
-        Key 'f'; Start-Sleep 1
+        Rc 'fullscreen off' | Out-Null; Start-Sleep 1
         Stop-Vlc $v; $v = $null; Start-Sleep 2
     }
     if (Want 'queue') {
-        $v = Start-Vlc $Queue; Start-Sleep 4; Place $v; MouseTo 1200 700; Start-Sleep 1; Key ' '; Start-Sleep 1
+        $v = Start-Vlc $Queue -Rc; Start-Sleep 4; Place $v; Rc 'pause' | Out-Null; Start-Sleep 1
+        try { Engage $v
         $f = Capture 'queueopen' 3 { MouseTo 1300 900; Start-Sleep -Milliseconds 300
             MouseTo $P.queueBtn[0] $P.queueBtn[1]; Start-Sleep -Milliseconds 15; Down; Start-Sleep -Milliseconds 30; Up }
         $q = [ordered]@{ open = (Motion $f $P.panelRoi "$($P.queueBtn[0]),$($P.queueBtn[1])") }
@@ -336,6 +346,7 @@ try {
         $q.scroll = Motion $f $P.panelRoi '-'
         $v.proc.Refresh(); $q.ram_private_mb = [math]::Round($v.proc.PrivateMemorySize64 / 1MB, 0)
         $Results.queue = $q
+        } catch { $Results.queue = "skipped: $($_.Exception.Message)" }
         Stop-Vlc $v; $v = $null
     }
 }
