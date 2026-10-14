@@ -432,6 +432,21 @@ Item {
                         onDone: Qt.callLater(() => { onboardingLoader.active = false })
                     }
                 }
+            }
+
+            Connections {
+                target: DialogsProvider
+
+                function onShowOnboarding() {
+                    onboardingLoader.active = true
+                    if (onboardingLoader.item)
+                        onboardingLoader.item.onboarding.openOnboarding()
+                    else
+                        DialogsProvider.firstRunWizard()
+                }
+            }
+        }
+
         // redesign (W8.1a): Customize Player (VLC's toolbar editor, video 19:12-19:28), over every
         // view so a view switch does not lose unsaved edits; created on its first open
         Loader {
@@ -445,12 +460,6 @@ Item {
             Connections {
                 target: DialogsProvider
 
-                function onShowOnboarding() {
-                    onboardingLoader.active = true
-                    if (onboardingLoader.item)
-                        onboardingLoader.item.onboarding.openOnboarding()
-                    else
-                        DialogsProvider.firstRunWizard()
                 function onShowToolbarEditorDialog() {
                     MainCtx.emitRaise()
                     customizePlayerDialogLoader.active = true
