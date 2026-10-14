@@ -456,6 +456,8 @@ void MainCtx::loadPrefs(const bool callSignals)
 
     loadFromVLCOption(m_maxVolume, "qt-max-volume", &MainCtx::maxVolumeChanged);
 
+    loadFromVLCOption(m_fsSensitivity, "qt-fs-sensitivity", &MainCtx::fsSensitivityChanged);
+
     loadFromVLCOption(m_pinVideoControls, "qt-pin-controls", &MainCtx::pinVideoControlsChanged);
 
     loadFromVLCOption(m_pinOpacity, "qt-fs-opacity", &MainCtx::pinOpacityChanged);
@@ -651,6 +653,15 @@ void MainCtx::setAccentColor(const QColor& color)
     const QByteArray value = color.isValid() ? color.name(QColor::HexRgb).toUtf8() : QByteArray("default");
     config_PutPsz("qt-accent-color", value.constData());
     emit accentColorChanged();
+}
+
+void MainCtx::setFsSensitivity(int pixels)
+{
+    if (m_fsSensitivity == pixels)
+        return;
+    m_fsSensitivity = pixels;
+    config_PutInt("qt-fs-sensitivity", pixels);
+    emit fsSensitivityChanged();
 }
 
 void MainCtx::setPinOpacity(float pinOpacity)

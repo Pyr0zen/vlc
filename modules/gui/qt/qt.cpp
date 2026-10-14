@@ -266,6 +266,8 @@ static void ShowDialog   ( intf_thread_t *, int, int, intf_dialog_args_t * );
 #define QT_PIN_CONTROLS_LONGTEXT N_("Place video controls above and below the video instead of above")
 
 #define FULLSCREEN_CONTROL_PIXELS N_( "Fullscreen controller mouse sensitivity" )
+#define FULLSCREEN_CONTROL_PIXELS_LONGTEXT N_( "How near the top or bottom edge of the screen " \
+    "the mouse shows the bars in fullscreen, in pixels at 100% scale." )
 
 #define QT_COMPOSITOR_TEXT N_("Select Qt video integration backend")
 #define QT_COMPOSITOR_LONGTEXT N_("Select Qt video integration backend. Use with care, the interface may not start if an incompatible compositor is selected")
@@ -458,8 +460,10 @@ vlc_module_begin ()
     /* redesign: volume range 0 to 200% by default (Decision 7) */
     add_integer_with_range( "qt-max-volume", 200, 60, 300, VOLUME_MAX_TEXT, nullptr)
 
-    add_integer_with_range( "qt-fs-sensitivity", 3, 0, 4000, FULLSCREEN_CONTROL_PIXELS,
-            nullptr)
+    /* redesign: the distance from an edge (dp) at which the fullscreen bars show (Player.qml);
+     * Settings > Interface offers 16 / 40 / 96 */
+    add_integer_with_range( "qt-fs-sensitivity", 40, 0, 4000, FULLSCREEN_CONTROL_PIXELS,
+            FULLSCREEN_CONTROL_PIXELS_LONGTEXT)
 
     add_integer( "qt-auto-raise", MainCtx::RAISE_VIDEO, AUTORAISE_ON_PLAYBACK_TEXT,
                  AUTORAISE_ON_PLAYBACK_LONGTEXT )
