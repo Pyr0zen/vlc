@@ -1277,6 +1277,13 @@ libqml_module_dialogs_a_QML = \
 	dialogs/toolbar/qml/ToolbarEditor.qml \
 	dialogs/toolbar/qml/ToolbarEditorDialog.qml \
 	dialogs/toolbar/qml/ToolbarEditorButtonList.qml \
+	dialogs/toolbar/qml/CustomizePlayerDialog.qml \
+	dialogs/toolbar/qml/CustomizePalette.qml \
+	dialogs/toolbar/qml/CustomizePaletteTile.qml \
+	dialogs/toolbar/qml/CustomizeBar.qml \
+	dialogs/toolbar/qml/CustomizeZone.qml \
+	dialogs/toolbar/qml/CustomizeZoneItem.qml \
+	dialogs/toolbar/qml/CustomizeNamePrompt.qml \
 	dialogs/redesign/settings/SettingsAdvancedBar.qml \
 	dialogs/redesign/settings/SettingsCategoryButton.qml \
 	dialogs/redesign/settings/SettingsDialog.qml \
@@ -1673,6 +1680,7 @@ libqml_module_widgets_a_QML = \
 	widgets/qml/RdPanel.qml \
 	widgets/qml/RdTooltip.qml \
 	widgets/qml/RdIcon.qml \
+	widgets/qml/RdDashedFrame.qml \
 	widgets/qml/RdValueBox.qml \
 	widgets/qml/RdSettingRow.qml \
 	widgets/qml/RdSettingsSection.qml \
@@ -1763,7 +1771,8 @@ libqt_plugin_la_SHADER_FRAG = shaders/FadingEdge.frag \
                               shaders/DualKawaseBlur_upsample.frag \
                               shaders/DualKawaseBlur_downsample.frag \
                               shaders/DualKawaseBlur_upsample_postprocess.frag \
-                              shaders/VolumeCone.frag
+                              shaders/VolumeCone.frag \
+                              shaders/RdDashedFrame.frag
 
 libqt_plugin_la_SHADER_VERT = shaders/FadingEdgeX.vert \
                               shaders/FadingEdgeY.vert \
