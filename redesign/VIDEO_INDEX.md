@@ -133,6 +133,8 @@ Extra decisions made during the build, one line each (date, row IDs, decision, r
 - 2026-10-14 W8.4 / P8-04: the video's lighter light-mode section headers and near-white segment text come from the file's Light/FG/1 and FG/2 (dark values); with Decision 33 headers are #222222. The "Player - Light" frame's leftovers from the dark design (play pill in Dark/Accent/Main, prev / next and library rows in Dark/FG/A2) are not copied: each component uses the light style of the same role.
 - 2026-10-14 W8.4 / P8-41: theme and accent switches are instant: SystemPalette.switching holds VLC's color Behaviors (DelayedBehavior: AnimatedBackground, IconToolButton, tab buttons) off until the next event loop pass, and RdIcon keeps its image while the recolored one loads. New color animations use DelayedBehavior or check palette.switching.
 - 2026-10-14 W8.4: the volume cone takes each theme's Figma fills: empty part BG/B2 (Dark) / BG/A5 (Light), gradient tint #000000 20 % / #FFFFFF 20 % (rdVolumeEmpty, rdVolumeTint).
+- 2026-10-14 W8.4 (review): selected text on the Accent/DIm selection is FG/1 in Dark and BG/A1 in Light (rdSelectionText; FG/1 on Light Accent/DIm reads at 3.4:1); Figma shows no text selection.
+- 2026-10-14 W8.4 (review): the Qt widget dialogs' push buttons take the light Standard look of RdButton in Light (FG/A2, BG/A1 text); a disabled Standard button is drawn at 50 % in both themes, like Figma's only disabled button (Save, "Open network stream").
 
 ## Core changes (status)
 Approved by Decision 27 (minimal and isolated); reverse playback postponed (Decision 29).
