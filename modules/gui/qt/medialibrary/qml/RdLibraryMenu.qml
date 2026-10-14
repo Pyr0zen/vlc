@@ -23,11 +23,35 @@
 import QtQuick
 
 import VLC.MainInterface
+import VLC.Player
 import VLC.Style
 import VLC.Widgets as Widgets
 
 Widgets.RdMenuPanel {
     id: menu
+
+    // while open, keys go to the menu instead of VLC's hotkeys over the player
+    // (RdPanels.modalCount, see menus/qml/RdCascadeMenu.qml)
+    property bool _holdsModal: false
+
+    onAboutToShow: {
+        if (!menu._holdsModal) {
+            RdPanels.acquireModal()
+            menu._holdsModal = true
+        }
+    }
+
+    onAboutToHide: {
+        if (menu._holdsModal) {
+            RdPanels.releaseModal()
+            menu._holdsModal = false
+        }
+    }
+
+    Component.onDestruction: {
+        if (menu._holdsModal)
+            RdPanels.releaseModal()
+    }
 
     property var entries: []
 

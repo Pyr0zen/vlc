@@ -22,11 +22,35 @@ import QtQuick
 import QtQuick.Templates as T
 
 import VLC.MainInterface
+import VLC.Player
 import VLC.Style
 import VLC.Widgets as Widgets
 
 T.Popup {
     id: popup
+
+    // while open, keys go to the popup instead of VLC's hotkeys over the player
+    // (RdPanels.modalCount, see menus/qml/RdCascadeMenu.qml)
+    property bool _holdsModal: false
+
+    onAboutToShow: {
+        if (!popup._holdsModal) {
+            RdPanels.acquireModal()
+            popup._holdsModal = true
+        }
+    }
+
+    onAboutToHide: {
+        if (popup._holdsModal) {
+            RdPanels.releaseModal()
+            popup._holdsModal = false
+        }
+    }
+
+    Component.onDestruction: {
+        if (popup._holdsModal)
+            RdPanels.releaseModal()
+    }
 
     property string folderTitle: ""
     property string location: ""
@@ -48,7 +72,8 @@ T.Popup {
 
     background: Rectangle {
         radius: VLCStyle.rd_radius_panel
-        color: VLCStyle.palette.rdBgB1Transparent
+        // opaque over the native video (Figma's 95 % assumes a background blur)
+        color: Qt.alpha(VLCStyle.palette.rdBgB1Transparent, 1.0)
 
         Widgets.RdShadow { }
     }

@@ -25,11 +25,35 @@ import QtQuick
 import QtQuick.Templates as T
 
 import VLC.MainInterface
+import VLC.Player
 import VLC.Style
 import VLC.Widgets as Widgets
 
 T.Popup {
     id: dialog
+
+    // while open, keys go to the dialog instead of VLC's hotkeys over the player
+    // (RdPanels.modalCount, see menus/qml/RdCascadeMenu.qml)
+    property bool _holdsModal: false
+
+    onAboutToShow: {
+        if (!dialog._holdsModal) {
+            RdPanels.acquireModal()
+            dialog._holdsModal = true
+        }
+    }
+
+    onAboutToHide: {
+        if (dialog._holdsModal) {
+            RdPanels.releaseModal()
+            dialog._holdsModal = false
+        }
+    }
+
+    Component.onDestruction: {
+        if (dialog._holdsModal)
+            RdPanels.releaseModal()
+    }
 
     property string title: ""
     property bool canSave: true
@@ -50,14 +74,19 @@ T.Popup {
     padding: 0
     closePolicy: T.Popup.CloseOnEscape
 
-    T.Overlay.modal: Rectangle {
-        color: VLCStyle.palette.rdBgB2Transparent
-        opacity: 0.6
+    // dimmed window behind the dialog, as behind Open Network Stream (video 13:09)
+    T.Overlay.modal: Item {
+        Rectangle {
+            anchors.fill: parent
+            anchors.margins: MainCtx.windowExtendedMargin
+            color: VLCStyle.palette.rdBgB2Transparent
+        }
     }
 
     background: Rectangle {
         radius: VLCStyle.rd_radius_large
-        color: VLCStyle.palette.rdBgA3Transparent
+        // opaque over the native video (Figma's 95 % assumes a background blur)
+        color: Qt.alpha(VLCStyle.palette.rdBgA3Transparent, 1.0)
 
         Widgets.RdShadow { }
     }

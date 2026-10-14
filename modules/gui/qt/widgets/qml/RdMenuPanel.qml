@@ -51,6 +51,8 @@ T.Popup {
         property var _connected: []
 
         onChildrenChanged: {
+            // rows of a Repeater are destroyed and recreated: forget the destroyed ones
+            _connected = _connected.filter((c) => !!c)
             for (let i = 0; i < children.length; ++i) {
                 const child = children[i]
                 if (child.clicked !== undefined && _connected.indexOf(child) < 0) {
