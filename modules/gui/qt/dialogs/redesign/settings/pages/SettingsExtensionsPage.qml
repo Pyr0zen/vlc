@@ -52,7 +52,13 @@ SettingsPage {
     // the roles of the selected add-on (name, state, manageable, ...)
     property var _selected: null
 
+    // add-ons whose install was asked for and has not started yet (VLC's installer queue):
+    // asking again would remove them once installed
+    property var _installRequested: ({})
+
+    readonly property bool _installPending: !!_selected && !!_installRequested[_selectedKey]
     readonly property bool _canInstall: !!_selected && _selected.state === ServicesDiscoveryModel.STATE_NOTINSTALLED
+                                        && !_installPending
     readonly property bool _canRemove: !!_selected && _selected.state === ServicesDiscoveryModel.STATE_INSTALLED
                                        && !!_selected.manageable
 
@@ -92,7 +98,26 @@ SettingsPage {
         _selected = null
     }
 
+    function _forgetStartedInstalls() {
+        const pending = Object.keys(_installRequested)
+        if (pending.length === 0)
+            return
+        const left = {}
+        for (const key of pending) {
+            for (let i = 0; i < addons.count; ++i) {
+                const data = addons.getDataAt(i)
+                if (_keyOf(data) === key) {
+                    if (data.state === ServicesDiscoveryModel.STATE_NOTINSTALLED)
+                        left[key] = true
+                    break
+                }
+            }
+        }
+        _installRequested = left
+    }
+
     function _refreshSelection() {
+        _forgetStartedInstalls()
         if (_selectedKey === "") {
             if (_selectedRow >= 0 && _selectedRow < addons.count) {
                 _selected = addons.getDataAt(_selectedRow)
@@ -402,10 +427,12 @@ SettingsPage {
 
             Widgets.RdButton {
                 text: qsTr("Add")
-                enabled: root._canInstall || !root._gathering
+                enabled: !root._installPending && (root._canInstall || !root._gathering)
                 Accessible.description: root._canInstall ? qsTr("Install \"%1\"").arg(root._selected.name)
                                                          : qsTr("Add an add-on package (.vlp) from this computer")
                 onClicked: {
+                    if (root._installPending)
+                        return
                     if (!root._canInstall) {
                         root._addPackage()
                         return
@@ -414,8 +441,12 @@ SettingsPage {
                     // installed: act on the live state of the row, not the remembered one
                     const live = addons.getDataAt(root._selectedRow)
                     if (root._keyOf(live) === root._selectedKey
-                            && live.state === ServicesDiscoveryModel.STATE_NOTINSTALLED)
+                            && live.state === ServicesDiscoveryModel.STATE_NOTINSTALLED) {
+                        const requested = Object.assign({}, root._installRequested)
+                        requested[root._selectedKey] = true
+                        root._installRequested = requested
                         addons.installService(root._selectedRow)
+                    }
                     root._refreshSelection()
                 }
             }

@@ -223,24 +223,6 @@ SettingsPage {
                 labels: [qsTr("10%"), qsTr("100%")]
             }
 
-            // VLC's option is the distance in pixels the mouse moves before the controls show
-            SettingsRow {
-                text: qsTr("Fullscreen controls sensitivity")
-                keywords: "qt-fs-sensitivity"
-
-                SettingsSegmented {
-                    readonly property var pixels: [10, 3, 1]
-                    readonly property int current: Number(root._option("qt-fs-sensitivity"))
-
-                    implicitWidth: VLCStyle.dp(320)
-                    implicitHeight: VLCStyle.dp(36)
-                    model: [qsTr("Low"), qsTr("Medium"), qsTr("High")]
-                    currentIndex: current >= 10 ? 0 : (current >= 3 ? 1 : 2)
-                    Accessible.name: qsTr("Fullscreen controls sensitivity")
-                    onActivated: (index) => RdEffects.setOption("qt-fs-sensitivity", pixels[index])
-                }
-            }
-
             SettingsOption {
                 option: "qt-menubar"
                 text: qsTr("Show the menu bar")

@@ -26,7 +26,7 @@ Branch `redesign-settings`, branched from `redesign` (10b542199c). Built by the 
 
 **Pages (`dialogs/redesign/settings/pages/`)**: rows and order from the Figma frames ("Settings - *"), wording from the video where it differs (Decision 11), values in words.
 - General: interface language (Windows), Theme (Dark / Light / System through `MainCtx.colorScheme`, instant), Accent color (live), Startup, Diagnostics (logging), Advanced: minor warnings, log format, statistics, configuration folder, Reset all settings, Developer Options (system log; Linux/BSD only).
-- Interface: skin, window, playback controls (Decision 30: "Auto-hide the controls" = VLC's pin controls), tray and notifications, playlist; Advanced: opacity, minimized pause, raising, cover art, open dialog, app icon, fullscreen controls opacity and sensitivity, menu bar, interface size, smooth scrolling, blur, picture-in-picture, safe area.
+- Interface: skin, window, playback controls (Decision 30: "Auto-hide the controls" = VLC's pin controls), tray and notifications, playlist; Advanced: opacity, minimized pause, raising, cover art, open dialog, app icon, fullscreen controls opacity, menu bar, interface size, smooth scrolling, blur, picture-in-picture, safe area.
 - Privacy: history, remember position, Clear history, internet metadata, ask about internet access, Last.fm (no Advanced Options, as the video and Figma).
 - Controls: Edit Keyboard Shortcuts (opens the dialog), Reset all shortcuts (HotkeysModel), skip amounts, single click, scroll wheels and reverse direction in words, web remote with port and password; Advanced: mouse / key handling on the video, media keys.
 - Playback: continue where you left off, autostart, default speed slider, cork; video quality, menu language, default tracks in words; repeat (Off / All / One) and end of list (Stop / Pause on the last frame / Quit VLC); precise seeking; optical drive, AVI repair, MKV preload; Advanced: time-shift folder and size, start paused, playback states, default video track, audio CD drive.
@@ -103,6 +103,7 @@ Rows of the dialog shell (P7-18, IB-42, P8-02, P8-39, P8-40) and the Keyboard Sh
 2. `widgets/qml/RdTooltip.qml` (the info popover) still uses `rdBgB1Transparent`: make it opaque like the other popups (`Qt.alpha(..., 1.0)`), so it never shows the video through where it passes the dialog's edge.
 3. Palette: a red text token for the "Reset all settings" button (Figma red text, P8-43); until then it uses the standard button.
 4. `widgets/qml/RdSegmented.qml` is mouse-only. The settings pages wrap it in `SettingsSegmented` (Tab, Left / Right); the kit widget itself could take that over for its other users.
+   The interface rows (maximum volume, hide timeout...) call `MainCtx.reloadPrefs()` like VLC's preferences; it also re-applies values the session changed without saving them (e.g. compact mode toggled by a hotkey).
 5. `network/addonsmodel.cpp` / `util/listcache.hxx`: a row state update can be lost when two add-on events come back to back (section 8).
 6. When the seek-bar thumbnails (P2-04) are built, add their option and a "Show thumbnail while scrubbing" SettingsOption row to Playback > Seeking.
 7. VIDEO_INDEX.md: set the rows of section 3 to "in progress" (built, unverified) at the merge; add the decisions of section 4.
@@ -111,7 +112,7 @@ Rows of the dialog shell (P7-18, IB-42, P8-02, P8-39, P8-40) and the Keyboard Sh
 
 Rows of the design without a VLC option behind them (left out rather than shown without effect):
 - General > Advanced "Additional command line options": VLC keeps no such setting.
-- Interface "Remember window size and position" (VLC 4 always remembers), "Popup duration" (no option).
+- Interface "Remember window size and position" (VLC 4 always remembers), "Popup duration" (no option), "Fullscreen controls sensitivity" (VLC 4's interface no longer reads "qt-fs-sensitivity"; the option is kept out of the lists too).
 - Privacy "Never remember items matching" (VLC 4 removed the filter).
 - Controls "Double click on the video" (always fullscreen in VLC).
 - Playback "Show thumbnail while scrubbing" (the feature is not built yet; section 5).
@@ -152,6 +153,16 @@ Three fresh subagents that did not write the code reviewed the branch (the C++ c
 - Extensions: the online catalog could not be fetched again after an offline attempt; "Add" could uninstall an add-on whose install was still running (VLC's install request is a toggle) and now acts on the live state; the selection follows rows loaded later and every reload; the "no match" message no longer flashes while the search reloads.
 - Video post-processing "Off" changed nothing (the quality is only read by the post-processing filter); Off now takes the filter out.
 - The x264 preset text claimed to set casting (casting uses its own fast settings).
+
+Verification round (a fourth reviewer, on the fixes):
+- Two quick clicks on Add while VLC's installer was busy could install then remove an add-on; Add is now disabled for an add-on whose install is queued.
+- Changing the post-processing level did not reach the running filter; it now does.
+- A hardware decoding device set to VLC's "none" showed as Automatic; it shows Off.
+- Typing an exact font size could swap the control under the user; Precise stays chosen.
+- A search like "a b" listed almost every option; every word must have 3+ letters.
+- Dragging an interface slider re-read MainCtx's options at every step; now once, on release.
+- A build without the post-processing filter no longer logs a missing module.
+- "Fullscreen controls sensitivity" was removed: nothing in VLC 4's interface reads its option.
 
 Not changed, with reasons:
 - Opening the Extensions page creates VLC's add-ons model, which reads the local add-ons catalog on the UI thread (VLC's own model). Only noticeable with many installed add-ons; measure on the PC.

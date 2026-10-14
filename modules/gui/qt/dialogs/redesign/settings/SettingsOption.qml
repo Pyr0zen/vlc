@@ -92,10 +92,12 @@ SettingsRow {
                                               "qt-menubar", "qt-minimal-view", "qt-pin-controls", "qt-safe-area",
                                               "qt-smooth-scrolling", "qt-titlebar", "video-on-top"].indexOf(option) >= 0
     property bool _reloadPending: false
+    // a slider being dragged: the interface reads the value once it is released
+    property bool _dragging: false
 
     function apply(v) {
         RdEffects.setOption(option, v)
-        if (_readByInterface)
+        if (_readByInterface && !_dragging)
             _reloadPending = true
     }
 
@@ -227,6 +229,11 @@ SettingsRow {
             bipolar: root.bipolar
             value: Number(root.value ?? 0) / root.valueScale
             Accessible.name: root.text
+            onPressedChanged: {
+                root._dragging = pressed
+                if (!pressed && root._readByInterface)
+                    root._reloadPending = true
+            }
             onMoved: root.applyNumber(value)
         }
     }

@@ -44,10 +44,10 @@ SettingsSection {
             _full = true
     }
 
-    // before that, a search lists the matching plugins only; one or two letters match nearly
-    // everything, so they list nothing here
+    // before that, a search lists the matching plugins only; words of one or two letters match
+    // nearly everything, so such a search lists nothing here
     readonly property string _filter: !!_page && _page.filtering ? _page.filterText.trim() : ""
-    readonly property bool _searching: _filter.length >= 3
+    readonly property bool _searching: _filter !== "" && _filter.split(/\s+/).every((w) => w.length >= 3)
 
     readonly property bool _wanted: _full || _searching
     on_WantedChanged: {
