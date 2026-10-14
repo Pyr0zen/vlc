@@ -234,7 +234,19 @@ SettingsCatalog::Catalog readCatalog()
             continue;
 
         const QString override = core ? QString() : categoryOfPlugin(object, capability);
+        // a plugin's options declared before its first set_subcategory belong to that one
         int subcat = SUBCAT_UNKNOWN;
+        if (!core)
+        {
+            for (unsigned i = 0; i < size; ++i)
+            {
+                if (config[i].i_type == CONFIG_SUBCATEGORY)
+                {
+                    subcat = config[i].value.i;
+                    break;
+                }
+            }
+        }
         // a plugin is one group, filed by its first subcategory (as VLC's preferences tree);
         // VLC's own options are grouped by their subcategory
         QString pluginCategory;
@@ -366,13 +378,17 @@ void SettingsCatalog::load()
 
 bool SettingsCatalog::exists(const QString& name) const
 {
-    return !name.isEmpty() && config_FindConfig(qtu(name)) != nullptr;
+    if (name.isEmpty())
+        return false;
+    // obsolete options are still found, without a text
+    const module_config_t* config = config_FindConfig(qtu(name));
+    return config && config->psz_text;
 }
 
 QVariantMap SettingsCatalog::describe(const QString& name) const
 {
     const module_config_t* config = config_FindConfig(qtu(name));
-    if (!config)
+    if (!config || !config->psz_text)
         return {};
 
     QVariantMap result {
@@ -523,6 +539,13 @@ void SettingsCatalog::resetAll()
     // default and saved; the interface's own state (window, library) stays
     config_ResetAll();
     config_SaveConfigFile(p_intf);
+    // the interface reads its options again (as VLC's preferences); the accent goes back to
+    // the theme's own
+    if (p_intf->p_mi)
+    {
+        p_intf->p_mi->setAccentColor(QColor());
+        p_intf->p_mi->reloadPrefs();
+    }
 #ifdef _WIN32
     setLanguage(QStringLiteral("auto"));
 #endif

@@ -23,7 +23,7 @@
 // controls 320 px wide):
 //   toggle    Toggle (ON / OFF); `checkedValue` / `uncheckedValue` for options that are not booleans
 //   dropdown  values in words (`choices`, else the ones VLC declares) - never a number code
-//   number    a value box; `scale` and `unit` show it in the user's unit (ms as "3 s")
+//   number    a value box; `valueScale` and `unit` show it in the user's unit (ms as "3 s")
 //   slider    a slider under the label's line (`from`, `to`, `step`, `labels`)
 //   text, password, file, savefile, directory (field + Browse), color (hex + swatch)
 import QtQuick
@@ -46,12 +46,12 @@ SettingsRow {
     // toggle: the values written for ON and OFF (booleans by default)
     property var checkedValue: true
     property var uncheckedValue: false
-    // number / slider: shown = value / scale (1000 shows milliseconds in seconds)
-    property real scale: 1
+    // number / slider: shown = value / valueScale (1000 shows milliseconds in seconds)
+    property real valueScale: 1
     property string unit: ""
     property int decimals: 0
-    property real from: info.min !== undefined ? info.min / scale : 0
-    property real to: info.max !== undefined ? info.max / scale : 100
+    property real from: info.min !== undefined ? info.min / valueScale : 0
+    property real to: info.max !== undefined ? info.max / valueScale : 100
     property real step: decimals > 0 ? Math.pow(10, -decimals) : 1
     property var labels: []
     // slider filled from 0 (delays)
@@ -86,13 +86,22 @@ SettingsRow {
     readonly property bool _integer: info.type === "integer"
     readonly property var _choices: choices ?? RdEffects.optionChoices(option)
 
+    // options the interface reads into MainCtx (MainCtx::loadPrefs): it reads them again once
+    // RdEffects has written the change, so they apply at once (as after VLC's preferences)
+    readonly property bool _readByInterface: ["mouse-hide-timeout", "qt-bgcone", "qt-fs-opacity", "qt-max-volume",
+                                              "qt-menubar", "qt-minimal-view", "qt-pin-controls", "qt-safe-area",
+                                              "qt-smooth-scrolling", "qt-titlebar", "video-on-top"].indexOf(option) >= 0
+    property bool _reloadPending: false
+
     function apply(v) {
         RdEffects.setOption(option, v)
+        if (_readByInterface)
+            _reloadPending = true
     }
 
     // a number typed by the user, in the option's own unit, within VLC's range
     function applyNumber(shown) {
-        let v = shown * scale
+        let v = shown * valueScale
         if (info.min !== undefined)
             v = Math.max(info.min, v)
         if (info.max !== undefined)
@@ -108,7 +117,7 @@ SettingsRow {
     }
 
     function _numberText(v) {
-        const n = Number(v ?? 0) / scale
+        const n = Number(v ?? 0) / valueScale
         const text = decimals > 0 ? n.toFixed(decimals) : String(Math.round(n))
         return unit !== "" ? text + " " + unit : text
     }
@@ -128,6 +137,17 @@ SettingsRow {
     }
     keywords: option
     shown: SettingsCatalog.exists(option)
+
+    Connections {
+        target: RdEffects
+        enabled: root._reloadPending
+
+        // RdEffects signals once the change has reached VLC's configuration
+        function onChanged() {
+            root._reloadPending = false
+            MainCtx.reloadPrefs()
+        }
+    }
 
     Loader {
         sourceComponent: {
@@ -205,7 +225,7 @@ SettingsRow {
             stepSize: root.step
             labels: root.labels
             bipolar: root.bipolar
-            value: Number(root.value ?? 0) / root.scale
+            value: Number(root.value ?? 0) / root.valueScale
             Accessible.name: root.text
             onMoved: root.applyNumber(value)
         }

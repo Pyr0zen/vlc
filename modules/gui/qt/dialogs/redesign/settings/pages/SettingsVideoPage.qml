@@ -210,33 +210,41 @@ SettingsPage {
             ]
         }
 
-        // VLC keeps a width and a height; -1 keeps the video's (or its aspect)
+        // VLC keeps a width and a height (src/misc/picture.c picture_Export): -1 keeps the
+        // video's, 0 follows the other one's proportions
         SettingsRow {
             text: qsTr("Size")
-            description: qsTr("The size of the saved picture. A width alone keeps the video's proportions.")
+            description: qsTr("The size of the saved picture. A width keeps the video's proportions.")
             keywords: "snapshot-width snapshot-height"
 
             Widgets.RdDropdown {
-                readonly property var widths: [-1, 3840, 1920, 1280, 640]
+                readonly property var widths: [3840, 1920, 1280, 640]
                 readonly property int width_: Number(root._option("snapshot-width") ?? -1)
                 readonly property int height_: Number(root._option("snapshot-height") ?? -1)
+                // -1: another size set elsewhere
+                readonly property int _index: {
+                    if (width_ < 0 && height_ < 0)
+                        return 0
+                    const i = widths.indexOf(width_)
+                    return height_ === 0 && i >= 0 ? i + 1 : -1
+                }
 
                 implicitWidth: VLCStyle.dp(320)
                 implicitHeight: VLCStyle.dp(36)
                 model: {
                     const list = [qsTr("Same as video"), qsTr("3840 wide"), qsTr("1920 wide"),
                                   qsTr("1280 wide"), qsTr("640 wide")]
-                    if (widths.indexOf(width_) < 0 || height_ > 0)
+                    if (_index < 0)
                         list.push(qsTr("%1 x %2").arg(width_).arg(height_))
                     return list
                 }
-                currentIndex: height_ > 0 || widths.indexOf(width_) < 0 ? widths.length : widths.indexOf(width_)
+                currentIndex: _index >= 0 ? _index : widths.length + 1
                 Accessible.name: qsTr("Size")
                 onActivated: (index) => {
-                    if (index >= widths.length)
+                    if (index > widths.length)
                         return
-                    RdEffects.setOption("snapshot-width", widths[index])
-                    RdEffects.setOption("snapshot-height", -1)
+                    RdEffects.setOption("snapshot-width", index === 0 ? -1 : widths[index - 1])
+                    RdEffects.setOption("snapshot-height", index === 0 ? -1 : 0)
                 }
             }
         }

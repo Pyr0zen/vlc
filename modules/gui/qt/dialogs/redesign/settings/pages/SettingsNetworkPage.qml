@@ -134,7 +134,7 @@ SettingsPage {
             SettingsOption {
                 option: "ipv4-timeout"
                 text: qsTr("Connection timeout")
-                scale: 1000
+                valueScale: 1000
                 decimals: 1
                 unit: qsTr("s")
             }

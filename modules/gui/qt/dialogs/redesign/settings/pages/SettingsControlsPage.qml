@@ -73,6 +73,7 @@ SettingsPage {
                                                         qsTr("Reset all shortcuts")))
                         return
                     const model = hotkeysModelComponent.createObject(root)
+                    model.reload()
                     model.resetAll()
                     model.save()
                     model.destroy()

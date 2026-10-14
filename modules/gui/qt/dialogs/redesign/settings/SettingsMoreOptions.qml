@@ -19,8 +19,9 @@
 // category, grouped by plugin (W6.2; video 16:03-16:30: "basic settings, scroll down, advanced
 // settings" on the same page, so no option of VLC needs the old preferences). The options come
 // from SettingsCatalog (VLC's own category of each option); the ones the page shows by name are
-// left out. Built once, in the background, when Advanced Options first opens or the dialog's
-// search first runs; the settings of a plugin are created when it is opened.
+// left out. The whole list is built once, in the background, when Advanced Options first opens;
+// before that, a search of three letters or more lists only the plugins it matches. The settings
+// of a plugin are created when it is opened.
 import QtQuick
 import QtQuick.Layouts
 
@@ -34,18 +35,29 @@ SettingsSection {
     // SettingsCatalog category ("general", "audio", ...)
     required property string category
 
-    // once built, it stays: closing Advanced Options or clearing the search must not rebuild it
-    property bool _wanted: false
-    readonly property bool _requested: !!_page && (_page.advancedExpanded || _page.filtering)
-    on_RequestedChanged: _build()
-    // the page may be created while the search runs
-    Component.onCompleted: Qt.callLater(_build)
+    // the whole list, once Advanced Options has been opened: it stays (closing it or searching
+    // must not rebuild it)
+    property bool _full: false
+    readonly property bool _expanded: !!_page && _page.advancedExpanded
+    on_ExpandedChanged: {
+        if (_expanded)
+            _full = true
+    }
 
-    function _build() {
-        if (!_requested || _wanted)
-            return
-        _wanted = true
-        SettingsCatalog.load()
+    // before that, a search lists the matching plugins only; one or two letters match nearly
+    // everything, so they list nothing here
+    readonly property string _filter: !!_page && _page.filtering ? _page.filterText.trim() : ""
+    readonly property bool _searching: _filter.length >= 3
+
+    readonly property bool _wanted: _full || _searching
+    on_WantedChanged: {
+        if (_wanted)
+            SettingsCatalog.load()
+    }
+    // the page may be created while the search runs
+    Component.onCompleted: {
+        if (_wanted)
+            SettingsCatalog.load()
     }
 
     title: qsTr("All Other Options")
@@ -63,7 +75,7 @@ SettingsSection {
         id: groupsLoader
 
         Layout.fillWidth: true
-        active: root._wanted && SettingsCatalog.ready
+        active: (root._full || root._searching) && SettingsCatalog.ready
         asynchronous: true
 
         sourceComponent: Column {
@@ -72,7 +84,8 @@ SettingsSection {
             Repeater {
                 id: groups
 
-                model: SettingsCatalog.groups(root.category)
+                model: root._full ? SettingsCatalog.groups(root.category)
+                                  : (root._searching ? SettingsCatalog.groups(root.category, root._filter) : [])
 
                 delegate: SettingsOptionGroup {
                     required property var modelData

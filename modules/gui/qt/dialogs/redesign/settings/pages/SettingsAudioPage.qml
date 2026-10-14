@@ -47,9 +47,22 @@ SettingsPage {
     readonly property string _volumeOption: _aout === "waveout" ? "waveout-volume" : "mmdevice-volume"
     readonly property bool _rememberVolume: _option("volume-save") === true
     readonly property int _eqPreset: RdEffects.values.equalizerPreset
-    // spatial audio: the room spatializer or the headphone virtualization filter
-    property string _spatialMode: _filterOn("spatializer") ? "spatializer" : "headphone_channel_mixer"
+    // spatial audio: the room spatializer or the headphone virtualization filter; the mode
+    // shown is the filter that is on, else the one last chosen here
+    readonly property var _spatialModes: ["headphone_channel_mixer", "spatializer"]
+    property string _preferredSpatialMode: "headphone_channel_mixer"
+    readonly property string _spatialMode: _filterOn("spatializer") ? "spatializer"
+                                         : _filterOn("headphone_channel_mixer") ? "headphone_channel_mixer"
+                                         : _preferredSpatialMode
     readonly property bool _spatial: _filterOn("spatializer") || _filterOn("headphone_channel_mixer")
+
+    function _setSpatial(enabled, mode) {
+        for (const m of _spatialModes) {
+            const on = enabled && m === mode
+            if (_filterOn(m) !== on)
+                RdEffects.setAudioFilterEnabled(m, on)
+        }
+    }
 
     SettingsSection {
         title: qsTr("Output")
@@ -130,7 +143,8 @@ SettingsPage {
                                 if (isNaN(percent))
                                     return
                                 RdEffects.setOption("volume-save", false)
-                                RdEffects.setOption(root._volumeOption, Math.max(0, Math.min(1.25, percent / 100)))
+                                const max = RdEffects.optionRange(root._volumeOption).max ?? 1.25
+                                RdEffects.setOption(root._volumeOption, Math.max(0, Math.min(max, percent / 100)))
                             }
                         }
                     }
@@ -142,7 +156,7 @@ SettingsPage {
         SettingsOption {
             option: "volume-step"
             text: qsTr("Volume step")
-            scale: 2.56
+            valueScale: 2.56
             unit: "%"
         }
     }
@@ -152,6 +166,7 @@ SettingsPage {
 
         FilterToggle {
             module: "normvol"
+            description: qsTr("Keeps the loudness even, so quiet and loud parts end up closer to the same level.")
             text: qsTr("Normalize loudness")
         }
 
@@ -241,7 +256,7 @@ SettingsPage {
             Widgets.RdToggle {
                 checked: root._spatial
                 Accessible.name: qsTr("Spatial audio")
-                onToggled: RdEffects.setAudioFilterEnabled(root._spatialMode, checked)
+                onToggled: root._setSpatial(checked, root._spatialMode)
             }
         }
 
@@ -251,33 +266,28 @@ SettingsPage {
             keywords: "spatializer headphone"
 
             Widgets.RdDropdown {
-                readonly property var modes: ["headphone_channel_mixer", "spatializer"]
-
                 implicitWidth: VLCStyle.dp(320)
                 implicitHeight: VLCStyle.dp(36)
                 model: [qsTr("Headphone virtualization"), qsTr("Room")]
-                currentIndex: modes.indexOf(root._spatialMode)
+                currentIndex: root._spatialModes.indexOf(root._spatialMode)
                 Accessible.name: qsTr("Spatial audio mode")
                 onActivated: (index) => {
-                    const mode = modes[index]
-                    if (mode === root._spatialMode)
-                        return
-                    if (root._spatial) {
-                        RdEffects.setAudioFilterEnabled(root._spatialMode, false)
-                        RdEffects.setAudioFilterEnabled(mode, true)
-                    }
-                    root._spatialMode = mode
+                    root._preferredSpatialMode = root._spatialModes[index]
+                    if (root._spatial)
+                        root._setSpatial(true, root._preferredSpatialMode)
                 }
             }
         }
 
         FilterToggle {
             module: "stereo_widen"
+            description: qsTr("Makes the stereo sound wider, as if the speakers were further apart.")
             text: qsTr("Stereo widening")
         }
 
         FilterToggle {
             module: "compressor"
+            description: qsTr("Narrows the gap between the quiet and the loud parts, so dialogue stays audible without loud scenes being too loud.")
             text: qsTr("Compressor")
         }
 
@@ -307,11 +317,13 @@ SettingsPage {
 
         FilterToggle {
             module: "chorus_flanger"
+            description: qsTr("Adds a chorus or flanger effect: copies of the sound, slightly delayed.")
             text: qsTr("Chorus/flanger")
         }
 
         FilterToggle {
             module: "karaoke"
+            description: qsTr("Removes the voice from songs where it is mixed in the center.")
             text: qsTr("Karaoke")
         }
     }
@@ -327,7 +339,7 @@ SettingsPage {
         SettingsOption {
             option: "audio-desync"
             text: qsTr("Audio delay")
-            scale: 1000
+            valueScale: 1000
             decimals: 2
             unit: qsTr("s")
         }
@@ -421,7 +433,6 @@ SettingsPage {
         property string module
 
         keywords: module
-        description: RdEffects.optionDescription(module)
 
         Widgets.RdToggle {
             checked: RdEffects.values[RdEffects.audioFilterKey(filterRow.module)] === true

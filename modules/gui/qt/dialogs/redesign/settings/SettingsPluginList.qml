@@ -135,16 +135,16 @@ SettingsSection {
                     text: modelData.score
                 }
             }
+        }
 
-            Text {
-                anchors.centerIn: parent
-                visible: list.count === 0
-                text: SettingsCatalog.ready ? qsTr("No plugin matches \"%1\"").arg(filterField.text)
-                                            : qsTr("Loading the plugins...")
-                font.family: VLCStyle.rd_fontFamily
-                font.pixelSize: VLCStyle.rd_fontSize_label
-                color: VLCStyle.palette.rdFgA3
-            }
+        Text {
+            anchors.centerIn: list
+            visible: list.count === 0
+            text: SettingsCatalog.ready ? qsTr("No plugin matches \"%1\"").arg(filterField.text)
+                                        : qsTr("Loading the plugins...")
+            font.family: VLCStyle.rd_fontFamily
+            font.pixelSize: VLCStyle.rd_fontSize_label
+            color: VLCStyle.palette.rdFgA3
         }
     }
 

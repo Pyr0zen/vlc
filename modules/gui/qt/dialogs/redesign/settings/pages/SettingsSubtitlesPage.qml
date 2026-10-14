@@ -113,7 +113,7 @@ SettingsPage {
             description: qsTr("Relative sizes are in words, from Smaller to Larger. Precise sets the exact size, in percent of VLC's normal size.")
             keywords: "sub-text-scale font size relative precise"
 
-            Widgets.RdSegmented {
+            SettingsSegmented {
                 implicitWidth: VLCStyle.dp(320)
                 implicitHeight: VLCStyle.dp(36)
                 model: [qsTr("Relative"), qsTr("Precise")]
@@ -135,24 +135,35 @@ SettingsPage {
             description: RdEffects.optionDescription("sub-text-scale")
             keywords: "sub-text-scale font size"
 
-            Widgets.RdDropdown {
-                visible: !root._precise
-                implicitWidth: VLCStyle.dp(320)
-                implicitHeight: VLCStyle.dp(36)
-                model: root._sizes.map((s) => s.text)
-                currentIndex: root._sizes.findIndex((s) => s.value === root._scale)
-                Accessible.name: qsTr("Font size")
-                onActivated: (index) => RdEffects.setSubtitleTextScale(root._sizes[index].value)
+            // one control at a time, so the row's control slot is the size of the shown one
+            Loader {
+                sourceComponent: root._precise ? preciseSize : relativeSize
             }
 
-            Widgets.RdValueBox {
-                visible: root._precise
-                text: root._scale + "%"
-                Accessible.name: qsTr("Font size")
-                onEdited: (text) => {
-                    const v = parseInt(text)
-                    if (!isNaN(v))
-                        RdEffects.setSubtitleTextScale(Math.max(10, Math.min(500, v)))
+            Component {
+                id: relativeSize
+
+                Widgets.RdDropdown {
+                    implicitWidth: VLCStyle.dp(320)
+                    implicitHeight: VLCStyle.dp(36)
+                    model: root._sizes.map((s) => s.text)
+                    currentIndex: root._sizes.findIndex((s) => s.value === root._scale)
+                    Accessible.name: qsTr("Font size")
+                    onActivated: (index) => RdEffects.setSubtitleTextScale(root._sizes[index].value)
+                }
+            }
+
+            Component {
+                id: preciseSize
+
+                Widgets.RdValueBox {
+                    text: root._scale + "%"
+                    Accessible.name: qsTr("Font size")
+                    onEdited: (text) => {
+                        const v = parseInt(text)
+                        if (!isNaN(v))
+                            RdEffects.setSubtitleTextScale(Math.max(10, Math.min(500, v)))
+                    }
                 }
             }
         }
@@ -172,7 +183,7 @@ SettingsPage {
             option: "freetype-opacity"
             text: qsTr("Text opacity")
             kind: "slider"
-            scale: 2.55
+            valueScale: 2.55
             from: 0
             to: 100
             step: 1
@@ -243,7 +254,7 @@ SettingsPage {
             option: "freetype-background-opacity"
             text: qsTr("Background opacity")
             kind: "slider"
-            scale: 2.55
+            valueScale: 2.55
             from: 0
             to: 100
             step: 1
@@ -272,7 +283,7 @@ SettingsPage {
             text: qsTr("Subtitle delay")
             kind: "slider"
             bipolar: true
-            scale: 10
+            valueScale: 10
             from: -5
             to: 5
             step: 0.1
@@ -298,7 +309,7 @@ SettingsPage {
             option: "video-title-timeout"
             text: qsTr("Show filename for")
             kind: "slider"
-            scale: 1000
+            valueScale: 1000
             from: 1
             to: 10
             step: 0.5
