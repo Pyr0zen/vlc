@@ -85,46 +85,87 @@ FocusScope {
                                                && (_controlsUnderVideo || _showBothBars || _mouseNearBottom
                                                    || (playerToolbarVisibilityFSM.isLocked && !_mouseNearTop))
 
-    // cursor height inside the player, -1 outside. Hover and mouse move events do not reach Qt
-    // Quick while the cursor is over the native video, so the cursor is read ten times a second.
+    // cursor height inside the player, -1 outside, from mouse events (no polling): the hover
+    // handler below sees the moves over the bars and panels; the video surface accepts its hover
+    // events, so the handler is not hovered over the video, where the surface reports the moves
+    // as in upstream VLC and its own hover handler tells when the cursor is over it
+    // (_videoHovered). Hover events reach Qt Quick while another app is active, so a window also
+    // shows its bars then.
     property real _cursorY: -1
+    property bool _videoHovered: false
 
-    Timer {
-        interval: 100
-        repeat: true
-        triggeredOnStart: true
-        // a window also shows its bars when the mouse moves over it while another app is active
-        running: !rootPlayer._controlsUnderVideo && rootPlayer.visible && MainCtx.hasEmbededVideo
-                 && MainCtx.intfMainWindow.visible && MainCtx.intfMainWindow.visibility !== Window.Minimized
-                 && (rootPlayer._windowed || Qt.application.state === Qt.ApplicationActive)
+    // the cursor left the player only when neither the player nor the video is hovered (moving
+    // from a bar onto the video unhovers the player handler)
+    function _cursorMaybeLeft() {
+        if (!playerHover.hovered && !_videoHovered)
+            _cursorY = -1
+    }
 
-        // last cursor position in screen coordinates (window moves and fullscreen switches are
-        // not mouse moves); invalid until the first poll after a start
-        property point _last
-        property bool _primed: false
+    HoverHandler {
+        id: playerHover
 
-        onTriggered: {
-            const p = MainCtx.cursorPosition(rootPlayer)
-            const inside = p.x >= 0 && p.y >= 0 && p.x <= rootPlayer.width && p.y <= rootPlayer.height
-            rootPlayer._cursorY = inside ? p.y : -1
+        // only the video player hides its bars and cursor
+        enabled: MainCtx.hasEmbededVideo
 
-            // mouse moves over the native video do not reach the toolbar FSM either: report them
-            // (ends the keyboard "show both bars" mode and shows the auto-hidden cursor again)
-            const g = rootPlayer.mapToGlobal(p.x, p.y)
-            // (with a tolerance: the round trip through the window's scaled coordinates is not exact)
-            if (_primed && inside && (Math.abs(g.x - _last.x) > 0.5 || Math.abs(g.y - _last.y) > 0.5)) {
-                if (Player.isInteractive)
-                    interactiveAutoHideTimer.restart()
-                else
-                    playerToolbarVisibilityFSM.mouseMove()
-            }
-            _last = g
-            _primed = true
+        onPointChanged: {
+            if (hovered)
+                cursorTracker.track(point.scenePosition.x, point.scenePosition.y)
         }
-        onRunningChanged: {
-            _primed = false
-            if (!running)
+        onHoveredChanged: {
+            if (!hovered)
+                rootPlayer._cursorMaybeLeft()
+        }
+        // without video nothing is tracked
+        onEnabledChanged: {
+            if (!enabled)
                 rootPlayer._cursorY = -1
+        }
+    }
+
+    QtObject {
+        id: cursorTracker
+
+        // last cursor position in scene and in screen coordinates
+        property bool valid: false
+        property real sceneX: 0
+        property real sceneY: 0
+        property real globalX: 0
+        property real globalY: 0
+
+        // Window moves, resizes and fullscreen switches move the player under a still cursor and
+        // cause hover events without a mouse move: they do not count as moves (they would end the
+        // keyboard mode and show the bars).
+        function track(x, y) {
+            const tolerance = 0.01
+            let p
+            if (valid && Math.abs(x - sceneX) < tolerance && Math.abs(y - sceneY) < tolerance) {
+                // same position in the window (Qt's hover check after the scene changed): the
+                // cursor is still where it was on the screen
+                p = rootPlayer.mapFromGlobal(globalX, globalY)
+            } else {
+                p = rootPlayer.mapFromItem(null, x, y)
+                const g = rootPlayer.mapToGlobal(p.x, p.y)
+                // the window moved under a still cursor if only the position in the window changed
+                const moved = !valid || Math.abs(g.x - globalX) >= tolerance
+                                     || Math.abs(g.y - globalY) >= tolerance
+                valid = true
+                sceneX = x
+                sceneY = y
+                globalX = g.x
+                globalY = g.y
+                // (ends the keyboard "show both bars" mode and shows the auto-hidden cursor again)
+                if (moved && inside(p)) {
+                    if (Player.isInteractive)
+                        interactiveAutoHideTimer.restart()
+                    else
+                        playerToolbarVisibilityFSM.mouseMove()
+                }
+            }
+            rootPlayer._cursorY = inside(p) ? p.y : -1
+        }
+
+        function inside(p) {
+            return p.x >= 0 && p.y >= 0 && p.x <= rootPlayer.width && p.y <= rootPlayer.height
         }
     }
 
@@ -376,11 +417,31 @@ FocusScope {
                             playerToolbarVisibilityFSM.mouseMove();
                     }
 
+                    // redesign: moves go through the player's cursor tracking, which tells mouse
+                    // moves from window moves and also gives the cursor height for the
+                    // fullscreen bar zones; the surface reports device pixels
+                    function onMouseMove(x, y) {
+                        const dpr = MainCtx.effectiveDevicePixelRatio(Window.window) || 1.0
+                        const p = videoSurface.mapToItem(null, x / dpr, y / dpr)
+                        cursorTracker.track(p.x, p.y)
+                    }
+
                     Component.onCompleted: {
-                        mouseMoved.connect(videoSurface.onMouseEvent)
+                        mouseMoved.connect(videoSurface.onMouseMove)
                         mousePressed.connect(videoSurface.onMouseEvent)
                         mouseReleased.connect(videoSurface.onMouseEvent)
                         mouseDblClicked.connect(videoSurface.onMouseEvent)
+                    }
+
+                    Component.onDestruction: rootPlayer._videoHovered = false
+
+                    // redesign: tells the player when the cursor is over the video (see _cursorY)
+                    HoverHandler {
+                        onHoveredChanged: {
+                            rootPlayer._videoHovered = hovered
+                            if (!hovered)
+                                rootPlayer._cursorMaybeLeft()
+                        }
                     }
 
                     Binding on cursorShape {
@@ -414,7 +475,7 @@ FocusScope {
                     anchors.right: parent.right
 
                     opacity: topBar.opacity
-                    visible: rootPlayer.displayFadeRectangles && !topBarAcrylicBg.visible
+                    visible: rootPlayer.displayFadeRectangles
 
                     gradient: Gradient {
                         GradientStop { position: 0; color: Qt.rgba(0, 0, 0, .8) }
@@ -1028,14 +1089,16 @@ FocusScope {
     // bars hidden a thin frame stays all around, video 3:50 and 5:28). Drawn above the video, below
     // the bars (W3.7).
     // Qt is built without Canvas and Shapes, so the frame is the thick border of a rounded
-    // rectangle: its inner edge is the rounded video opening, its outer edge lies outside the window.
+    // rectangle: its inner edge is the rounded video opening, its outer edge lies outside the
+    // player. The opening follows the bars' fade, so the frame is split into a top and a bottom
+    // half, each a fixed-size rectangle that only moves with its edge (no geometry is rebuilt
+    // during a fade) and is clipped to its half.
     Item {
         id: videoFrame
 
         anchors.fill: parent
         visible: MainCtx.hasEmbededVideo && (MainCtx.intfMainWindow.visibility !== Window.FullScreen)
         enabled: false
-        clip: true
 
         readonly property real inset: VLCStyle.dp(6, VLCStyle.scale)
         readonly property real innerRadius: VLCStyle.dp(8, VLCStyle.scale)
@@ -1044,24 +1107,46 @@ FocusScope {
         readonly property real topEdge: inset + (topBar.height - inset) * (topBar.visible ? topBar.opacity : 0)
         readonly property real bottomEdge: height - inset
                                            - (controlBar.height - inset) * (controlBar.visible ? controlBar.opacity : 0)
+        // fixed while the bars fade (whole pixels: a rectangle's border width is pixel aligned)
+        readonly property real frameWidth: Math.ceil(2 * Math.max(topBar.height, controlBar.height)
+                                                     + 2 * innerRadius + VLCStyle.dp(10, VLCStyle.scale))
+        readonly property real openingWidth: Math.max(0, width - 2 * inset)
+        // smaller corners when the opening is too small for them
+        readonly property real cornerRadius: Math.min(innerRadius, openingWidth / 2,
+                                                      Math.max(0, bottomEdge - topEdge) / 2)
+        // the halves meet in the middle; in a tiny window, inside the opening (or where it closed)
+        readonly property real split: Math.min(Math.max(height / 2, topEdge), bottomEdge)
 
-        Rectangle {
-            // wide enough that the outer rounded corners stay outside the window
-            readonly property real frameWidth: 2 * Math.max(videoFrame.topEdge, videoFrame.height - videoFrame.bottomEdge)
-                                               + 2 * videoFrame.innerRadius + VLCStyle.dp(10, VLCStyle.scale)
-            readonly property real openingWidth: Math.max(0, videoFrame.width - 2 * videoFrame.inset)
-            readonly property real openingHeight: Math.max(0, videoFrame.bottomEdge - videoFrame.topEdge)
+        Repeater {
+            model: 2 // top half, bottom half
 
-            x: videoFrame.inset - frameWidth
-            y: videoFrame.topEdge - frameWidth
-            width: openingWidth + 2 * frameWidth
-            height: openingHeight + 2 * frameWidth
+            delegate: Item {
+                id: frameHalf
 
-            color: "transparent"
-            border.width: frameWidth
-            border.color: VLCStyle.palette.rdBgA3
-            radius: frameWidth + Math.min(videoFrame.innerRadius, openingWidth / 2, openingHeight / 2)
-            antialiasing: true
+                required property int index
+                readonly property bool atTop: index === 0
+
+                y: atTop ? 0 : videoFrame.split
+                width: videoFrame.width
+                height: atTop ? videoFrame.split : videoFrame.height - videoFrame.split
+                clip: true
+
+                // its opening is as tall as the player, so only the edge of this half shows
+                Rectangle {
+                    x: videoFrame.inset - videoFrame.frameWidth
+                    y: (frameHalf.atTop ? videoFrame.topEdge
+                                        : videoFrame.bottomEdge - videoFrame.height - frameHalf.y)
+                       - videoFrame.frameWidth
+                    width: videoFrame.openingWidth + 2 * videoFrame.frameWidth
+                    height: videoFrame.height + 2 * videoFrame.frameWidth
+
+                    color: "transparent"
+                    border.width: videoFrame.frameWidth
+                    border.color: VLCStyle.palette.rdBgA3
+                    radius: videoFrame.frameWidth + videoFrame.cornerRadius
+                    antialiasing: true
+                }
+            }
         }
     }
 
@@ -1130,24 +1215,10 @@ FocusScope {
             MainCtx.playerView = false
         }
 
+        // redesign: no acrylic background behind the top bar, it paints its own opaque BG/A3
+
         FadeControllerStateGroup {
             target: topBar
-        }
-
-        // TODO: Make TopBar a Control and use background
-        Widgets.AcrylicBackground {
-            id: topBarAcrylicBg
-
-            z: -1
-
-            anchors.fill: parent
-
-            // redesign: same background as the control bar (BG/A3, 95% over the video in fullscreen)
-            opacity: (MainCtx.hasEmbededVideo && !rootPlayer._controlsUnderVideo) ? 0.95 : 1.0
-
-            tintColor: Qt.alpha(VLCStyle.palette.rdBgA3Transparent, 1.0)
-
-            visible: rootPlayer._windowed || !MainCtx.hasEmbededVideo || !rootPlayer.displayFadeRectangles
         }
     }
 
