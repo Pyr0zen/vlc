@@ -1104,8 +1104,9 @@ FocusScope {
         visible: MainCtx.hasEmbededVideo && (MainCtx.intfMainWindow.visibility !== Window.FullScreen)
         enabled: false
 
-        readonly property real inset: VLCStyle.dp(6, VLCStyle.scale)
-        readonly property real innerRadius: VLCStyle.dp(8, VLCStyle.scale)
+        // Figma "Frame 312": 10 px of BG/A3 frame, visible corner about 9 px (visual audit A7, A8)
+        readonly property real inset: VLCStyle.dp(10, VLCStyle.scale)
+        readonly property real innerRadius: VLCStyle.dp(9, VLCStyle.scale)
         // the opening follows the bars' fade, so it grows and shrinks with them instead of
         // jumping once a bar has faded out (bars auto-hide over the video, Decision 30)
         readonly property real topEdge: inset + (topBar.height - inset) * (topBar.visible ? topBar.opacity : 0)
@@ -1704,7 +1705,7 @@ FocusScope {
         anchors.right: parent.right
         anchors.rightMargin: VLCStyle.dp(20, VLCStyle.scale)
         anchors.bottom: controlBar.top
-        anchors.bottomMargin: VLCStyle.dp(12, VLCStyle.scale)
+        anchors.bottomMargin: VLCStyle.dp(20, VLCStyle.scale)
         z: 2
 
         open: RdPanels.tracksOpen
@@ -1719,16 +1720,16 @@ FocusScope {
     }
 
     // settings sidebar (gear) and queue sidebar (list button): inside the video area at the right,
-    // from under the top bar to over the control bar (video 7:12, 9:29; Figma 400 wide)
+    // 20 px from both bars and the right edge (video 7:12, 9:29; Figma "queue" 491:1781 400 wide)
     PanelLoader {
         id: settingsPanelLoader
 
         anchors.right: parent.right
         anchors.rightMargin: VLCStyle.dp(20, VLCStyle.scale)
         anchors.top: topBar.bottom
-        anchors.topMargin: VLCStyle.dp(10, VLCStyle.scale)
+        anchors.topMargin: VLCStyle.dp(20, VLCStyle.scale)
         anchors.bottom: controlBar.top
-        anchors.bottomMargin: VLCStyle.dp(12, VLCStyle.scale)
+        anchors.bottomMargin: VLCStyle.dp(20, VLCStyle.scale)
         width: VLCStyle.rd_sidePanelWidth
         z: 2
 
@@ -1746,9 +1747,9 @@ FocusScope {
         anchors.right: parent.right
         anchors.rightMargin: VLCStyle.dp(20, VLCStyle.scale)
         anchors.top: topBar.bottom
-        anchors.topMargin: VLCStyle.dp(10, VLCStyle.scale)
+        anchors.topMargin: VLCStyle.dp(20, VLCStyle.scale)
         anchors.bottom: controlBar.top
-        anchors.bottomMargin: VLCStyle.dp(12, VLCStyle.scale)
+        anchors.bottomMargin: VLCStyle.dp(20, VLCStyle.scale)
         width: VLCStyle.rd_sidePanelWidth
         z: 2
 
