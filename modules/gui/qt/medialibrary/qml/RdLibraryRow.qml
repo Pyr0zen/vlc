@@ -163,10 +163,11 @@ T.AbstractButton {
         id: dragHandler
 
         enabled: row.dragUrls.length > 0
-        // as VLC's own list and grid items: touch flicks the list, the mouse drags; lists may
-        // take the gesture over
+        // as VLC's own list and grid items: touch flicks the list, the mouse drags; the drag
+        // takes the press over from the row's button (an item), lists may take it over again
         acceptedDevices: PointerDevice.AllDevices & ~(PointerDevice.TouchScreen)
-        grabPermissions: PointerHandler.CanTakeOverFromHandlersOfDifferentType | PointerHandler.ApprovesTakeOverByAnything
+        grabPermissions: PointerHandler.CanTakeOverFromItems | PointerHandler.CanTakeOverFromHandlersOfDifferentType
+                         | PointerHandler.ApprovesTakeOverByAnything
         target: null
 
         onCentroidChanged: {
