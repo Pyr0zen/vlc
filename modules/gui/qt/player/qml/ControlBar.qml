@@ -103,8 +103,10 @@ T.Pane {
 
     TextMetrics {
         id: timeTextMetrics
+        // redesign: Figma "Current Time" / "Duration": Inter 400 15
         font.pixelSize: (textPosition === ControlBar.TimeTextPosition.LeftRightSlider) ? VLCStyle.fontSize_small
-                                                                                       : VLCStyle.fontSize_normal
+                      : (textPosition === ControlBar.TimeTextPosition.Inline) ? VLCStyle.rd_fontSize_time
+                                                                               : VLCStyle.fontSize_normal
         text: {
             // This text metrics is used for both the time and length, as we want them to have the same width.
             // Length might not be reported in some cases, for that reason we should check both and use the bigger one.
@@ -448,6 +450,7 @@ T.Pane {
             middleItem: (textPosition === ControlBar.TimeTextPosition.Inline) ? inlineSeekRow : null
             spacing: (textPosition === ControlBar.TimeTextPosition.Inline) ? VLCStyle.dp(8, VLCStyle.scale) : VLCStyle.margin_normal
             layoutSpacing: (textPosition === ControlBar.TimeTextPosition.Inline) ? VLCStyle.rd_controlBarSpacing : VLCStyle.margin_xxlarge
+            figmaGaps: textPosition === ControlBar.TimeTextPosition.Inline
 
             implicitHeight: (textPosition === ControlBar.TimeTextPosition.Inline) ? VLCStyle.rd_controlBarHeight - 2 * VLCStyle.rd_controlBarPaddingV
                           : MainCtx.pinVideoControls ? VLCStyle.controlLayoutHeightPinned
