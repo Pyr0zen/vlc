@@ -110,12 +110,29 @@ RdSidePanel {
         }
 
         ColumnLayout {
+            id: queueList
+
             Layout.fillWidth: true
             Layout.leftMargin: VLCStyle.dp(20)
             Layout.rightMargin: VLCStyle.dp(20)
             spacing: VLCStyle.dp(12)
 
+            // RdQueueDropArea inserts at the row under the drop point (ListView interface): the
+            // row whose upper half holds the point, -1 below the last row (appends)
+            readonly property Item contentItem: queueList
+
+            function indexAt(px, py) {
+                for (let i = 0; i < queueRows.count; ++i) {
+                    const row = queueRows.itemAt(i)
+                    if (row && py < row.y + row.height / 2)
+                        return i
+                }
+                return -1
+            }
+
             Repeater {
+                id: queueRows
+
                 model: queueModel
 
                 // a click selects the row (for "remove"), a double click plays it; the handle
@@ -172,6 +189,15 @@ RdSidePanel {
                 }
             }
         }
+    }
+
+    // library rows and files dropped on the queue join it where they are dropped (video
+    // 11:44-11:49, W5.9)
+    RdQueueDropArea {
+        anchors.fill: parent
+        z: 1
+        enabled: queuePage.active
+        view: queueList
     }
 
     /* Bookmarks */
