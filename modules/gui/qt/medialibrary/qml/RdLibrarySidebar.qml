@@ -78,7 +78,8 @@ FocusScope {
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         width: VLCStyle.rd_libraryPanelWidth
-        color: VLCStyle.palette.rdBgB1Transparent
+        // opaque: it slides over the native video (Figma's 95 % assumes a background blur)
+        color: Qt.alpha(VLCStyle.palette.rdBgB1Transparent, 1.0)
 
         RdLibraryHeader {
             id: header

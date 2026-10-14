@@ -68,7 +68,7 @@ FocusScope {
 
     // redesign: the compact library docked on the left between the bars (video 11:37-11:59,
     // P5-23 / P5-25 / F-16; Figma Player.png): the top bar's sidebar toggle and folder chip open
-    // and close it with the Figma smart animate "slow" (208 ms), the video area moves to its
+    // and close it with the Figma smart animate "slow" (208 ms), the video area sits to its
     // right. Without the media library the toggle opens VLC's own library view instead.
     readonly property bool _libraryShown: MainCtx.mediaLibraryAvailable && RdPanels.libraryOpen
                                           && !RdPanels.uiHidden
@@ -82,6 +82,10 @@ FocusScope {
     }
     readonly property real _libraryFullWidth: VLCStyle.rd_libraryRailWidth + VLCStyle.rd_libraryPanelWidth
     readonly property real _libraryWidth: _libraryFullWidth * _libraryProgress
+    // left edge of the video area. The library slides over the video, which takes its new size
+    // once, when the opening ends or the closing starts: the native video surface is resized
+    // once instead of on every frame of the slide (performance first)
+    readonly property real _videoInset: (_libraryShown && _libraryProgress >= 1) ? _libraryFullWidth : 0
     // the library is built on its first opening and then kept, so it reopens within a frame
     property bool _libraryActivated: false
 
@@ -382,7 +386,7 @@ FocusScope {
         anchors {
             left: parent.left
             // the video area starts right of the compact library
-            leftMargin: rootPlayer._libraryWidth
+            leftMargin: rootPlayer._videoInset
             right: parent.right
             top: (MainCtx.hasEmbededVideo && rootPlayer._controlsUnderVideo) ? topBar.bottom : parent.top
             bottom: (MainCtx.hasEmbededVideo && rootPlayer._controlsUnderVideo) ? controlBar.top : parent.bottom
@@ -1167,7 +1171,7 @@ FocusScope {
         anchors.fill: parent
         // next to the compact library the opening starts at the library's edge (Figma
         // Player.png: no frame between the library and the video)
-        anchors.leftMargin: Math.max(0, rootPlayer._libraryWidth - inset * rootPlayer._libraryProgress)
+        anchors.leftMargin: rootPlayer._videoInset > 0 ? rootPlayer._videoInset - inset : 0
         visible: MainCtx.hasEmbededVideo && (MainCtx.intfMainWindow.visibility !== Window.FullScreen)
         enabled: false
 
@@ -1222,7 +1226,8 @@ FocusScope {
     }
 
     // redesign: the compact library (RdLibrarySidebar, 427 px: rail 50 + panel 377) between the
-    // top bar and the control bar; it slides in from the left edge while the video area moves
+    // top bar and the control bar; it slides in from the left edge over the video (opaque: the
+    // video is a native surface under the scene)
     Item {
         id: libraryHost
 
@@ -1821,13 +1826,13 @@ FocusScope {
 
         anchors.horizontalCenter: parent.horizontalCenter
         // centered over the video area, right of the compact library
-        anchors.horizontalCenterOffset: rootPlayer._libraryWidth / 2
+        anchors.horizontalCenterOffset: rootPlayer._videoInset / 2
         anchors.bottom: controlBar.top
         anchors.bottomMargin: VLCStyle.margin_small
         z: 2
 
         maxWidth: Math.min(VLCStyle.dp(552, VLCStyle.scale),
-                           rootPlayer.width - rootPlayer._libraryWidth - 2 * VLCStyle.margin_normal)
+                           rootPlayer.width - rootPlayer._videoInset - 2 * VLCStyle.margin_normal)
 
         Navigation.parentItem: rootPlayer
 
