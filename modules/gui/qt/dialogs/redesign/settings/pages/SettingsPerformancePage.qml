@@ -80,8 +80,9 @@ SettingsPage {
                 implicitWidth: VLCStyle.dp(320)
                 implicitHeight: VLCStyle.dp(36)
                 model: entries.map((e) => e.text)
-                currentIndex: !_enabled ? entries.length - 1
-                                        : Math.max(0, entries.findIndex((e) => e.device === _device))
+                // "none" (VLC's own Disable) is off too
+                currentIndex: !_enabled || _device === "none" ? entries.length - 1
+                                                              : Math.max(0, entries.findIndex((e) => e.device === _device))
                 Accessible.name: qsTr("Hardware-accelerated decoding")
                 onActivated: (index) => {
                     const device = entries[index].device
@@ -101,7 +102,9 @@ SettingsPage {
             shown: SettingsCatalog.exists("postproc-q")
 
             Widgets.RdDropdown {
-                readonly property bool _on: RdEffects.values[RdEffects.videoFilterKey("postproc")] === true
+                // only asked when the filter exists (VLC logs a missing filter module)
+                readonly property bool _on: SettingsCatalog.exists("postproc-q")
+                                            && RdEffects.values[RdEffects.videoFilterKey("postproc")] === true
                 readonly property int _quality: Number(root._option("postproc-q") ?? 6)
                 readonly property var levels: [qsTr("Off"), qsTr("Lowest"), qsTr("Low"), qsTr("Medium"),
                                                qsTr("High"), qsTr("Very high"), qsTr("Highest")]
@@ -112,8 +115,9 @@ SettingsPage {
                 currentIndex: _on ? Math.max(1, Math.min(6, _quality)) : 0
                 Accessible.name: qsTr("Video post-processing")
                 onActivated: (index) => {
+                    // also the running filter's quality
                     if (index > 0)
-                        RdEffects.setOption("postproc-q", index)
+                        RdEffects.setVideoValue("postproc-q", index)
                     if (RdEffects.videoFilterEnabled("postproc") !== (index > 0))
                         RdEffects.setVideoFilterEnabled("postproc", index > 0)
                 }

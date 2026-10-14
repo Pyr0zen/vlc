@@ -50,8 +50,10 @@ SettingsPage {
         { value: 160, text: qsTr("Larger") }
     ]
     readonly property int _scale: Number(RdEffects.values.subtitleTextScale ?? 100)
-    // "Precise" shows the exact value; a value without a word opens on it
-    property bool _precise: !_sizes.some((s) => s.value === _scale)
+    // "Precise" shows the exact value; a value without a word opens on it (decided once, so
+    // typing an exact value never swaps the control under the user)
+    property bool _precise: false
+    Component.onCompleted: _precise = !_sizes.some((s) => s.value === _scale)
 
     SettingsSection {
         title: qsTr("Tracks & Languages")
@@ -161,8 +163,10 @@ SettingsPage {
                     Accessible.name: qsTr("Font size")
                     onEdited: (text) => {
                         const v = parseInt(text)
-                        if (!isNaN(v))
-                            RdEffects.setSubtitleTextScale(Math.max(10, Math.min(500, v)))
+                        if (isNaN(v))
+                            return
+                        root._precise = true
+                        RdEffects.setSubtitleTextScale(Math.max(10, Math.min(500, v)))
                     }
                 }
             }
