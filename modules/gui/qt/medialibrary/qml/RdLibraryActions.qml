@@ -124,13 +124,13 @@ QtObject {
         DialogsProvider.mediaInfoDialog(item.id)
     }
 
-    // a folder of `category` picked by the user; the library opens it once it is scanned
     // the app's one Open Network Stream dialog (W6.4); with a Playlist Name it saves a stream
     // list under Network (RdStreamListSaver)
     function openNetworkStream() {
         DialogsProvider.openNetDialog()
     }
 
+    // a folder of `category` picked by the user; the library opens it once it is scanned
     function addFolder(category) {
         const url = RdLibraryStore.pickFolder(qsTr("Add Folder"))
         if (url.toString() === "")

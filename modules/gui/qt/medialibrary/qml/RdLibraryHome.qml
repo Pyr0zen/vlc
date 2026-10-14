@@ -308,7 +308,6 @@ FocusScope {
         return (item.kind === "media" || item.kind === "stream") && item.mrl ? [item.mrl] : []
     }
 
-    // length of the deepest folder of `folders` that holds `mrl` (0: none)
     // the category of a Home row (RdLibraryNav.itemCategory)
     function categoryOf(item) {
         return RdLibraryNav.itemCategory(item)

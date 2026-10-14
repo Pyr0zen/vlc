@@ -152,7 +152,8 @@ FocusScope {
                 return
             const crumbs = result ? result.crumbs : []
             if (crumbs.length === 0 || RdLibraryNav.mrlKey(crumbs[crumbs.length - 1].mrl) !== RdLibraryNav.mrlKey(mrl)) {
-                if (last === true)
+                // (another scan may still run: keep waiting for it)
+                if (last === true && !MediaLib.discoveryPending)
                     RdLibraryNav.pendingFolderMrl = ""
                 return
             }

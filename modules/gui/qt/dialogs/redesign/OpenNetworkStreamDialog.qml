@@ -18,8 +18,9 @@
 
 // redesign (W6.4, video 13:07-13:20, Figma "Open network stream" 6216:13614):
 // modal dialog over the dimmed window. "Network URL" takes one link per line;
-// "Playlist Name (optional)" saves the links as a named media library playlist
-// instead of playing them (shown only when the media library is available).
+// "Playlist Name (optional)" saves the links as stream lists under the library's
+// Network and shows them there (RdStreamListSaver, P6-14) instead of playing them
+// (shown only when the media library is available).
 // Opened by DialogsProvider.openNetDialog() through showOpenNetworkStreamDialog().
 import QtQuick
 import QtQuick.Templates as T

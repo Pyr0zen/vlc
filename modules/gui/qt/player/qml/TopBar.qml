@@ -64,6 +64,7 @@ FocusScope{
     // (MainDisplay.qml, Figma Player-3.png) has only the cone, "...", the title and the window
     // buttons
     property bool showLibraryButtons: true
+    property string accessibleName: qsTr("Player topbar")
 
     readonly property ColorContext colorContext: ColorContext {
         id: theme
@@ -96,7 +97,7 @@ FocusScope{
     implicitHeight: topMargin + VLCStyle.rd_topBarHeight
 
     Accessible.role: Accessible.ToolBar
-    Accessible.name: qsTr("Player topbar")
+    Accessible.name: accessibleName
     AccessibleCompat.id: "playerTopBar"
 
     // Children

@@ -207,7 +207,8 @@ Rectangle {
             const crumbs = result ? result.crumbs : []
             const last = crumbs.length > 0 ? crumbs[crumbs.length - 1] : null
             if (!last || RdLibraryNav.mrlKey(last.mrl) !== RdLibraryNav.mrlKey(mrl)) {
-                if (lastTry)
+                // (another scan may still run: keep waiting for it)
+                if (lastTry && !MediaLib.discoveryPending)
                     rail._folderToPin = ""
                 return
             }

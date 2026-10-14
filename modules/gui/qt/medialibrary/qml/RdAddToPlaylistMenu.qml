@@ -70,7 +70,8 @@ Widgets.RdMenuPanel {
     Loader {
         id: playlists
 
-        active: menu.opened
+        // (visible, not opened: opened turns true only after the fade in)
+        active: menu.visible
         sourceComponent: MLPlaylistListModel {
             ml: MediaLib
         }
