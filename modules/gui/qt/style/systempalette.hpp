@@ -107,6 +107,9 @@ public:
     Q_PROPERTY(MainCtx* ctx READ getCtx WRITE setCtx NOTIFY ctxChanged FINAL)
     Q_PROPERTY(ColorSchemeModel::ColorScheme  source READ source WRITE setSource NOTIFY sourceChanged FINAL)
     Q_PROPERTY(bool isDark MEMBER m_isDark NOTIFY paletteChanged FINAL)
+    // redesign: true while a theme or accent switch recolors the interface (until the next
+    // event loop pass): color animations stay off then, so the switch is instant (P8-41)
+    Q_PROPERTY(bool switching READ isSwitching NOTIFY switchingChanged FINAL)
     Q_PROPERTY(bool hasCSDImage READ hasCSDImage NOTIFY hasCSDImageChanged FINAL)
     Q_PROPERTY(CSDMetrics* csdMetrics READ getCSDMetrics NOTIFY CSDMetricsChanged FINAL)
 
@@ -127,6 +130,7 @@ public:
     COLOR_DEFINITION(rdAccentMain, "#D37918");
     COLOR_DEFINITION(rdAccentBright, "#FC9729");
     COLOR_DEFINITION(rdAccentDim, "#AB6314");
+    COLOR_DEFINITION(rdAccentLogo, "#D37918");
     COLOR_DEFINITION(rdBgAccentBright, "#371F06");
     COLOR_DEFINITION(rdBgAccentDark, "#1A1611");
     COLOR_DEFINITION(rdBgA1, "#222222");
@@ -143,6 +147,10 @@ public:
     COLOR_DEFINITION(rdDividerDim, "#222222");
     COLOR_DEFINITION(rdHoverOverlay, QColor(0xFF, 0xFF, 0xFF, 15)); // hover tint over any background
     COLOR_DEFINITION(rdShadow, QColor(0x00, 0x00, 0x00, 117)); // Figma effect drop shadow #000000 46%
+    // Figma "volume" component fills of each theme's Player frame: the cone's empty part and the
+    // tint over its gradient (Dark: BG/B2 and #000000 20 %, Light: BG/A5 and #FFFFFF 20 %)
+    COLOR_DEFINITION(rdVolumeEmpty, "#090909");
+    COLOR_DEFINITION(rdVolumeTint, QColor(0x00, 0x00, 0x00, 51));
 
     COLOR_DEFINITION(orange400, "#f89a06"); //FIXME name have been chosen randomly by me
     COLOR_DEFINITION(orange200, "#e29a06"); //FIXME name have been chosen randomly by me
@@ -173,6 +181,7 @@ public:
     CSDMetrics* getCSDMetrics() const;
 
     inline MainCtx* getCtx() const { return m_ctx; }
+    inline bool isSwitching() const { return m_switching; }
     bool hasCSDImage() const;
 
     void setColor(ColorContext::ColorSet colorSet,  ColorContext::ColorSection section,
@@ -191,6 +200,7 @@ public slots:
 signals:
     void sourceChanged();
     void paletteChanged();
+    void switchingChanged();
     void hasCSDImageChanged();
     void ctxChanged();
     void CSDMetricsChanged();
@@ -201,6 +211,7 @@ private:
 
     void makeLightPalette();
     void makeDarkPalette();
+    void makeRdColorSets();
     void makeSystemPalette();
 
 private:
@@ -209,6 +220,7 @@ private:
 
     ColorSchemeModel::ColorScheme m_source = ColorSchemeModel::ColorScheme::Day;
     bool m_isDark = false;
+    bool m_switching = false;
     bool m_hasCSDImage = false;
 
     std::unique_ptr<ExternalPaletteImpl> m_palettePriv;
