@@ -435,10 +435,14 @@ QVariantList SettingsCatalog::groups(const QString& category, const QString& fil
         if (group.category != category)
             continue;
         QStringList names;
+        QString keywords;
         for (const QString& name : group.options)
         {
-            if (words.isEmpty() || matches(m_catalog.options.value(name), group, words))
-                names.append(name);
+            const Option& option = m_catalog.options[name];
+            if (!words.isEmpty() && !matches(option, group, words))
+                continue;
+            names.append(name);
+            keywords += option.text + QLatin1Char(' ') + option.longtext + QLatin1Char(' ') + name + QLatin1Char(' ');
         }
         if (names.isEmpty())
             continue;
@@ -446,6 +450,8 @@ QVariantList SettingsCatalog::groups(const QString& category, const QString& fil
             { QStringLiteral("id"), group.id },
             { QStringLiteral("title"), group.title },
             { QStringLiteral("options"), names },
+            // what the dialog's search finds the group by: its options' texts and names
+            { QStringLiteral("keywords"), keywords },
         });
     }
     return result;
