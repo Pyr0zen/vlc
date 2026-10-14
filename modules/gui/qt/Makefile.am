@@ -1470,6 +1470,7 @@ libqml_module_player_a_QML = \
 	player/qml/TracksPopup.qml \
 	player/qml/RdSidePanel.qml \
 	player/qml/RdSidePanelPage.qml \
+	player/qml/RdSidePanelPageLoader.qml \
 	player/qml/SettingsSidebar.qml \
 	player/qml/QueueSidebar.qml \
 	player/qml/PlaybackSettingsPage.qml \
@@ -1713,7 +1714,8 @@ libqml_module_widgets_a_QML = \
 	widgets/qml/RdParamSlider.qml \
 	widgets/qml/RdChoiceDropdown.qml \
 	widgets/qml/RdEqCurve.qml \
-	widgets/qml/RdListRow.qml
+	widgets/qml/RdListRow.qml \
+	widgets/qml/RdListView.qml
 libqml_module_widgets_a_Singleton_QML =
 libqml_module_widgets_a_SOURCES = $(QML_MODULE_widgets_SRC)
 nodist_libqml_module_widgets_a_SOURCES = widgets/qmlassets.cpp $(QML_MODULE_widgets_NODIST_EXTRA)

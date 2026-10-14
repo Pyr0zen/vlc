@@ -18,7 +18,8 @@
 
 // redesign: queue sidebar (video 9:29-9:34 and 15:08-15:16, Decision 3; Figma "queue",
 // "bookmarks", "chapters"). Tabs Queue / Bookmarks / Chapters over VLC's play queue, the media
-// library bookmarks of the current file and the chapters of the current title.
+// library bookmarks of the current file and the chapters of the current title. Each page is
+// created on first use (RdSidePanelPageLoader) and its rows on demand (RdListView).
 import QtQuick
 import QtQuick.Layouts
 
@@ -27,6 +28,7 @@ import VLC.Style
 import VLC.Player
 import VLC.Playlist
 import VLC.Dialogs
+import VLC.Util
 import VLC.Widgets as Widgets
 
 RdSidePanel {
@@ -50,90 +52,167 @@ RdSidePanel {
 
     /* Queue */
 
-    RdSidePanelPage {
-        id: queuePage
+    // header on top, then the rows, created on demand (RdListView): the queue can hold thousands
+    // of items. The queue model lives only while this page does.
+    RdSidePanelPageLoader {
+        id: queueLoader
 
         key: "queue"
 
-        property int selectedIndex: -1
+        sourceComponent: Item {
+            id: queuePage
 
-        PlaylistListModel {
-            id: queueModel
+            property int selectedIndex: -1
 
-            playlist: MainPlaylistController.playlist
-            onCountChanged: queuePage.selectedIndex = -1
-        }
+            // the sidebar is open on the queue
+            readonly property bool shown: root.visible && queueLoader.current
 
-        Header {
-            text: qsTr("%n item(s)", "", queueModel.count)
-                  + (queueModel.duration.valid() ? " - " + root.durationText(queueModel.duration) : "")
+            function positionAtCurrent() {
+                if (MainPlaylistController.currentIndex >= 0)
+                    queueView.positionViewAtIndex(MainPlaylistController.currentIndex, ItemView.Center)
+            }
 
-            HeaderButton {
-                rdIcon: "sort"
-                description: qsTr("Sort by title")
-                // sorting by the same key again reverses the order
-                onClicked: {
-                    queuePage.selectedIndex = -1
-                    MainPlaylistController.sort(PlaylistController.SORT_KEY_TITLE)
+            onShownChanged: {
+                if (shown)
+                    positionAtCurrent()
+            }
+
+            Component.onCompleted: {
+                if (shown)
+                    Qt.callLater(positionAtCurrent)
+            }
+
+            PlaylistListModel {
+                id: queueModel
+
+                playlist: MainPlaylistController.playlist
+                onCountChanged: queuePage.selectedIndex = -1
+            }
+
+            // drag to reorder: VLC's play queue drag (PlaylistPane), started from a row's handle
+            Widgets.DragItem {
+                id: dragItem
+
+                view: queueView
+
+                onRequestData: (indexes, resolve, reject) => {
+                    resolve(indexes.map((index) => {
+                        const item = queueModel.itemAt(index)
+                        return {
+                            "title": item.title,
+                            "cover": (!!item.artwork && item.artwork.toString() !== "") ? item.artwork : VLCStyle.noArtAlbumCover,
+                            "url": item.url
+                        }
+                    }))
+                }
+
+                onRequestInputItems: (indexes, data, resolve, reject) => {
+                    resolve(queueModel.getItemsForIndexes(indexes))
                 }
             }
 
-            HeaderButton {
-                rdIcon: "repeat_direction-right"
-                description: qsTr("Repeat")
-                checked: MainPlaylistController.repeatMode !== PlaylistController.PLAYBACK_REPEAT_NONE
-                onClicked: MainPlaylistController.toggleRepeatMode()
-            }
+            Header {
+                id: queueHeader
 
-            HeaderButton {
-                rdIcon: "shuffle_direction-right"
-                description: qsTr("Shuffle")
-                checked: MainPlaylistController.random
-                onClicked: MainPlaylistController.toggleRandom()
-            }
+                width: parent.width
+                height: VLCStyle.dp(68)
 
-            HeaderButton {
-                rdIcon: "remove"
-                description: qsTr("Remove the selected item")
-                enabled: queuePage.selectedIndex >= 0
-                onClicked: {
-                    queueModel.removeItems([queuePage.selectedIndex])
-                    queuePage.selectedIndex = -1
+                text: qsTr("%n item(s)", "", queueModel.count)
+                      + (queueModel.duration.valid() ? " - " + root.durationText(queueModel.duration) : "")
+
+                HeaderButton {
+                    rdIcon: "sort"
+                    description: qsTr("Sort by title")
+                    // sorting by the same key again reverses the order
+                    onClicked: {
+                        queuePage.selectedIndex = -1
+                        MainPlaylistController.sort(PlaylistController.SORT_KEY_TITLE)
+                    }
+                }
+
+                HeaderButton {
+                    rdIcon: "repeat_direction-right"
+                    description: qsTr("Repeat")
+                    checked: MainPlaylistController.repeatMode !== PlaylistController.PLAYBACK_REPEAT_NONE
+                    onClicked: MainPlaylistController.toggleRepeatMode()
+                }
+
+                HeaderButton {
+                    rdIcon: "shuffle_direction-right"
+                    description: qsTr("Shuffle")
+                    checked: MainPlaylistController.random
+                    onClicked: MainPlaylistController.toggleRandom()
+                }
+
+                HeaderButton {
+                    rdIcon: "remove"
+                    description: qsTr("Remove the selected item")
+                    enabled: queuePage.selectedIndex >= 0
+                    onClicked: {
+                        queueModel.removeItems([queuePage.selectedIndex])
+                        queuePage.selectedIndex = -1
+                    }
+                }
+
+                HeaderButton {
+                    rdIcon: "add"
+                    description: qsTr("Add files to the queue")
+                    onClicked: DialogsProvider.simpleOpenDialog(false)
                 }
             }
 
-            HeaderButton {
-                rdIcon: "add"
-                description: qsTr("Add files to the queue")
-                onClicked: DialogsProvider.simpleOpenDialog(false)
-            }
-        }
+            Widgets.RdListView {
+                id: queueView
 
-        ColumnLayout {
-            id: queueList
-
-            Layout.fillWidth: true
-            Layout.leftMargin: VLCStyle.dp(20)
-            Layout.rightMargin: VLCStyle.dp(20)
-            spacing: VLCStyle.dp(12)
-
-            // RdQueueDropArea inserts at the row under the drop point (ListView interface): the
-            // row whose upper half holds the point, -1 below the last row (appends)
-            readonly property Item contentItem: queueList
-
-            function indexAt(px, py) {
-                for (let i = 0; i < queueRows.count; ++i) {
-                    const row = queueRows.itemAt(i)
-                    if (row && py < row.y + row.height / 2)
-                        return i
-                }
-                return -1
-            }
-
-            Repeater {
-                id: queueRows
+                anchors.top: queueHeader.bottom
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
 
                 model: queueModel
+
+                // a row of the queue moved, library items or files dropped in; rows of the
+                // redesigned library carry their URLs in rdDragUrls (video 11:44-11:49, W5.9)
+                isDropAcceptableFunc: function(drag, index) {
+                    if (drag.source === dragItem)
+                        return Helpers.itemsMovable(dragItem.indexes, index)
+                    else if (Helpers.isValidInstanceOf(drag.source, Widgets.DragItem))
+                        return true
+                    else if (drag.source && drag.source.rdDragUrls)
+                        return drag.source.rdDragUrls.length > 0
+                    return drag.hasUrls
+                }
+
+                acceptDropFunc: function(index, drop) {
+                    const source = drop.source
+
+                    if (source === dragItem) {
+                        queueModel.moveItemsPre(dragItem.indexes, index)
+                        queuePage.selectedIndex = -1
+                    } else if (Helpers.isValidInstanceOf(source, Widgets.DragItem)) {
+                        return source.getSelectedInputItem().then((inputItems) => {
+                            if (!Helpers.isArray(inputItems) || inputItems.length === 0) {
+                                console.warn("can't convert items to input items")
+                                return
+                            }
+                            MainPlaylistController.insert(index, inputItems, false)
+                        })
+                    } else if (source && source.rdDragUrls) {
+                        MainPlaylistController.insert(index, source.rdDragUrls, false)
+                    } else if (drop.hasUrls) {
+                        const urls = []
+                        for (let i in drop.urls)
+                            urls.push(drop.urls[i])
+                        MainPlaylistController.insert(index, urls, false)
+                        // otherwise the main window adds the files as well
+                        drop.accept(Qt.IgnoreAction)
+                    }
+
+                    return Promise.resolve()
+                }
+
+                // Enter on the current row plays it
+                onActionAtIndex: (index) => MainPlaylistController.goTo(index, true)
 
                 // a click selects the row (for "remove"), a double click plays it; the handle
                 // drags it to another place in the queue
@@ -143,19 +222,36 @@ RdSidePanel {
                     required property int index
                     required property var model
 
+                    // drop target of a drag (ListViewExt: drop indicator and auto scroll)
+                    readonly property bool topContainsDrag: dropAreas.higherDropArea.containsDrag
+                    readonly property bool bottomContainsDrag: dropAreas.lowerDropArea.containsDrag
+                    readonly property bool containsDrag: topContainsDrag || bottomContainsDrag
+                    readonly property point dragPosition: mapFromItem(dropAreas,
+                                                                      dropAreas.dragPosition.x,
+                                                                      dropAreas.dragPosition.y)
+
+                    width: queueView.contentWidth
+
                     title: model.title ?? ""
                     detail: model.duration && model.duration.valid() ? model.duration.formatHMS() : ""
                     current: !!model.isCurrent
-                    selected: queuePage.selectedIndex === index || drag.active
+                    selected: queuePage.selectedIndex === index || dragHandler.active
                     leftPadding: VLCStyle.dp(32)
 
-                    onClicked: queuePage.selectedIndex = index
-                    onDoubleClicked: MainPlaylistController.goTo(index, true)
+                    ListView.delayRemove: dragHandler.active
 
-                    z: drag.active ? 1 : 0
-                    transform: Translate {
-                        y: drag.active ? drag.translation.y : 0
+                    Navigation.upAction: function() { queueView.focusRow(index - 1) }
+                    Navigation.downAction: function() { queueView.focusRow(index + 1) }
+                    // Enter acts on the focused row, also when it got focus by Tab
+                    onActiveFocusChanged: if (activeFocus) ListView.view.currentIndex = index
+
+                    onContainsDragChanged: queueView.updateItemContainsDrag(this, containsDrag)
+
+                    onClicked: {
+                        queuePage.selectedIndex = index
+                        queueView.currentIndex = index
                     }
+                    onDoubleClicked: MainPlaylistController.goTo(index, true)
 
                     Widgets.RdIcon {
                         x: VLCStyle.dp(4)
@@ -164,107 +260,124 @@ RdSidePanel {
                         color: VLCStyle.palette.rdFgA3
 
                         DragHandler {
-                            id: drag
+                            id: dragHandler
 
                             target: null
-                            xAxis.enabled: false
                             cursorShape: Qt.SizeVerCursor
-                            // keep the drag from the scrolling page
+                            // keep the drag from the list's flicking
                             grabPermissions: PointerHandler.CanTakeOverFromAnything
 
                             onActiveChanged: {
-                                if (active)
-                                    return
-                                const step = queueRow.height + VLCStyle.dp(12)
-                                const target = Math.max(0, Math.min(queueModel.count - 1,
-                                                                    queueRow.index + Math.round(translation.y / step)))
-                                if (target < queueRow.index)
-                                    queueModel.moveItemsPre([queueRow.index], target)
-                                else if (target > queueRow.index)
-                                    queueModel.moveItemsPost([queueRow.index], target)
-                                queuePage.selectedIndex = -1
+                                if (active) {
+                                    queuePage.selectedIndex = queueRow.index
+                                    dragItem.indexes = [queueRow.index]
+                                    dragItem.indexesFlat = true
+                                    dragItem.Drag.active = true
+                                } else {
+                                    dragItem.Drag.drop()
+                                }
                             }
                         }
+                    }
+
+                    // the drop areas cover the row and half of the gaps around it
+                    Widgets.ListViewExt.VerticalDropAreaLayout {
+                        id: dropAreas
+
+                        anchors.fill: parent
+                        anchors.topMargin: -queueView.spacing / 2
+                        anchors.bottomMargin: -queueView.spacing / 2
+
+                        index: queueRow.index
+                        view: queueView
+                        isDropAcceptable: queueView.isDropAcceptableFunc
+                        acceptDrop: queueView.acceptDropFunc
                     }
                 }
             }
         }
     }
 
-    // library rows and files dropped on the queue join it where they are dropped (video
-    // 11:44-11:49, W5.9)
-    RdQueueDropArea {
-        anchors.fill: parent
-        z: 1
-        enabled: queuePage.active
-        view: queueList
-    }
-
     /* Bookmarks */
 
-    RdSidePanelPage {
+    RdSidePanelPageLoader {
         key: "bookmarks"
 
-        Header {
-            text: qsTr("%n Bookmark(s)", "", bookmarkLoader.item ? bookmarkLoader.item.count : 0)
+        sourceComponent: ColumnLayout {
+            spacing: 0
 
-            // Ctrl+B and the instant bookmark are new features (BUILD_PLAN.md W4.8b); until then
-            // both buttons open VLC's bookmark editor
-            HeaderButton {
-                rdIcon: "remove"
-                description: qsTr("Remove a bookmark")
-                onClicked: DialogsProvider.bookmarksDialog()
+            Header {
+                text: qsTr("%n Bookmark(s)", "", bookmarkLoader.item ? bookmarkLoader.item.count : 0)
+
+                // Ctrl+B and the instant bookmark are new features (BUILD_PLAN.md W4.8b); until then
+                // both buttons open VLC's bookmark editor
+                HeaderButton {
+                    rdIcon: "remove"
+                    description: qsTr("Remove a bookmark")
+                    onClicked: DialogsProvider.bookmarksDialog()
+                }
+
+                HeaderButton {
+                    rdIcon: "add"
+                    description: qsTr("Add a bookmark")
+                    onClicked: DialogsProvider.bookmarksDialog()
+                }
             }
 
-            HeaderButton {
-                rdIcon: "add"
-                description: qsTr("Add a bookmark")
-                onClicked: DialogsProvider.bookmarksDialog()
+            // VLC keeps bookmarks in the media library
+            Loader {
+                id: bookmarkLoader
+
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                active: MainCtx.mediaLibraryAvailable
+                source: "qrc:///qt/qml/VLC/MediaLibrary/RdBookmarkList.qml"
             }
-        }
-
-        // VLC keeps bookmarks in the media library
-        Loader {
-            id: bookmarkLoader
-
-            Layout.fillWidth: true
-            Layout.leftMargin: VLCStyle.dp(20)
-            Layout.rightMargin: VLCStyle.dp(20)
-            active: MainCtx.mediaLibraryAvailable
-            source: "qrc:///qt/qml/VLC/MediaLibrary/RdBookmarkList.qml"
         }
     }
 
     /* Chapters */
 
-    RdSidePanelPage {
+    RdSidePanelPageLoader {
         key: "chapters"
 
-        ColumnLayout {
-            Layout.fillWidth: true
-            Layout.leftMargin: VLCStyle.dp(20)
-            Layout.rightMargin: VLCStyle.dp(20)
-            Layout.topMargin: VLCStyle.dp(20)
-            spacing: VLCStyle.dp(12)
+        sourceComponent: Item {
+            Widgets.RdListView {
+                id: chapterView
 
-            Repeater {
+                anchors.fill: parent
+                topMargin: VLCStyle.dp(20)
+
                 model: Player.chapters
+
+                // Enter on the current row jumps to it
+                onActionAtIndex: (index) => Player.chapters.selectChapter(index)
 
                 delegate: Widgets.RdListRow {
                     required property int index
                     required property var model
 
+                    width: chapterView.contentWidth
+
                     number: index + 1
                     title: model.display ?? ""
                     detail: model.time ? model.time.formatHMS() : ""
                     current: !!model.checked
+
+                    Navigation.upAction: function() { chapterView.focusRow(index - 1) }
+                    Navigation.downAction: function() { chapterView.focusRow(index + 1) }
+                    // Enter acts on the focused row, also when it got focus by Tab
+                    onActiveFocusChanged: if (activeFocus) ListView.view.currentIndex = index
+
                     onClicked: Player.chapters.selectChapter(index)
                 }
             }
 
             Text {
                 visible: Player.chapters.count === 0
-                Layout.fillWidth: true
+                x: VLCStyle.dp(20)
+                y: VLCStyle.dp(20)
+                width: parent.width - 2 * VLCStyle.dp(20)
                 leftPadding: VLCStyle.dp(4)
                 text: qsTr("This media has no chapters")
                 font.family: VLCStyle.rd_fontFamily

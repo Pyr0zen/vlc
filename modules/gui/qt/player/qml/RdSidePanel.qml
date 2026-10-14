@@ -24,7 +24,8 @@
 // - tab header 50 px, BG/B2, then a 1 px Divider/Dim line: icon 20 + label Inter 12; active
 //   tab: two-tone icon, FG/A2 label and a 2 px accent underline as wide as the Figma tab content
 //   frame (centered); inactive: plain icon, FG/A3 label
-// - pages (RdSidePanelPage) cross-fade when the tab changes (video 8:40, IA-37)
+// - pages (RdSidePanelPageLoader) are created on first use and cross-fade when the tab changes
+//   (video 8:40, IA-37)
 // - optional footer pinned at the bottom (preset selector, "Open Advanced Settings")
 import QtQuick
 import QtQuick.Templates as T
@@ -154,11 +155,19 @@ Widgets.RdPanel {
         color: root.rdPalette.rdDividerDim
     }
 
-    // pages: each RdSidePanelPage shows itself when its key is the current one
+    // pages: each RdSidePanelPageLoader shows its page when its key is the current one
     Item {
         id: pageHost
 
         readonly property string currentKey: root.currentKey
+        // the sidebar has been shown: the pages not created yet are created in the background
+        property bool prewarm: false
+
+        Binding on prewarm {
+            when: root.visible
+            value: true
+            restoreMode: Binding.RestoreNone
+        }
 
         anchors.top: headerDivider.bottom
         anchors.left: parent.left
