@@ -1283,6 +1283,9 @@ libqml_module_dialogs_a_QML = \
 	dialogs/redesign/settings/SettingsRow.qml \
 	dialogs/redesign/settings/SettingsSearchField.qml \
 	dialogs/redesign/settings/SettingsSection.qml \
+	dialogs/redesign/settings/SettingsAccentPicker.qml \
+	dialogs/redesign/settings/SettingsEqualizer.qml \
+	dialogs/redesign/settings/SettingsLanguageOption.qml \
 	dialogs/redesign/settings/SettingsOption.qml \
 	dialogs/redesign/settings/SettingsOptionGroup.qml \
 	dialogs/redesign/settings/SettingsMoreOptions.qml \

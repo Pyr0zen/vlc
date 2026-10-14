@@ -28,7 +28,6 @@
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QPointer>
-#include <QSettings>
 
 #include <algorithm>
 #include <cfloat>
@@ -42,9 +41,10 @@
 #include "util/registry.hpp"
 #endif
 
-namespace {
+#include "maininterface/mainctx.hpp"
+#include "medialibrary/medialib.hpp"
 
-#define DEVELOPER_MODE_KEY "Settings/developerMode"
+namespace {
 
 // options the category pages show by name (dialogs/redesign/settings/pages/*): they are left
 // out of the generated "More ... options" lists. Keep in sync with the pages.
@@ -336,21 +336,11 @@ SettingsCatalog::SettingsCatalog(qt_intf_t* intf, QObject* parent)
     , p_intf(intf)
 {
     m_pool.setMaxThreadCount(1);
-    m_developerMode = getSettings()->value(QStringLiteral(DEVELOPER_MODE_KEY), false).toBool();
 }
 
 SettingsCatalog::~SettingsCatalog()
 {
     m_pool.waitForDone();
-}
-
-void SettingsCatalog::setDeveloperMode(bool enabled)
-{
-    if (m_developerMode == enabled)
-        return;
-    m_developerMode = enabled;
-    getSettings()->setValue(QStringLiteral(DEVELOPER_MODE_KEY), enabled);
-    emit developerModeChanged();
 }
 
 void SettingsCatalog::load()
@@ -534,11 +524,22 @@ void SettingsCatalog::resetAll()
     // default and saved; the interface's own state (window, library) stays
     config_ResetAll();
     config_SaveConfigFile(p_intf);
-    setDeveloperMode(false);
 #ifdef _WIN32
     setLanguage(QStringLiteral("auto"));
 #endif
     emit resetDone();
+}
+
+bool SettingsCatalog::clearHistory()
+{
+    MediaLib* mediaLib = p_intf->p_mi ? p_intf->p_mi->getMediaLibrary() : nullptr;
+    if (!mediaLib)
+        return false;
+    // as the Recent page (medialibrary/mlrecentmediamodel.cpp)
+    mediaLib->runOnMLThread(this, [](vlc_medialibrary_t* ml) {
+        vlc_ml_clear_history(ml, VLC_ML_HISTORY_TYPE_GLOBAL);
+    });
+    return true;
 }
 
 bool SettingsCatalog::languageSupported() const
