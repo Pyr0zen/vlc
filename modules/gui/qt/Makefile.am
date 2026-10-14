@@ -240,6 +240,16 @@ libqt_plugin_la_SOURCES = \
 	medialibrary/mlvideo.hpp \
 	medialibrary/mlvideofoldersmodel.cpp \
 	medialibrary/mlvideofoldersmodel.hpp \
+	medialibrary/rdlibrarymodel.cpp \
+	medialibrary/rdlibrarymodel.hpp \
+	medialibrary/rdsubfoldermodel.cpp \
+	medialibrary/rdsubfoldermodel.hpp \
+	medialibrary/rdconcatmodel.cpp \
+	medialibrary/rdconcatmodel.hpp \
+	medialibrary/rdcollectionmodel.cpp \
+	medialibrary/rdcollectionmodel.hpp \
+	medialibrary/rdlibrarystore.cpp \
+	medialibrary/rdlibrarystore.hpp \
 	medialibrary/mlvideogroupsmodel.cpp \
 	medialibrary/mlvideogroupsmodel.hpp \
 	medialibrary/mlmediamodel.cpp \
@@ -483,6 +493,11 @@ nodist_libqt_plugin_la_SOURCES = \
 	medialibrary/mlplaylistlistmodel.moc.cpp \
 	medialibrary/mlplaylistmodel.moc.cpp \
 	medialibrary/mlvideofoldersmodel.moc.cpp \
+	medialibrary/rdlibrarymodel.moc.cpp \
+	medialibrary/rdsubfoldermodel.moc.cpp \
+	medialibrary/rdconcatmodel.moc.cpp \
+	medialibrary/rdcollectionmodel.moc.cpp \
+	medialibrary/rdlibrarystore.moc.cpp \
 	medialibrary/mlvideogroupsmodel.moc.cpp \
 	medialibrary/thumbnailcollector.moc.cpp \
 	menus/custom_menus.moc.cpp \
@@ -1366,8 +1381,30 @@ libqml_module_medialibrary_a_QML = \
 	medialibrary/qml/MLContextMenu.qml \
 	medialibrary/qml/MLDragItem.qml \
 	medialibrary/qml/MLTableColumns.qml \
-	medialibrary/qml/ScanProgressBar.qml
-libqml_module_medialibrary_a_Singleton_QML =
+	medialibrary/qml/ScanProgressBar.qml \
+	medialibrary/qml/RdLibraryIconButton.qml \
+	medialibrary/qml/RdLibraryThumb.qml \
+	medialibrary/qml/RdLibraryRow.qml \
+	medialibrary/qml/RdLibraryCard.qml \
+	medialibrary/qml/RdLibraryMenu.qml \
+	medialibrary/qml/RdAddToPlaylistMenu.qml \
+	medialibrary/qml/RdLibraryItemMenu.qml \
+	medialibrary/qml/RdBreadcrumb.qml \
+	medialibrary/qml/RdLibraryHeader.qml \
+	medialibrary/qml/RdLibraryPage.qml \
+	medialibrary/qml/RdLibraryHome.qml \
+	medialibrary/qml/RdLibraryContent.qml \
+	medialibrary/qml/RdLibraryDialog.qml \
+	medialibrary/qml/RdDashedBorder.qml \
+	medialibrary/qml/RdPlaylistDialog.qml \
+	medialibrary/qml/RdStreamDialog.qml \
+	medialibrary/qml/RdFolderInfoPopup.qml \
+	medialibrary/qml/RdLibraryRail.qml \
+	medialibrary/qml/RdLibrarySidebar.qml \
+	medialibrary/qml/RdLibraryView.qml
+libqml_module_medialibrary_a_Singleton_QML = \
+	medialibrary/qml/RdLibraryNav.qml \
+	medialibrary/qml/RdLibraryActions.qml
 libqml_module_medialibrary_a_SOURCES = $(QML_MODULE_medialibrary_SRC)
 nodist_libqml_module_medialibrary_a_SOURCES = medialibrary/qmlassets.cpp $(QML_MODULE_medialibrary_NODIST_EXTRA)
 QML_MODULE_LIBS += libqml_module_medialibrary.a
@@ -1447,7 +1484,9 @@ libqml_module_player_a_QML = \
 	player/qml/ControlLayout.qml \
 	player/qml/ControlRepeater.qml \
 	player/qml/NavigationBox.qml \
-	player/qml/RdPlayerMenu.qml
+	player/qml/RdPlayerMenu.qml 
+	player/qml/RdMiniQueue.qml 
+	player/qml/RdMiniPlayer.qml
 
 libqml_module_player_a_Singleton_QML = \
 	player/qml/PlayerControlbarControls.qml \
@@ -1520,7 +1559,8 @@ libqml_module_playlist_a_CPPFLAGS = $(libqt_plugin_la_CPPFLAGS)
 libqml_module_playlist_a_QML = \
 	playlist/qml/PlaylistDelegate.qml \
 	playlist/qml/PlaylistPane.qml \
-	playlist/qml/PlaylistDetachedWindow.qml
+	playlist/qml/PlaylistDetachedWindow.qml \
+	playlist/qml/RdQueueDropArea.qml
 libqml_module_playlist_a_Singleton_QML =
 libqml_module_playlist_a_SOURCES = $(QML_MODULE_playlist_SRC)
 nodist_libqml_module_playlist_a_SOURCES = playlist/qmlassets.cpp $(QML_MODULE_playlist_NODIST_EXTRA)

@@ -23,6 +23,10 @@
 #include "medialibrary/mlplaylistmodel.hpp"
 #include "medialibrary/mlplaylist.hpp"
 #include "medialibrary/mlbookmarkmodel.hpp"
+#include "medialibrary/rdsubfoldermodel.hpp"
+#include "medialibrary/rdconcatmodel.hpp"
+#include "medialibrary/rdcollectionmodel.hpp"
+#include "medialibrary/rdlibrarystore.hpp"
 
 #include "player/player_controller.hpp"
 #include "player/player_controlbar_model.hpp"
@@ -491,6 +495,13 @@ void MainUI::registerQMLTypes()
         qmlRegisterType<MLPlaylistListModel>( uri, versionMajor, versionMinor, "MLPlaylistListModel" );
         qmlRegisterType<MLPlaylistModel>( uri, versionMajor, versionMinor, "MLPlaylistModel" );
         qmlRegisterType<MLBookmarkModel>( uri, versionMajor, versionMinor, "MLBookmarkModel" );
+        // redesign: the redesigned library (Phase 5)
+        qmlRegisterUncreatableType<RdLibraryModel>( uri, versionMajor, versionMinor, "RdLibraryModel", "" );
+        qmlRegisterType<RdSubfolderModel>( uri, versionMajor, versionMinor, "RdSubfolderModel" );
+        qmlRegisterType<RdConcatModel>( uri, versionMajor, versionMinor, "RdConcatModel" );
+        qmlRegisterType<RdCollectionModel>( uri, versionMajor, versionMinor, "RdCollectionModel" );
+        qmlRegisterSingletonInstance<RdLibraryStore>( uri, versionMajor, versionMinor, "RdLibraryStore",
+                                                      new RdLibraryStore(m_intf, m_mainCtx->getMediaLibrary(), this) );
 
         qmlRegisterType<NetworkMediaModel>( uri, versionMajor, versionMinor, "NetworkMediaModel");
         qmlRegisterType<NetworkDeviceModel>( uri, versionMajor, versionMinor, "NetworkDeviceModel");
