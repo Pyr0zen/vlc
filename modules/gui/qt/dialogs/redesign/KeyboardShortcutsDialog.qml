@@ -58,7 +58,11 @@ T.Popup {
     padding: 0
     modal: true
     focus: true
-    closePolicy: T.Popup.CloseOnEscape
+    // a click outside closes the dialog unless it holds unsaved changes or is capturing a key
+    // (Escape, X and Cancel still close it)
+    closePolicy: (hotkeysModel.dirty || captureRow >= 0)
+                 ? T.Popup.CloseOnEscape
+                 : (T.Popup.CloseOnEscape | T.Popup.CloseOnPressOutside)
 
     function startCapture(row, global) {
         captureRow = row
