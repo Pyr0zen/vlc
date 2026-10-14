@@ -34,7 +34,8 @@ Order (dependencies respected; lanes from section 4 still apply inside each grou
 14. W7.3 OSD shows the pressed shortcut (core change, Decision 27).
 15. W8.1b new Customize controls (File / Folder / Playlist / Artist name, Favorite, Thumbnail, Bookmarks, Right Sidebar, Go Home ...) and editable top bar.
 16. W8.2 profiles (layout + settings, restart notice).
-17. Then W9.1 release (needs Sticky's go).
+17. The 12 Settings rows without a VLC option (VIDEO_INDEX rows 350-361, S2-01..S2-12; Sticky 2026-10-14: build everything she shows): each names the VLC mechanism to build on; S2-01 (additional command line options) and S2-11 (ignore ASS styling) need core changes (Decision 27, own build).
+18. Then W9.1 release (needs Sticky's go).
 
 Status of Step 1 work coded before this split: W2.1, W2.2, W2.5, W3.1-W3.8 (W3.5 click-to-jump included), W4.1/W4.2 part 1 are coded and in verification (run 38317777499). The restoreTime property (resume toast time) and AudioDeviceModel.refresh() expose data VLC already has.
 
