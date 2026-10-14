@@ -37,6 +37,7 @@ Behavior {
     }
 
     // redesign: a theme or accent switch applies the new colors at once instead of animating
-    // every control (P8-41); this part is not delayed so it is off before the colors change
-    enabled: _delayedEnabled && !VLCStyle.palette.switching
+    // every control (P8-41); this part is not delayed so it is off before the colors change.
+    // darkPalette (items drawn on the picture) recolors with the accent.
+    enabled: _delayedEnabled && !VLCStyle.palette.switching && !VLCStyle.darkPalette.switching
 }
