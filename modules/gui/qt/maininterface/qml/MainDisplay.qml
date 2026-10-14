@@ -65,6 +65,16 @@ FocusScope {
         g_mainDisplay.goBack()
     }
 
+    // Ctrl+F searches the library (its Search field) instead of VLC's global Ctrl+F "Open
+    // Folder" (Ctrl+O and the main menu still open files and folders); the shortcut override
+    // comes before the global shortcut
+    Keys.onShortcutOverride: (event) => {
+        if (KeyHelper.matchSearch(event) && library.item && library.item.focusSearch) {
+            event.accepted = true
+            library.item.focusSearch()
+        }
+    }
+
     Keys.onPressed: (event) => {
         if (KeyHelper.matchSearch(event) && library.item && library.item.focusSearch) {
             library.item.focusSearch()

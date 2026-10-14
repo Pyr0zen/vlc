@@ -239,16 +239,17 @@ FocusScope {
 
     // Events
 
-    // keys go to VLC's hotkeys, except while a modal redesign popup is open (RdPanels.modalCount)
-    // or the compact library has the focus (its lists and search field use the keys, unhandled
-    // keys still reach the hotkeys below, as in the full library).
+    // keys go to VLC's hotkeys, except while a modal redesign popup is open (RdPanels.modalCount).
+    // In the compact library a row with keyboard focus or the search field still gets its keys
+    // (InterfaceWindowHandler::applyKeyEvent), a row clicked with the mouse does not: Space
+    // pauses as everywhere else in the player.
     // _leaving keeps the binding off while the view is destroyed: a menu released during the
     // destruction would otherwise turn the hotkeys back on for the library
     property bool _leaving: false
     Binding {
         target: MainCtx
         property: "preferHotkeys"
-        value: !rootPlayer._leaving && RdPanels.modalCount === 0 && !librarySidebar.activeFocus
+        value: !rootPlayer._leaving && RdPanels.modalCount === 0
     }
     Component.onDestruction: {
         rootPlayer._leaving = true
@@ -258,12 +259,22 @@ FocusScope {
     }
 
     Keys.priority: Keys.AfterItem
+
+    // Ctrl+F searches the compact library while it is shown: the shortcut override comes
+    // before VLC's global Ctrl+F "Open Folder" shortcut and before the hotkeys (the key press
+    // itself may go to the hotkeys); with the library closed Ctrl+F stays Open Folder
+    Keys.onShortcutOverride: (event) => {
+        if (rootPlayer._libraryShown && librarySidebar.item && KeyHelper.matchSearch(event)) {
+            event.accepted = true
+            librarySidebar.item.focusSearch()
+        }
+    }
+
     Keys.onPressed: (event) => {
         if (event.accepted)
             return
 
-        // Ctrl+F searches the compact library, as in the full library (VLC's global Ctrl+F
-        // "Open Folder" shortcut runs first while global shortcuts are on)
+        // Ctrl+F reaching the player (focus in the library search): stays there
         if (rootPlayer._libraryShown && librarySidebar.item && KeyHelper.matchSearch(event)) {
             librarySidebar.item.focusSearch()
             event.accepted = true
