@@ -72,6 +72,12 @@ FocusScope {
         if (KeyHelper.matchSearch(event) && library.item && library.item.focusSearch) {
             event.accepted = true
             library.item.focusSearch()
+        } else if (event.key === Qt.Key_L && event.modifiers === Qt.ControlModifier && miniPlayer.visible) {
+            // Ctrl+L (VLC's play queue toggle) shows and hides the mini player's queue, the
+            // library's play queue (Decision 3), instead of VLC's docked play queue, which
+            // would then show up in the player
+            event.accepted = true
+            miniPlayer.queueOpen = !miniPlayer.queueOpen
         }
     }
 
@@ -205,17 +211,6 @@ FocusScope {
         onFolderClicked: {
             if (library.item && library.item.revealMrl)
                 library.item.revealMrl(Player.url.toString())
-        }
-
-        // Ctrl+L (VLC's play queue toggle, GlobalShortcuts.qml) shows and hides the mini
-        // player's queue, the library's play queue (Decision 3: the queue is everywhere)
-        Connections {
-            target: MainCtx.playqueuePanel
-
-            function onVisibleChanged() {
-                if (miniPlayer.visible)
-                    miniPlayer.queueOpen = !miniPlayer.queueOpen
-            }
         }
     }
 
