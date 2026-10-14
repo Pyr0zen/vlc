@@ -60,6 +60,10 @@ FocusScope{
 
     // the compact library is open (sidebar toggle shown active)
     property bool libraryOpen: false
+    // the sidebar toggle and the folder chip belong to the player; the full library's top bar
+    // (MainDisplay.qml, Figma Player-3.png) has only the cone, "...", the title and the window
+    // buttons
+    property bool showLibraryButtons: true
 
     readonly property ColorContext colorContext: ColorContext {
         id: theme
@@ -174,7 +178,7 @@ FocusScope{
                 checked: contextMenu.visible
 
                 Navigation.parentItem: root
-                Navigation.rightItem: sidebarButton
+                Navigation.rightItem: root.showLibraryButtons ? sidebarButton : null
 
                 onClicked: contextMenu.popupBelow(menuSelector, visualFocus)
 
@@ -199,6 +203,7 @@ FocusScope{
 
             // sidebar toggle (video 11:37): opens and closes the compact library
             Item {
+                visible: root.showLibraryButtons
                 width: VLCStyle.dp(10, VLCStyle.scale)
                 height: 1
             }
@@ -206,6 +211,7 @@ FocusScope{
             Widgets.IconToolButton {
                 id: sidebarButton
 
+                visible: root.showLibraryButtons
                 anchors.verticalCenter: parent.verticalCenter
                 width: VLCStyle.dp(28, VLCStyle.scale)
                 height: VLCStyle.rd_iconButtonHeight
@@ -247,7 +253,7 @@ FocusScope{
             T.AbstractButton {
                 id: folderChip
 
-                visible: root.folderName !== ""
+                visible: root.showLibraryButtons && root.folderName !== ""
                 anchors.verticalCenter: parent.verticalCenter
 
                 implicitHeight: VLCStyle.dp(28, VLCStyle.scale)

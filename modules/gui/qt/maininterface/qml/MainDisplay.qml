@@ -29,7 +29,6 @@ import VLC.MainInterface
 import VLC.Widgets as Widgets
 import VLC.Playlist
 import VLC.Player
-import VLC.Menus as Menus
 
 import VLC.Util
 import VLC.Dialogs
@@ -127,12 +126,6 @@ FocusScope {
         }
     }
 
-    ColorContext {
-        id: theme
-        palette: VLCStyle.palette
-        colorSet: ColorContext.View
-    }
-
     Rectangle {
         anchors.fill: parent
         color: VLCStyle.palette.rdBgB1
@@ -152,133 +145,25 @@ FocusScope {
         }
     }
 
-    // window top bar (Figma "topbar": 40 px, BG/A3; title Inter 400 14 FG/A2, centered)
-    Rectangle {
+    // window top bar: the player's top bar without its sidebar toggle and folder chip (Figma
+    // Player-3.png, video 11:48), so both bars line up exactly; the title is the playing media's,
+    // VLC's name when nothing plays
+    TopBar {
         id: topBar
 
         z: 5
         anchors.top: menuTopbar.visible ? menuTopbar.bottom : parent.top
         anchors.left: parent.left
         anchors.right: parent.right
-        height: VLCStyle.applicationVerticalMargin + VLCStyle.rd_topBarHeight
-        color: VLCStyle.palette.rdBgA3
 
-        //drag and dbl click the titlebar in CSD mode
-        Loader {
-            anchors.fill: parent
-            active: g_mainDisplay._showCSD
-            source: "qrc:///qt/qml/VLC/Widgets/CSDTitlebarTapNDrapHandler.qml"
-        }
+        topMargin: VLCStyle.applicationVerticalMargin
+        sideMargin: VLCStyle.applicationHorizontalMargin
+        textWidth: width
 
-        Item {
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.bottom: parent.bottom
-            height: VLCStyle.rd_topBarHeight
-
-            Row {
-                id: leftGroup
-
-                anchors.left: parent.left
-                anchors.leftMargin: VLCStyle.dp(6, VLCStyle.scale) + VLCStyle.applicationHorizontalMargin
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: VLCStyle.dp(7, VLCStyle.scale)
-
-                Item {
-                    width: VLCStyle.dp(38, VLCStyle.scale)
-                    height: VLCStyle.dp(28, VLCStyle.scale)
-
-                    Widgets.RdIcon {
-                        anchors.centerIn: parent
-                        name: "vlc"
-                        accentColor: theme.accent
-                    }
-                }
-
-                Widgets.IconToolButton {
-                    id: menuButton
-
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: VLCStyle.rd_iconButtonWidth
-                    height: VLCStyle.rd_iconButtonHeight
-                    font.pixelSize: VLCStyle.rd_iconSize
-
-                    text: VLCIcons.more
-                    rdIcon: "more"
-                    description: qsTr("Menu")
-                    checked: mainMenu.visible
-
-                    onClicked: mainMenu.popupBelow(menuButton, visualFocus)
-
-                    // the main menu in the Figma style, as on the player's top bar (W4.9)
-                    Menus.RdMainMenu {
-                        id: mainMenu
-                    }
-                }
-            }
-
-            Text {
-                readonly property real _maxWidth: Math.max(0, parent.width - 2 * Math.max(leftGroup.x + leftGroup.width,
-                                                                                           parent.width - rightGroup.x))
-
-                anchors.centerIn: parent
-                width: Math.min(implicitWidth, _maxWidth)
-                visible: width > 0
-                text: qsTr("VLC Media Player")
-                elide: Text.ElideRight
-                font.family: VLCStyle.rd_fontFamily
-                font.pixelSize: VLCStyle.rd_fontSize_label
-                color: VLCStyle.palette.rdFgA2
-            }
-
-            Item {
-                id: rightGroup
-
-                anchors.right: parent.right
-                anchors.rightMargin: VLCStyle.applicationHorizontalMargin
-                anchors.top: parent.top
-                anchors.bottom: parent.bottom
-                width: g_mainDisplay._showCSD ? csdDecorations.width : fullscreenButton.width + VLCStyle.dp(6, VLCStyle.scale)
-
-                Loader {
-                    id: csdDecorations
-
-                    anchors.top: parent.top
-                    anchors.bottom: parent.bottom
-                    anchors.right: parent.right
-
-                    focus: false
-                    active: g_mainDisplay._showCSD
-                    visible: g_mainDisplay._showCSD
-                    source: VLCStyle.palette.hasCSDImage
-                        ? "qrc:///qt/qml/VLC/Widgets/CSDThemeButtonSet.qml"
-                        : "qrc:///qt/qml/VLC/Widgets/CSDWindowButtonSet.qml"
-
-                    onLoaded: {
-                        if (item.showFullscreenButton !== undefined)
-                            item.showFullscreenButton = true
-                    }
-                }
-
-                Widgets.IconToolButton {
-                    id: fullscreenButton
-
-                    visible: !g_mainDisplay._showCSD || !(csdDecorations.item && csdDecorations.item.showFullscreenButton !== undefined)
-                    anchors.verticalCenter: parent.verticalCenter
-                    anchors.right: g_mainDisplay._showCSD ? csdDecorations.left : parent.right
-                    anchors.rightMargin: g_mainDisplay._showCSD ? 0 : VLCStyle.dp(6, VLCStyle.scale)
-                    width: VLCStyle.rd_iconButtonWidth
-                    height: VLCStyle.rd_iconButtonHeight
-                    font.pixelSize: VLCStyle.rd_iconSize
-
-                    text: (MainCtx.intfMainWindow.visibility === Window.FullScreen) ? VLCIcons.defullscreen : VLCIcons.fullscreen
-                    rdIcon: (MainCtx.intfMainWindow.visibility === Window.FullScreen) ? "fullscreen_state-active" : "fullscreen"
-                    description: qsTr("Fullscreen")
-
-                    onClicked: MainCtx.toggleInterfaceFullScreen()
-                }
-            }
-        }
+        showLibraryButtons: false
+        title: Player.isStarted ? (Player.title !== "" ? Player.title : Player.name)
+                                : qsTr("VLC Media Player")
+        showCSD: g_mainDisplay._showCSD
     }
 
     // the library (VLC's own home page without the media library)

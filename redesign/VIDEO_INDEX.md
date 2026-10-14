@@ -135,7 +135,7 @@ Extra decisions made during the build, one line each (date, row IDs, decision, r
 - 2026-10-14 Phase 5: extra menu items not in the video but needed to manage the data: Delete Playlist, Remove from Library (folders), Unpin and Move Up / Down (pins).
 - 2026-10-14 Phase 5: mini player X stops playback (VLC has no other "close the mini player" state).
 - 2026-10-14 Phase 5: Network Podcasts and Radio are VLC's existing "podcast" and "radio" services.
-- 2026-10-14 Phase 5: window title text "VLC Media Player" stays until the Phase 6 rename.
+- 2026-10-14 Phase 5: window title text "VLC Media Player" stays until the Phase 6 rename; while something plays, the full library's top bar shows its title like the player's (Figma Player-3.png). That top bar is the player's TopBar without the sidebar toggle and folder chip, so both line up exactly.
 - 2026-10-14 Phase 5: Edit / Add Subtitle and Audio Tracks on a file use VLC's existing slave tracks (`:input-slave`); for folders and playlists they wait for the W6.5 dialog.
 - 2026-10-14 F-16 / P5-23: the compact library slides in from the left over 208 ms with an ease-out curve (Figma "slow" is an overdamped spring, ease-out shaped); its open state survives a visit to the full library (P5-27: the player comes back with it open) and Hide UI closes it like the other panels.
 - 2026-10-14 F-16 (performance first): the opaque library slides over the video and the video area takes its new width once, when the opening ends and when the closing starts, instead of resizing the native video surface on every frame of the 208 ms slide; Figma's smart animate would interpolate the video too, but the video (11:37-11:41) only shows a camera zoom there, and Sticky's rule puts no dropped frames over that motion.
