@@ -43,7 +43,11 @@ Item {
     readonly property int controlId: model.id
     readonly property bool dragActive: frameItem.Drag.active
 
-    readonly property real gapBefore: zone ? zone.gapBefore(index, controlId) : 0
+    // an icon button of the control bar (IconToolButton: 30 wide in the bar)
+    readonly property bool isIconButton: !!loader.item && loader.item.rdMinimumWidth !== undefined
+
+    // re-evaluated when the zone's items change or this one loads (ControlRepeater does the same)
+    readonly property real gapBefore: zone ? (zone.count, isIconButton, zone.gapBefore(index)) : 0
 
     // drop position: true when a drop goes after this item
     property bool _dropAfter: false
@@ -107,7 +111,7 @@ Item {
             onLoaded: {
                 item.paintOnly = true
                 item.enabled = false
-                if ((item.rdIcon ?? "") !== "" && item.rdMinimumWidth !== undefined)
+                if (item.rdMinimumWidth !== undefined)
                     item.rdMinimumWidth = VLCStyle.rd_iconButtonWidth
             }
         }

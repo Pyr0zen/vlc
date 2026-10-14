@@ -54,36 +54,30 @@ Item {
 
     // ------------------------------------------------------------------------------ gaps
 
-    // controls drawn with a Figma icon in the control bar (ControlRepeater's 12 px pairs)
-    readonly property var _iconButtons: [
-        ControlListModel.PREVIOUS_BUTTON, ControlListModel.NEXT_BUTTON,
-        ControlListModel.FULLSCREEN_BUTTON, ControlListModel.EXTENDED_BUTTON,
-        ControlListModel.PLAYLIST_BUTTON, ControlListModel.AUDIO_TRACKS_BUTTON,
-        ControlListModel.SUBTITLE_TRACKS_BUTTON
-    ]
+    // same gaps as the live control bar (ControlRepeater.gapBefore, Figma "Controls"): 8 between
+    // controls, between two icon buttons 8 in the left / center zones and 12 in the right zone
+    // (the track buttons group), 20 after the volume and before the queue button
+    readonly property real _iconSpacing: (alignment === Qt.AlignRight) ? VLCStyle.rd_iconButtonSpacing
+                                                                       : VLCStyle.dp(8)
 
-    function controlIdAt(index) {
-        if (!model || index < 0 || index >= model.rowCount())
-            return -1
-        return model.data(model.index(index, 0), Qt.UserRole)
-    }
-
-    // same gaps as the live control bar (ControlRepeater.gapBefore, Figma "Controls")
-    function gapBefore(index, controlId) {
+    function gapBefore(index) {
         if (index <= 0)
             return 0
-        const prev = controlIdAt(index - 1)
-        if (controlId === ControlListModel.PLAYLIST_BUTTON || prev === ControlListModel.VOLUME)
+        const cur = repeater.itemAt(index)
+        const prev = repeater.itemAt(index - 1)
+        if (!cur || !prev)
+            return VLCStyle.dp(8)
+        if (cur.controlId === ControlListModel.PLAYLIST_BUTTON || prev.controlId === ControlListModel.VOLUME)
             return VLCStyle.rd_controlBarSpacing
-        if (_iconButtons.indexOf(controlId) >= 0 && _iconButtons.indexOf(prev) >= 0)
-            return VLCStyle.dp(12)
+        if (cur.isIconButton && prev.isIconButton)
+            return _iconSpacing
         return VLCStyle.dp(8)
     }
 
     function gapAfter(index) {
         if (index + 1 >= count)
             return VLCStyle.dp(8)
-        return gapBefore(index + 1, controlIdAt(index + 1))
+        return gapBefore(index + 1)
     }
 
     // ------------------------------------------------------------------------------ drops
