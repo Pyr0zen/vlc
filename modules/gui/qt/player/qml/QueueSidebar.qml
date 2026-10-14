@@ -117,7 +117,7 @@ RdSidePanel {
                 width: parent.width
                 height: VLCStyle.dp(68)
 
-                text: qsTr("%n item(s)", "", queueModel.count)
+                text: qsTr("%1 item", "%1 items", queueModel.count).arg(queueModel.count)
                       + (queueModel.duration.valid() ? " - " + root.durationText(queueModel.duration) : "")
 
                 HeaderButton {
@@ -307,7 +307,8 @@ RdSidePanel {
             spacing: 0
 
             Header {
-                text: qsTr("%n Bookmark(s)", "", bookmarkLoader.item ? bookmarkLoader.item.count : 0)
+                text: qsTr("%1 Bookmark", "%1 Bookmarks", bookmarkLoader.item ? bookmarkLoader.item.count : 0)
+                          .arg(bookmarkLoader.item ? bookmarkLoader.item.count : 0)
 
                 // Ctrl+B and the instant bookmark are new features (BUILD_PLAN.md W4.8b); until then
                 // both buttons open VLC's bookmark editor

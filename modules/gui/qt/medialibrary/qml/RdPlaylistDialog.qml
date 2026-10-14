@@ -212,7 +212,7 @@ RdLibraryDialog {
                     text: dialog.files.length === 0
                           ? qsTr("Drag files into the box or click here to select files.")
                           : dialog.files.length === 1 ? dialog._fileName(dialog.files[0])
-                                                      : qsTr("%n file(s) selected", "", dialog.files.length)
+                                                      : qsTr("%1 file selected", "%1 files selected", dialog.files.length).arg(dialog.files.length)
                     font.family: VLCStyle.rd_fontFamily
                     font.pixelSize: VLCStyle.rd_fontSize_label
                     color: dialog.files.length === 0 ? VLCStyle.palette.rdFgA4 : VLCStyle.palette.rdFgA2

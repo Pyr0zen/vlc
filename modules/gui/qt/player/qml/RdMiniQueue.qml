@@ -93,7 +93,7 @@ Item {
             anchors.rightMargin: VLCStyle.dp(10)
             anchors.verticalCenter: parent.verticalCenter
             elide: Text.ElideRight
-            text: qsTr("%n item(s)", "", queueModel.count)
+            text: qsTr("%1 item", "%1 items", queueModel.count).arg(queueModel.count)
                   + (queueModel.duration.valid() ? " - " + root._durationText(queueModel.duration) : "")
             font.family: VLCStyle.rd_fontFamily
             font.pixelSize: VLCStyle.rd_fontSize_label

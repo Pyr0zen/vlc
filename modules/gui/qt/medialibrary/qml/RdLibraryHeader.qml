@@ -58,7 +58,7 @@ Item {
     function _countText() {
         if (!page)
             return ""
-        const count = qsTr("%n item(s)", "", page.itemCount)
+        const count = qsTr("%1 item", "%1 items", page.itemCount).arg(page.itemCount)
         if (MediaLib.idle)
             return count
         const status = MediaLib.discoveryPending ? qsTr("Scanning...")
