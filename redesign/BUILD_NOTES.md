@@ -162,3 +162,13 @@ Log of every CI problem and fix (newest last). Workflow: `.github/workflows/buil
 - Top bar divider (8a9caf449a): Figma "Vector 26" is an 18 px line with a 1.5 px round-capped stroke (3 px wide, 40 tall with soft ends in the 2x Player.png). Ours was 1 x 20; now 1.5 x 19.5 with round ends, not rounded through dp() (dp(1.5) = 2). Offscreen at 125 % it covers 2 x 25 physical px (Figma 1.9 x 24.4).
 - Seen, not changed: the music bar's -15 / +15 buttons still use VLC's skip glyphs (Figma: backward-15-sec / forward-15-sec icons, which exist in pixmaps/redesign; VLC's short jump is 10 s by default, so the icon needs a decision); Figma "Player - Music" hides the playback settings button (the Controls "music" variant and the video at 12:14 have it; our profile keeps it).
 - To check on the PC: control bar at 1920 against Player.png (gaps 8 / 20 / 12 / 20, 30 px icon cells); resize the window from maximized down to the minimum and back (controls hide from the queue button inwards, then the duration, then the current time; nothing overlaps); the same in fullscreen and with an audio file (music bar); no top line in Dark, a line in Light; top bar divider look at 125 %.
+
+## 2026-10-14 UX bugs reported by Sticky (being fixed; UX pass rule added to CLAUDE.md)
+- Overlay panels and popups (settings sidebar, tracks popup, queue, menus) do not close on a click outside, e.g. on the video. UX agent.
+- Changing subtitle speed or timing freezes the video while the audio keeps playing. Playback-stall agent (also audits every live control for stalls while dragging).
+- Subtitles sidebar: "Subtitle Speed 1.000 fps" and "Duration Factor 0.000" with thumbs at the far left: row mapping and units suspect. Playback-stall agent.
+- Tracks popup: the Video / Audio / Subtitles tab header has no background and floats over the video; the opaque body starts below it. UX agent.
+- Fullscreen control bar: plain black background, so the seek track is invisible; prev/next look disabled. UX agent.
+- Library rail: the orange marker of the selected sub-item ("All") sits detached at the far left. Library integration agent.
+- Double click, right-click menu, wheel, middle click, drag and drop, hotkeys in every state: being audited (UX agent), then checked hands-on.
+- Elements with wrong proportions or unwanted transparency vs Figma: full visual audit running (figma_file.json node values vs QML and PC screenshots).
