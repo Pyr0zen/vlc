@@ -498,7 +498,7 @@ FocusScope {
         default: {
             // media of VLC's media models (MLMediaModel roles); a playlist's media
             // (MLPlaylistModel) have no isVideo or artist role: a video track tells a video
-            const isVideo = model.isVideo ?? (modelKind === "playlistMedia" ? !!model.videoDesc
+            const isVideo = model.isVideo ?? (modelKind === "playlistMedia" ? (model.videoDesc?.length ?? 0) > 0
                                                                              : modelKind !== "audio")
             const progress = model.progress ?? -1
             return {
@@ -716,7 +716,17 @@ FocusScope {
                     playing: page.isPlaying(cell.item.mrl)
                     secondary: cell.item.kind !== "media" && cell.item.kind !== "stream"
                     dragUrls: page.dragUrlsOf(cell.item)
-                    onClicked: page.activate(cell.item)
+                    // VLC's Navigation takes the arrows and Escape first: move in the grid,
+                    // Escape goes back in the library
+                    Navigation.upAction: () => grid.moveCurrentIndexUp()
+                    Navigation.downAction: () => grid.moveCurrentIndexDown()
+                    Navigation.leftAction: () => grid.moveCurrentIndexLeft()
+                    Navigation.rightAction: () => grid.moveCurrentIndexRight()
+                    Navigation.cancelAction: () => RdLibraryNav.goBack()
+                    onClicked: {
+                        grid.currentIndex = cell.index
+                        page.activate(cell.item)
+                    }
                     onMoreClicked: (button) => itemMenu.openForItem(cell.item, button, page.categoryOf(cell.item))
                 }
             }
@@ -737,7 +747,17 @@ FocusScope {
                     watched: cell.item.watched ?? false
                     playing: page.isPlaying(cell.item.mrl)
                     dragUrls: page.dragUrlsOf(cell.item)
-                    onClicked: page.activate(cell.item)
+                    // VLC's Navigation takes the arrows and Escape first: move in the grid,
+                    // Escape goes back in the library
+                    Navigation.upAction: () => grid.moveCurrentIndexUp()
+                    Navigation.downAction: () => grid.moveCurrentIndexDown()
+                    Navigation.leftAction: () => grid.moveCurrentIndexLeft()
+                    Navigation.rightAction: () => grid.moveCurrentIndexRight()
+                    Navigation.cancelAction: () => RdLibraryNav.goBack()
+                    onClicked: {
+                        grid.currentIndex = cell.index
+                        page.activate(cell.item)
+                    }
                     onMoreClicked: (button) => itemMenu.openForItem(cell.item, button, page.categoryOf(cell.item))
                 }
             }
