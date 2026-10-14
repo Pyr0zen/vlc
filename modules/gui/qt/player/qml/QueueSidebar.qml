@@ -117,8 +117,11 @@ RdSidePanel {
                 width: parent.width
                 height: VLCStyle.dp(68)
 
-                text: qsTr("%1 item", "%1 items", queueModel.count).arg(queueModel.count)
-                      + (queueModel.duration.valid() ? " - " + root.durationText(queueModel.duration) : "")
+                readonly property string countText: qsTr("%1 item", "%1 items", queueModel.count).arg(queueModel.count)
+
+                text: queueModel.duration.valid()
+                      ? qsTr("%1 - %2").arg(countText).arg(root.durationText(queueModel.duration))
+                      : countText
 
                 HeaderButton {
                     rdIcon: "sort"

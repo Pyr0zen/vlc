@@ -130,8 +130,8 @@ T.AbstractButton {
     Item {
         id: ghost
 
-        // over the whole window only while dragging
-        parent: dragHandler.active ? row.Window.contentItem : row
+        // over the whole window only while dragging (set by the drag handler)
+        parent: row
         visible: dragHandler.active
         width: row.width
         height: row.height
@@ -195,10 +195,13 @@ T.AbstractButton {
         }
 
         onActiveChanged: {
-            if (active)
+            if (active) {
+                ghost.parent = row.Window.contentItem
                 ghost.Drag.active = true
-            else
+            } else {
                 ghost.Drag.drop()
+                ghost.parent = row
+            }
         }
     }
 

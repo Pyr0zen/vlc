@@ -25,6 +25,7 @@ import VLC.MainInterface
 import VLC.Player
 import VLC.Style
 import VLC.Widgets as Widgets
+import VLC.MediaLibrary
 
 T.Popup {
     id: popup
@@ -70,7 +71,7 @@ T.Popup {
     function show(item) {
         folderTitle = item.title ?? ""
         const url = item.mrl ?? ""
-        location = url.startsWith("file://") ? decodeURIComponent(url.replace(/^file:\/\/\/?/, "")) : url
+        location = url.startsWith("file://") ? RdLibraryNav.decoded(url.replace(/^file:\/\/\/?/, "")) : url
         open()
     }
 

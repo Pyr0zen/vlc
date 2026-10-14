@@ -151,16 +151,29 @@ T.Popup {
             }
         }
 
-        // body
-        Column {
-            id: bodyColumn
-
+        // body: scrolls when the window is too low for it, so the footer stays inside
+        Flickable {
             width: parent.width
-            topPadding: VLCStyle.dp(22)
-            bottomPadding: VLCStyle.dp(22)
-            leftPadding: VLCStyle.dp(20)
-            rightPadding: VLCStyle.dp(20)
-            spacing: VLCStyle.dp(20)
+            height: Math.min(bodyColumn.implicitHeight,
+                             dialog.parent ? Math.max(0, dialog.parent.height - VLCStyle.dp(40)
+                                                         - VLCStyle.dp(50) - VLCStyle.dp(72))
+                                           : bodyColumn.implicitHeight)
+            contentWidth: width
+            contentHeight: bodyColumn.implicitHeight
+            clip: contentHeight > height
+            boundsBehavior: Flickable.StopAtBounds
+            interactive: contentHeight > height
+
+            Column {
+                id: bodyColumn
+
+                width: parent.width
+                topPadding: VLCStyle.dp(22)
+                bottomPadding: VLCStyle.dp(22)
+                leftPadding: VLCStyle.dp(20)
+                rightPadding: VLCStyle.dp(20)
+                spacing: VLCStyle.dp(20)
+            }
         }
 
         // footer

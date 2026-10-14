@@ -179,10 +179,11 @@ FocusScope {
     readonly property int sortOrder: _sortSpec.desc ? Qt.DescendingOrder : Qt.AscendingOrder
 
     // the file playing now, to mark its row (11:41)
-    readonly property string playingMrl: Player.url.toString() !== "" ? decodeURIComponent(Player.url.toString()) : ""
+    // compared as RdLibraryNav.mrlKey (decoded safely, drive letters as on disk)
+    readonly property string playingMrl: Player.url.toString() !== "" ? RdLibraryNav.mrlKey(Player.url.toString()) : ""
 
     function isPlaying(mrl) {
-        return playingMrl !== "" && !!mrl && decodeURIComponent(mrl) === playingMrl
+        return playingMrl !== "" && !!mrl && RdLibraryNav.mrlKey(mrl) === playingMrl
     }
 
     // rows above the items: "+ Add" rows (isAction) and the fixed entries of Music and Network
@@ -539,7 +540,7 @@ FocusScope {
     // songs show "title - artist" (12:00)
     function titleOf(item) {
         if (item.kind === "media" && !item.isVideo && item.subtitle)
-            return item.title + " - " + item.subtitle
+            return qsTr("%1 - %2").arg(item.title).arg(item.subtitle)
         return item.title
     }
 

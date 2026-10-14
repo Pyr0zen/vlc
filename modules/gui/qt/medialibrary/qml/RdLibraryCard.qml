@@ -141,8 +141,8 @@ T.AbstractButton {
     Item {
         id: ghost
 
-        // over the whole window only while dragging
-        parent: dragHandler.active ? card.Window.contentItem : card
+        // over the whole window only while dragging (set by the drag handler)
+        parent: card
         visible: dragHandler.active
         width: VLCStyle.dp(337)
         height: VLCStyle.rd_rowHeight
@@ -204,10 +204,13 @@ T.AbstractButton {
         }
 
         onActiveChanged: {
-            if (active)
+            if (active) {
+                ghost.parent = card.Window.contentItem
                 ghost.Drag.active = true
-            else
+            } else {
                 ghost.Drag.drop()
+                ghost.parent = card
+            }
         }
     }
 

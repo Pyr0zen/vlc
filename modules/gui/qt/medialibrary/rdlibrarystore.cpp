@@ -849,7 +849,9 @@ void RdLibraryStore::exportPlaylist(const MLItemId& playlistId, const QString& n
         {
             if (!m.p_files || m.p_files->i_nb_items == 0 || !m.p_files->p_items[0].psz_mrl)
                 continue;
-            ctx.lines.append(QStringLiteral("#EXTINF:%1,%2").arg(m.i_duration / 1000).arg(qfu(m.psz_title)));
+            // -1: unknown length (a stream), as the M3U format says
+            const int64_t seconds = m.i_duration > 0 ? m.i_duration / 1000 : -1;
+            ctx.lines.append(QStringLiteral("#EXTINF:%1,%2").arg(seconds).arg(qfu(m.psz_title)));
             const QUrl url(qfu(m.p_files->p_items[0].psz_mrl));
             ctx.lines.append(url.isLocalFile() ? QDir::toNativeSeparators(url.toLocalFile())
                                                : qfu(m.p_files->p_items[0].psz_mrl));
