@@ -47,8 +47,10 @@ Item {
                     action: () => RdLibraryActions.setWatched(item, false) }
                 : { text: qsTr("Mark as Watched"), icon: "check_state-selected_two-tone-yes",
                     action: () => RdLibraryActions.setWatched(item, true) })
-            entries.push({ text: qsTr("Favorite"), icon: "favorite_two-tone-yes", selected: !!item.isFavorite,
-                           action: () => RdLibraryActions.toggleFavorite(item) })
+            // only where the model knows the favorite state, so it can be cleared again
+            if (item.isFavorite !== undefined)
+                entries.push({ text: qsTr("Favorite"), icon: "favorite_two-tone-yes", selected: !!item.isFavorite,
+                               action: () => RdLibraryActions.toggleFavorite(item) })
         }
         entries.push({ text: qsTr("Stream"), icon: "streaming_two-tone-yes", action: () => RdLibraryActions.stream(item) })
         entries.push({ text: qsTr("Convert"), icon: "swap_two-tone-yes", action: () => RdLibraryActions.convert(item) })
@@ -76,8 +78,9 @@ Item {
     function _playlistEntries(item) {
         return [
             { text: qsTr("Play"), icon: "playback_two-tone-yes", action: () => RdLibraryActions.play(item) },
-            { text: qsTr("Favorite"), icon: "favorite_two-tone-yes", selected: !!item.isFavorite,
-              action: () => RdLibraryActions.toggleFavorite(item) },
+            // only where the model knows the favorite state, so it can be cleared again
+            item.isFavorite !== undefined ? { text: qsTr("Favorite"), icon: "favorite_two-tone-yes", selected: !!item.isFavorite,
+                                              action: () => RdLibraryActions.toggleFavorite(item) } : null,
             { text: qsTr("Shuffle"), icon: "shuffle_two-tone-yes_direction-right", action: () => RdLibraryActions.shuffle(item) },
             { text: qsTr("Export Playlist"), icon: "save_two-tone-yes",
               action: () => RdLibraryStore.exportPlaylist(item.id, item.title) },
@@ -97,19 +100,20 @@ Item {
                   button: qsTr("Delete"),
                   action: () => RdLibraryStore.deletePlaylist(item.id)
               }) }
-        ]
+        ].filter((entry) => !!entry)
     }
 
     function _containerEntries(item) {
         return [
             { text: qsTr("Play"), icon: "playback_two-tone-yes", action: () => RdLibraryActions.play(item) },
-            { text: qsTr("Favorite"), icon: "favorite_two-tone-yes", selected: !!item.isFavorite,
-              action: () => RdLibraryActions.toggleFavorite(item) },
+            // only where the model knows the favorite state, so it can be cleared again
+            item.isFavorite !== undefined ? { text: qsTr("Favorite"), icon: "favorite_two-tone-yes", selected: !!item.isFavorite,
+                                              action: () => RdLibraryActions.toggleFavorite(item) } : null,
             { text: qsTr("Shuffle"), icon: "shuffle_two-tone-yes_direction-right", action: () => RdLibraryActions.shuffle(item) },
             { text: qsTr("Add to Queue"), icon: "queue_two-tone-yes", action: () => RdLibraryActions.addToQueue(item) },
             { text: qsTr("Add to Playlist"), icon: "playlist_two-tone-yes", submenu: true,
               action: (row) => { playlistMenu.mediaItems = [item.id]; playlistMenu.openBeside(row) } }
-        ]
+        ].filter((entry) => !!entry)
     }
 
     // the folder menu: the header "..." of folder pages and the "..." of folder rows

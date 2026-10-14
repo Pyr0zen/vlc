@@ -516,7 +516,8 @@ FocusScope {
                 progress: (progress > 0 && progress < 1) ? progress : -1,
                 watched: (model.playcount ?? 0) > 0,
                 isVideo: isVideo,
-                isFavorite: model.isFavorite ?? false
+                // undefined where the model has no favorite role (a playlist's media)
+                isFavorite: model.isFavorite
             }
         }
         }

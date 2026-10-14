@@ -151,6 +151,7 @@ RdLibraryItem RdLibraryItems::fromPlaylist(const vlc_ml_playlist_t& playlist)
     item.title = qfu(playlist.psz_name);
     item.mrl = qfu(playlist.psz_mrl);
     item.count = static_cast<int>(playlist.i_nb_media);
+    item.isFavorite = playlist.b_is_favorite;
     return item;
 }
 
