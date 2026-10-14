@@ -120,17 +120,10 @@ T.Pane {
     // PlayerControlLayout moves it into its middle slot
     readonly property Item inlineSeekRow: inlineSeekRowItem
 
+    // redesign: Figma "Controls": BG/A3, no stroke (the 1 px top line was not in the design)
     background: Rectangle {
         color: root.textPosition === ControlBar.TimeTextPosition.Inline ? VLCStyle.palette.rdBgA3Transparent
                                                                          : theme.bg.primary
-
-        // redesign: 1 px top line Divider/Dim
-        Rectangle {
-            visible: root.textPosition === ControlBar.TimeTextPosition.Inline
-            width: parent.width
-            height: VLCStyle.dp(1, VLCStyle.scale)
-            color: VLCStyle.palette.rdDividerDim
-        }
     }
 
     // keeps the seek row in the control bar's item tree (it inherits the colors from it) without

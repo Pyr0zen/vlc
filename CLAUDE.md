@@ -80,7 +80,7 @@ READY TO BUILD. Next session: read CLAUDE.md, VIDEO_INDEX.md, FIGMA_FLOWS.md and
 - **Status file (permanent):** keep `redesign/STATUS.md` updated and push it after every finished work package, every phase, and whenever you stop or get blocked. It holds, at the top, the date and time, the current work package and the last 10 commits (hash + message), then the latest PROGRESS REPORT. Overwrite it each time.
 
 ## Using Tony's PC (Tony, 2026-10-14)
-- Tony works on this PC while tests run (2026-10-14): on-PC tests are fine, but close the test VLC and every test window as soon as each test is done, keep runs short, and tell him briefly before a longer input-driven run. Every input helper must refuse unless the VLC window under test is in front (vlcperf.ps1 Guard, vlctest.ps1 Require-Focus), so no key, click or pointer move can reach his apps.
+- On-PC tests (Tony, 2026-10-14): mouse, keyboard and windows may be used anytime, no need to wait. Requirement: when a test is done, close every window and process it opened (test VLC, scripts, captures, command windows) so nothing is left running or open. Keep the safety guard: input only goes to VLC while it is the window in front (vlcperf.ps1 Guard, vlctest.ps1 Require-Focus).
 
 ## Quality rules (mandatory for every work package; a package is NOT done until all pass)
 - **Performance first (Tony, 2026-10-13, top priority):** the redesign must feel at least as snappy as stock VLC. If it feels sluggish it has failed, no matter how close it looks to the video. Responsiveness wins over visual effects every time. Hard targets, measured on this PC every build round against stock VLC 4 (the green stock build from Phase 1, run 38315049322, in builds\38315049322), both in portable mode, same tester videos:
