@@ -94,8 +94,10 @@ public:
     Q_INVOKABLE void movePin(int from, int to);
     Q_INVOKABLE int pinIndex(const QVariantMap& location) const;
 
-    // named network stream lists (a pasted m3u link saved with a name)
-    Q_INVOKABLE void addStreamList(const QString& name, const QString& url);
+    // named network stream lists (a pasted m3u link saved with a name). The link is made an MRL
+    // as Open URL does (a link without a scheme is a local path); returns the list's entry
+    // { name, url } (the existing one for a link already saved), empty for an invalid link
+    Q_INVOKABLE QVariantMap addStreamList(const QString& name, const QString& url);
     Q_INVOKABLE void removeStreamList(int index);
     Q_INVOKABLE void renameStreamList(int index, const QString& name);
     // a browse tree for NetworkMediaModel over a stream list, a folder or a playlist URL

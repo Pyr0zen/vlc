@@ -539,19 +539,38 @@ int RdLibraryStore::pinIndex(const QVariantMap& location) const
 
 /* network stream lists */
 
-void RdLibraryStore::addStreamList(const QString& name, const QString& url)
+QVariantMap RdLibraryStore::addStreamList(const QString& name, const QString& url)
 {
+    // as DialogsProvider::openNetworkStreams
+    const QString link = url.trimmed();
+    if (link.isEmpty())
+        return {};
+    char* uri = link.contains(QLatin1String("://"))
+              ? vlc_uri_fixup(qtu(link))
+              : vlc_path2uri(qtu(QDir::toNativeSeparators(link)), nullptr);
+    if (uri == nullptr)
+    {
+        msg_Warn(p_intf, "invalid network link: %s", qtu(link));
+        return {};
+    }
+    const QString mrl = qfu(uri);
+    free(uri);
+
+    const QString key = RdLibraryItems::mrlKey(mrl);
     for (const QVariant& entry : std::as_const(m_streamLists))
     {
-        if (entry.toMap().value(QStringLiteral("url")).toString() == url)
-            return;
+        const QVariantMap map = entry.toMap();
+        if (RdLibraryItems::mrlKey(map.value(QStringLiteral("url")).toString()) == key)
+            return map;
     }
-    m_streamLists.append(QVariantMap {
+    const QVariantMap entry {
         { QStringLiteral("name"), name },
-        { QStringLiteral("url"), url },
-    });
+        { QStringLiteral("url"), mrl },
+    };
+    m_streamLists.append(entry);
     save(RD_LIBRARY_KEY("streamLists"), m_streamLists);
     emit streamListsChanged();
+    return entry;
 }
 
 void RdLibraryStore::removeStreamList(int index)
