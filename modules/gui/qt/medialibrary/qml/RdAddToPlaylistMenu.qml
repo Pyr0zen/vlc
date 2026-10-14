@@ -53,7 +53,8 @@ Widgets.RdMenuPanel {
     }
 
     // MLItemIds or URLs of the media to add
-    property var items: []
+    // (not "items": that is RdMenuPanel's default property, the rows of the menu)
+    property var mediaItems: []
 
     // to the right of a row of another menu; parented to the window, so it stays when that
     // menu closes
@@ -79,7 +80,7 @@ Widgets.RdMenuPanel {
         text: qsTr("New Playlist...")
         rdIcon: "add"
         dimmed: true
-        onClicked: RdLibraryNav.playlistDialogRequested({ items: menu.items })
+        onClicked: RdLibraryNav.playlistDialogRequested({ items: menu.mediaItems })
     }
 
     // at most 6 rows high, rows are created as they scroll in
@@ -99,7 +100,7 @@ Widgets.RdMenuPanel {
             text: model.name ?? ""
             rdIcon: "playlist_two-tone-yes"
             onClicked: {
-                RdLibraryStore.appendToPlaylist(model.id, menu.items)
+                RdLibraryStore.appendToPlaylist(model.id, menu.mediaItems)
                 menu.close()
             }
         }
