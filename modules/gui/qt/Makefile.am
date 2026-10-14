@@ -153,6 +153,8 @@ libqt_plugin_la_SOURCES = \
 	dialogs/preferences/simple_preferences.hpp \
 	dialogs/redesign/hotkeys_model.cpp \
 	dialogs/redesign/hotkeys_model.hpp \
+	dialogs/redesign/settings/settings_catalog.cpp \
+	dialogs/redesign/settings/settings_catalog.hpp \
 	dialogs/sout/convert.cpp dialogs/sout/convert.hpp \
 	dialogs/sout/profile_selector.cpp \
 	dialogs/sout/profile_selector.hpp \
@@ -444,6 +446,7 @@ nodist_libqt_plugin_la_SOURCES = \
 	dialogs/preferences/preferences_widgets.moc.cpp \
 	dialogs/preferences/simple_preferences.moc.cpp \
 	dialogs/redesign/hotkeys_model.moc.cpp \
+	dialogs/redesign/settings/settings_catalog.moc.cpp \
 	dialogs/sout/convert.moc.cpp \
 	dialogs/sout/profile_selector.moc.cpp \
 	dialogs/sout/sout.moc.cpp \
