@@ -71,6 +71,11 @@ Decided by Sticky on 2026-10-12. General rule for anything not listed: her final
 31. (2026-10-13) The final UIs are in the Figma file; the video shows iterations on the way. Look: Figma. Functionality and relations: the video and its transcript.
 32. (2026-10-13) Dialogs open and close instantly, like the Figma prototype and the Settings dialog, so all dialogs behave the same (Open Network Stream, Settings, Keyboard Shortcuts and later ones); the video's dialog fades are editing dissolves. Menus keep the 120 ms fade in measured from her unedited demo (5:08).
 33. (2026-10-14) Light theme: Light/FG/1 is #111111 and Light/FG/2 is #222222 (the Figma file repeats the dark values there); approves the proposal under Decisions (Claude), W2.1 / Decision 20.
+34. (2026-10-14) Popup duration (row 352): test on the PC first whether Windows honours the app's tray notification time; if it ignores it, draw our own popup so the setting works.
+35. (2026-10-14) Process priority (row 356): shown in words, Lowest / Low / Normal / High / Highest.
+36. (2026-10-14) Discover cast devices OFF (row 359): search only while the cast picker is open, never in the background.
+37. (2026-10-14) Double click on the video set to Play/Pause (row 354): single-click play/pause turns off in that case, so single clicks never need a delay. Default stays double click = fullscreen.
+38. (2026-10-14) Night mode (row 355): Sticky does the listening test once it is built (tell him when).
 
 ## Decisions (Claude)
 Extra decisions made during the build, one line each (date, row IDs, decision, reason).
