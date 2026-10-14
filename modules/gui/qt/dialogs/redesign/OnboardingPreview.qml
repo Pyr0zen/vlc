@@ -63,6 +63,7 @@ Item {
                 y: 8
                 size: 24
                 name: "vlc"
+                accentColor: root.rdPalette.rdAccentLogo
             }
 
             Row {

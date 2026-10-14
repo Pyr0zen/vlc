@@ -270,6 +270,7 @@ T.Popup {
                 y: root.dp(116)
                 size: root.dp(141)
                 name: "vlc"
+                accentColor: root.rdPalette.rdAccentLogo
             }
 
             Text {
