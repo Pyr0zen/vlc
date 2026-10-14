@@ -187,6 +187,12 @@ MainCtx::MainCtx(qt_intf_t *_p_intf)
     });
 #endif
 
+    // redesign: the scheme is kept at once, not only when VLC quits: reloadPrefs() (after the
+    // Settings dialog writes an interface option) reads it back and must not undo a live change
+    connect(m_colorScheme, &ColorSchemeModel::currentChanged, this, [this]() {
+        settings->setValue( "MainWindow/color-scheme-index", m_colorScheme->currentIndex() );
+    });
+
     m_sort = new SortCtx(this);
     m_search = new SearchCtx(this);
     m_playqueuePanel = new SidePanelCtx(this);
@@ -611,6 +617,8 @@ void MainCtx::setIntfUserScaleFactor(double newValue)
     if (qFuzzyCompare(value, m_intfUserScaleFactor))
         return;
     m_intfUserScaleFactor = value;
+    // redesign: kept at once, as the color scheme: reloadPrefs() reads it back
+    settings->setValue( "MainWindow/interface-scale", QString::number( m_intfUserScaleFactor ) );
     updateIntfScaleFactor();
 }
 
