@@ -39,6 +39,33 @@ Rectangle {
     radius: VLCStyle.rd_radius_normal
     color: rdPalette.rdBgB2
 
+    // keyboard: Tab reaches the control, Left / Right pick the previous / next segment; the
+    // focus ring is the FG/A3 border of the other redesign controls (not in Figma)
+    activeFocusOnTab: true
+    border.width: activeFocus ? VLCStyle.dp(1) : 0
+    border.color: rdPalette.rdFgA3
+
+    Accessible.role: Accessible.PageTabList
+    Accessible.name: (currentIndex >= 0 && currentIndex < model.length) ? model[currentIndex] : ""
+
+    function _step(delta) {
+        const count = root.model.length
+        if (count === 0)
+            return
+        const index = Math.max(0, Math.min(count - 1, root.currentIndex + delta))
+        if (index !== root.currentIndex)
+            root.activated(index)
+    }
+
+    Keys.onLeftPressed: (event) => {
+        root._step(-1)
+        event.accepted = true
+    }
+    Keys.onRightPressed: (event) => {
+        root._step(1)
+        event.accepted = true
+    }
+
     Row {
         id: row
 
