@@ -1017,6 +1017,7 @@ qml_modules += {
         'widgets/qml/RdPanel.qml',
         'widgets/qml/RdTooltip.qml',
         'widgets/qml/RdIcon.qml',
+        'widgets/qml/RdDashedFrame.qml',
         'widgets/qml/RdValueBox.qml',
         'widgets/qml/RdSettingRow.qml',
         'widgets/qml/RdSettingsSection.qml',
