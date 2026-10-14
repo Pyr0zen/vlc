@@ -1088,10 +1088,11 @@ FocusScope {
     // (video 9:29 / 11:41 zoomed: ~6 px frame on the sides and bottom, ~8 px inner radius; with the
     // bars hidden a thin frame stays all around, video 3:50 and 5:28). Drawn above the video, below
     // the bars (W3.7).
-    // Qt is built without Canvas and Shapes, so the frame is four plain rectangles around the
-    // opening plus a small shader for each rounded inner corner. While the bars fade only the
-    // corner positions and the two band heights change: no rounded geometry is rebuilt per frame
-    // and nothing needs a clip.
+    // Qt is built without Canvas and Shapes, so the frame is the thick border of a rounded
+    // rectangle: its inner edge is the rounded video opening, its outer edge lies outside the
+    // player. The opening follows the bars' fade, so the frame is split into a top and a bottom
+    // half, each a fixed-size rectangle that only moves with its edge (no geometry is rebuilt
+    // during a fade) and is clipped to its half.
     Item {
         id: videoFrame
 
@@ -1106,63 +1107,45 @@ FocusScope {
         readonly property real topEdge: inset + (topBar.height - inset) * (topBar.visible ? topBar.opacity : 0)
         readonly property real bottomEdge: height - inset
                                            - (controlBar.height - inset) * (controlBar.visible ? controlBar.opacity : 0)
+        // fixed while the bars fade (whole pixels: a rectangle's border width is pixel aligned)
+        readonly property real frameWidth: Math.ceil(2 * Math.max(topBar.height, controlBar.height)
+                                                     + 2 * innerRadius + VLCStyle.dp(10, VLCStyle.scale))
+        readonly property real openingWidth: Math.max(0, width - 2 * inset)
         // smaller corners when the opening is too small for them
-        readonly property real cornerRadius: Math.max(0, Math.min(innerRadius, (width - 2 * inset) / 2,
-                                                                  (bottomEdge - topEdge) / 2))
-        readonly property color color: VLCStyle.palette.rdBgA3
+        readonly property real cornerRadius: Math.min(innerRadius, openingWidth / 2,
+                                                      Math.max(0, bottomEdge - topEdge) / 2)
+        // the halves meet in the middle; in a tiny window, inside the opening (or where it closed)
+        readonly property real split: Math.min(Math.max(height / 2, topEdge), bottomEdge)
 
-        // top band
-        Rectangle {
-            width: videoFrame.width
-            height: videoFrame.topEdge
-            color: videoFrame.color
-            antialiasing: true
-        }
-
-        // bottom band
-        Rectangle {
-            y: videoFrame.bottomEdge
-            width: videoFrame.width
-            height: videoFrame.height - videoFrame.bottomEdge
-            color: videoFrame.color
-            antialiasing: true
-        }
-
-        // left and right sides
-        Rectangle {
-            width: videoFrame.inset
-            height: videoFrame.height
-            color: videoFrame.color
-            antialiasing: true
-        }
-
-        Rectangle {
-            x: videoFrame.width - width
-            width: videoFrame.inset
-            height: videoFrame.height
-            color: videoFrame.color
-            antialiasing: true
-        }
-
-        // rounded corners of the opening, clockwise from the top left one
         Repeater {
-            model: 4
+            model: 2 // top half, bottom half
 
-            delegate: ShaderEffect {
+            delegate: Item {
+                id: frameHalf
+
                 required property int index
+                readonly property bool atTop: index === 0
 
-                readonly property bool atRight: index === 1 || index === 2
-                readonly property bool atBottom: index >= 2
-                readonly property color color: videoFrame.color
+                y: atTop ? 0 : videoFrame.split
+                width: videoFrame.width
+                height: atTop ? videoFrame.split : videoFrame.height - videoFrame.split
+                clip: true
 
-                x: atRight ? videoFrame.width - videoFrame.inset - width : videoFrame.inset
-                y: atBottom ? videoFrame.bottomEdge - height : videoFrame.topEdge
-                width: videoFrame.cornerRadius
-                height: videoFrame.cornerRadius
-                rotation: index * 90
+                // its opening is as tall as the player, so only the edge of this half shows
+                Rectangle {
+                    x: videoFrame.inset - videoFrame.frameWidth
+                    y: (frameHalf.atTop ? videoFrame.topEdge
+                                        : videoFrame.bottomEdge - videoFrame.height - frameHalf.y)
+                       - videoFrame.frameWidth
+                    width: videoFrame.openingWidth + 2 * videoFrame.frameWidth
+                    height: videoFrame.height + 2 * videoFrame.frameWidth
 
-                blending: true
-                fragmentShader: "qrc:///shaders/VideoFrameCorner.frag.qsb"
+                    color: "transparent"
+                    border.width: videoFrame.frameWidth
+                    border.color: VLCStyle.palette.rdBgA3
+                    radius: videoFrame.frameWidth + videoFrame.cornerRadius
+                    antialiasing: true
+                }
             }
         }
     }
