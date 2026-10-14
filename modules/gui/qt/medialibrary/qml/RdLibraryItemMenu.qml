@@ -180,7 +180,7 @@ Item {
         case "streams":
         case "service":
         case "browse":
-            entries = [{ text: qsTr("Add Network Stream"), icon: "add", action: () => RdLibraryNav.streamDialogRequested() }]
+            entries = [{ text: qsTr("Add Network Stream"), icon: "add", action: () => RdLibraryActions.openNetworkStream() }]
             break
         case "recent":
             entries = [{ text: qsTr("Clear Recent"), icon: "close", action: () => RdLibraryStore.clearHistory() }]

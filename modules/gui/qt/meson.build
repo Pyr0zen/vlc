@@ -759,7 +759,7 @@ qml_modules += {
         'medialibrary/qml/RdLibraryDialog.qml',
         'medialibrary/qml/RdDashedBorder.qml',
         'medialibrary/qml/RdPlaylistDialog.qml',
-        'medialibrary/qml/RdStreamDialog.qml',
+        'medialibrary/qml/RdStreamListSaver.qml',
         'medialibrary/qml/RdFolderInfoPopup.qml',
         'medialibrary/qml/RdLibraryRail.qml',
         'medialibrary/qml/RdLibrarySidebar.qml',

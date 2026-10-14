@@ -208,7 +208,7 @@ FocusScope {
             ]
         case "network": {
             const rows = [{ kind: "action", isAction: true, title: qsTr("Add Network Stream"), icon: "add",
-                            run: () => RdLibraryNav.streamDialogRequested() }]
+                            run: () => RdLibraryActions.openNetworkStream() }]
             const lists = RdLibraryStore.streamLists
             for (let i = 0; i < lists.length; ++i)
                 rows.push({ kind: "streamList", index: i, title: lists[i].name, mrl: lists[i].url, icon: "streaming",

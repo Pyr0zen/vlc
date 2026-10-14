@@ -65,7 +65,6 @@ QtObject {
     // dialogs and popups of the library, shown by the library view that is on screen
     //   params: { items } for a new playlist, { playlist } to edit one (Properties & Metadata)
     signal playlistDialogRequested(var params)
-    signal streamDialogRequested()
     signal infoRequested(var item)
 
     function _root(page) {

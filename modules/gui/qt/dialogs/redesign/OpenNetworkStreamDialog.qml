@@ -82,9 +82,23 @@ T.Popup {
         if (!_canSave)
             return
 
-        DialogsProvider.openNetworkStreams(urlArea.text,
-                                           _showPlaylistName ? nameField.text.trim() : "")
+        // with a Playlist Name the links become stream lists under Network, shown in the
+        // library (video 13:17-13:20, P6-14); without one they play
+        const name = _showPlaylistName ? nameField.text.trim() : ""
+        if (name !== "" && _streamListSaver.item) {
+            const urls = urlArea.text.split("\n").map((u) => u.trim()).filter((u) => u !== "")
+            _streamListSaver.item.save(name, urls)
+        } else {
+            DialogsProvider.openNetworkStreams(urlArea.text, name)
+        }
         close()
+    }
+
+    // the library's stream lists (VLC.MediaLibrary is only there with the media library); not
+    // a child of the dialog's content column
+    readonly property Loader _streamListSaver: Loader {
+        active: root._showPlaylistName
+        source: "qrc:///qt/qml/VLC/MediaLibrary/RdStreamListSaver.qml"
     }
 
     parent: T.Overlay.overlay
