@@ -394,6 +394,15 @@ QtObject {
     readonly property int rd_dialogHeight: MainCtx.dp(800, scale)
     readonly property int rd_dialogHeaderHeight: MainCtx.dp(96, scale)
     readonly property int rd_dialogFooterHeight: MainCtx.dp(72, scale)
+    // onboarding (Figma "Onboarding" 1090x759, radius 14, video 19:47-19:54)
+    readonly property int rd_onboardingWidth: MainCtx.dp(1090, scale)
+    readonly property int rd_onboardingHeight: MainCtx.dp(759, scale)
+    // accent color options in the order of the Figma onboarding dots (Decision 15)
+    readonly property var rd_accentOptions: ["#D37918", "#E15032", "#C49E23", "#19A234", "#18AAD3",
+                                             "#185DD3", "#8E42FF", "#F052B3", "#AFAFAF"]
+    // pictures of the light and dark themes on the onboarding theme tiles, the same in every theme
+    readonly property color rd_themeTileLight: "#AFAFAF"
+    readonly property color rd_themeTileDark: "#222222"
 
     // Scroll bar (size means width or height, depending on the orientation):
     readonly property real scrollBarInteractingSize: MainCtx.dp(8, scale)
