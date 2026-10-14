@@ -153,6 +153,8 @@ libqt_plugin_la_SOURCES = \
 	dialogs/preferences/simple_preferences.hpp \
 	dialogs/redesign/hotkeys_model.cpp \
 	dialogs/redesign/hotkeys_model.hpp \
+	dialogs/redesign/settings/settings_catalog.cpp \
+	dialogs/redesign/settings/settings_catalog.hpp \
 	dialogs/sout/convert.cpp dialogs/sout/convert.hpp \
 	dialogs/sout/profile_selector.cpp \
 	dialogs/sout/profile_selector.hpp \
@@ -454,6 +456,7 @@ nodist_libqt_plugin_la_SOURCES = \
 	dialogs/preferences/preferences_widgets.moc.cpp \
 	dialogs/preferences/simple_preferences.moc.cpp \
 	dialogs/redesign/hotkeys_model.moc.cpp \
+	dialogs/redesign/settings/settings_catalog.moc.cpp \
 	dialogs/sout/convert.moc.cpp \
 	dialogs/sout/profile_selector.moc.cpp \
 	dialogs/sout/sout.moc.cpp \
@@ -1295,6 +1298,15 @@ libqml_module_dialogs_a_QML = \
 	dialogs/redesign/settings/SettingsRow.qml \
 	dialogs/redesign/settings/SettingsSearchField.qml \
 	dialogs/redesign/settings/SettingsSection.qml \
+	dialogs/redesign/settings/SettingsSegmented.qml \
+	dialogs/redesign/settings/SettingsInterfaceToggle.qml \
+	dialogs/redesign/settings/SettingsAccentPicker.qml \
+	dialogs/redesign/settings/SettingsEqualizer.qml \
+	dialogs/redesign/settings/SettingsLanguageOption.qml \
+	dialogs/redesign/settings/SettingsOption.qml \
+	dialogs/redesign/settings/SettingsOptionGroup.qml \
+	dialogs/redesign/settings/SettingsMoreOptions.qml \
+	dialogs/redesign/settings/SettingsPluginList.qml \
 	dialogs/redesign/settings/pages/SettingsGeneralPage.qml \
 	dialogs/redesign/settings/pages/SettingsInterfacePage.qml \
 	dialogs/redesign/settings/pages/SettingsPrivacyPage.qml \

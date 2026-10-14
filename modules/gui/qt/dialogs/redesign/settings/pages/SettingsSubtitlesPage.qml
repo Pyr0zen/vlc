@@ -15,13 +15,12 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
-// redesign: Settings > Subtitles ("Subtitle Defaults", video 18:09-18:14, Figma "Settings - subtitles"
-// / "Settings - subtitles-1"); rows: BUILD_PLAN.md section 8, P8-12, P7-17.
-// The "Loading Subtitles" section is the pattern for W6.2: real VLC options read and written
-// through RdEffects (the same source as the settings sidebar, so both stay in sync), values in
-// words instead of numbers (video 17:03-17:33), info popovers with VLC's explanation, a
-// dependent row disabled while its parent setting is off (video 18:15, P8-14) and one setting
-// under Advanced Options.
+// redesign: Settings > Subtitles ("Subtitle Defaults", video 18:09-18:14 and 7:29-7:40, Figma
+// "Settings - subtitles" / "Settings - subtitles-1"); rows: P8-12, P7-17, P8-01, P3-22.
+// Values in words instead of numbers (video 17:03-17:33), and the font size both in words and
+// as an exact value (7:29-7:40: "the exact font sizes are hidden in the advanced preferences").
+// The text style options are the freetype text renderer's; the size is VLC's subtitle text
+// scale, applied at once (the settings sidebar's).
 import QtQuick
 
 import VLC.MainInterface
@@ -33,72 +32,351 @@ import VLC.Dialogs
 SettingsPage {
     id: root
 
-    // a binding reading RdEffects.values[key] follows only that value
-    readonly property bool _autodetect: RdEffects.values[RdEffects.optionKey("sub-autodetect-file")] === true
+    function _option(name) {
+        return RdEffects.values[RdEffects.optionKey(name)]
+    }
+
+    readonly property bool _autodetect: _option("sub-autodetect-file") === true
+    readonly property bool _shadow: Number(_option("freetype-shadow-opacity") ?? 0) > 0
+    readonly property bool _background: Number(_option("freetype-background-opacity") ?? 0) > 0
+    readonly property bool _title: _option("video-title-show") === true
+
+    // the size in words (percent of VLC's default size)
+    readonly property var _sizes: [
+        { value: 60, text: qsTr("Smaller") },
+        { value: 80, text: qsTr("Small") },
+        { value: 100, text: qsTr("Automatic") },
+        { value: 125, text: qsTr("Large") },
+        { value: 160, text: qsTr("Larger") }
+    ]
+    readonly property int _scale: Number(RdEffects.values.subtitleTextScale ?? 100)
+    // "Precise" shows the exact value; a value without a word opens on it (decided once, so
+    // typing an exact value never swaps the control under the user)
+    property bool _precise: false
+    Component.onCompleted: _precise = !_sizes.some((s) => s.value === _scale)
+
+    SettingsSection {
+        title: qsTr("Tracks & Languages")
+
+        SettingsOption {
+            option: "spu"
+            text: qsTr("Enable subtitles")
+        }
+
+        SettingsLanguageOption {
+            option: "sub-language"
+            text: qsTr("Preferred language")
+        }
+
+        SettingsOption {
+            option: "subsdec-encoding"
+            text: qsTr("Text encoding")
+        }
+    }
 
     SettingsSection {
         title: qsTr("Loading Subtitles")
 
-        SettingsRow {
+        SettingsOption {
+            option: "sub-autodetect-file"
             text: qsTr("Load subtitle files automatically")
-            description: RdEffects.optionDescription("sub-autodetect-file")
-            keywords: "sub-autodetect-file"
-
-            Widgets.RdToggle {
-                checked: root._autodetect
-                Accessible.name: qsTr("Load subtitle files automatically")
-                onToggled: RdEffects.setOption("sub-autodetect-file", checked)
-            }
         }
 
         // VLC's explanation lists the numbers the video replaces with words, so this row
         // explains the choice itself
-        SettingsRow {
+        SettingsOption {
+            option: "sub-autodetect-fuzzy"
             text: qsTr("File name matching")
             description: qsTr("How closely the name of a subtitle file has to match the name of the video for the subtitles to load automatically.")
             keywords: "sub-autodetect-fuzzy fuzziness"
             available: root._autodetect
-
-            Widgets.RdDropdown {
-                // sub-autodetect-fuzzy: 0 to 4, in the video's words (17:03-17:33)
-                readonly property int fuzziness: Number(RdEffects.values[RdEffects.optionKey("sub-autodetect-fuzzy")])
-
-                implicitWidth: VLCStyle.dp(320)
-                implicitHeight: VLCStyle.dp(36)
-                model: [qsTr("Off"), qsTr("Any title"), qsTr("Contains title"),
-                        qsTr("Title with extra characters"), qsTr("Exact title match")]
-                currentIndex: Math.max(0, Math.min(4, fuzziness))
-                Accessible.name: qsTr("File name matching")
-                onActivated: (index) => RdEffects.setOption("sub-autodetect-fuzzy", index)
-            }
+            choices: [
+                { value: 0, text: qsTr("Off") },
+                { value: 1, text: qsTr("Any title") },
+                { value: 2, text: qsTr("Contains title") },
+                { value: 3, text: qsTr("Title with extra characters") },
+                { value: 4, text: qsTr("Exact title match") }
+            ]
         }
     }
 
-    SettingsPlaceholder {
-        text: qsTr("The other subtitle settings are moving here. Until then, they are in All VLC Settings.")
+    SettingsSection {
+        title: qsTr("Appearance")
+
+        SettingsOption {
+            option: "freetype-font"
+            text: qsTr("Font")
+            placeholder: qsTr("System, sans-serif")
+        }
+
+        // Figma "Values" (2): words, or the exact value
+        SettingsRow {
+            text: qsTr("Size values")
+            description: qsTr("Relative sizes are in words, from Smaller to Larger. Precise sets the exact size, in percent of VLC's normal size.")
+            keywords: "sub-text-scale font size relative precise"
+
+            SettingsSegmented {
+                implicitWidth: VLCStyle.dp(320)
+                implicitHeight: VLCStyle.dp(36)
+                model: [qsTr("Relative"), qsTr("Precise")]
+                currentIndex: root._precise ? 1 : 0
+                Accessible.name: qsTr("Size values")
+                onActivated: (index) => {
+                    root._precise = index === 1
+                    // a value without a word becomes the nearest word
+                    if (!root._precise && !root._sizes.some((s) => s.value === root._scale)) {
+                        const nearest = root._sizes.reduce((a, b) => Math.abs(b.value - root._scale) < Math.abs(a.value - root._scale) ? b : a)
+                        RdEffects.setSubtitleTextScale(nearest.value)
+                    }
+                }
+            }
+        }
+
+        SettingsRow {
+            text: qsTr("Font size")
+            description: RdEffects.optionDescription("sub-text-scale")
+            keywords: "sub-text-scale font size"
+
+            // one control at a time, so the row's control slot is the size of the shown one
+            Loader {
+                sourceComponent: root._precise ? preciseSize : relativeSize
+            }
+
+            Component {
+                id: relativeSize
+
+                Widgets.RdDropdown {
+                    implicitWidth: VLCStyle.dp(320)
+                    implicitHeight: VLCStyle.dp(36)
+                    model: root._sizes.map((s) => s.text)
+                    currentIndex: root._sizes.findIndex((s) => s.value === root._scale)
+                    Accessible.name: qsTr("Font size")
+                    onActivated: (index) => RdEffects.setSubtitleTextScale(root._sizes[index].value)
+                }
+            }
+
+            Component {
+                id: preciseSize
+
+                Widgets.RdValueBox {
+                    text: root._scale + "%"
+                    Accessible.name: qsTr("Font size")
+                    onEdited: (text) => {
+                        const v = parseInt(text)
+                        if (isNaN(v))
+                            return
+                        root._precise = true
+                        RdEffects.setSubtitleTextScale(Math.max(10, Math.min(500, v)))
+                    }
+                }
+            }
+        }
+
+        SettingsOption {
+            option: "freetype-bold"
+            text: qsTr("Bold")
+        }
+
+        SettingsOption {
+            option: "freetype-color"
+            text: qsTr("Text color")
+        }
+
+        // VLC's opacities are 0 to 255
+        SettingsOption {
+            option: "freetype-opacity"
+            text: qsTr("Text opacity")
+            kind: "slider"
+            valueScale: 2.55
+            from: 0
+            to: 100
+            step: 1
+            labels: [qsTr("0%"), qsTr("50%"), qsTr("100%")]
+        }
+
+        SettingsOption {
+            option: "freetype-outline-thickness"
+            text: qsTr("Outline thickness")
+        }
+
+        SettingsOption {
+            option: "freetype-outline-color"
+            text: qsTr("Outline color")
+        }
+
+        SettingsRow {
+            text: qsTr("Shadow")
+            description: RdEffects.optionDescription("freetype-shadow-opacity")
+            keywords: "freetype-shadow-opacity"
+
+            Widgets.RdToggle {
+                checked: root._shadow
+                Accessible.name: qsTr("Shadow")
+                onToggled: RdEffects.setOption("freetype-shadow-opacity", checked ? 128 : 0)
+            }
+        }
+
+        SettingsOption {
+            option: "freetype-shadow-color"
+            text: qsTr("Shadow color")
+            available: root._shadow
+        }
+
+        SettingsOption {
+            option: "freetype-shadow-distance"
+            text: qsTr("Shadow distance")
+            available: root._shadow
+            choices: [
+                { value: 0.04, text: qsTr("Small") },
+                { value: 0.06, text: qsTr("Medium") },
+                { value: 0.1, text: qsTr("Large") }
+            ]
+        }
+
+        SettingsRow {
+            text: qsTr("Background")
+            description: RdEffects.optionDescription("freetype-background-opacity")
+            keywords: "freetype-background-opacity box"
+
+            Widgets.RdDropdown {
+                implicitWidth: VLCStyle.dp(320)
+                implicitHeight: VLCStyle.dp(36)
+                model: [qsTr("None"), qsTr("Box")]
+                currentIndex: root._background ? 1 : 0
+                Accessible.name: qsTr("Background")
+                onActivated: (index) => RdEffects.setOption("freetype-background-opacity", index === 1 ? 128 : 0)
+            }
+        }
+
+        SettingsOption {
+            option: "freetype-background-color"
+            text: qsTr("Background color")
+            available: root._background
+        }
+
+        SettingsOption {
+            option: "freetype-background-opacity"
+            text: qsTr("Background opacity")
+            kind: "slider"
+            valueScale: 2.55
+            from: 0
+            to: 100
+            step: 1
+            labels: [qsTr("0%"), qsTr("50%"), qsTr("100%")]
+            available: root._background
+        }
+
+        // VLC's "sub-margin" lifts the subtitles from the bottom, in pixels
+        SettingsOption {
+            option: "sub-margin"
+            text: qsTr("Vertical position")
+            choices: [
+                { value: 0, text: qsTr("Bottom") },
+                { value: 50, text: qsTr("Raised") },
+                { value: 100, text: qsTr("Higher") }
+            ]
+        }
+    }
+
+    SettingsSection {
+        title: qsTr("Timing")
+
+        // VLC counts tenths of a second
+        SettingsOption {
+            option: "sub-delay"
+            text: qsTr("Subtitle delay")
+            kind: "slider"
+            bipolar: true
+            valueScale: 10
+            from: -5
+            to: 5
+            step: 0.1
+            decimals: 1
+            labels: [qsTr("-5 s"), qsTr("0 s"), qsTr("+5 s")]
+        }
+    }
+
+    SettingsSection {
+        title: qsTr("On-Screen Messages")
+
+        SettingsOption {
+            option: "osd"
+            text: qsTr("Show feedback for shortcuts")
+        }
+
+        SettingsOption {
+            option: "video-title-show"
+            text: qsTr("Show filename when a video starts")
+        }
+
+        SettingsOption {
+            option: "video-title-timeout"
+            text: qsTr("Show filename for")
+            kind: "slider"
+            valueScale: 1000
+            from: 1
+            to: 10
+            step: 0.5
+            labels: [qsTr("1 s"), qsTr("10 s")]
+            available: root._title
+        }
     }
 
     advanced: [
         SettingsSection {
-            SettingsRow {
-                text: qsTr("Also look for subtitles in")
-                description: RdEffects.optionDescription("sub-autodetect-path")
-                keywords: "sub-autodetect-path folders paths"
+            SettingsOption {
+                option: "sub-autodetect-path"
+                text: qsTr("Load subtitles from these folders")
                 available: root._autodetect
-
-                Widgets.RdTextField {
-                    readonly property string paths: String(RdEffects.values[RdEffects.optionKey("sub-autodetect-path")])
-
-                    implicitWidth: VLCStyle.dp(320)
-                    implicitHeight: VLCStyle.dp(36)
-                    text: paths
-                    Accessible.name: qsTr("Also look for subtitles in")
-                    onEditingFinished: {
-                        if (text.trim() !== paths)
-                            RdEffects.setOption("sub-autodetect-path", text.trim())
-                    }
-                }
             }
+
+            SettingsOption {
+                option: "freetype-shadow-angle"
+                text: qsTr("Shadow angle")
+                unit: "°"
+                available: root._shadow
+            }
+
+            SettingsOption {
+                option: "freetype-text-direction"
+                text: qsTr("Text direction")
+                choices: [
+                    { value: 2, text: qsTr("Automatic") },
+                    { value: 0, text: qsTr("Left to right") },
+                    { value: 1, text: qsTr("Right to left") }
+                ]
+            }
+
+            SettingsOption {
+                option: "freetype-monofont"
+                text: qsTr("Monospace font")
+                placeholder: qsTr("System monospace")
+            }
+
+            SettingsOption {
+                option: "video-title-position"
+                text: qsTr("Filename position")
+            }
+
+            SettingsOption {
+                option: "subsdec-align"
+                text: qsTr("Text alignment")
+            }
+
+            SettingsOption {
+                option: "secondary-sub-alignment"
+                text: qsTr("Second subtitles position")
+            }
+
+            SettingsOption {
+                option: "secondary-sub-margin"
+                text: qsTr("Second subtitles margin")
+                unit: qsTr("px")
+            }
+        },
+
+        SettingsMoreOptions {
+            category: "subtitles"
         }
     ]
 }
