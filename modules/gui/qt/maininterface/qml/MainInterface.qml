@@ -162,7 +162,10 @@ Item {
             color: (historyDragHandler.accumulatedDelta >= historyDragHandler.threshold) ? theme.accent
                                                                                          : theme.bg.primary
 
-            Behavior on color {
+            // redesign: off during a theme or accent switch (P8-41)
+            DelayedBehavior on color {
+                delayedEnabled: true
+
                 ColorAnimation {
                     duration: VLCStyle.duration_short
                 }

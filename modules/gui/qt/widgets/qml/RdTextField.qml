@@ -45,7 +45,7 @@ T.TextField {
     color: rdPalette.rdFg2
     placeholderTextColor: rdPalette.rdFgA4
     selectionColor: rdPalette.rdAccentDim
-    selectedTextColor: rdPalette.rdFg1
+    selectedTextColor: rdPalette.rdSelectionText
     verticalAlignment: TextInput.AlignVCenter
 
     // QtQuick.Templates draw no placeholder (the Basic style adds one), so draw it here

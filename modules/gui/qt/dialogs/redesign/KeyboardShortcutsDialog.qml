@@ -379,7 +379,7 @@ T.Popup {
                     font.pixelSize: VLCStyle.rd_fontSize_label
                     color: root.rdPalette.rdFg2
                     selectionColor: root.rdPalette.rdAccentDim
-                    selectedTextColor: root.rdPalette.rdFg1
+                    selectedTextColor: root.rdPalette.rdSelectionText
 
                     placeholderText: qsTr("Search Keyboard Shortcuts...")
                     Accessible.name: placeholderText

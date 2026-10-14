@@ -17,6 +17,8 @@
  *****************************************************************************/
 import QtQuick
 
+import VLC.Style
+
 // This is useful especially for color animations, as we do not want the
 // animations to run as soon as the theme is initialized, as the colors
 // often adjusted depending on initialization, and to have debouncing.
@@ -26,12 +28,16 @@ Behavior {
     // FIXME: Making this property `required` causes weird issues with Qt 6.2 when repeater is involved:
     property bool delayedEnabled: false // modifying `enabled` is not permitted, this property should be used instead
 
-    Component.onCompleted: {
-        behavior.enabled = false
-    }
+    // `delayedEnabled`, applied once the event queue is cleared (false until then)
+    property bool _delayedEnabled: false
 
-    Binding on enabled {
+    Binding on _delayedEnabled {
         delayed: true
         value: behavior.delayedEnabled
     }
+
+    // redesign: a theme or accent switch applies the new colors at once instead of animating
+    // every control (P8-41); this part is not delayed so it is off before the colors change.
+    // darkPalette (items drawn on the picture) recolors with the accent.
+    enabled: _delayedEnabled && !VLCStyle.palette.switching && !VLCStyle.darkPalette.switching
 }

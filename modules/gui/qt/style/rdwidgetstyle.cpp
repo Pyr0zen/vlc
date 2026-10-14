@@ -102,7 +102,7 @@ QPlainTextEdit, QTextEdit, QListView, QTreeView {
     border-radius: 6px;
     padding: 4px 8px;
     selection-background-color: {accentDim};
-    selection-color: {fg1};
+    selection-color: {selectionFg};
 }
 QLineEdit:hover, QComboBox:hover, QSpinBox:hover, QDoubleSpinBox:hover, QTimeEdit:hover,
 QPlainTextEdit:hover, QTextEdit:hover, QListView:hover, QTreeView:hover {
@@ -139,8 +139,8 @@ QComboBox QAbstractItemView {
 }
 
 QPushButton, QToolButton {
-    background-color: {bgA1};
-    color: {fgA2};
+    background-color: {btnBg};
+    color: {btnFg};
     border: 1px solid transparent;
     border-radius: 6px;
     padding: 4px 8px;
@@ -151,17 +151,18 @@ QPushButton#clearHistoryButton {
     max-width: 160px;
 }
 QPushButton:hover, QToolButton:hover {
-    background-color: {dividerBright};
-    color: {fg2};
+    background-color: {btnHoverBg};
+    color: {btnHoverFg};
 }
 QPushButton:pressed, QToolButton:pressed {
-    background-color: {bgA2};
+    background-color: {btnPressedBg};
 }
 QPushButton:focus, QToolButton:focus {
-    border-color: {fg2};
+    border-color: {btnFocus};
 }
 QPushButton:disabled, QToolButton:disabled {
-    color: {fgA4};
+    background-color: {btnDisabledBg};
+    color: {btnDisabledFg};
 }
 QPushButton[rdPrimary="true"], QToolButton[rdPrimary="true"] {
     background-color: {bgAccentBright};
@@ -261,12 +262,28 @@ QScrollBar::add-page, QScrollBar::sub-page {
 
 QString makeStyleSheet( const SystemPalette& p )
 {
-    /* opaque dialog window: Dark/BG/A3 Transparent (#191919 95 %) seen over nothing */
-    const QColor bg = p.get_rdBgA4();
+    /* opaque dialog window: BG/A3 Transparent seen over nothing (Dark #191919, Light #D5D5D5),
+     * like the QML dialogs */
+    QColor bg = p.get_rdBgA3Transparent();
+    bg.setAlpha( 255 );
+
+    /* push buttons: in Light the dark Standard button of RdButton (FG/A2, hover FG/A1, BG/A1
+     * text, accent focus, 50 % when disabled), like "Browse" in the video at 17:43; Dark keeps
+     * its BG/A1 buttons */
+    const bool dark = p.property( "isDark" ).toBool();
+    const QColor btnBg = dark ? p.get_rdBgA1() : p.get_rdFgA2();
+    const QColor btnFg = dark ? p.get_rdFgA2() : p.get_rdBgA1();
 
     const std::pair<const char*, QColor> colors[] = {
         { "{bg}", bg },
-        { "{fg1}", p.get_rdFg1() },
+        { "{btnBg}", btnBg },
+        { "{btnFg}", btnFg },
+        { "{btnHoverBg}", dark ? p.get_rdDividerBright() : p.get_rdFgA1() },
+        { "{btnHoverFg}", dark ? p.get_rdFg2() : p.get_rdBgA1() },
+        { "{btnPressedBg}", dark ? p.get_rdBgA2() : p.get_rdFgA4() },
+        { "{btnFocus}", dark ? p.get_rdFg2() : p.get_rdAccentMain() },
+        { "{btnDisabledBg}", dark ? btnBg : halfOver( btnBg, bg ) },
+        { "{btnDisabledFg}", dark ? p.get_rdFgA4() : halfOver( btnFg, bg ) },
         { "{fg2}", p.get_rdFg2() },
         { "{fgA1}", p.get_rdFgA1() },
         { "{fgA2}", p.get_rdFgA2() },
@@ -280,6 +297,7 @@ QString makeStyleSheet( const SystemPalette& p )
         { "{bgB2}", p.get_rdBgB2() },
         { "{accentMain}", p.get_rdAccentMain() },
         { "{accentDim}", p.get_rdAccentDim() },
+        { "{selectionFg}", p.get_rdSelectionText() },
         { "{bgAccentBright}", p.get_rdBgAccentBright() },
         /* disabled Save: gray BG/A1 + FG/A2 at 50 % (RdButton) */
         { "{saveDisabledBg}", halfOver( p.get_rdBgA1(), bg ) },
