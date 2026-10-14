@@ -17,7 +17,7 @@
  *****************************************************************************/
 
 // Redesign text input (Figma "Frame 86"): BG/B2 fill, 2 px BG/A4 border, radius 6,
-// padding 8,18,8,12, placeholder FG/A4, text FG/2. Border turns accent while editing.
+// padding 8,18,8,12, placeholder FG/A4, text FG/2. Border turns accent with keyboard focus.
 import QtQuick
 import QtQuick.Templates as T
 
@@ -29,12 +29,15 @@ T.TextField {
 
     readonly property SystemPalette rdPalette: VLCStyle.palette
 
+    readonly property bool _keyboardFocus: activeFocus && (focusReason === Qt.TabFocusReason
+                                                           || focusReason === Qt.BacktabFocusReason)
+
     implicitWidth: VLCStyle.dp(240)
     implicitHeight: VLCStyle.dp(37)
 
     topPadding: VLCStyle.dp(8)
     bottomPadding: VLCStyle.dp(8)
-    leftPadding: VLCStyle.dp(12)
+    leftPadding: VLCStyle.dp(14)    // Figma 12 inside the 2 px stroke (text at x 14)
     rightPadding: VLCStyle.dp(18)
 
     font.family: VLCStyle.rd_fontFamily
@@ -45,12 +48,31 @@ T.TextField {
     selectedTextColor: rdPalette.rdFg1
     verticalAlignment: TextInput.AlignVCenter
 
+    // QtQuick.Templates draw no placeholder (the Basic style adds one), so draw it here
+    Text {
+        x: control.leftPadding
+        y: control.topPadding
+        width: control.width - control.leftPadding - control.rightPadding
+        height: control.height - control.topPadding - control.bottomPadding
+
+        visible: control.length === 0 && control.preeditText === ""
+        text: control.placeholderText
+        font: control.font
+        color: control.placeholderTextColor
+        verticalAlignment: control.verticalAlignment
+        horizontalAlignment: control.horizontalAlignment
+        elide: Text.ElideRight
+
+        Accessible.ignored: true
+    }
+
     background: Rectangle {
         radius: VLCStyle.rd_radius_normal
         color: control.rdPalette.rdBgB2
         border.width: VLCStyle.dp(2)
-        border.color: control.activeFocus ? control.rdPalette.rdAccentMain
-                                          : (control.hovered ? control.rdPalette.rdDividerBright
-                                                             : control.rdPalette.rdBgA4)
+        // accent only for keyboard focus: the video (13:19) shows no accent border while typing
+        border.color: control._keyboardFocus ? control.rdPalette.rdAccentMain
+                                             : (control.hovered ? control.rdPalette.rdDividerBright
+                                                                : control.rdPalette.rdBgA4)
     }
 }

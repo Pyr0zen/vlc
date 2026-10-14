@@ -31,7 +31,9 @@
 #include "dialogs/sout/sout_widgets.hpp"
 #include "widgets/native/qvlcframe.hpp"
 #include "util/colorizedsvgicon.hpp"
+#include "style/rdwidgetstyle.hpp"
 
+#include <QAbstractButton>
 #include <QString>
 
 #include <cassert>
@@ -49,6 +51,9 @@ SoutDialog::SoutDialog( QWindow *parent, qt_intf_t *_p_intf, const QString& inpu
     setWizardStyle(QWizard::ModernStyle);
 
     QVLCDialog::setWindowTransientParent(this, parent , p_intf);
+
+    /* redesign (W6.4): Figma dialog colors, fonts and radii, following the theme */
+    RdWidgetStyle::apply( this, p_intf );
 
     /* UI stuff */
     ui.setupUi( this );
@@ -96,6 +101,8 @@ SoutDialog::SoutDialog( QWindow *parent, qt_intf_t *_p_intf, const QString& inpu
     setButtonText( QWizard::CancelButton, qtr("Cancel") );
     setButtonText( QWizard::NextButton, qtr("Next") );
     setButtonText( QWizard::FinishButton, qtr("Stream") );
+    RdWidgetStyle::setPrimary( button( QWizard::NextButton ) );
+    RdWidgetStyle::setPrimary( button( QWizard::FinishButton ) );
 }
 
 void SoutDialog::closeTab( int i )

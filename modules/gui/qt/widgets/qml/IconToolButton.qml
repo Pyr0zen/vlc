@@ -51,8 +51,12 @@ T.ToolButton {
 
     enabled: !paintOnly
 
+    // redesign: width of the Figma "Icon Wrapper" around the icon (control bar: 30), 0 = icon size
+    property real rdMinimumWidth: 0
+
     implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
-                            implicitContentWidth + leftPadding + rightPadding)
+                            implicitContentWidth + leftPadding + rightPadding,
+                            rdMinimumWidth)
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              implicitContentHeight + topPadding + bottomPadding)
 

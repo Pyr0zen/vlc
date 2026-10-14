@@ -1,3 +1,6 @@
 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 <path d="M6 4.75H18C19.2426 4.75 20.25 5.75736 20.25 7V17C20.25 18.2426 19.2426 19.25 18 19.25H6C4.75736 19.25 3.75 18.2426 3.75 17V7C3.75 5.75736 4.75736 4.75 6 4.75Z" stroke="#FF00FF" stroke-width="1.5"/>
+<path d="M3.75 8.5H20.25" stroke="#FF00FF" stroke-width="1.5"/>
+<path d="M8.25 4.5L9.75 8.5" stroke="#FF00FF" stroke-width="1.5"/>
+<path d="M14 4.5L15.5 8.5" stroke="#FF00FF" stroke-width="1.5"/>
 </svg>

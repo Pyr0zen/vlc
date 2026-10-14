@@ -122,6 +122,9 @@ public:
 #ifdef UPDATE_CHECK
     Q_PROPERTY(bool updateDialogVisible READ updateDialogVisible NOTIFY updateDialogVisibleChanged FINAL)
 #endif
+    // redesign: set while the player shows VLC's right-click menu in QML (W4.10); the requests
+    // then go to rdPopupMenuRequested() instead of the native popup menu
+    Q_PROPERTY(bool rdPopupMenu MEMBER m_rdPopupMenu NOTIFY rdPopupMenuChanged FINAL)
 
     static DialogsProvider *getInstance()
     {
@@ -193,6 +196,7 @@ private:
 
     QWidget* root;
     bool b_isDying;
+    bool m_rdPopupMenu = false;
 
     void openDialog( OpenDialog::OpenTab );
 
@@ -216,6 +220,11 @@ public slots:
                                               const QMessageBox::StandardButton defaultButton = QMessageBox::NoButton,
                                               const QMessageBox::Icon icon = QMessageBox::NoIcon);
     void prefsDialog();
+    // redesign: the Settings dialog, optionally on one category ("general", "audio", ...);
+    // VLC's own preferences (toggled) when the main interface cannot show it
+    void settingsDialog( const QString& category = QString() );
+    // VLC's complete preferences (every module option), shown or raised
+    void legacyPrefsDialog();
     void firstRunDialog();
     void extendedDialog();
     void synchroDialog();
@@ -233,6 +242,8 @@ public slots:
     void podcastConfigureDialog();
     void pluginDialog();
     void epgDialog();
+    // redesign: the Keyboard Shortcuts dialog (video 15:57-16:03), shown by Dialogs.qml
+    void keyboardShortcutsDialog();
     void setPopupMenu();
     void destroyPopupMenu();
 
@@ -246,6 +257,8 @@ public slots:
     void openUrlDialog();
     void openNetDialog();
     void openCaptureDialog();
+    /* redesign: Save of the QML Open Network Stream dialog (one link per line) */
+    void openNetworkStreams( const QString& links, const QString& playlistName = QString() );
 
     void PLOpenDir();
     void PLAppendDir();
@@ -288,6 +301,10 @@ public:
 signals:
     void releaseMouseEvents();
     void showToolbarEditorDialog();
+    /* redesign: shows the QML Open Network Stream dialog (MainInterface.qml) */
+    void showOpenNetworkStreamDialog();
+    void showSettingsDialog( const QString& category );
+    void showKeyboardShortcutsDialog();
 
     //visiblity signal
     void openDialogVisibleChanged();
@@ -307,6 +324,10 @@ signals:
 #ifdef UPDATE_CHECK
     void updateDialogVisibleChanged();
 #endif
+
+    void rdPopupMenuChanged();
+    // show or hide the player's right-click menu (right click on the video, Menu key)
+    void rdPopupMenuRequested(bool show);
 };
 
 class DialogEvent : public QEvent

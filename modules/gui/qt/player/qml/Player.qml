@@ -59,7 +59,8 @@ FocusScope {
 
     property bool _controlsUnderVideo: (MainCtx.pinVideoControls
                                         &&
-                                        (MainCtx.intfMainWindow.visibility !== Window.FullScreen))
+                                        (MainCtx.intfMainWindow.visibility !== Window.FullScreen)
+                                        && !RdPanels.uiHidden)
 
     readonly property bool _windowed: MainCtx.intfMainWindow.visibility !== Window.FullScreen
 
@@ -76,10 +77,13 @@ FocusScope {
     readonly property bool _showBothBars: playerToolbarVisibilityFSM.isVisible
                                           && (_windowed || !MainCtx.hasEmbededVideo
                                               || playerToolbarVisibilityFSM.keyboardShown)
-    readonly property bool _topBarVisible: _controlsUnderVideo || _showBothBars || _mouseNearTop
-                                           || (playerToolbarVisibilityFSM.isLocked && !_mouseNearBottom)
-    readonly property bool _controlBarVisible: _controlsUnderVideo || _showBothBars || _mouseNearBottom
-                                               || (playerToolbarVisibilityFSM.isLocked && !_mouseNearTop)
+    // Hide UI (W4.10, Ctrl + \) hides both bars whatever the mouse does
+    readonly property bool _topBarVisible: !RdPanels.uiHidden
+                                           && (_controlsUnderVideo || _showBothBars || _mouseNearTop
+                                               || (playerToolbarVisibilityFSM.isLocked && !_mouseNearBottom))
+    readonly property bool _controlBarVisible: !RdPanels.uiHidden
+                                               && (_controlsUnderVideo || _showBothBars || _mouseNearBottom
+                                                   || (playerToolbarVisibilityFSM.isLocked && !_mouseNearTop))
 
     // cursor height inside the player, -1 outside, from mouse events (no polling): the hover
     // handler below sees every move over the player (video, bars, panels), the video surface
@@ -156,15 +160,20 @@ FocusScope {
 
     // Events
 
-    // keys go to VLC's hotkeys, except while a modal redesign popup is open (RdPanels.modalCount)
+    // keys go to VLC's hotkeys, except while a modal redesign popup is open (RdPanels.modalCount).
+    // _leaving keeps the binding off while the view is destroyed: a menu released during the
+    // destruction would otherwise turn the hotkeys back on for the library
+    property bool _leaving: false
     Binding {
         target: MainCtx
         property: "preferHotkeys"
-        value: RdPanels.modalCount === 0
+        value: !rootPlayer._leaving && RdPanels.modalCount === 0
     }
     Component.onDestruction: {
+        rootPlayer._leaving = true
         MainCtx.preferHotkeys = false
         RdPanels.close()
+        RdPanels.uiHidden = false
     }
 
     Keys.priority: Keys.AfterItem
@@ -1633,10 +1642,17 @@ FocusScope {
         onVisibleChanged: rootPlayer.lockUnlockAutoHide(visible)
     }
 
-    QmlAudioContextMenu {
-        id: audioContextMenu
+    // redesign: right-click menu and Hide UI (W4.10); the video's right click arrives through
+    // DialogsProvider, the audio view's here
+    RdPlayerMenu {
+        id: playerMenu
 
-        ctx: MainCtx
+        // a hidden toolbar FSM ignores lock(): show it first so lock and unlock stay balanced
+        onShownChanged: {
+            if (shown && !playerToolbarVisibilityFSM.isVisible)
+                playerToolbarVisibilityFSM.askShow()
+            rootPlayer.lockUnlockAutoHide(shown)
+        }
     }
 
     TapHandler {
@@ -1645,7 +1661,7 @@ FocusScope {
 
         onTapped: (eventPoint, button) => {
             if (button & Qt.RightButton) {
-                audioContextMenu.popup(eventPoint.globalPosition)
+                playerMenu.popupAtCursor()
             }
         }
     }

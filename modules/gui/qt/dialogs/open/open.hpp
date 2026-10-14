@@ -64,7 +64,8 @@ public:
     OpenDialog(qt_intf_t * , QWindow *parent = nullptr);
     virtual ~OpenDialog();
 
-    void showTab( OpenDialog::OpenTab tab, OpenDialog::ActionFlag action );
+    void showTab( OpenDialog::OpenTab tab, OpenDialog::ActionFlag action,
+                  bool b_single_source = false );
     QString getMRL( bool b = true );
 
     QStringList getMRLs();

@@ -122,6 +122,8 @@ public:
     SharedInputItem    m_currentItem;
     bool            m_canRestorePlayback = false;
     double          m_restoreProgress = 0.;
+    // redesign: identifies the media library query of the resume position in flight
+    quint64         m_restoreQuery = 0;
 
     int             m_capabilities = 0;
 

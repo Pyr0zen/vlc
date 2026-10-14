@@ -39,7 +39,8 @@ T.Button {
     readonly property bool _paintHovered: control.hovered || showHovered
 
     padding: 0
-    width: VLCStyle.dp(40, VLCStyle.scale)
+    // redesign: Figma window buttons are 36 wide (24 icon + 6 on each side), back to back
+    width: VLCStyle.dp(36, VLCStyle.scale)
 
     implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
                             implicitContentWidth + leftPadding + rightPadding)

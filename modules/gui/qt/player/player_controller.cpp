@@ -23,6 +23,8 @@
 #include "dialogs/extensions/extensions_manager.hpp"
 #include "player_controller.hpp"
 #include "player_controller_p.hpp"
+#include "maininterface/mainctx.hpp"
+#include "medialibrary/medialib.hpp"
 #include "util/shared_input_item.hpp"
 
 #include <vlc_actions.h>           /* ACTION_ID */
@@ -382,6 +384,7 @@ static  void on_player_current_media_changed(vlc_player_t *, input_item_t *new_m
             that->m_currentItem = std::move(newMediaPtr);
         }
 
+        ++that->m_restoreQuery;
         that->m_canRestorePlayback = false;
         that->m_restoreProgress = 0.;
         emit q->playbackRestoreQueried();
@@ -444,6 +447,7 @@ static void on_player_state_changed(vlc_player_t *, enum vlc_player_state state,
             emit q->isMenuChanged( false );
             that->m_isInteractive= false;
             emit q->isInteractiveChanged( false );
+            ++that->m_restoreQuery;
             that->m_canRestorePlayback = false;
             that->m_restoreProgress = 0.;
             emit q->playbackRestoreQueried();
@@ -989,42 +993,67 @@ static void on_player_playback_restore_queried(vlc_player_t *, void *data)
     PlayerControllerPrivate* that = static_cast<PlayerControllerPrivate*>(data);
     msg_Dbg( that->p_intf, "on_playback_restore_queried");
     that->callAsync([that](){
-        that->m_canRestorePlayback = true;
+        PlayerController* q = that->q_func();
+        // a newer media (or a newer query) makes the answer of this one obsolete
+        const quint64 query = ++that->m_restoreQuery;
+
         // redesign: the resume toast shows where playback would continue; the media library
         // keeps the progress of each file (the position the core restores, as a fraction)
-        that->m_restoreProgress = 0.;
-        if (vlc_medialibrary_t* ml = vlc_ml_instance_get(that->p_intf))
+        MediaLib* medialib = that->p_intf->p_mi ? that->p_intf->p_mi->getMediaLibrary() : nullptr;
+        QByteArray mrl;
+        if (medialib)
         {
-            QByteArray mrl;
+            vlc_player_locker lock{ that->m_player };
+            input_item_t* item = vlc_player_GetCurrentMedia(that->m_player);
+            if (item)
             {
-                vlc_player_locker lock{ that->m_player };
-                input_item_t* item = vlc_player_GetCurrentMedia(that->m_player);
-                if (item)
-                {
-                    vlc_mutex_lock(&item->lock);
-                    if (item->psz_uri)
-                        mrl = QByteArray(item->psz_uri);
-                    vlc_mutex_unlock(&item->lock);
-                }
-            }
-            if (!mrl.isEmpty())
-            {
-                vlc_ml_media_t* media = vlc_ml_get_media_by_mrl(ml, mrl.constData());
-                if (media)
-                {
-                    if (media->f_progress > 0)
-                    {
-                        that->m_restoreProgress = media->f_progress;
-                        // a file watched to its last 20 seconds starts over without asking
-                        // (Tony, 2026-10-13); i_duration is in milliseconds
-                        if (media->i_duration > 0 && (1. - media->f_progress) * media->i_duration < 20000.)
-                            that->m_canRestorePlayback = false;
-                    }
-                    vlc_ml_release(media);
-                }
+                vlc_mutex_lock(&item->lock);
+                if (item->psz_uri)
+                    mrl = QByteArray(item->psz_uri);
+                vlc_mutex_unlock(&item->lock);
             }
         }
-        emit that->q_func()->playbackRestoreQueried();
+        if (mrl.isEmpty())
+        {
+            that->m_canRestorePlayback = true;
+            that->m_restoreProgress = 0.;
+            emit q->playbackRestoreQueried();
+            return;
+        }
+
+        // the database is read on the media library's thread, never on the UI thread
+        struct Ctx {
+            bool found = false;
+            double progress = 0.;
+            int64_t duration = 0;
+        };
+        medialib->runOnMLThread<Ctx>(q,
+        //ML thread
+        [mrl](vlc_medialibrary_t* ml, Ctx& ctx) {
+            vlc_ml_media_t* media = vlc_ml_get_media_by_mrl(ml, mrl.constData());
+            if (!media)
+                return;
+            ctx.found = true;
+            ctx.progress = media->f_progress;
+            ctx.duration = media->i_duration;
+            vlc_ml_release(media);
+        },
+        //UI thread
+        [that, query](quint64, Ctx& ctx) {
+            if (query != that->m_restoreQuery)
+                return;
+            that->m_canRestorePlayback = true;
+            that->m_restoreProgress = 0.;
+            if (ctx.found && ctx.progress > 0)
+            {
+                that->m_restoreProgress = ctx.progress;
+                // a file watched to its last 20 seconds starts over without asking
+                // (Tony, 2026-10-13); i_duration is in milliseconds
+                if (ctx.duration > 0 && (1. - ctx.progress) * ctx.duration < 20000.)
+                    that->m_canRestorePlayback = false;
+            }
+            emit that->q_func()->playbackRestoreQueried();
+        });
     });
 }
 

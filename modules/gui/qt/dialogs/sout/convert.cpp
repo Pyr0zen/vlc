@@ -28,6 +28,7 @@
 #include "dialogs/sout/convert.hpp"
 #include "dialogs/sout/sout_widgets.hpp"
 #include "maininterface/mainctx.hpp"
+#include "style/rdwidgetstyle.hpp"
 
 #include "util/qt_dirs.hpp"
 
@@ -47,6 +48,9 @@ ConvertDialog::ConvertDialog( QWindow *parent, qt_intf_t *_p_intf,
 {
     setWindowTitle( qtr( "Convert" ) );
     setWindowRole( "vlc-convert" );
+
+    /* redesign (W6.4): Figma dialog colors, fonts and radii, following the theme */
+    RdWidgetStyle::apply( this, p_intf );
 
     QGridLayout *mainLayout = new QGridLayout( this );
     SoutInputBox *inputBox = new SoutInputBox( this );
@@ -138,6 +142,7 @@ ConvertDialog::ConvertDialog( QWindow *parent, qt_intf_t *_p_intf,
     QDialogButtonBox *buttonBox = new QDialogButtonBox;
 
     okButton->setDefault( true );
+    RdWidgetStyle::setPrimary( okButton );
     buttonBox->addButton( okButton, QDialogButtonBox::AcceptRole );
     buttonBox->addButton( cancelButton, QDialogButtonBox::RejectRole );
 

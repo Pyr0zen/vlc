@@ -335,6 +335,83 @@ Item {
             source: "qrc:///qt/qml/VLC/Menus/GlobalShortcuts.qml"
         }
 
+        // redesign (W6.4): Open Network Stream dialog over the whole window, opened by
+        // DialogsProvider.openNetDialog() (main menu, Ctrl+N, library, core requests)
+        OpenNetworkStreamDialog {
+            id: openNetworkStreamDialog
+        }
+
+        Connections {
+            target: DialogsProvider
+
+            function onShowOpenNetworkStreamDialog() {
+                openNetworkStreamDialog.openDialog()
+            }
+        }
+
+        // redesign: the Settings dialog, over every view; while nothing listens to
+        // showSettingsDialog, DialogsProvider opens VLC's preferences instead
+        Loader {
+            id: settingsDialogLoader
+
+            anchors.fill: parent
+            active: false
+            sourceComponent: Component {
+                SettingsDialog { }
+            }
+
+            Connections {
+                target: DialogsProvider
+
+                function onShowSettingsDialog(category) {
+                    settingsDialogLoader.active = true
+                    if (settingsDialogLoader.item)
+                        settingsDialogLoader.item.toggle(category)
+                    else
+                        DialogsProvider.legacyPrefsDialog()
+                }
+            }
+        }
+
+        // redesign: the Keyboard Shortcuts dialog (video 15:57-16:03), over every view, so a
+        // view switch (the video ends) does not destroy it with unsaved edits. It is built in
+        // the background shortly after startup, so opening it starts within one frame; an
+        // early open finishes the build synchronously.
+        Loader {
+            id: keyboardShortcutsDialogLoader
+
+            active: false
+            asynchronous: true
+            sourceComponent: Component {
+                Item {
+                    readonly property alias dialog: keyboardShortcutsDialog
+
+                    KeyboardShortcutsDialog {
+                        id: keyboardShortcutsDialog
+                    }
+                }
+            }
+
+            Timer {
+                interval: 2000
+                running: true
+                onTriggered: keyboardShortcutsDialogLoader.active = true
+            }
+
+            Connections {
+                target: DialogsProvider
+
+                function onShowKeyboardShortcutsDialog() {
+                    keyboardShortcutsDialogLoader.asynchronous = false
+                    keyboardShortcutsDialogLoader.active = true
+                    if (keyboardShortcutsDialogLoader.item)
+                        keyboardShortcutsDialogLoader.item.dialog.open()
+                    else
+                        DialogsProvider.legacyPrefsDialog()
+                }
+            }
+        }
+
         Loader {
             active: {
                 const windowVisibility = MainCtx.intfMainWindow.visibility

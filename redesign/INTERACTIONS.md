@@ -27,6 +27,9 @@ The user can switch Dark / Light / System and pick one of 9 accent colors at any
 - Fullscreen: same bars and zones; window buttons hidden; video frame (W3.7) not drawn; the fullscreen button in the top bar shows the exit icon.
 - Side panels and the compact library dock inside the inset video area (IA-28, IA-43, P5-23); the video frame, panels, toast and seek thumbnail must not overlap each other badly at small window sizes.
 - Pinned controls (VLC's existing option) keep working: bars always visible, video between them.
+- In-window modal dialogs (Open Network Stream, W6.4) dim the whole window, bars included; the bars may fade underneath and come back on the next mouse move. Closing a dialog (Save, Cancel, X, Escape) gives the keyboard focus back to the item that had it.
+
+- The Settings dialog is a modal panel over the whole window (hosted by MainInterface.qml, not by the player page): it does not lock the bars, so in a window they may fade while it is open; Escape closes the top-most popup first (dropdown list or info popover, then a non-empty search text, then the dialog).
 
 ## 3. Customize Player and profiles (video 19:12-19:36; W8.1, W8.2)
 - Every control bar and top bar element must be a self-contained control that works wherever the user drags it (left, center, right, top bar, bottom bar), at any order, with any neighbours. No control may assume its position or look up siblings by position.
@@ -39,6 +42,8 @@ The same option can be changed in several places: the right sidebar tabs, the Se
 - All of them read and write the same VLC option / player property and update live when it changes elsewhere (e.g. subtitle delay from the sidebar slider, from G/H hotkeys, from a preset).
 - Presets (Decision 18) apply to every tab at once; the sidebar must show the active preset's values right after it is applied.
 - Options that only apply on the next file or vout must say so (Decision 29 notice) instead of silently doing nothing.
+- The Settings dialog pages (W6.1/W6.2) read and write options through RdEffects like the sidebar, so a value changed in one shows in the other right away; a page binds to `RdEffects.revision`, never caches a value.
+- VLC's complete preferences ("All VLC Settings") write the same options; the redesigned dialog closes before they open, and reopening it re-reads every value.
 
 ## 5. Seek bar modes
 The seek bar has several looks that can combine: thick bar (default), chapter segments (IB-46), subtitle timeline (P3-16, zoomed window with asterisk times), waveform (P6-06, music and the "Show Waveform" option), hover thumbnail (Decision 6), bookmarks marks. Build the seek bar so these are layers / modes of one component, not separate copies.
@@ -51,9 +56,16 @@ The seek bar has several looks that can combine: thick bar (default), chapter se
 ## 7. Keyboard, focus, accessibility, translation
 - Every new interactive element: keyboard reachable, visible focus, `Accessible.name`, `qsTr` / `qtr` text. Escape closes the top-most popup first.
 - Hotkeys keep VLC defaults (Decision 22); new shortcuts: Ctrl+\ Hide UI, Ctrl+B bookmark. OSD shows the pressed key (W7.3).
+- Hotkey names shown anywhere (menus, onboarding 19:50, OSD "Pressed C", Keyboard Shortcuts dialog) use the same formatting: HotkeysModel.displayKeys() ("Ctrl + F"). Hotkeys edited in the dialog apply after a restart until the core key map can be reloaded (W6.3).
 
 ## 8. Sizes and scaling
 - All sizes go through `VLCStyle.rd_*` / `VLCStyle.dp()` so Windows scaling 100 / 125 / 150 % and VLC's own interface scale work. Test at small window sizes: panels, toast and title must elide or shrink, never overlap the window buttons.
 
 ## 9. Fonts and text
 - Inter everywhere (`VLCStyle.rd_fontFamily`), bundled with the app. Long file names elide.
+
+## 10. Menus (W4.9, W4.10)
+- The main "..." menu and the right-click menu are QML (`menus/qml/RdCascadeMenu.qml`) drawing VLC's own QMenus through `RdMenuModel` (`menus/rd_menu_model.cpp`). New entries go into the C++ builders so they keep VLC's actions; entries that need QML (Hide UI, Show Queue, Keyboard Shortcuts, Customize Player) are emitted as `requested(id)` and handled in `RdMainMenu.qml` / `RdPlayerMenu.qml`.
+- Later packages hook in there: W6.3 points "keyboardShortcuts" at its dialog, W8.1 points "customizePlayer" at the Customize Player screen, W8.2 adds the "Profile (name)" submenu after the divider below Open Recent, W6.1 changes what Settings (prefsDialog) opens. The library top bar (Phase 5) should use `Menus.RdMainMenu` too.
+- An open menu keeps the bars visible (lock) and releases them when it closes. While the player is shown, `DialogsProvider.rdPopupMenu` routes VLC's right-click and Menu key requests to the QML menu.
+- Hide UI state lives in `RdPanels.uiHidden`; any new bar or panel must hide with it.

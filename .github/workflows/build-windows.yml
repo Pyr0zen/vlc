@@ -10,6 +10,7 @@ on:
     paths-ignore:
       - 'redesign/**'
       - 'CLAUDE.md'
+      - '.github/ISSUE_TEMPLATE/**'
   workflow_dispatch: {}
 
 concurrency:
