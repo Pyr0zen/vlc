@@ -230,6 +230,13 @@ QtObject {
         return key.replace(/\/+$/, "")
     }
 
+    // keyboard: moves the focus from `item` to the next (or previous) item of the focus chain
+    function focusStep(item, forward) {
+        const next = item.nextItemInFocusChain(forward)
+        if (next && next !== item)
+            next.forceActiveFocus(forward ? Qt.TabFocusReason : Qt.BacktabFocusReason)
+    }
+
     // length of the deepest folder of `folders` that holds `mrl` (0: none)
     function _depthIn(folders, mrl) {
         const key = mrlKey(mrl)

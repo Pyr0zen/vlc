@@ -137,6 +137,9 @@ Item {
         hoverEnabled: true
         focusPolicy: last ? Qt.NoFocus : Qt.TabFocus
 
+        Keys.onReturnPressed: crumb.clicked()
+        Keys.onEnterPressed: crumb.clicked()
+
         Accessible.role: Accessible.Link
         Accessible.name: text
 

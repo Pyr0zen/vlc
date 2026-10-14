@@ -340,6 +340,9 @@ FocusScope {
         hoverEnabled: true
         focusPolicy: Qt.TabFocus
 
+        Keys.onReturnPressed: header.clicked()
+        Keys.onEnterPressed: header.clicked()
+
         Accessible.role: Accessible.Link
         Accessible.name: text
 

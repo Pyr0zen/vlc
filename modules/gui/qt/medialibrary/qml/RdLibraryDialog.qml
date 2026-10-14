@@ -146,6 +146,8 @@ T.Popup {
                 iconName: "close"
                 description: qsTr("Close")
                 onClicked: dialog.close()
+                // Escape closes the dialog, not the library page behind it
+                Navigation.cancelAction: () => dialog.close()
             }
         }
 

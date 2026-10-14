@@ -257,6 +257,9 @@ Rectangle {
         hoverEnabled: true
         focusPolicy: Qt.TabFocus
 
+        Keys.onReturnPressed: button.clicked()
+        Keys.onEnterPressed: button.clicked()
+
         Accessible.role: Accessible.Button
         Accessible.name: label
 
