@@ -435,6 +435,7 @@ SettingsPage {
             }
 
             Widgets.RdButton {
+                style: Widgets.RdButton.Style.Plain
                 leftPadding: VLCStyle.dp(20)
                 rightPadding: VLCStyle.dp(20)
                 text: root._catalog ? qsTr("Show installed") : qsTr("Find more extensions")
@@ -445,6 +446,7 @@ SettingsPage {
             }
 
             Widgets.RdButton {
+                style: Widgets.RdButton.Style.Plain
                 text: qsTr("Add")
                 enabled: !root._installPending && (root._canInstall || !root._gathering)
                 Accessible.description: root._canInstall ? qsTr("Install \"%1\"").arg(root._selected.name)
@@ -476,6 +478,7 @@ SettingsPage {
             }
 
             Widgets.RdButton {
+                style: Widgets.RdButton.Style.Plain
                 text: qsTr("Remove")
                 enabled: root._canRemove
                 Accessible.description: root._canRemove ? qsTr("Uninstall \"%1\"").arg(root._selected.name) : ""

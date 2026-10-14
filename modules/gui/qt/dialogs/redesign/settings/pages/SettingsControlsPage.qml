@@ -54,7 +54,10 @@ SettingsPage {
             description: qsTr("Opens the list of every keyboard shortcut, where each one can be changed.")
             keywords: "hotkeys keys shortcuts edit"
 
+            // Figma: 320 wide
             Widgets.RdButton {
+                style: Widgets.RdButton.Style.Plain
+                implicitWidth: VLCStyle.dp(320)
                 text: qsTr("Edit Keyboard Shortcuts")
                 enabled: !!root.settingsDialog
                 onClicked: root.settingsDialog.openExternal(() => DialogsProvider.keyboardShortcutsDialog())
@@ -67,6 +70,8 @@ SettingsPage {
             keywords: "hotkeys keys shortcuts reset defaults"
 
             Widgets.RdButton {
+                style: Widgets.RdButton.Style.Plain
+                implicitWidth: VLCStyle.dp(320)
                 text: qsTr("Reset")
                 onClicked: {
                     if (!DialogsProvider.questionDialog(qsTr("Put every keyboard shortcut back to VLC's own?"),

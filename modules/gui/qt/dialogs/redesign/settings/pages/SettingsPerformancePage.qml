@@ -45,14 +45,6 @@ SettingsPage {
         return list
     }
 
-    // 0 lets FFmpeg pick the number of threads
-    readonly property var _threadChoices: {
-        const list = [{ value: 0, text: qsTr("Automatic") }]
-        for (let i = 1; i <= 16; ++i)
-            list.push({ value: i, text: String(i) })
-        return list
-    }
-
     SettingsSection {
         title: qsTr("Decoding")
 
@@ -147,7 +139,8 @@ SettingsPage {
         SettingsOption {
             option: "avcodec-threads"
             text: qsTr("Decoding threads")
-            choices: root._threadChoices
+            // Figma: a text input; 0 lets FFmpeg pick the number of threads (the info popover)
+            kind: "number"
         }
     }
 

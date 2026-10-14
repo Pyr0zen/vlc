@@ -86,6 +86,10 @@ public:
                                  const QString& filter = {}) const;
     Q_INVOKABLE QString pickDirectory(const QString& title, const QString& current = {}) const;
 
+    // the computer's optical drives, as VLC's "dvd" / "cd-audio" options name them ("D:",
+    // "/dev/sr0"): [{ value, text }]
+    Q_INVOKABLE QVariantList opticalDrives() const;
+
     // opens VLC's configuration folder in the file manager
     Q_INVOKABLE void openConfigFolder() const;
     // every option back to its default, saved (VLC's "Reset Preferences")

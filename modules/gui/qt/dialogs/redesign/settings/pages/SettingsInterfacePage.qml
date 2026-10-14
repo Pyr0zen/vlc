@@ -130,6 +130,8 @@ SettingsPage {
             option: "mouse-hide-timeout"
             text: qsTr("Hide after")
             kind: "slider"
+            sliderTrackTop: VLCStyle.dp(4)
+            sliderLabelSpacing: VLCStyle.dp(8)
             valueScale: 1000
             from: 0
             to: 10
@@ -144,7 +146,8 @@ SettingsPage {
             text: qsTr("Show controls in fullscreen")
         }
 
-        // how near the top or bottom edge the mouse shows a bar in fullscreen (Figma "Values")
+        // how near the top or bottom edge the mouse shows a bar in fullscreen (Figma: a three
+        // stop slider, "wrapper" 320x47)
         SettingsRow {
             text: qsTr("Fullscreen controls sensitivity")
             description: qsTr("How near the top or bottom edge of the screen the mouse has to be to show the controls in fullscreen. High shows them from further away.")
@@ -152,15 +155,19 @@ SettingsPage {
             shown: SettingsCatalog.exists("qt-fs-sensitivity")
             available: fsControllerRow.value !== false
 
-            SettingsSegmented {
+            Widgets.RdSlider {
                 // distance from the edge, in dp (Player.qml); Medium is the default
                 readonly property var distances: [16, 40, 96]
 
                 implicitWidth: VLCStyle.dp(320)
-                implicitHeight: VLCStyle.dp(36)
-                model: [qsTr("Low"), qsTr("Medium"), qsTr("High")]
+                trackTop: VLCStyle.dp(4)
+                labelSpacing: VLCStyle.dp(8)
+                from: 0
+                to: distances.length - 1
+                stepSize: 1
+                labels: [qsTr("Low"), qsTr("Medium"), qsTr("High")]
                 // a value set elsewhere shows as the nearest choice
-                currentIndex: {
+                value: {
                     const v = MainCtx.fsSensitivity
                     let best = 0
                     for (let i = 1; i < distances.length; ++i) {
@@ -170,7 +177,7 @@ SettingsPage {
                     return best
                 }
                 Accessible.name: qsTr("Fullscreen controls sensitivity")
-                onActivated: (index) => MainCtx.fsSensitivity = distances[index]
+                onMoved: MainCtx.fsSensitivity = distances[Math.round(value)]
             }
         }
     }
@@ -217,6 +224,8 @@ SettingsPage {
                 option: "qt-opacity"
                 text: qsTr("Window opacity")
                 kind: "slider"
+                sliderTrackTop: VLCStyle.dp(4)
+                sliderLabelSpacing: VLCStyle.dp(8)
                 valueScale: 0.01
                 from: 10
                 to: 100
@@ -253,6 +262,8 @@ SettingsPage {
                 option: "qt-fs-opacity"
                 text: qsTr("Fullscreen controls opacity")
                 kind: "slider"
+                sliderTrackTop: VLCStyle.dp(4)
+                sliderLabelSpacing: VLCStyle.dp(8)
                 valueScale: 0.01
                 from: 10
                 to: 100

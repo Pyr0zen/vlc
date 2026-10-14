@@ -61,6 +61,7 @@ SettingsPage {
             available: MainCtx.mediaLibraryAvailable
 
             Widgets.RdButton {
+                style: Widgets.RdButton.Style.Plain
                 text: qsTr("Clear")
                 onClicked: {
                     if (DialogsProvider.questionDialog(qsTr("Forget everything you played?"), qsTr("Clear history")))

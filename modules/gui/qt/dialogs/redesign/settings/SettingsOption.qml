@@ -56,13 +56,17 @@ SettingsRow {
     property var labels: []
     // slider filled from 0 (delays)
     property bool bipolar: false
+    // Figma "Settings - *": every control 320 wide; text inputs 36 high, a few 32 (row 42)
     property real controlWidth: VLCStyle.dp(320)
+    property real controlHeight: VLCStyle.dp(36)
+    // slider: Figma "wrapper" of most Settings sliders (track 8 px down, labels 14 px under
+    // it, 57 high); the Interface page's are 4 and 8 (47 high)
+    property real sliderTrackTop: VLCStyle.dp(8)
+    property real sliderLabelSpacing: VLCStyle.dp(14)
     // text fields
     property string placeholder: ""
     // VLC reads the option when it starts: the info popover says so
     property bool restartRequired: false
-    // directory: a drive is written as VLC's default writes it ("D:", not "D:\")
-    property bool driveLetter: false
 
     readonly property var info: SettingsCatalog.describe(option)
     // a binding reading RdEffects.values[key] follows only this option's value
@@ -208,8 +212,10 @@ SettingsRow {
     Component {
         id: numberControl
 
+        // Figma "Frame 265": a 320 wide text input
         Widgets.RdValueBox {
-            implicitWidth: VLCStyle.dp(140)
+            implicitWidth: root.controlWidth
+            implicitHeight: root.controlHeight
             text: root._numberText(root.value)
             validator: RegularExpressionValidator { regularExpression: /-?[0-9]*[.,]?[0-9]*\s*\S*/ }
             Accessible.name: root.text
@@ -230,6 +236,8 @@ SettingsRow {
             to: root.to
             stepSize: root.step
             labels: root.labels
+            trackTop: root.sliderTrackTop
+            labelSpacing: root.sliderLabelSpacing
             bipolar: root.bipolar
             value: Number(root.value ?? 0) / root.valueScale
             Accessible.name: root.text
@@ -251,6 +259,8 @@ SettingsRow {
             implicitWidth: root.controlWidth
             implicitHeight: VLCStyle.dp(32)
             text: root._colorText(root.value)
+            // Figma "Frame 87": BG/B2 without a frame
+            framed: false
             showSwatch: true
             swatch: text
             validator: RegularExpressionValidator { regularExpression: /#?[0-9a-fA-F]{0,6}/ }
@@ -268,7 +278,9 @@ SettingsRow {
 
         Widgets.RdTextField {
             implicitWidth: root.controlWidth
-            implicitHeight: VLCStyle.dp(36)
+            implicitHeight: root.controlHeight
+            // Figma "Frame 265": the value in FG/A2
+            color: VLCStyle.palette.rdFgA2
             text: String(root.value ?? "")
             placeholderText: root.placeholder
             echoMode: root.resolvedKind === "password" ? TextInput.Password : TextInput.Normal
@@ -291,7 +303,8 @@ SettingsRow {
                 id: pathField
 
                 width: root.controlWidth - browseButton.width - parent.spacing
-                height: VLCStyle.dp(36)
+                height: root.controlHeight
+                color: VLCStyle.palette.rdFgA2
                 text: String(root.value ?? "")
                 placeholderText: root.placeholder
                 Accessible.name: root.text
@@ -305,15 +318,14 @@ SettingsRow {
                 id: browseButton
 
                 anchors.verticalCenter: parent.verticalCenter
+                style: Widgets.RdButton.Style.Plain
                 text: qsTr("Browse")
                 Accessible.name: qsTr("Browse for \"%1\"").arg(root.text)
                 onClicked: {
                     const current = String(root.value ?? "")
-                    let path = root.resolvedKind === "directory"
-                             ? SettingsCatalog.pickDirectory(root.text, current)
-                             : SettingsCatalog.pickFile(root.text, current, root.resolvedKind === "savefile")
-                    if (root.driveLetter && /^[A-Za-z]:[\\/]$/.test(path))
-                        path = path.substring(0, 2)
+                    const path = root.resolvedKind === "directory"
+                               ? SettingsCatalog.pickDirectory(root.text, current)
+                               : SettingsCatalog.pickFile(root.text, current, root.resolvedKind === "savefile")
                     if (path !== "")
                         root.apply(path)
                 }

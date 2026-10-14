@@ -89,7 +89,7 @@ const QSet<QString>& curatedOptions()
         "mix-mode", "qt-max-volume", "volume-save", "mmdevice-volume", "waveout-volume",
         "volume-step", "norm-max-level", "audio-replay-gain-mode", "audio-replay-gain-preamp",
         "equalizer-2pass", "pitch-shift", "audio-language", "audio-desync", "audio-visual",
-        "mmdevice-passthrough", "force-dolby-surround", "audio-resampler", "role",
+        "mmdevice-passthrough", "force-dolby-surround", "audio-resampler", "soxr-resampler-quality", "role",
         "effect-width", "effect-height", "audio-time-stretch", "audio-filter", "stereo-mode", "gain",
         // Subtitles
         "spu", "sub-language", "subsdec-encoding", "sub-autodetect-file", "sub-autodetect-fuzzy",
@@ -543,6 +543,39 @@ QString SettingsCatalog::pickDirectory(const QString& title, const QString& curr
     const QString dir = QFileDialog::getExistingDirectory(nullptr, title,
                                                           current.isEmpty() ? QDir::homePath() : current);
     return QDir::toNativeSeparators(dir);
+}
+
+QVariantList SettingsCatalog::opticalDrives() const
+{
+    QVariantList drives;
+    const auto add = [&drives](const QString& device) {
+        drives.append(QVariantMap {
+            { QStringLiteral("value"), device },
+            { QStringLiteral("text"), device },
+        });
+    };
+#ifdef _WIN32
+    // the drive letters of the CD / DVD / Blu-ray drives (no disc access: an empty drive does
+    // not slow the list down)
+    const DWORD letters = GetLogicalDrives();
+    for (int i = 0; i < 26; ++i)
+    {
+        if (!(letters & (1u << i)))
+            continue;
+        const wchar_t root[] = { static_cast<wchar_t>(L'A' + i), L':', L'\\', L'\0' };
+        if (GetDriveTypeW(root) == DRIVE_CDROM)
+            add(QString(QChar(static_cast<char16_t>(u'A' + i))) + QLatin1Char(':'));
+    }
+#else
+    static const char* const devices[] = { "/dev/sr0", "/dev/sr1", "/dev/sr2", "/dev/sr3",
+                                            "/dev/cdrom", "/dev/dvd", "/dev/cd0", "/dev/cd0c" };
+    for (const char* device : devices)
+    {
+        if (QFileInfo::exists(QString::fromLatin1(device)))
+            add(QString::fromLatin1(device));
+    }
+#endif
+    return drives;
 }
 
 void SettingsCatalog::openConfigFolder() const

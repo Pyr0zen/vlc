@@ -190,6 +190,7 @@ SettingsPage {
                 keywords: "config vlcrc folder"
 
                 Widgets.RdButton {
+                    style: Widgets.RdButton.Style.Plain
                     text: qsTr("Open")
                     onClicked: SettingsCatalog.openConfigFolder()
                 }
@@ -237,6 +238,7 @@ SettingsPage {
 
             SettingsOption {
                 option: "syslog-ident"
+                controlHeight: VLCStyle.dp(32)
                 text: qsTr("System log identity")
                 available: root._syslog
             }

@@ -123,6 +123,7 @@ SettingsPage {
             keywords: "adjust picture reset"
 
             Widgets.RdButton {
+                style: Widgets.RdButton.Style.Plain
                 text: qsTr("Reset")
                 onClicked: {
                     for (const name of root._pictureValues) {
@@ -198,12 +199,14 @@ SettingsPage {
 
         SettingsOption {
             option: "snapshot-path"
+            controlHeight: VLCStyle.dp(32)
             text: qsTr("Save to")
             kind: "directory"
         }
 
         SettingsOption {
             option: "snapshot-prefix"
+            controlHeight: VLCStyle.dp(32)
             text: qsTr("File name prefix")
         }
 
@@ -272,18 +275,21 @@ SettingsPage {
         SettingsSection {
             SettingsOption {
                 option: "custom-aspect-ratios"
+                controlHeight: VLCStyle.dp(32)
                 text: qsTr("Custom aspect ratios")
                 placeholder: "21:9,32:9"
             }
 
             SettingsOption {
                 option: "custom-crop-ratios"
+                controlHeight: VLCStyle.dp(32)
                 text: qsTr("Custom crop ratios")
                 placeholder: "21:9,32:9"
             }
 
             SettingsOption {
                 option: "monitor-par"
+                controlHeight: VLCStyle.dp(32)
                 text: qsTr("Monitor pixel aspect ratio")
                 placeholder: "1:1"
             }

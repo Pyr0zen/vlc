@@ -118,10 +118,13 @@ Rectangle {
                 contentItem: Item {
                     Rectangle {
                         anchors.centerIn: parent
-                        width: VLCStyle.dp(20)
+                        // Figma: the cell less its 6 px padding (19.6 x 20)
+                        width: cell.width - 2 * VLCStyle.dp(6)
                         height: VLCStyle.dp(20)
                         radius: VLCStyle.dp(1)
                         color: root.colors[cell.index]
+                        // Figma: the colors not chosen at 70 %
+                        opacity: cell.selected ? 1.0 : 0.7
                     }
                 }
             }

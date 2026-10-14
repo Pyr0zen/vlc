@@ -29,8 +29,8 @@ import VLC.Dialogs
 SettingsPage {
     id: root
 
-    // the disc drives: a folder picker on Windows (a drive, written "D:"), else a device file
-    readonly property string _driveKind: Qt.platform.os === "windows" ? "directory" : ""
+    // Figma: the disc drives in a dropdown; empty lets VLC use the first drive it finds
+    readonly property var _driveChoices: [{ value: "", text: qsTr("Automatic") }].concat(SettingsCatalog.opticalDrives())
 
     function _option(name) {
         return RdEffects.values[RdEffects.optionKey(name)]
@@ -177,12 +177,11 @@ SettingsPage {
     SettingsSection {
         title: qsTr("Files & Discs")
 
-        // a file option holding a device: on Windows a drive ("D:"), picked as a folder
         SettingsOption {
             option: "dvd"
             text: qsTr("Default optical drive")
-            kind: root._driveKind
-            driveLetter: true
+            kind: "dropdown"
+            choices: root._driveChoices
         }
 
         SettingsOption {
@@ -206,6 +205,7 @@ SettingsPage {
         SettingsSection {
             SettingsOption {
                 option: "input-timeshift-path"
+                controlHeight: VLCStyle.dp(32)
                 text: qsTr("Time-shift buffer folder")
                 kind: "directory"
             }
@@ -239,8 +239,8 @@ SettingsPage {
             SettingsOption {
                 option: "cd-audio"
                 text: qsTr("Default audio CD drive")
-                kind: root._driveKind
-                driveLetter: true
+                kind: "dropdown"
+                choices: root._driveChoices
             }
         },
 

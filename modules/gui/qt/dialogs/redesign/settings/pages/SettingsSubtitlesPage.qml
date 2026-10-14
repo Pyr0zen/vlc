@@ -159,6 +159,7 @@ SettingsPage {
                 id: preciseSize
 
                 Widgets.RdValueBox {
+                    implicitWidth: VLCStyle.dp(320)
                     text: root._scale + "%"
                     Accessible.name: qsTr("Font size")
                     onEdited: (text) => {

@@ -145,6 +145,9 @@ SettingsPage {
                             anchors.verticalCenter: parent.verticalCenter
                             implicitWidth: VLCStyle.dp(182)
                             implicitHeight: VLCStyle.dp(32)
+                            framed: false
+                            backgroundRadius: VLCStyle.rd_radius_xsmall
+                            textColor: Qt.alpha(VLCStyle.palette.rdFgA2, fixedChoice.selected ? 1.0 : 0.4)
                             visible: SettingsCatalog.exists(root._volumeOption)
                             text: Math.round(Number(root._option(root._volumeOption) ?? 1) * 100) + "%"
                             Accessible.name: qsTr("Startup volume")
@@ -327,6 +330,9 @@ SettingsPage {
                 readonly property real pitch: root._filterOn("scaletempo_pitch")
                                               ? Number(RdEffects.values[RdEffects.audioKey("pitch-shift")] ?? 0) : 0
 
+                // Figma "Frame 265" 320x32
+                implicitWidth: VLCStyle.dp(320)
+                implicitHeight: VLCStyle.dp(32)
                 text: pitch.toFixed(2)
                 Accessible.name: qsTr("Pitch shift")
                 onEdited: (text) => {
@@ -398,8 +404,15 @@ SettingsPage {
             }
 
             SettingsOption {
-                option: "audio-resampler"
-                text: qsTr("Resampler")
+                option: "soxr-resampler-quality"
+                text: qsTr("Resampling quality")
+                choices: [
+                    { value: 0, text: qsTr("Fastest") },
+                    { value: 1, text: qsTr("Low") },
+                    { value: 2, text: qsTr("Balanced") },
+                    { value: 3, text: qsTr("High") },
+                    { value: 4, text: qsTr("Best") }
+                ]
             }
 
             SettingsOption {
@@ -423,6 +436,11 @@ SettingsPage {
                 option: "aout"
                 text: qsTr("Audio output")
                 restartRequired: true
+            }
+
+            SettingsOption {
+                option: "audio-resampler"
+                text: qsTr("Resampler")
             }
 
             SettingsOption {
