@@ -365,6 +365,15 @@ void RdEffects::refresh()
     emit changed();
 }
 
+void RdEffects::discardPending()
+{
+    m_applyTimer.stop();
+    m_pending.clear();
+    m_touched.clear();
+    // strings waiting for a save in progress: the save that follows writes the reset values
+    m_pendingStrings.clear();
+}
+
 /* values as VLC has them */
 
 QString RdEffects::configString(const char* name) const
@@ -557,6 +566,18 @@ void RdEffects::putConfig(const char* name, const QVariant& value)
     touchIfCached(makeKey("audio", key));
     touchIfCached(makeKey("audioFlag", key));
     touchIfCached(makeKey("video", key));
+    // the audio filter list typed as text (Settings > Audio): the filter toggles read it while
+    // no audio output runs
+    if (key == QLatin1String("audio-filter"))
+    {
+        const QString prefix = makeKey("audioFilter", QString());
+        const QStringList keys = m_values->keys();
+        for (const QString& cached : keys)
+        {
+            if (cached.startsWith(prefix))
+                touch(cached);
+        }
+    }
 }
 
 void RdEffects::save()
