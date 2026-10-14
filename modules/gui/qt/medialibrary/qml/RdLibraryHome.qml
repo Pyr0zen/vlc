@@ -58,6 +58,8 @@ FocusScope {
     readonly property bool searchable: true
 
     property int itemCount: 0
+    // a section is still loading: the "Watch Next" empty state waits for it
+    property bool anyLoading: true
 
     signal loaded()
 
@@ -70,19 +72,32 @@ FocusScope {
         { section: "latestStreams", title: qsTr("Latest Streams"), wide: false }
     ]
 
-    // full library: one row of cards per section
+    // full library: one row of cards per section, as many as fit (Continue Watching cards are
+    // wider)
     readonly property real _cardGap: VLCStyle.dp(14)
-    readonly property int _cardsPerRow: Math.max(1, Math.floor((flick.width + _cardGap) / (VLCStyle.dp(180) + _cardGap)))
-    readonly property int _limit: compact || listMode ? 3 : _cardsPerRow
+
+    function _cardWidth(wide) {
+        return wide ? VLCStyle.dp(240) : VLCStyle.dp(150)
+    }
+
+    function _limit(wide) {
+        if (compact || listMode)
+            return 3
+        return Math.max(1, Math.floor((flick.width + _cardGap) / (_cardWidth(wide) + _cardGap)))
+    }
 
     function _updateCount() {
         let count = 0
+        let loading = false
         for (let i = 0; i < sectionRepeater.count; ++i) {
             const s = sectionRepeater.itemAt(i)
-            if (s)
+            if (s) {
                 count += s.model.count
+                loading = loading || s.model.loading
+            }
         }
         itemCount = count
+        anyLoading = loading
     }
 
     readonly property string playingMrl: Player.url.toString() !== "" ? decodeURIComponent(Player.url.toString()) : ""
@@ -135,7 +150,7 @@ FocusScope {
 
                         ml: MediaLib
                         section: sectionItem.modelData.section
-                        limit: home._limit
+                        limit: home._limit(sectionItem.modelData.wide)
                         searchPattern: home.searchText
                         ids: {
                             if (sectionItem.modelData.section === "frequentFolders")
@@ -145,6 +160,7 @@ FocusScope {
                             return []
                         }
                         onCountChanged: home._updateCount()
+                        onLoadingChanged: home._updateCount()
                         onLoaded: home.loaded()
                     }
 
@@ -202,7 +218,7 @@ FocusScope {
 
                                 readonly property var item: home.toItem(model, index)
 
-                                width: sectionItem.modelData.wide ? VLCStyle.dp(240) : VLCStyle.dp(150)
+                                width: home._cardWidth(sectionItem.modelData.wide)
                                 title: item.title
                                 subtitle: item.kind === "media" && !item.isVideo ? (item.subtitle ?? "") : ""
                                 iconName: home.iconOf(item) || "videos"
@@ -222,7 +238,7 @@ FocusScope {
 
             // nothing played yet (20:52-20:59)
             Column {
-                visible: home.itemCount === 0 && home.searchText === ""
+                visible: home.itemCount === 0 && !home.anyLoading && home.searchText === ""
                 width: parent.width
                 spacing: VLCStyle.dp(15)
 
