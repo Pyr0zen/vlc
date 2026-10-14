@@ -1644,9 +1644,12 @@ FocusScope {
                 }
             }
 
-            // redesign: BG/A3 95%; a 1 px Divider/Dim top line only in the light theme (Figma
-            // "Player - Light" has it, the dark "Player" frame has none)
-            color: (controlBar.textPosition === ControlBar.TimeTextPosition.Inline) ? VLCStyle.palette.rdBgA3Transparent
+            // redesign: Figma BG/A3 Transparent made opaque, like the panels and menus: the 95 %
+            // assumes a background blur, and over the native video (fullscreen, where no frame
+            // is drawn behind the bar) the 5 % shows the picture through and dims the bar; a 1 px
+            // Divider/Dim top line only in the light theme (Figma "Player - Light" has it, the
+            // dark "Player" frame has none)
+            color: (controlBar.textPosition === ControlBar.TimeTextPosition.Inline) ? Qt.alpha(VLCStyle.palette.rdBgA3Transparent, 1.0)
                                                                                     : windowTheme.bg.primary
 
             Rectangle {
