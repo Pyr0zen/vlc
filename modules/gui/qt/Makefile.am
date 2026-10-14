@@ -1756,8 +1756,7 @@ libqt_plugin_la_SHADER_FRAG = shaders/FadingEdge.frag \
                               shaders/DualKawaseBlur_upsample.frag \
                               shaders/DualKawaseBlur_downsample.frag \
                               shaders/DualKawaseBlur_upsample_postprocess.frag \
-                              shaders/VolumeCone.frag \
-                              shaders/VideoFrameCorner.frag
+                              shaders/VolumeCone.frag
 
 libqt_plugin_la_SHADER_VERT = shaders/FadingEdgeX.vert \
                               shaders/FadingEdgeY.vert \
