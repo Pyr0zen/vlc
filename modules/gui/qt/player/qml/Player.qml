@@ -1149,6 +1149,83 @@ FocusScope {
         }
     }
 
+    // redesign: a click outside the open player panel closes it (INTERACTIONS.md section 2).
+    // Over the video (or the audio view) the click only closes the panel: it does not reach the
+    // video, which would pause on the click (mouse-pause-policy) and switch to fullscreen on a
+    // double click; the second click of a quick double click is held back too. A right click
+    // closes the panel and opens the right-click menu. Clicks on the bars are handled below.
+    MouseArea {
+        id: panelDismissArea
+
+        anchors.fill: parent
+
+        enabled: RdPanels.current !== "" || dismissClickGuard.running || pressed
+        acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+
+        onPressed: {
+            if (RdPanels.current === "")
+                return
+            RdPanels.close()
+            dismissClickGuard.restart()
+        }
+
+        onClicked: (mouse) => {
+            if (mouse.button === Qt.RightButton)
+                playerMenu.popupAtCursor()
+        }
+
+        Timer {
+            id: dismissClickGuard
+
+            interval: Qt.styleHints.mouseDoubleClickInterval
+        }
+    }
+
+    // a press on the bars (or anywhere else in the player outside the panel) closes the panel
+    // once the click is done, unless the click itself changed the panel: the button of the open
+    // panel toggles it, another panel button switches to its panel without the panel flashing
+    // closed in between. The handler only observes: the click still reaches the control (play,
+    // seek, volume ... work in the same click). It sits on an empty item above everything in the
+    // player, because Qt delivers a press that a control accepted to the handlers of the items
+    // above that control, not to its parents.
+    Item {
+        anchors.fill: parent
+        z: 100
+
+        PointHandler {
+            id: panelOutsidePress
+
+            enabled: RdPanels.current !== ""
+            acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+
+            property string _panel: ""
+
+            function _inside(item, scenePoint) {
+                if (!item || !item.visible)
+                    return false
+                const p = item.mapFromItem(null, scenePoint.x, scenePoint.y)
+                return p.x >= 0 && p.y >= 0 && p.x < item.width && p.y < item.height
+            }
+
+            onActiveChanged: {
+                if (active) {
+                    const p = point.scenePressPosition
+                    const panel = RdPanels.tracksOpen ? tracksPopupLoader
+                                : RdPanels.settingsOpen ? settingsPanelLoader
+                                : RdPanels.queueOpen ? queuePanelLoader : null
+                    _panel = _inside(panel, p) ? "" : RdPanels.current
+                } else if (_panel !== "") {
+                    const panel = _panel
+                    _panel = ""
+                    Qt.callLater(() => {
+                        if (RdPanels.current === panel)
+                            RdPanels.close()
+                    })
+                }
+            }
+        }
+    }
+
     TopBar {
         id: topBar
 
@@ -1635,6 +1712,8 @@ FocusScope {
     // settings sidebar (gear) and queue sidebar (list button): inside the video area at the right,
     // from under the top bar to over the control bar (video 7:12, 9:29; Figma 400 wide)
     PanelLoader {
+        id: settingsPanelLoader
+
         anchors.right: parent.right
         anchors.rightMargin: VLCStyle.dp(20, VLCStyle.scale)
         anchors.top: topBar.bottom
@@ -1653,6 +1732,8 @@ FocusScope {
     }
 
     PanelLoader {
+        id: queuePanelLoader
+
         anchors.right: parent.right
         anchors.rightMargin: VLCStyle.dp(20, VLCStyle.scale)
         anchors.top: topBar.bottom
