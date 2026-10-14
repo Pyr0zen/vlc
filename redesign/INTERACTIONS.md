@@ -37,6 +37,7 @@ The user can switch Dark / Light / System and pick one of 9 accent colors at any
 - The seek row (time, seek bar, duration) must work as a movable item (19:22 alternate layout moves it to its own row).
 - New controls (File / Folder / Playlist / Artist name, Favorite, Thumbnail, Bookmarks, Right Sidebar, Go Home ...) are added as `ControlListModel` types (append-only enum) with palette entries.
 - Profiles switch layout and settings; any setting UI must reflect a profile switch live (bind to the source, never cache values).
+- Step 1 (W8.1a): dialogs/toolbar/qml/CustomizePlayerDialog.qml edits VLC's zones (left / center / right per player layout) in its own bar drawn over the live control bar (CustomizeBar / CustomizeZone, dashed outlines via Widgets.RdDashedFrame); the live bars follow the edited models behind it. W8.1b moves the editing onto the real top and control bars (top bar model, movable seek row and title) and adds the Figma-only controls to CustomizePalette (icon, name, outline size per control); keep the palette's 50 ms shifts and the cursor hot spot. Its profile dropdown and "..." menu make way for the main menu Profile entry with W8.2.
 
 ## 4. One source of truth for settings
 The same option can be changed in several places: the right sidebar tabs, the Settings dialog pages, menus, hotkeys, per-show presets and profiles.
