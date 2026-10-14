@@ -15,13 +15,416 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
-// redesign: Settings > Extensions ("Extensions & Scripts", video 18:26-18:47, Figma "Settings - extensions");
-// rows: BUILD_PLAN.md section 8, P8-18, P8-20 (VLC's plugin list goes under Advanced Options).
-// Until its rows are mapped to VLC's options (W6.2), the page points to VLC's complete preferences.
+// redesign: Settings > Extensions ("Extensions & Scripts", video 18:26-18:47, Figma "Settings - extensions"); rows: P8-18, P8-19, P8-20.
+// The list holds VLC's add-ons, everything installable (extensions, skins, playlist parsers,
+// service discovery, interfaces, art fetchers), from VLC's add-ons manager (AddonsModel, the
+// model of the old "Addons Manager" tab): the installed ones, or VLC's online catalog after
+// "Find more extensions" (the button then reads "Show installed"). "Add" installs the selected
+// add-on of the catalog; with none selected it reads an add-on package (.vlp) from the computer,
+// as the old dialog did with a dropped package (also accepted here), whose add-ons can then be
+// installed. VLC's plugins (internal functions, "not really supposed to edit them here") move
+// under Advanced Options. Wording: the video's (Decision 11; Figma says "Add-ons").
 import QtQuick
+import QtQuick.Layouts
+import QtQuick.Templates as T
 
+import VLC.MainInterface
+import VLC.Style
+import VLC.Widgets as Widgets
 import VLC.Dialogs
+import VLC.Network
 
 SettingsPage {
-    SettingsPlaceholder { }
+    id: root
+
+    // false: the installed add-ons; true: VLC's online catalog (and read packages) as well
+    property bool _catalog: false
+    property bool _catalogLoaded: false
+    // a repository or a package is being read
+    property bool _gathering: false
+    // a message about the last package the user tried to add
+    property string _notice: ""
+
+    // the selection follows its add-on when the list reloads (rows move, states change)
+    property int _selectedRow: -1
+    property string _selectedKey: ""
+    // the roles of the selected add-on (name, state, manageable, ...)
+    property var _selected: null
+
+    readonly property bool _canInstall: !!_selected && _selected.state === ServicesDiscoveryModel.STATE_NOTINSTALLED
+    readonly property bool _canRemove: !!_selected && _selected.state === ServicesDiscoveryModel.STATE_INSTALLED
+                                       && !!_selected.manageable
+
+    readonly property string _emptyText: {
+        if (_gathering)
+            return qsTr("Looking for add-ons...")
+        if (_notice !== "")
+            return _notice
+        if (addons.loading)
+            return ""
+        if (searchField.text !== "")
+            return qsTr("No add-on matches \"%1\"").arg(searchField.text)
+        if (_catalog)
+            return qsTr("No add-ons found. VLC's add-on catalog needs an internet connection.")
+        return qsTr("No add-ons installed. Find more extensions to browse VLC's add-on catalog.")
+    }
+
+    function _keyOf(data) {
+        return [data.name, data.version, data.type].join("\n")
+    }
+
+    function _select(row) {
+        if (row < 0 || row >= addons.count) {
+            _clearSelection()
+            return
+        }
+        _selectedRow = row
+        _selected = addons.getDataAt(row)
+        _selectedKey = _keyOf(_selected)
+        list.positionViewAtIndex(row, ListView.Contain)
+    }
+
+    function _clearSelection() {
+        _selectedRow = -1
+        _selectedKey = ""
+        _selected = null
+    }
+
+    function _refreshSelection() {
+        if (_selectedKey === "")
+            return
+        let row = _selectedRow
+        if (row < 0 || row >= addons.count || _keyOf(addons.getDataAt(row)) !== _selectedKey) {
+            row = -1
+            for (let i = 0; i < addons.count; ++i) {
+                if (_keyOf(addons.getDataAt(i)) === _selectedKey) {
+                    row = i
+                    break
+                }
+            }
+        }
+        if (row < 0) {
+            _clearSelection()
+            return
+        }
+        _selectedRow = row
+        _selected = addons.getDataAt(row)
+    }
+
+    function _showCatalog(show) {
+        _notice = ""
+        _catalog = show
+        if (!show || _catalogLoaded || _gathering)
+            return
+        _catalogLoaded = true
+        _gathering = true
+        addons.loadFromDefaultRepository()
+    }
+
+    function _loadPackage(url) {
+        _notice = ""
+        _catalog = true
+        _gathering = true
+        addons.loadFromExternalRepository(url)
+    }
+
+    // an add-on package (.vlp) from the computer: VLC's add-ons manager reads it as a repository
+    function _addPackage() {
+        _notice = ""
+        const path = SettingsCatalog.pickFile(qsTr("Add an add-on package (.vlp)"))
+        if (path === "")
+            return
+        if (!/\.vlp$/i.test(path)) {
+            _notice = qsTr("\"%1\" is not a VLC add-on package (.vlp).").arg(path)
+            return
+        }
+        const encoded = path.replace(/\\/g, "/").split("/")
+                            .map((part) => encodeURIComponent(part).replace(/%3A/gi, ":"))
+                            .join("/")
+        _loadPackage((encoded.startsWith("/") ? "file://" : "file:///") + encoded)
+    }
+
+    function _detail(type, version, author, state, manageable) {
+        const parts = [addons.getLabelForType(type)]
+        if (version)
+            parts.push(version)
+        if (author)
+            parts.push(qsTr("by %1").arg(author))
+        switch (state) {
+        case ServicesDiscoveryModel.STATE_INSTALLING:
+            parts.push(qsTr("Installing..."))
+            break
+        case ServicesDiscoveryModel.STATE_UNINSTALLING:
+            parts.push(qsTr("Removing..."))
+            break
+        case ServicesDiscoveryModel.STATE_INSTALLED:
+            if (!manageable)
+                parts.push(qsTr("installed manually"))
+            else if (_catalog)
+                parts.push(qsTr("Installed"))
+            break
+        }
+        return parts.join(" · ")
+    }
+
+    ServicesDiscoveryModel {
+        id: addons
+
+        ctx: MainCtx
+        stateFilter: root._catalog ? ServicesDiscoveryModel.STATE_NONE : ServicesDiscoveryModel.STATE_INSTALLED
+        searchPattern: searchField.text
+
+        onLoadingChanged: {
+            if (!loading)
+                root._gathering = false
+        }
+        onCountChanged: root._refreshSelection()
+    }
+
+    // install and remove progress changes the rows in place
+    Connections {
+        target: addons
+
+        function onDataChanged() {
+            root._refreshSelection()
+        }
+    }
+
+    SettingsSection {
+        title: qsTr("Extensions")
+        keywords: qsTr("add-ons addons extensions skins scripts playlist parsers service discovery interfaces art fetchers install remove")
+
+        // Figma "Frame 86": 194 high, BG/B2, 2 px BG/A4 stroke, radius 6, padding 12,8
+        Rectangle {
+            id: box
+
+            Layout.fillWidth: true
+            Layout.preferredHeight: VLCStyle.dp(194)
+            radius: VLCStyle.rd_radius_normal
+            color: VLCStyle.palette.rdBgB2
+            border.width: VLCStyle.dp(2)
+            // accent only for keyboard focus, like the Rd text fields
+            border.color: (list.activeFocus && !list.byMouse) ? VLCStyle.palette.rdAccentMain
+                                                               : VLCStyle.palette.rdBgA4
+
+            ListView {
+                id: list
+
+                // focus came from a click on a row: no keyboard focus frame
+                property bool byMouse: false
+
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.top: parent.top
+                anchors.bottom: statusText.visible ? statusText.top : parent.bottom
+                anchors.leftMargin: VLCStyle.dp(8)
+                anchors.rightMargin: VLCStyle.dp(8)
+                anchors.topMargin: VLCStyle.dp(6)
+                anchors.bottomMargin: VLCStyle.dp(6)
+                clip: true
+                boundsBehavior: Flickable.StopAtBounds
+                activeFocusOnTab: true
+                keyNavigationEnabled: false
+
+                model: addons
+
+                Accessible.role: Accessible.List
+                Accessible.name: qsTr("Extensions")
+
+                T.ScrollBar.vertical: Widgets.ScrollBarExt {
+                    colorContext.palette: VLCStyle.palette
+                }
+
+                onActiveFocusChanged: {
+                    if (!activeFocus)
+                        byMouse = false
+                }
+
+                // arrows move the selection; Enter or Space selects the first add-on
+                Keys.onPressed: (event) => {
+                    let row = root._selectedRow
+                    const page = Math.max(1, Math.floor(height / VLCStyle.rd_rowHeight) - 1)
+                    switch (event.key) {
+                    case Qt.Key_Up: row = row < 0 ? 0 : row - 1; break
+                    case Qt.Key_Down: row = row + 1; break
+                    case Qt.Key_PageUp: row = row - page; break
+                    case Qt.Key_PageDown: row = row < 0 ? page : row + page; break
+                    case Qt.Key_Home: row = 0; break
+                    case Qt.Key_End: row = count - 1; break
+                    case Qt.Key_Return:
+                    case Qt.Key_Enter:
+                    case Qt.Key_Space: row = Math.max(0, row); break
+                    default: return
+                    }
+                    event.accepted = true
+                    byMouse = false
+                    if (count > 0)
+                        root._select(Math.max(0, Math.min(count - 1, row)))
+                }
+
+                delegate: Widgets.RdListRow {
+                    id: row
+
+                    required property int index
+                    required property var model
+
+                    readonly property string detail: root._detail(model.type, model.version, model.author,
+                                                                  model.state, !!model.manageable)
+
+                    width: ListView.view.width
+                    focusPolicy: Qt.NoFocus
+                    title: model.name ?? ""
+                    selected: index === root._selectedRow
+                    Accessible.description: [detail, model.summary ?? ""].filter((t) => t !== "").join(". ")
+
+                    onClicked: {
+                        list.byMouse = true
+                        list.forceActiveFocus(Qt.MouseFocusReason)
+                        root._select(index)
+                    }
+
+                    contentItem: RowLayout {
+                        spacing: VLCStyle.dp(10)
+
+                        Text {
+                            Layout.fillWidth: true
+                            Layout.leftMargin: VLCStyle.dp(4)
+                            text: row.title
+                            elide: Text.ElideRight
+                            font.family: VLCStyle.rd_fontFamily
+                            font.pixelSize: VLCStyle.rd_fontSize_label
+                            color: (row.selected || row.hovered) ? row.rdPalette.rdFg2 : row.rdPalette.rdFgA1
+                        }
+
+                        Text {
+                            Layout.maximumWidth: Math.round(row.width / 2)
+                            Layout.rightMargin: VLCStyle.dp(4)
+                            text: row.detail
+                            elide: Text.ElideRight
+                            font.family: VLCStyle.rd_fontFamily
+                            font.pixelSize: VLCStyle.rd_fontSize_label
+                            color: row.rdPalette.rdFgA3
+                        }
+                    }
+                }
+            }
+
+            // reading the catalog or a package while add-ons are listed, or a message
+            Text {
+                id: statusText
+
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                anchors.leftMargin: VLCStyle.dp(12)
+                anchors.rightMargin: VLCStyle.dp(12)
+                anchors.bottomMargin: VLCStyle.dp(8)
+                visible: list.count > 0 && text !== ""
+                text: root._notice !== "" ? root._notice : (root._gathering ? qsTr("Looking for add-ons...") : "")
+                elide: Text.ElideRight
+                font.family: VLCStyle.rd_fontFamily
+                font.pixelSize: VLCStyle.rd_fontSize_toggle
+                color: VLCStyle.palette.rdFgA4
+            }
+
+            Text {
+                anchors.centerIn: parent
+                width: parent.width - 2 * VLCStyle.dp(24)
+                visible: list.count === 0
+                text: root._emptyText
+                wrapMode: Text.WordWrap
+                horizontalAlignment: Text.AlignHCenter
+                font.family: VLCStyle.rd_fontFamily
+                font.pixelSize: VLCStyle.rd_fontSize_label
+                color: VLCStyle.palette.rdFgA3
+            }
+
+            // a package dropped on the list, as in the old Addons Manager
+            DropArea {
+                anchors.fill: parent
+
+                onEntered: (drag) => {
+                    drag.accepted = !root._gathering && drag.hasUrls && drag.urls.length === 1
+                                    && /^file:.*\.vlp$/i.test(String(drag.urls[0]))
+                }
+                onDropped: (drop) => {
+                    root._loadPackage(drop.urls[0])
+                    drop.accept(Qt.CopyAction)
+                }
+            }
+        }
+
+        // Figma "Frame 156": search field 210x36 on the left, buttons 185 / 100 / 100 on the right
+        RowLayout {
+            Layout.fillWidth: true
+            Layout.topMargin: VLCStyle.dp(6)
+            Layout.bottomMargin: VLCStyle.dp(11)
+            spacing: VLCStyle.dp(10)
+
+            Widgets.RdTextField {
+                id: searchField
+
+                Layout.preferredWidth: VLCStyle.dp(210)
+                Layout.minimumWidth: VLCStyle.dp(120)
+                Layout.preferredHeight: VLCStyle.dp(36)
+                placeholderText: qsTr("Search")
+                Accessible.name: qsTr("Search add-ons")
+            }
+
+            Item {
+                Layout.fillWidth: true
+            }
+
+            Widgets.RdButton {
+                leftPadding: VLCStyle.dp(20)
+                rightPadding: VLCStyle.dp(20)
+                text: root._catalog ? qsTr("Show installed") : qsTr("Find more extensions")
+                enabled: root._catalog || !root._gathering
+                Accessible.description: root._catalog ? qsTr("List the installed add-ons only")
+                                                      : qsTr("Browse VLC's online add-on catalog")
+                onClicked: root._showCatalog(!root._catalog)
+            }
+
+            Widgets.RdButton {
+                text: qsTr("Add")
+                enabled: root._canInstall || !root._gathering
+                Accessible.description: root._canInstall ? qsTr("Install \"%1\"").arg(root._selected.name)
+                                                         : qsTr("Add an add-on package (.vlp) from this computer")
+                onClicked: {
+                    if (root._canInstall)
+                        addons.installService(root._selectedRow)
+                    else
+                        root._addPackage()
+                }
+            }
+
+            Widgets.RdButton {
+                text: qsTr("Remove")
+                enabled: root._canRemove
+                Accessible.description: root._canRemove ? qsTr("Uninstall \"%1\"").arg(root._selected.name) : ""
+                onClicked: {
+                    const name = root._selected.name
+                    if (!DialogsProvider.questionDialog(qsTr("Remove \"%1\"?").arg(name), qsTr("Remove add-on")))
+                        return
+                    // the list may have changed while the question was open
+                    root._refreshSelection()
+                    if (root._canRemove && root._selected.name === name)
+                        addons.removeService(root._selectedRow)
+                }
+            }
+        }
+
+        SettingsOption {
+            option: "qt-autoload-extensions"
+            text: qsTr("Load extensions on startup")
+        }
+    }
+
+    advanced: [
+        SettingsPluginList { },
+
+        SettingsMoreOptions {
+            category: "extensions"
+        }
+    ]
 }
