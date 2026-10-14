@@ -52,7 +52,9 @@ T.Button {
 
     Accessible.onPressAction: control.clicked()
 
-    opacity: (!enabled && style === RdButton.Style.Save) ? 0.5 : 1.0
+    // Figma has no button component with a disabled state; its one disabled button (Save in
+    // "Open network stream") is gray at 50 %: Standard buttons are gray already, so both at 50 %
+    opacity: (!enabled && (style === RdButton.Style.Save || style === RdButton.Style.Standard)) ? 0.5 : 1.0
 
     readonly property color _bg: {
         switch (style) {
