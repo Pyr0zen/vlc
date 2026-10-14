@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 import QtQuick
+// upstream dropped QtQuick.Controls (fc71047387) but this file still uses its types
+import QtQuick.Controls.Basic
 import QtQuick.Templates as T
 
 
@@ -95,7 +97,7 @@ T.ComboBox {
         radius: VLCStyle.dp(2, VLCStyle.scale)
     }
 
-    popup: Popup {
+    popup: T.Popup {
         y: control.height - 1
 
         // NOTE: This Popup should be on top of other Popup(s) most of the time.

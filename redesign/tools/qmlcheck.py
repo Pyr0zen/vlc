@@ -209,13 +209,10 @@ for b in blocks:
             src = os.path.join(qt, *f.split("/"))
             base = os.path.basename(f)
             if os.path.exists(src):
-                # upstream dropped the QtQuick.Controls imports (commit fc71047387) yet still uses
-                # Popup, Control, Label, ... which VLC's static Qt resolves; make them resolvable here
-                text = open(src, encoding="utf-8").read()
-                if not re.search(r"^import QtQuick\.Controls", text, re.M):
-                    text = re.sub(r"^import QtQuick\s*$", "import QtQuick; import QtQuick.Controls.Basic",  # same line: keeps line numbers
-                                  text, count=1, flags=re.M)
-                open(os.path.join(out, base), "w", encoding="utf-8").write(text)
+                # copied unchanged: a file that uses Popup, Control, Label, ... without importing
+                # QtQuick.Controls(.Basic) or QtQuick.Templates fails in VLC too ("X is not a
+                # type", seen on the PC in the toolbar editor), so it must fail here as well
+                shutil.copyfile(src, os.path.join(out, base))
                 copies[os.path.normcase(src)] = os.path.join(out, base)
                 original[os.path.normcase(src)] = src
             qmldirs[name].append(("singleton " if kind == "singletons" else "") + "%s 1.0 %s" % (base[:-4], base))

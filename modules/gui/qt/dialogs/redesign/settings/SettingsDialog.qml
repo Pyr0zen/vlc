@@ -345,7 +345,9 @@ Item {
 
         background: Rectangle {
             radius: VLCStyle.rd_radius_large
-            color: VLCStyle.palette.rdBgB1Transparent
+            // opaque: over the native video Figma's 95 % (meant with a background blur) shows a
+            // sharp ghost of the video (same rule as the side panels)
+            color: Qt.alpha(VLCStyle.palette.rdBgB1Transparent, 1.0)
 
             Widgets.RdShadow { }
         }

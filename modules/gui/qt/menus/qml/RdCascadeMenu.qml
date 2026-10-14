@@ -366,7 +366,8 @@ T.Popup {
                 y: anchor ? Math.max(root._margin, Math.min(anchor.y, root.height - height - root._margin)) : 0
 
                 radius: VLCStyle.rd_radius_panel
-                color: VLCStyle.palette.rdBgA3Transparent
+                // opaque over the native video (Figma's 95 % assumes a background blur)
+                color: Qt.alpha(VLCStyle.palette.rdBgA3Transparent, 1.0)
 
                 Widgets.RdShadow {
                     visible: root.withShadow

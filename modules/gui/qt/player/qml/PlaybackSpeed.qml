@@ -17,6 +17,8 @@
  *****************************************************************************/
 
 import QtQuick
+// upstream dropped QtQuick.Controls (fc71047387) but this file still uses its types
+import QtQuick.Controls.Basic
 import QtQuick.Templates as T
 import QtQuick.Layouts
 
@@ -256,7 +258,7 @@ ColumnLayout {
         rowSpacing: VLCStyle.margin_small
         columnSpacing: VLCStyle.margin_small
 
-        ButtonGroup {
+        T.ButtonGroup {
             id: buttonGroup
 
             onClicked: function(button /* : AbstractButton */) {

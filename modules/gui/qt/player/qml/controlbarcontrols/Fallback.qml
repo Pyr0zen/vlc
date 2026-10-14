@@ -17,6 +17,8 @@
  *****************************************************************************/
 
 import QtQuick
+// upstream dropped QtQuick.Controls (fc71047387) but this file still uses its types
+import QtQuick.Controls.Basic
 import QtQuick.Layouts
 
 import VLC.MainInterface
