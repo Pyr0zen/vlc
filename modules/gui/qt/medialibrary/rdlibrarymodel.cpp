@@ -151,6 +151,7 @@ RdLibraryItem RdLibraryItems::fromPlaylist(const vlc_ml_playlist_t& playlist)
     item.title = qfu(playlist.psz_name);
     item.mrl = qfu(playlist.psz_mrl);
     item.count = static_cast<int>(playlist.i_nb_media);
+    item.isFavorite = playlist.b_is_favorite;
     return item;
 }
 
@@ -176,7 +177,14 @@ QString RdLibraryItems::normalizedMrl(const QString& mrl)
 
 QString RdLibraryItems::mrlKey(const QString& mrl)
 {
-    return normalizedMrl(QUrl::fromPercentEncoding(mrl.toUtf8()));
+    QString key = normalizedMrl(QUrl::fromPercentEncoding(mrl.toUtf8()));
+#ifdef _WIN32
+    // Windows drive letters are not case sensitive ("file:///C:/" and "file:///c:/")
+    if (key.size() > 9 && key.startsWith(QLatin1String("file:///"), Qt::CaseInsensitive)
+        && key.at(9) == QLatin1Char(':'))
+        key[8] = key.at(8).toLower();
+#endif
+    return key;
 }
 
 bool RdLibraryItems::containsMrl(const QStringList& list, const QString& mrl)
@@ -329,7 +337,10 @@ void RdLibraryModel::onMlEvent(void* data, const vlc_ml_event_t* event)
 
 void RdLibraryModel::scheduleReload()
 {
-    m_reloadTimer.start();
+    // the first event of a burst starts the delay, the next ones join it (a long scan still
+    // refreshes the page every RELOAD_DELAY_MS)
+    if (!m_reloadTimer.isActive())
+        m_reloadTimer.start();
 }
 
 void RdLibraryModel::requestReload()

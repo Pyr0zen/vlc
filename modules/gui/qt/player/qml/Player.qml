@@ -88,15 +88,21 @@ FocusScope {
     readonly property real _videoInset: (_libraryShown && _libraryProgress >= 1) ? _libraryFullWidth : 0
     // the library is built on its first opening and then kept, so it reopens within a frame
     property bool _libraryActivated: false
+    // built in the background when the player starts with it open (the player shows first)
+    property bool _libraryAsync: false
 
     // open already when the player comes back from the full library
     Component.onCompleted: {
-        if (_libraryShown)
+        if (_libraryShown) {
+            _libraryAsync = true
             _libraryActivated = true
+        }
     }
 
     on_LibraryShownChanged: {
         if (_libraryShown) {
+            // opened by the user: built at once (the folder chip reveals in it right away)
+            _libraryAsync = false
             _libraryActivated = true
         } else if (librarySidebar.activeFocus) {
             // keys must not go on to the hidden library
@@ -240,16 +246,17 @@ FocusScope {
 
     // Events
 
-    // keys go to VLC's hotkeys, except while a modal redesign popup is open (RdPanels.modalCount)
-    // or the compact library has the focus (its lists and search field use the keys, unhandled
-    // keys still reach the hotkeys below, as in the full library).
+    // keys go to VLC's hotkeys, except while a modal redesign popup is open (RdPanels.modalCount).
+    // In the compact library a row with keyboard focus or the search field still gets its keys
+    // (InterfaceWindowHandler::applyKeyEvent), a row clicked with the mouse does not: Space
+    // pauses as everywhere else in the player.
     // _leaving keeps the binding off while the view is destroyed: a menu released during the
     // destruction would otherwise turn the hotkeys back on for the library
     property bool _leaving: false
     Binding {
         target: MainCtx
         property: "preferHotkeys"
-        value: !rootPlayer._leaving && RdPanels.modalCount === 0 && !librarySidebar.activeFocus
+        value: !rootPlayer._leaving && RdPanels.modalCount === 0
     }
     Component.onDestruction: {
         rootPlayer._leaving = true
@@ -259,12 +266,22 @@ FocusScope {
     }
 
     Keys.priority: Keys.AfterItem
+
+    // Ctrl+F searches the compact library while it is shown: the shortcut override comes
+    // before VLC's global Ctrl+F "Open Folder" shortcut and before the hotkeys (the key press
+    // itself may go to the hotkeys); with the library closed Ctrl+F stays Open Folder
+    Keys.onShortcutOverride: (event) => {
+        if (rootPlayer._libraryShown && librarySidebar.item && KeyHelper.matchSearch(event)) {
+            event.accepted = true
+            librarySidebar.item.focusSearch()
+        }
+    }
+
     Keys.onPressed: (event) => {
         if (event.accepted)
             return
 
-        // Ctrl+F searches the compact library, as in the full library (VLC's global Ctrl+F
-        // "Open Folder" shortcut runs first while global shortcuts are on)
+        // Ctrl+F reaching the player (focus in the library search): stays there
         if (rootPlayer._libraryShown && librarySidebar.item && KeyHelper.matchSearch(event)) {
             librarySidebar.item.focusSearch()
             event.accepted = true
@@ -326,10 +343,9 @@ FocusScope {
     ColorContext {
         id: windowTheme
 
-        // NOTE: We force the night theme when playing a video.
-        palette: (MainCtx.hasEmbededVideo && MainCtx.pinVideoControls === false)
-                 ? VLCStyle.darkPalette
-                 : VLCStyle.palette
+        // redesign: the player follows the theme over the video too (Figma "Player - Light",
+        // video 17:43), instead of VLC's night theme forced while a video plays
+        palette: VLCStyle.palette
 
         colorSet: ColorContext.Window
     }
@@ -1253,6 +1269,7 @@ FocusScope {
 
             enabled: rootPlayer._libraryShown
             active: rootPlayer._libraryActivated
+            asynchronous: rootPlayer._libraryAsync
             source: "qrc:///qt/qml/VLC/MediaLibrary/RdLibrarySidebar.qml"
         }
     }
@@ -1326,7 +1343,8 @@ FocusScope {
         onLibraryToggleRequested: rootPlayer.toggleLibrary(false)
         onFolderRequested: rootPlayer.toggleLibrary(true)
 
-        // redesign: no acrylic background behind the top bar, it paints its own opaque BG/A3
+        // redesign: no acrylic background behind the top bar, it paints its own background
+        // (BG/A3 in Dark, BG/A3 Transparent in Light, see TopBar.qml)
 
         FadeControllerStateGroup {
             target: topBar
@@ -1528,6 +1546,9 @@ FocusScope {
                     && (interactiveAutoHideTimer.running
                     || navBox.hovered || !MainCtx.hasEmbededVideo)
 
+        // drawn on the picture itself (translucent black box): keeps the night colors in every theme
+        colorContext.palette: VLCStyle.darkPalette
+
         x: rootPlayer.x + VLCStyle.margin_normal + VLCStyle.applicationHorizontalMargin
         y: controlBar.y - navBox.height - VLCStyle.margin_normal
 
@@ -1573,6 +1594,9 @@ FocusScope {
         }
         iconSize: VLCStyle.icon_large
         iconTxt: controlBar.state === "hidden" ? VLCIcons.expand_inverted : VLCIcons.expand
+
+        // drawn on the picture itself (no bar behind it): keeps the night colors in every theme
+        colorContext.palette: VLCStyle.darkPalette
 
         Navigation.parentItem: rootPlayer
         Navigation.upItem: playlistVisibility.isPlaylistVisible ? playlistpopup : (MainCtx.hasEmbededVideo ? playerSpecializationLoader : topBar)
@@ -1667,12 +1691,13 @@ FocusScope {
                 }
             }
 
-            // redesign: BG/A3 95% with a 1 px Divider/Dim top line
+            // redesign: BG/A3 95%; a 1 px Divider/Dim top line only in the light theme (Figma
+            // "Player - Light" has it, the dark "Player" frame has none)
             color: (controlBar.textPosition === ControlBar.TimeTextPosition.Inline) ? VLCStyle.palette.rdBgA3Transparent
                                                                                     : windowTheme.bg.primary
 
             Rectangle {
-                visible: controlBar.textPosition === ControlBar.TimeTextPosition.Inline
+                visible: controlBar.textPosition === ControlBar.TimeTextPosition.Inline && !VLCStyle.palette.isDark
                 width: parent.width
                 height: VLCStyle.dp(1, VLCStyle.scale)
                 color: VLCStyle.palette.rdDividerDim

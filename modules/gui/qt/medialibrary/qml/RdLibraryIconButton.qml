@@ -25,6 +25,7 @@ import QtQuick.Templates as T
 
 import VLC.MainInterface
 import VLC.Style
+import VLC.MediaLibrary
 import VLC.Widgets as Widgets
 
 T.AbstractButton {
@@ -48,7 +49,22 @@ T.AbstractButton {
     Accessible.onPressAction: control.clicked()
 
     Keys.priority: Keys.AfterItem
-    Keys.onPressed: (event) => Navigation.defaultKeyAction(event)
+    Keys.onPressed: (event) => {
+        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+            control.clicked()
+            event.accepted = true
+            return
+        }
+        Navigation.defaultKeyAction(event)
+    }
+
+    // VLC's Navigation takes the arrows and Escape: the arrows walk the keyboard focus chain
+    // and Escape goes back in the library, unless the view sets its own (RdLibraryPage's grid)
+    Navigation.upAction: () => RdLibraryNav.focusStep(control, false)
+    Navigation.downAction: () => RdLibraryNav.focusStep(control, true)
+    Navigation.leftAction: () => RdLibraryNav.focusStep(control, false)
+    Navigation.rightAction: () => RdLibraryNav.focusStep(control, true)
+    Navigation.cancelAction: () => RdLibraryNav.goBack()
 
     T.ToolTip.visible: (hovered || visualFocus) && description !== ""
     T.ToolTip.delay: VLCStyle.delayToolTipAppear

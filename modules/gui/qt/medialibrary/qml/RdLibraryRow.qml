@@ -26,6 +26,7 @@ import QtQuick.Templates as T
 
 import VLC.MainInterface
 import VLC.Style
+import VLC.MediaLibrary
 import VLC.Widgets as Widgets
 
 T.AbstractButton {
@@ -56,7 +57,22 @@ T.AbstractButton {
     Accessible.name: title
 
     Keys.priority: Keys.AfterItem
-    Keys.onPressed: (event) => Navigation.defaultKeyAction(event)
+    Keys.onPressed: (event) => {
+        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+            row.clicked()
+            event.accepted = true
+            return
+        }
+        Navigation.defaultKeyAction(event)
+    }
+
+    // VLC's Navigation takes the arrows and Escape: the arrows walk the keyboard focus chain
+    // and Escape goes back in the library, unless the view sets its own (RdLibraryPage's grid)
+    Navigation.upAction: () => RdLibraryNav.focusStep(row, false)
+    Navigation.downAction: () => RdLibraryNav.focusStep(row, true)
+    Navigation.leftAction: () => RdLibraryNav.focusStep(row, false)
+    Navigation.rightAction: () => RdLibraryNav.focusStep(row, true)
+    Navigation.cancelAction: () => RdLibraryNav.goBack()
 
     background: Item { }
 
@@ -114,8 +130,8 @@ T.AbstractButton {
     Item {
         id: ghost
 
-        // over the whole window only while dragging
-        parent: dragHandler.active ? row.Window.contentItem : row
+        // over the whole window only while dragging (set by the drag handler)
+        parent: row
         visible: dragHandler.active
         width: row.width
         height: row.height
@@ -179,10 +195,13 @@ T.AbstractButton {
         }
 
         onActiveChanged: {
-            if (active)
+            if (active) {
+                ghost.parent = row.Window.contentItem
                 ghost.Drag.active = true
-            else
+            } else {
                 ghost.Drag.drop()
+                ghost.parent = row
+            }
         }
     }
 

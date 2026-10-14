@@ -59,8 +59,14 @@ Widgets.RdMenuPanel {
     // edge on the item's right edge (the "..." menus)
     function openBelow(item, alignRight) {
         parent = item
+        keyboard = !!item.visualFocus
         x = alignRight ? item.width - width : -VLCStyle.dp(11)
-        y = item.height + VLCStyle.dp(6)
+        // above the item when the window has no room below it
+        const window = item.Window.window
+        const below = item.mapToItem(null, 0, item.height + VLCStyle.dp(6)).y
+        y = (window && below + implicitHeight > window.height - margins)
+            ? -implicitHeight - VLCStyle.dp(6)
+            : item.height + VLCStyle.dp(6)
         open()
     }
 

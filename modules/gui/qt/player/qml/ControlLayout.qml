@@ -99,6 +99,7 @@ FocusScope {
     property alias spacing: rowLayout.spacing
     // redesign: Figma gaps in the player's control bar (ControlRepeater)
     property alias figmaGaps: repeater.figmaGaps
+    property alias iconSpacing: repeater.iconSpacing
 
     // Signals
 

@@ -17,7 +17,8 @@
  *****************************************************************************/
 
 // Redesign text button (Figma "Frame 140/141", 100x32, radius 6, Inter 600 14):
-// - Standard: BG/A3 + FG/A2 (Cancel, Back, Browse)
+// - Standard: BG/A3 + FG/A2 (Cancel, Back, Browse); in the light theme a dark button, FG/A2 +
+//   BG/A1 text, like "Browse" at video 17:43 (Figma has no light dialog)
 // - Save: BG/Accent Bright + Accent/Main (dialog Save, Test); disabled is gray (BG/A1 + FG/A2)
 //   at 50% opacity, as the Figma "Open network stream" export and the video (13:10) show it
 // - Primary: Accent/Main + FG/B1 (Next, Finish, Continue Watching)
@@ -52,14 +53,19 @@ T.Button {
 
     Accessible.onPressAction: control.clicked()
 
-    opacity: (!enabled && style === RdButton.Style.Save) ? 0.5 : 1.0
+    // Figma has no button component with a disabled state; its one disabled button (Save in
+    // "Open network stream") is gray at 50 %: Standard buttons are gray already, so both at 50 %
+    opacity: (!enabled && (style === RdButton.Style.Save || style === RdButton.Style.Standard)) ? 0.5 : 1.0
 
     readonly property color _bg: {
         switch (style) {
         case RdButton.Style.Save: return enabled ? rdPalette.rdBgAccentBright : rdPalette.rdBgA1
         case RdButton.Style.Primary: return hovered ? rdPalette.rdAccentBright : rdPalette.rdAccentMain
         case RdButton.Style.Bar: return hovered ? rdPalette.rdBgA4 : rdPalette.rdBgB2
-        default: return hovered ? rdPalette.rdBgA1 : rdPalette.rdBgA3
+        default:
+            if (!rdPalette.isDark)
+                return hovered ? rdPalette.rdFgA1 : rdPalette.rdFgA2
+            return hovered ? rdPalette.rdBgA1 : rdPalette.rdBgA3
         }
     }
     readonly property color _fg: {
@@ -68,7 +74,7 @@ T.Button {
         case RdButton.Style.Primary: return rdPalette.rdFgB1
         case RdButton.Style.Bar: return hovered ? rdPalette.rdFgA2 : rdPalette.rdFgA3
         case RdButton.Style.Destructive: return rdPalette.rdFgDestructive
-        default: return rdPalette.rdFgA2
+        default: return rdPalette.isDark ? rdPalette.rdFgA2 : rdPalette.rdBgA1
         }
     }
 
@@ -76,7 +82,9 @@ T.Button {
         radius: control.style === RdButton.Style.Bar ? VLCStyle.rd_radius_small : VLCStyle.rd_radius_normal
         color: control._bg
         border.width: control.visualFocus ? VLCStyle.dp(1) : 0
-        border.color: control.rdPalette.rdFg2
+        // the light Standard button is dark itself: its focus ring is the accent
+        border.color: (control.rdPalette.isDark || control.style !== RdButton.Style.Standard)
+                      ? control.rdPalette.rdFg2 : control.rdPalette.rdAccentMain
     }
 
     contentItem: Item {

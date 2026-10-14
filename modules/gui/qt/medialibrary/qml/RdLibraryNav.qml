@@ -227,7 +227,27 @@ QtObject {
         } catch (e) {
             // a stray "%": compare the text as it is
         }
-        return key.replace(/\/+$/, "")
+        key = key.replace(/\/+$/, "")
+        // Windows drive letters are not case sensitive ("file:///C:/" and "file:///c:/")
+        if (Qt.platform.os === "windows")
+            key = key.replace(/^(file:\/\/\/)([A-Za-z]):/i, (match, scheme, drive) => scheme + drive.toLowerCase() + ":")
+        return key
+    }
+
+    // `text` percent-decoded for display; as it is when it holds a stray "%"
+    function decoded(text) {
+        try {
+            return decodeURIComponent(String(text))
+        } catch (e) {
+            return String(text)
+        }
+    }
+
+    // keyboard: moves the focus from `item` to the next (or previous) item of the focus chain
+    function focusStep(item, forward) {
+        const next = item.nextItemInFocusChain(forward)
+        if (next && next !== item)
+            next.forceActiveFocus(forward ? Qt.TabFocusReason : Qt.BacktabFocusReason)
     }
 
     // length of the deepest folder of `folders` that holds `mrl` (0: none)

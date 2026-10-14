@@ -1498,8 +1498,8 @@ libqml_module_player_a_QML = \
 	player/qml/ControlLayout.qml \
 	player/qml/ControlRepeater.qml \
 	player/qml/NavigationBox.qml \
-	player/qml/RdPlayerMenu.qml 
-	player/qml/RdMiniQueue.qml 
+	player/qml/RdPlayerMenu.qml \
+	player/qml/RdMiniQueue.qml \
 	player/qml/RdMiniPlayer.qml
 
 libqml_module_player_a_Singleton_QML = \

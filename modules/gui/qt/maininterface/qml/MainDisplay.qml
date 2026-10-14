@@ -65,6 +65,22 @@ FocusScope {
         g_mainDisplay.goBack()
     }
 
+    // Ctrl+F searches the library (its Search field) instead of VLC's global Ctrl+F "Open
+    // Folder" (Ctrl+O and the main menu still open files and folders); the shortcut override
+    // comes before the global shortcut
+    Keys.onShortcutOverride: (event) => {
+        if (KeyHelper.matchSearch(event) && library.item && library.item.focusSearch) {
+            event.accepted = true
+            library.item.focusSearch()
+        } else if (event.key === Qt.Key_L && event.modifiers === Qt.ControlModifier && miniPlayer.visible) {
+            // Ctrl+L (VLC's play queue toggle) shows and hides the mini player's queue, the
+            // library's play queue (Decision 3), instead of VLC's docked play queue, which
+            // would then show up in the player
+            event.accepted = true
+            miniPlayer.queueOpen = !miniPlayer.queueOpen
+        }
+    }
+
     Keys.onPressed: (event) => {
         if (KeyHelper.matchSearch(event) && library.item && library.item.focusSearch) {
             library.item.focusSearch()
@@ -195,17 +211,6 @@ FocusScope {
         onFolderClicked: {
             if (library.item && library.item.revealMrl)
                 library.item.revealMrl(Player.url.toString())
-        }
-
-        // Ctrl+L (VLC's play queue toggle, GlobalShortcuts.qml) shows and hides the mini
-        // player's queue, the library's play queue (Decision 3: the queue is everywhere)
-        Connections {
-            target: MainCtx.playqueuePanel
-
-            function onVisibleChanged() {
-                if (miniPlayer.visible)
-                    miniPlayer.queueOpen = !miniPlayer.queueOpen
-            }
         }
     }
 

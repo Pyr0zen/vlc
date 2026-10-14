@@ -62,7 +62,7 @@ RdLibraryDialog {
 
     function _fileName(entry) {
         if (typeof entry === "string") {
-            const parts = decodeURIComponent(entry).split("/")
+            const parts = RdLibraryNav.decoded(entry).split("/")
             return parts[parts.length - 1]
         }
         return qsTr("Library item")

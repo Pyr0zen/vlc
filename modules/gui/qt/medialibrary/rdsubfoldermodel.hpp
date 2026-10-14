@@ -23,6 +23,7 @@
 #include "mlhelper.hpp"
 
 #include <QSet>
+#include <QTimer>
 
 // redesign: the folders of one level of the folder-based Videos and Music categories (video
 // 10:56-12:12, P5-16, P5-29, F-14). Without a parent: the library folders of the category;
@@ -100,6 +101,8 @@ private:
 
     QStringList m_categoryMrls;
     QStringList m_otherMrls;
+    // a scan sends one event per folder found or updated: the level reloads at most this often
+    QTimer m_scanResetTimer;
 };
 
 #endif // RDSUBFOLDERMODEL_HPP

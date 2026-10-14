@@ -32,9 +32,15 @@
 #include "rdlibrarymodel.hpp"
 #include "qt.hpp"
 
+// folder events of a scan reload a level at most this often
+static constexpr int SCAN_RESET_DELAY_MS = 300;
+
 RdSubfolderModel::RdSubfolderModel(QObject* parent)
     : MLBaseModel(parent)
 {
+    m_scanResetTimer.setSingleShot(true);
+    m_scanResetTimer.setInterval(SCAN_RESET_DELAY_MS);
+    connect(&m_scanResetTimer, &QTimer::timeout, this, &RdSubfolderModel::resetRequested);
 }
 
 QHash<int, QByteArray> RdSubfolderModel::roleNames() const
@@ -109,15 +115,21 @@ void RdSubfolderModel::onVlcMlEvent(const MLEvent& event)
 {
     switch (event.i_type)
     {
-    case VLC_ML_EVENT_FOLDER_ADDED:
     case VLC_ML_EVENT_FOLDER_DELETED:
     case VLC_ML_EVENT_ENTRY_POINT_ADDED:
     case VLC_ML_EVENT_ENTRY_POINT_REMOVED:
     case VLC_ML_EVENT_ENTRY_POINT_BANNED:
     case VLC_ML_EVENT_ENTRY_POINT_UNBANNED:
-    // MLEvent does not copy the id of an updated folder (mlevent.hpp): reload the level
-    case VLC_ML_EVENT_FOLDER_UPDATED:
+        m_scanResetTimer.stop();
         emit resetRequested();
+        return;
+    // folders found or updated during a scan: reload the level at most every
+    // SCAN_RESET_DELAY_MS (the first event starts the delay, the next ones join it).
+    // MLEvent does not copy the id of an updated folder (mlevent.hpp), so the level reloads.
+    case VLC_ML_EVENT_FOLDER_ADDED:
+    case VLC_ML_EVENT_FOLDER_UPDATED:
+        if (!m_scanResetTimer.isActive())
+            m_scanResetTimer.start();
         return;
     default:
         break;

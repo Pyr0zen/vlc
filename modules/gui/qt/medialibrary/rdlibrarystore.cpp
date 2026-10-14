@@ -131,6 +131,7 @@ RdLibraryStore::RdLibraryStore(qt_intf_t* intf, MediaLib* mediaLib, QObject* par
     m_sortKeys = settings->value(RD_LIBRARY_KEY("sortKeys")).toMap();
     m_viewMode = settings->value(RD_LIBRARY_KEY("viewMode"), QStringLiteral("grid")).toString();
     m_compactViewMode = settings->value(RD_LIBRARY_KEY("compactViewMode"), QStringLiteral("list")).toString();
+    m_hiddenRoots = settings->value(RD_LIBRARY_KEY("hiddenRoots")).toStringList();
 }
 
 RdLibraryStore::~RdLibraryStore()
@@ -220,7 +221,9 @@ void RdLibraryStore::addFolder(const QString& category, const QUrl& url)
     };
     m_mediaLib->runOnMLThread<Ctx>(this,
     [mrl](vlc_medialibrary_t* ml, Ctx& ctx) {
-        // a folder inside a library folder is already scanned: it is only recorded
+        // a folder inside a library folder is only recorded; that library folder is reloaded
+        // so a folder created after its last scan is listed too (the reload only looks at
+        // what changed)
         ml_unique_ptr<vlc_ml_folder_list_t> roots(vlc_ml_list_entry_points(ml, nullptr));
         if (roots)
         {
@@ -232,7 +235,10 @@ void RdLibraryStore::addFolder(const QString& category, const QUrl& url)
                 if (RdLibraryItems::mrlKey(rootMrl) == RdLibraryItems::mrlKey(mrl))
                     ctx.isRoot = true;
                 else if (isInside(rootMrl, mrl))
+                {
                     ctx.containingRoots.append(rootMrl);
+                    vlc_ml_reload_folder(ml, root.psz_mrl);
+                }
             }
         }
         if (!ctx.isRoot && ctx.containingRoots.isEmpty())
@@ -250,6 +256,12 @@ void RdLibraryStore::addFolder(const QString& category, const QUrl& url)
         };
 
         bool changed = false;
+        if (ctx.isRoot && RdLibraryItems::containsMrl(m_hiddenRoots, mrl))
+        {
+            removeMrl(m_hiddenRoots, mrl);
+            save(RD_LIBRARY_KEY("hiddenRoots"), m_hiddenRoots);
+            changed = true;
+        }
         if (ctx.isRoot)
         {
             // a library folder from before the redesign shows in both categories: it stays in
@@ -306,36 +318,50 @@ void RdLibraryStore::removeFolder(const QString& category, const QString& mrl)
     if (!inOther && !inMine)
         other.append(normalized);
     removeMrl(mine, normalized);
+
+    // a library folder leaves the media library once no category shows it. When folders of a
+    // category are inside it (a Music folder inside a Videos folder) it stays in the media
+    // library, hidden, so their media keep their data (play counts, progress, thumbnails).
+    // A folder inside a library folder is only taken off its list.
+    bool leaveLibrary = false;
+    if (!shownInOther)
+    {
+        const bool hasInner = std::any_of(m_videoFolders.cbegin(), m_videoFolders.cend(), [&normalized](const QString& folder) {
+            return RdLibraryItems::mrlKey(folder) != RdLibraryItems::mrlKey(normalized) && isInside(normalized, folder);
+        }) || std::any_of(m_musicFolders.cbegin(), m_musicFolders.cend(), [&normalized](const QString& folder) {
+            return RdLibraryItems::mrlKey(folder) != RdLibraryItems::mrlKey(normalized) && isInside(normalized, folder);
+        });
+        if (hasInner)
+        {
+            if (!RdLibraryItems::containsMrl(m_hiddenRoots, normalized))
+                m_hiddenRoots.append(normalized);
+            save(RD_LIBRARY_KEY("hiddenRoots"), m_hiddenRoots);
+        }
+        else
+        {
+            leaveLibrary = true;
+        }
+    }
     save(RD_LIBRARY_KEY("videoFolders"), m_videoFolders);
     save(RD_LIBRARY_KEY("musicFolders"), m_musicFolders);
     emit foldersChanged();
 
-    // a library folder leaves the media library once no category shows it; the folders of a
-    // category inside it (a Music folder inside a Videos folder) become library folders of
-    // their own. A folder inside a library folder is only taken off its list.
-    if (!shownInOther && m_mediaLib)
+    if (leaveLibrary && m_mediaLib)
     {
-        QStringList inner;
-        for (const QString& folder : m_videoFolders + m_musicFolders)
-        {
-            if (RdLibraryItems::mrlKey(folder) != RdLibraryItems::mrlKey(normalized) && isInside(normalized, folder)
-                && !RdLibraryItems::containsMrl(inner, folder))
-                inner.append(folder);
-        }
-        m_mediaLib->runOnMLThread(this, [normalized, inner](vlc_medialibrary_t* ml) {
+        m_mediaLib->runOnMLThread(this, [normalized](vlc_medialibrary_t* ml) {
             ml_unique_ptr<vlc_ml_folder_list_t> roots(vlc_ml_list_entry_points(ml, nullptr));
             if (!roots)
                 return;
+            // removed by the media library's own MRL of the folder
             const QString key = RdLibraryItems::mrlKey(normalized);
-            const bool isRoot = std::any_of(roots->p_items, roots->p_items + roots->i_nb_items,
-                                            [&key](const vlc_ml_folder_t& root) {
-                return root.psz_mrl && RdLibraryItems::mrlKey(qfu(root.psz_mrl)) == key;
-            });
-            if (!isRoot)
-                return;
-            vlc_ml_remove_folder(ml, qtu(withTrailingSlash(normalized)));
-            for (const QString& folder : inner)
-                vlc_ml_add_folder(ml, qtu(folder));
+            for (const vlc_ml_folder_t& root : ml_range_iterate<vlc_ml_folder_t>(roots))
+            {
+                if (root.psz_mrl && RdLibraryItems::mrlKey(qfu(root.psz_mrl)) == key)
+                {
+                    vlc_ml_remove_folder(ml, root.psz_mrl);
+                    break;
+                }
+            }
         });
     }
 }
@@ -539,19 +565,38 @@ int RdLibraryStore::pinIndex(const QVariantMap& location) const
 
 /* network stream lists */
 
-void RdLibraryStore::addStreamList(const QString& name, const QString& url)
+QVariantMap RdLibraryStore::addStreamList(const QString& name, const QString& url)
 {
+    // as DialogsProvider::openNetworkStreams
+    const QString link = url.trimmed();
+    if (link.isEmpty())
+        return {};
+    char* uri = link.contains(QLatin1String("://"))
+              ? vlc_uri_fixup(qtu(link))
+              : vlc_path2uri(qtu(QDir::toNativeSeparators(link)), nullptr);
+    if (uri == nullptr)
+    {
+        msg_Warn(p_intf, "invalid network link: %s", qtu(link));
+        return {};
+    }
+    const QString mrl = qfu(uri);
+    free(uri);
+
+    const QString key = RdLibraryItems::mrlKey(mrl);
     for (const QVariant& entry : std::as_const(m_streamLists))
     {
-        if (entry.toMap().value(QStringLiteral("url")).toString() == url)
-            return;
+        const QVariantMap map = entry.toMap();
+        if (RdLibraryItems::mrlKey(map.value(QStringLiteral("url")).toString()) == key)
+            return map;
     }
-    m_streamLists.append(QVariantMap {
+    const QVariantMap entry {
         { QStringLiteral("name"), name },
-        { QStringLiteral("url"), url },
-    });
+        { QStringLiteral("url"), mrl },
+    };
+    m_streamLists.append(entry);
     save(RD_LIBRARY_KEY("streamLists"), m_streamLists);
     emit streamListsChanged();
+    return entry;
 }
 
 void RdLibraryStore::removeStreamList(int index)
@@ -804,7 +849,9 @@ void RdLibraryStore::exportPlaylist(const MLItemId& playlistId, const QString& n
         {
             if (!m.p_files || m.p_files->i_nb_items == 0 || !m.p_files->p_items[0].psz_mrl)
                 continue;
-            ctx.lines.append(QStringLiteral("#EXTINF:%1,%2").arg(m.i_duration / 1000).arg(qfu(m.psz_title)));
+            // -1: unknown length (a stream), as the M3U format says
+            const int64_t seconds = m.i_duration > 0 ? m.i_duration / 1000 : -1;
+            ctx.lines.append(QStringLiteral("#EXTINF:%1,%2").arg(seconds).arg(qfu(m.psz_title)));
             const QUrl url(qfu(m.p_files->p_items[0].psz_mrl));
             ctx.lines.append(url.isLocalFile() ? QDir::toNativeSeparators(url.toLocalFile())
                                                : qfu(m.p_files->p_items[0].psz_mrl));

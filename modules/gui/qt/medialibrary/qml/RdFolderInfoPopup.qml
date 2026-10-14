@@ -25,6 +25,7 @@ import VLC.MainInterface
 import VLC.Player
 import VLC.Style
 import VLC.Widgets as Widgets
+import VLC.MediaLibrary
 
 T.Popup {
     id: popup
@@ -33,11 +34,16 @@ T.Popup {
     // (RdPanels.modalCount, see menus/qml/RdCascadeMenu.qml)
     property bool _holdsModal: false
 
+    // the item that had the focus before the popup opened gets it back when it closes
+    property Item _opener: null
+
     onAboutToShow: {
         if (!popup._holdsModal) {
             RdPanels.acquireModal()
             popup._holdsModal = true
         }
+        const window = popup.parent ? popup.parent.Window.window : null
+        popup._opener = window ? window.activeFocusItem : null
     }
 
     onAboutToHide: {
@@ -45,6 +51,13 @@ T.Popup {
             RdPanels.releaseModal()
             popup._holdsModal = false
         }
+    }
+
+    onClosed: {
+        const opener = popup._opener
+        popup._opener = null
+        if (opener && opener.visible && opener.enabled)
+            opener.forceActiveFocus(Qt.PopupFocusReason)
     }
 
     Component.onDestruction: {
@@ -58,7 +71,7 @@ T.Popup {
     function show(item) {
         folderTitle = item.title ?? ""
         const url = item.mrl ?? ""
-        location = url.startsWith("file://") ? decodeURIComponent(url.replace(/^file:\/\/\/?/, "")) : url
+        location = url.startsWith("file://") ? RdLibraryNav.decoded(url.replace(/^file:\/\/\/?/, "")) : url
         open()
     }
 

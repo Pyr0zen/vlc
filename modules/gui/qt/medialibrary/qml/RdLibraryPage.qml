@@ -179,10 +179,11 @@ FocusScope {
     readonly property int sortOrder: _sortSpec.desc ? Qt.DescendingOrder : Qt.AscendingOrder
 
     // the file playing now, to mark its row (11:41)
-    readonly property string playingMrl: Player.url.toString() !== "" ? decodeURIComponent(Player.url.toString()) : ""
+    // compared as RdLibraryNav.mrlKey (decoded safely, drive letters as on disk)
+    readonly property string playingMrl: Player.url.toString() !== "" ? RdLibraryNav.mrlKey(Player.url.toString()) : ""
 
     function isPlaying(mrl) {
-        return playingMrl !== "" && !!mrl && decodeURIComponent(mrl) === playingMrl
+        return playingMrl !== "" && !!mrl && RdLibraryNav.mrlKey(mrl) === playingMrl
     }
 
     // rows above the items: "+ Add" rows (isAction) and the fixed entries of Music and Network
@@ -309,7 +310,10 @@ FocusScope {
             ml: MediaLib
             parentId: page.location.page === "folder" ? page.location.id : page._noParent
             categoryMrls: page.category === "music" ? RdLibraryStore.musicFolders : RdLibraryStore.videoFolders
-            otherMrls: page.category === "music" ? RdLibraryStore.videoFolders : RdLibraryStore.musicFolders
+            // hidden library folders count as the other category's: not listed here, their
+            // folders of this category are
+            otherMrls: (page.category === "music" ? RdLibraryStore.videoFolders : RdLibraryStore.musicFolders)
+                       .concat(RdLibraryStore.hiddenRoots)
             sortCriteria: "title"
             sortOrder: page.location.page === "folder" || page.sortKey !== "titleDesc" ? Qt.AscendingOrder : Qt.DescendingOrder
             searchPattern: page.searchText
@@ -513,7 +517,8 @@ FocusScope {
                 progress: (progress > 0 && progress < 1) ? progress : -1,
                 watched: (model.playcount ?? 0) > 0,
                 isVideo: isVideo,
-                isFavorite: model.isFavorite ?? false
+                // undefined where the model has no favorite role (a playlist's media)
+                isFavorite: model.isFavorite
             }
         }
         }
@@ -535,7 +540,7 @@ FocusScope {
     // songs show "title - artist" (12:00)
     function titleOf(item) {
         if (item.kind === "media" && !item.isVideo && item.subtitle)
-            return item.title + " - " + item.subtitle
+            return qsTr("%1 - %2").arg(item.title).arg(item.subtitle)
         return item.title
     }
 

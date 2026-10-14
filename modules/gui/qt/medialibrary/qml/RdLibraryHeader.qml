@@ -374,6 +374,8 @@ Item {
             color: VLCStyle.palette.rdFg2
             selectionColor: VLCStyle.palette.rdAccentDim
             selectByMouse: true
+            // reachable with Tab like the buttons around it
+            activeFocusOnTab: true
 
             Accessible.role: Accessible.EditableText
             Accessible.name: qsTr("Search")

@@ -93,8 +93,11 @@ Item {
             anchors.rightMargin: VLCStyle.dp(10)
             anchors.verticalCenter: parent.verticalCenter
             elide: Text.ElideRight
-            text: qsTr("%1 item", "%1 items", queueModel.count).arg(queueModel.count)
-                  + (queueModel.duration.valid() ? " - " + root._durationText(queueModel.duration) : "")
+            readonly property string countText: qsTr("%1 item", "%1 items", queueModel.count).arg(queueModel.count)
+
+            text: queueModel.duration.valid()
+                  ? qsTr("%1 - %2").arg(countText).arg(root._durationText(queueModel.duration))
+                  : countText
             font.family: VLCStyle.rd_fontFamily
             font.pixelSize: VLCStyle.rd_fontSize_label
             color: VLCStyle.palette.rdFgA3

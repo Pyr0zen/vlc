@@ -100,7 +100,8 @@ FocusScope {
         anyLoading = loading
     }
 
-    readonly property string playingMrl: Player.url.toString() !== "" ? decodeURIComponent(Player.url.toString()) : ""
+    // compared as RdLibraryNav.mrlKey (decoded safely, drive letters as on disk)
+    readonly property string playingMrl: Player.url.toString() !== "" ? RdLibraryNav.mrlKey(Player.url.toString()) : ""
 
     Flickable {
         id: flick
@@ -288,7 +289,7 @@ FocusScope {
 
     function titleOf(item) {
         if (item.kind === "media" && !item.isVideo && item.subtitle)
-            return item.title + " - " + item.subtitle
+            return qsTr("%1 - %2").arg(item.title).arg(item.subtitle)
         return item.title
     }
 
@@ -301,7 +302,7 @@ FocusScope {
     }
 
     function isPlaying(mrl) {
-        return playingMrl !== "" && !!mrl && decodeURIComponent(mrl) === playingMrl
+        return playingMrl !== "" && !!mrl && RdLibraryNav.mrlKey(mrl) === playingMrl
     }
 
     function dragUrlsOf(item) {
@@ -339,6 +340,9 @@ FocusScope {
         implicitHeight: VLCStyle.dp(32)
         hoverEnabled: true
         focusPolicy: Qt.TabFocus
+
+        Keys.onReturnPressed: header.clicked()
+        Keys.onEnterPressed: header.clicked()
 
         Accessible.role: Accessible.Link
         Accessible.name: text
