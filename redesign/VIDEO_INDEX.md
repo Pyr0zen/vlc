@@ -71,6 +71,11 @@ Decided by Sticky on 2026-10-12. General rule for anything not listed: her final
 31. (2026-10-13) The final UIs are in the Figma file; the video shows iterations on the way. Look: Figma. Functionality and relations: the video and its transcript.
 32. (2026-10-13) Dialogs open and close instantly, like the Figma prototype and the Settings dialog, so all dialogs behave the same (Open Network Stream, Settings, Keyboard Shortcuts and later ones); the video's dialog fades are editing dissolves. Menus keep the 120 ms fade in measured from her unedited demo (5:08).
 33. (2026-10-14) Light theme: Light/FG/1 is #111111 and Light/FG/2 is #222222 (the Figma file repeats the dark values there); approves the proposal under Decisions (Claude), W2.1 / Decision 20.
+34. (2026-10-14) Popup duration (row 352): test on the PC first whether Windows honours the app's tray notification time; if it ignores it, draw our own popup so the setting works.
+35. (2026-10-14) Process priority (row 356): shown in words, Lowest / Low / Normal / High / Highest.
+36. (2026-10-14) Discover cast devices OFF (row 359): search only while the cast picker is open, never in the background.
+37. (2026-10-14) Double click on the video set to Play/Pause (row 354): single-click play/pause turns off in that case, so single clicks never need a delay. Default stays double click = fullscreen.
+38. (2026-10-14) Night mode (row 355): Sticky does the listening test once it is built (tell him when).
 
 ## Decisions (Claude)
 Extra decisions made during the build, one line each (date, row IDs, decision, reason).
@@ -135,6 +140,7 @@ Extra decisions made during the build, one line each (date, row IDs, decision, r
 - 2026-10-14 W8.4: the volume cone takes each theme's Figma fills: empty part BG/B2 (Dark) / BG/A5 (Light), gradient tint #000000 20 % / #FFFFFF 20 % (rdVolumeEmpty, rdVolumeTint).
 - 2026-10-14 W8.4 (review): selected text on the Accent/DIm selection is FG/1 in Dark and BG/A1 in Light (rdSelectionText; FG/1 on Light Accent/DIm reads at 3.4:1); Figma shows no text selection.
 - 2026-10-14 W8.4 (review): the Qt widget dialogs' push buttons take the light Standard look of RdButton in Light (FG/A2, BG/A1 text); a disabled Standard button is drawn at 50 % in both themes, like Figma's only disabled button (Save, "Open network stream").
+- 2026-10-14 control bar, narrow window (Figma has no narrow bar): VLC's own ControlRepeater rule hides the right controls from the end (queue, settings, subtitles, audio, then volume) before the seek row shrinks below both times plus a 76 px seek bar; with no right control left, the duration goes, then the current time; prev / play / next and a seek bar of at least 76 px always stay (fits VLC's 320 px minimum window).
 
 - 2026-10-14 W8.1a (P8-24, P8-25): Customize Player is the Figma overlay: a 1048 wide box over the window (no dim, Figma has none) and the edited bar drawn by the dialog at the bottom of the window where the control bar is, every control in a 1 px FG/A3 dashed outline (shader, Figma dashes 4/4 with half dashes at the corners), empty room as dashed drop slots. The live bars keep following every change behind it. Step 1 edits VLC's three zones (left / center / right) of the Video, Audio and Mini player layouts; the top bar, the seek row and the title are not movable before W8.1b, so they have no dashed outline (the old WindowDialog toolbar editor files stay in the tree unused).
 - 2026-10-14 W8.1a: VLC's layout profiles (select, new, duplicate, rename, delete) sit in the title row (RdDropdown 32 high + a "..." menu, new / duplicate / rename ask for a name in a small redesign prompt) and the three player layouts in the footer as the Figma "Values" segmented control 32 high; neither is in the design (Decision 21). Profiles move to the main menu with W8.2.

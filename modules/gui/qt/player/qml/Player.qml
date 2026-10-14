@@ -1562,12 +1562,13 @@ FocusScope {
                 }
             }
 
-            // redesign: BG/A3 95% with a 1 px Divider/Dim top line
+            // redesign: BG/A3 95%; a 1 px Divider/Dim top line only in the light theme (Figma
+            // "Player - Light" has it, the dark "Player" frame has none)
             color: (controlBar.textPosition === ControlBar.TimeTextPosition.Inline) ? VLCStyle.palette.rdBgA3Transparent
                                                                                     : windowTheme.bg.primary
 
             Rectangle {
-                visible: controlBar.textPosition === ControlBar.TimeTextPosition.Inline
+                visible: controlBar.textPosition === ControlBar.TimeTextPosition.Inline && !VLCStyle.palette.isDark
                 width: parent.width
                 height: VLCStyle.dp(1, VLCStyle.scale)
                 color: VLCStyle.palette.rdDividerDim
