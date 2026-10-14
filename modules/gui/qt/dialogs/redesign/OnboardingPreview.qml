@@ -189,7 +189,8 @@ Item {
 
                 readonly property size size: Qt.size(width, height)
                 readonly property real tipRadius: height * 0.12
-                readonly property color emptyColor: root.rdPalette.rdBgB2
+                readonly property color emptyColor: root.rdPalette.rdVolumeEmpty
+                readonly property color tint: root.rdPalette.rdVolumeTint
                 readonly property real level: 33 / 88
 
                 blending: true
