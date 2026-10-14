@@ -19,6 +19,7 @@
 import QtQuick
 
 
+import VLC.MainInterface
 import VLC.Widgets as Widgets
 import VLC.Style
 import VLC.Player
@@ -45,7 +46,12 @@ Widgets.IconToolButton {
 
     text: VLCIcons.audiosub
 
-    enabled: menuLoader.status === Loader.Ready
+    // redesign: in the player VLC's "Languages and tracks" button (Customize Player) opens the
+    // redesigned tracks popup like the subtitle button (visual audit B23); elsewhere it keeps
+    // VLC's tracks menu
+    enabled: MainCtx.playerView || menuLoader.status === Loader.Ready
+
+    checked: !paintOnly && MainCtx.playerView && RdPanels.tracksOpen
 
     description: qsTr("Languages and tracks")
 
@@ -53,7 +59,12 @@ Widgets.IconToolButton {
 
     // Events
 
-    onClicked: menuLoader.item.open()
+    onClicked: {
+        if (MainCtx.playerView)
+            RdPanels.toggle(RdPanels.tracksOpen ? RdPanels.current : "subtitles")
+        else
+            menuLoader.item.open()
+    }
 
     // Children
 
@@ -89,5 +100,7 @@ Widgets.IconToolButton {
     function forceUnlock() {
         if((menuLoader)&&(menuLoader.item))
             menuLoader.item.close()
+        if (MainCtx.playerView && RdPanels.tracksOpen)
+            RdPanels.close()
     }
 }
