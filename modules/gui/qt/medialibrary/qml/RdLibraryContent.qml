@@ -134,20 +134,28 @@ FocusScope {
         }
 
         function onFoldersScanned() {
-            content._tryReveal()
+            content._tryReveal(false)
+        }
+
+        // the scan ended: one last look, then stop waiting for the folder
+        function onScanFinished() {
+            content._tryReveal(true)
         }
     }
 
-    function _tryReveal() {
+    function _tryReveal(last) {
         const mrl = RdLibraryNav.pendingFolderMrl
         if (mrl === "")
             return
         RdLibraryStore.resolveFolder(mrl, (result) => {
-            if (!result || RdLibraryNav.pendingFolderMrl !== mrl)
+            if (RdLibraryNav.pendingFolderMrl !== mrl)
                 return
-            const crumbs = result.crumbs
-            if (crumbs.length === 0 || RdLibraryNav.mrlKey(crumbs[crumbs.length - 1].mrl) !== RdLibraryNav.mrlKey(mrl))
+            const crumbs = result ? result.crumbs : []
+            if (crumbs.length === 0 || RdLibraryNav.mrlKey(crumbs[crumbs.length - 1].mrl) !== RdLibraryNav.mrlKey(mrl)) {
+                if (last === true)
+                    RdLibraryNav.pendingFolderMrl = ""
                 return
+            }
             RdLibraryNav.pendingFolderMrl = ""
             RdLibraryNav.openFolderPath(result)
         }, RdLibraryNav.pendingFolderCategory)

@@ -28,6 +28,7 @@
 
 #include <QJSValue>
 #include <QObject>
+#include <QTimer>
 #include <QUrl>
 #include <QVariant>
 
@@ -136,11 +137,16 @@ signals:
     // a folder was added to a category; the library opens it once the media library has it
     void folderAdded(const QString& category, const QString& mrl);
     void playlistCreated(const MLItemId& playlistId);
-    // the media library found or scanned folders (a folder being added may now be listed)
+    // the media library found or scanned folders (a folder being added may now be listed); at
+    // most a few times a second during a scan, and once more when it ends
     void foldersScanned();
+    // a scan ended: a folder still not listed will not show up by itself
+    void scanFinished();
 
 private:
     static void onMlEvent(void* data, const struct vlc_ml_event_t* event);
+    void onFolderEvent();
+    void onScanCompleted();
     QVariantList frequentIds(const QString& kind) const;
     void save(const char* key, const QVariant& value);
     QString coverDirectory() const;
@@ -149,6 +155,8 @@ private:
     qt_intf_t* p_intf;
     MediaLib* m_mediaLib;
     std::unique_ptr<struct vlc_ml_event_callback_t, std::function<void(struct vlc_ml_event_callback_t*)>> m_eventCallback;
+    // coalesces foldersScanned during a scan (one folder event per folder found)
+    QTimer m_folderEventTimer;
 
     QStringList m_videoFolders;
     QStringList m_musicFolders;

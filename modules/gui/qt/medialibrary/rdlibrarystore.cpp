@@ -51,6 +51,8 @@ namespace {
 
 // Home shows this many frequently visited folders and playlists
 constexpr int FREQUENT_COUNT = 10;
+// folder events of a scan are reported at most this often
+constexpr int FOLDER_EVENT_DELAY_MS = 300;
 
 #define RD_LIBRARY_KEY(name) "RdLibrary/" name
 
@@ -112,6 +114,10 @@ RdLibraryStore::RdLibraryStore(qt_intf_t* intf, MediaLib* mediaLib, QObject* par
         m_mediaLib->unregisterEventListener(cb);
     })
 {
+    m_folderEventTimer.setSingleShot(true);
+    m_folderEventTimer.setInterval(FOLDER_EVENT_DELAY_MS);
+    connect(&m_folderEventTimer, &QTimer::timeout, this, &RdLibraryStore::foldersScanned);
+
     if (m_mediaLib)
         m_eventCallback.reset(m_mediaLib->registerEventListener(&RdLibraryStore::onMlEvent, this));
 
@@ -135,17 +141,33 @@ RdLibraryStore::~RdLibraryStore()
 void RdLibraryStore::onMlEvent(void* data, const vlc_ml_event_t* event)
 {
     // media library thread
+    auto* self = static_cast<RdLibraryStore*>(data);
     switch (event->i_type)
     {
     case VLC_ML_EVENT_FOLDER_ADDED:
     case VLC_ML_EVENT_ENTRY_POINT_ADDED:
+        QMetaObject::invokeMethod(self, &RdLibraryStore::onFolderEvent, Qt::QueuedConnection);
+        break;
     case VLC_ML_EVENT_DISCOVERY_COMPLETED:
-        QMetaObject::invokeMethod(static_cast<RdLibraryStore*>(data), &RdLibraryStore::foldersScanned,
-                                  Qt::QueuedConnection);
+        QMetaObject::invokeMethod(self, &RdLibraryStore::onScanCompleted, Qt::QueuedConnection);
         break;
     default:
         break;
     }
+}
+
+void RdLibraryStore::onFolderEvent()
+{
+    // the first event of a burst starts the delay, the next ones join it
+    if (!m_folderEventTimer.isActive())
+        m_folderEventTimer.start();
+}
+
+void RdLibraryStore::onScanCompleted()
+{
+    m_folderEventTimer.stop();
+    emit foldersScanned();
+    emit scanFinished();
 }
 
 void RdLibraryStore::save(const char* key, const QVariant& value)

@@ -186,23 +186,31 @@ Rectangle {
         enabled: rail._folderToPin !== ""
 
         function onFoldersScanned() {
-            rail._tryPinFolder()
+            rail._tryPinFolder(false)
         }
 
         function onFolderAdded(category, mrl) {
-            rail._tryPinFolder()
+            rail._tryPinFolder(false)
+        }
+
+        // the scan ended: one last look, then stop waiting for the folder
+        function onScanFinished() {
+            rail._tryPinFolder(true)
         }
     }
 
-    function _tryPinFolder() {
+    function _tryPinFolder(lastTry) {
         const mrl = _folderToPin
         RdLibraryStore.resolveFolder(mrl, (result) => {
-            if (!result || rail._folderToPin !== mrl)
+            if (rail._folderToPin !== mrl)
                 return
-            const crumbs = result.crumbs
-            const last = crumbs[crumbs.length - 1]
-            if (RdLibraryNav.mrlKey(last.mrl) !== RdLibraryNav.mrlKey(mrl))
+            const crumbs = result ? result.crumbs : []
+            const last = crumbs.length > 0 ? crumbs[crumbs.length - 1] : null
+            if (!last || RdLibraryNav.mrlKey(last.mrl) !== RdLibraryNav.mrlKey(mrl)) {
+                if (lastTry)
+                    rail._folderToPin = ""
                 return
+            }
             rail._folderToPin = ""
             const categoryRoot = result.category === "music"
                                ? [{ page: "music", title: qsTr("Music") }, { page: "songs", title: qsTr("Songs") }]
