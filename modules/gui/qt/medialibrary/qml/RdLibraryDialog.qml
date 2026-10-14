@@ -36,11 +36,16 @@ T.Popup {
     // (RdPanels.modalCount, see menus/qml/RdCascadeMenu.qml)
     property bool _holdsModal: false
 
+    // the item that had the focus before the popup opened gets it back when it closes
+    property Item _opener: null
+
     onAboutToShow: {
         if (!dialog._holdsModal) {
             RdPanels.acquireModal()
             dialog._holdsModal = true
         }
+        const window = dialog.parent ? dialog.parent.Window.window : null
+        dialog._opener = window ? window.activeFocusItem : null
     }
 
     onAboutToHide: {
@@ -48,6 +53,13 @@ T.Popup {
             RdPanels.releaseModal()
             dialog._holdsModal = false
         }
+    }
+
+    onClosed: {
+        const opener = dialog._opener
+        dialog._opener = null
+        if (opener && opener.visible && opener.enabled)
+            opener.forceActiveFocus(Qt.PopupFocusReason)
     }
 
     Component.onDestruction: {
@@ -65,6 +77,11 @@ T.Popup {
     readonly property real bodyWidth: width - VLCStyle.dp(40)
 
     signal saved()
+
+    // keyboard focus on the right button (a confirmation is answered with Space, Escape cancels)
+    function focusSaveButton() {
+        saveButton.forceActiveFocus(Qt.TabFocusReason)
+    }
 
     parent: T.Overlay.overlay
     anchors.centerIn: parent
@@ -158,6 +175,8 @@ T.Popup {
             }
 
             Widgets.RdButton {
+                id: saveButton
+
                 anchors.right: parent.right
                 anchors.rightMargin: VLCStyle.dp(20)
                 anchors.verticalCenter: parent.verticalCenter

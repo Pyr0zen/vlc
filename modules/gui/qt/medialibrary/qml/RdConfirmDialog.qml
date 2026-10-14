@@ -38,6 +38,7 @@ RdLibraryDialog {
         saveText = params.button ?? qsTr("OK")
         _action = params.action ?? null
         open()
+        focusSaveButton()
     }
 
     preferredWidth: VLCStyle.dp(520)

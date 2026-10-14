@@ -59,6 +59,7 @@ Widgets.RdMenuPanel {
     // to the right of a row of another menu; parented to the window, so it stays when that
     // menu closes
     function openBeside(row) {
+        keyboard = !!row.visualFocus
         parent = row.Window.contentItem
         const p = row.mapToItem(parent, row.width, 0)
         x = p.x + VLCStyle.dp(4)
@@ -99,6 +100,8 @@ Widgets.RdMenuPanel {
 
             width: list.width
             text: model.name ?? ""
+            // the arrows and Escape go to the menu (RdMenuPanel)
+            Navigation.parentItem: menu.contentItem
             rdIcon: "playlist_two-tone-yes"
             onClicked: {
                 RdLibraryStore.appendToPlaylist(model.id, menu.mediaItems)
