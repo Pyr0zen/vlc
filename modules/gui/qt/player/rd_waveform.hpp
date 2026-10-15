@@ -19,6 +19,7 @@
 #define RD_WAVEFORM_HPP
 
 #include <QByteArray>
+#include <QElapsedTimer>
 #include <QObject>
 #include <QString>
 #include <QThreadPool>
@@ -78,7 +79,7 @@ private:
     void startScan();
     void cancelScan();
     void setLevels(const QByteArray& levels);
-    void onScanEnded(int generation, const QByteArray& levels);
+    void onScanEnded(int generation, const QByteArray& levels, bool cached);
 
     qt_intf_t* m_intf = nullptr;
     PlayerController* m_player = nullptr;
@@ -98,6 +99,8 @@ private:
     // identifies the latest scan: results of older ones are dropped
     int m_generation = 0;
     std::shared_ptr<RdWaveformScanner> m_running;
+    // the latest job's start, for the log
+    QElapsedTimer m_scanClock;
 };
 
 #endif // RD_WAVEFORM_HPP

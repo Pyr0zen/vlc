@@ -124,11 +124,11 @@ public:
     void run() override
     {
         QByteArray levels;
+        bool found = false;
         const QFileInfo info(m_path);
         if (info.isFile() && !m_scanner->cancelled())
         {
             const QString cached = cachePath(m_cacheDir, info);
-            bool found = false;
             levels = readCache(cached, &found);
             if (!found)
             {
@@ -144,8 +144,8 @@ public:
         // the owner waits for this job before it goes (~RdWaveform)
         RdWaveform* owner = m_owner;
         const int generation = m_generation;
-        QMetaObject::invokeMethod(owner, [owner, generation, levels]() {
-            owner->onScanEnded(generation, levels);
+        QMetaObject::invokeMethod(owner, [owner, generation, levels, found]() {
+            owner->onScanEnded(generation, levels, found);
         }, Qt::QueuedConnection);
     }
 
@@ -240,6 +240,7 @@ void RdWaveform::startScan()
 
     m_running = std::make_shared<RdWaveformScanner>(VLC_OBJECT(m_intf), m_uri, m_length);
     m_pool.start(new RdWaveformJob(this, ++m_generation, m_running, path, m_cacheDir));
+    m_scanClock.start();
 }
 
 void RdWaveform::cancelScan()
@@ -259,11 +260,16 @@ void RdWaveform::setLevels(const QByteArray& levels)
     emit levelsChanged();
 }
 
-void RdWaveform::onScanEnded(int generation, const QByteArray& levels)
+void RdWaveform::onScanEnded(int generation, const QByteArray& levels, bool cached)
 {
     if (generation != m_generation)
         return;
     m_running.reset();
     m_done = true;
     setLevels(levels);
+
+    // "ready" for the PC measurements: from the start of the job to the bars' data
+    msg_Dbg(m_intf, "waveform: %s %s, %lld ms after the job started",
+            levels.isEmpty() ? "no waveform" : "ready", cached ? "from the cache" : "from the scan",
+            static_cast<long long>(m_scanClock.elapsed()));
 }

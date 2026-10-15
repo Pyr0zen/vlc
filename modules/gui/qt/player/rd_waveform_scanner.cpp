@@ -100,6 +100,9 @@ struct RdWaveformScanner::Scan
     bool positionKnown = false;
     double position = 0;
 
+    // how the file was read, for the log
+    const char* mode = "not opened";
+
     // sampled scan: the slice being sampled (-1: none) and the audio still wanted for it
     bool sampled = false;
     int targetBin = -1;
@@ -612,6 +615,7 @@ QByteArray RdWaveformScanner::Scan::execute()
         canSeek = false;
 
     QByteArray levels;
+    mode = "no duration";
     if (length > 0)
     {
         lengthSeconds = secf_from_vlc_tick(length);
@@ -620,6 +624,7 @@ QByteArray RdWaveformScanner::Scan::execute()
         // a large file the demuxer cannot seek in is never read from start to end: no waveform
         const bool large = sizeKnown && size > kFullScanMaxBytes;
         sampled = large && canSeek;
+        mode = !large ? "full" : sampled ? "sampled" : "large, not seekable";
 
         if (!large)
         {
@@ -718,10 +723,16 @@ QByteArray RdWaveformScanner::run()
         if (var_Create(obj, "avi-index", VLC_VAR_INTEGER) == VLC_SUCCESS)
             var_SetInteger(obj, "avi-index", kAviIndexNeverFix);
 
+        const vlc_tick_t start = vlc_tick_now();
         Scan scan(*this);
         scan.obj = obj;
         levels = scan.execute();
         vlc_object_delete(obj);
+
+        // the measurements of the PC tests read this line (WAVEFORM_NOTES section 8)
+        msg_Dbg(m_parent, "waveform scan (%s): %s in %lld ms", scan.mode,
+                cancelled() ? "cancelled" : levels.isEmpty() ? "no waveform" : "levels",
+                static_cast<long long>(MS_FROM_VLC_TICK(vlc_tick_now() - start)));
     }
 
     if (m_interrupt)
