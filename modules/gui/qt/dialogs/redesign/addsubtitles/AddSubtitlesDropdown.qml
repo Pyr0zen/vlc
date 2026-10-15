@@ -77,6 +77,10 @@ T.AbstractButton {
 
     onClicked: list.opened ? list.close() : list.open()
 
+    function openList() {
+        list.open()
+    }
+
     // like a closed combo box: the arrows pick the previous / next value
     Keys.onUpPressed: (event) => {
         const i = _nextEnabled(currentIndex, -1)

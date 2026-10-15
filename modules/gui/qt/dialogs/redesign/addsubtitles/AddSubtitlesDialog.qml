@@ -116,6 +116,9 @@ T.Popup {
         targetDropdown.forceActiveFocus(Qt.PopupFocusReason)
     }
 
+    // the target list is open when the dialog appears, as in the video (Decision 46)
+    onOpened: targetDropdown.openList()
+
     onAboutToHide: {
         if (_holdsModal) {
             RdPanels.releaseModal()

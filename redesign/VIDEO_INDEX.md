@@ -83,6 +83,7 @@ Decided by Sticky on 2026-10-12. General rule for anything not listed: her final
 43. (2026-10-15) Component motion: when building buttons, tabs and other controls, study the Figma prototype and the video frames to see how they animate (hover, press, selection, tab switch) and replicate that motion, not just the static look.
 44. (2026-10-15, Q5) Light theme FG/A4 (placeholders, disabled text) is #8A8A8A instead of Figma's #3B3B3B, which read almost like typed text.
 45. (2026-10-15) Hide UI keeps Figma's 300 ms smart animate (ease-in-and-out). The 150-200 ms cap of the performance rule only applies where Figma defines no duration.
+46. (2026-10-15) Add Subtitles: the target list (To This File / To This Folder / To This Playlist) opens by itself when the dialog opens, as in the video; Figma's frames show it closed. Escape or a click outside closes only the list.
 
 ## Decisions (Claude)
 Extra decisions made during the build, one line each (date, row IDs, decision, reason).
