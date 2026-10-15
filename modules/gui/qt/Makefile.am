@@ -327,6 +327,8 @@ libqt_plugin_la_SOURCES = \
 	player/rd_seek_thumbnailer.hpp \
 	player/rd_media_info.cpp \
 	player/rd_media_info.hpp \
+	player/rd_presets.cpp \
+	player/rd_presets.hpp \
 	player/player_controller.cpp player/player_controller.hpp player/player_controller_p.hpp \
 	player/player_controlbar_model.cpp player/player_controlbar_model.hpp \
 	player/control_list_model.cpp player/control_list_model.hpp \
@@ -542,6 +544,7 @@ nodist_libqt_plugin_la_SOURCES = \
 	player/rd_effects.moc.cpp \
 	player/rd_seek_thumbnailer.moc.cpp \
 	player/rd_media_info.moc.cpp \
+	player/rd_presets.moc.cpp \
 	player/input_models.moc.cpp \
 	player/player_controller.moc.cpp \
 	player/player_controlbar_model.moc.cpp \
@@ -1527,6 +1530,7 @@ libqml_module_player_a_QML = \
 	player/qml/RdSidePanelPage.qml \
 	player/qml/RdSidePanelPageLoader.qml \
 	player/qml/SettingsSidebar.qml \
+	player/qml/PresetSelector.qml \
 	player/qml/QueueSidebar.qml \
 	player/qml/PlaybackSettingsPage.qml \
 	player/qml/VideoSettingsPage.qml \
