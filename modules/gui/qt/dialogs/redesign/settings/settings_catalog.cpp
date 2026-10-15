@@ -58,7 +58,7 @@ const QSet<QString>& curatedOptions()
         "qt-error-dialogs", "logmode", "stats", "syslog", "syslog-debug", "syslog-ident",
         "syslog-facility", "qt-verbose", "qt-accent-color",
         // Interface
-        "intf", "skins2-last", "embedded-video", "qt-video-autoresize", "video-on-top", "qt-titlebar",
+        "intf", "skins2-last", "embedded-video", "qt-video-autoresize", "qt-remember-window", "video-on-top", "qt-titlebar",
         "qt-name-in-title", "qt-fullscreen-screennumber", "qt-minimal-view", "qt-pin-controls",
         "mouse-hide-timeout", "qt-fs-controller", "qt-system-tray", "qt-start-minimized",
         "qt-notification", "playlist-tree", "qt-opacity", "qt-pause-minimized", "qt-auto-raise",

@@ -75,6 +75,12 @@ SettingsPage {
             ]
         }
 
+        // S2-02 (video 17:50): read when the window opens, written when it closes
+        SettingsOption {
+            option: "qt-remember-window"
+            text: qsTr("Remember window size and position")
+        }
+
         SettingsOption {
             option: "video-on-top"
             text: qsTr("Keep window above other windows")
