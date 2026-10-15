@@ -43,6 +43,8 @@ constexpr int kSampleMaxPackets = 4000;
 // a file that has shown no audio track after this many packets has none (a video-only file
 // is not read to its end for nothing)
 constexpr int kNoAudioPackets = 2000;
+// the AVI demuxer's "avi-index" choice "Never fix" (0 asks the user)
+constexpr int64_t kAviIndexNeverFix = 2;
 
 struct Track
 {
@@ -704,6 +706,11 @@ QByteArray RdWaveformScanner::run()
     QByteArray levels;
     if (vlc_object_t* obj = static_cast<vlc_object_t*>(vlc_object_create(m_parent, sizeof(vlc_object_t))))
     {
+        // a background scan never asks the user anything: an AVI file with a broken index is
+        // read as is (VLC would ask whether to build the index, which reads the whole file)
+        if (var_Create(obj, "avi-index", VLC_VAR_INTEGER) == VLC_SUCCESS)
+            var_SetInteger(obj, "avi-index", kAviIndexNeverFix);
+
         Scan scan(*this);
         scan.obj = obj;
         levels = scan.execute();
