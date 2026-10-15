@@ -172,3 +172,12 @@ Changed after the review of this branch:
 - Library popups hold `RdPanels.modalCount` and are opaque over the video; RdMenuPanel fades in like RdCascadeMenu.
 - Add to Playlist menu fixed (`mediaItems`; `items` shadowed RdMenuPanel's rows); folders outside their category open in it (`RdLibraryNav.itemCategory`); keyboard focus on grid rows and cards; Home loads at once and hides "Watch Next" while loading; drag ghosts and handlers as VLC's lists; confirmations before Delete Playlist / Remove from Library; scan status in the header count; Ctrl+L toggles the mini queue; folder events coalesced; C++ compile fixes (`Q_MOC_INCLUDE` medialib.hpp, `vlc_ml_playlist_rename`, FOLDER_UPDATED).
 - Known limit: the mini player's video has square corners (the native video surface cannot be clipped by QML).
+
+## 11. W5.2 completion (2026-10-15, Step 2 item 5)
+
+What sections 2-10 already covered is unchanged. Added on top (BUILD_NOTES "W5.2"):
+- Add row rule on folder pages: every folder level of a category shows it except a Videos folder of media only (Figma sidebar: S01 none, "My Songs" one); a Videos folder decides once its rows are loaded.
+- `RdLibraryStore.pickFolder(title, start, category)`: the picker opens in `start` (the folder on screen), else in the user's Videos or Music folder; `RdLibraryActions.addFolder(category, startMrl)`.
+- `RdSubfolderModel` sort criteria "insertion" at the category roots: the order of the category's folder list (folders in no list first, by media library id), on the media library thread; the Videos and Music > Songs roots default to it ("Oldest First").
+- `RdLibraryStore::sortStandardFolders()`: a library folder in no category list that is the user's Videos (`VLC_VIDEOS_DIR`) or Music (`VLC_MUSIC_DIR`) folder joins that category, at start and on `VLC_ML_EVENT_ENTRY_POINT_ADDED` (one entry point query on the media library thread).
+- No core change, no new files.
