@@ -365,8 +365,6 @@ MainCtx::~MainCtx()
     var_DelCallback( libvlc, "intf-show", IntfRaiseMainCB, p_intf );
     var_DelCallback( libvlc, "intf-toggle-fscontrol", IntfShowCB, p_intf );
     var_DelCallback( libvlc, "intf-popupmenu", PopupMenuCB, p_intf );
-    if (m_singleClickPauseBlocked)
-        var_Destroy( libvlc, "mouse-pause-policy" );
 
     if (m_medialib)
         delete m_medialib;
@@ -501,23 +499,21 @@ void MainCtx::applyVideoDoubleClick()
                           ? static_cast<Action>(m_videoDoubleClick) : Action::Fullscreen;
 
     // Decision 37: a double click that plays / pauses turns the single click pause off, so a
-    // single click never waits to see whether a second one follows. The core reads
-    // "mouse-pause-policy" when a file opens: a variable on the libvlc object overrides the
-    // saved choice (kept for when the double click goes back to fullscreen) from the next file
-    const bool block = action == Action::PlayPause;
-    if (block != m_singleClickPauseBlocked)
+    // single click never waits to see whether a second one follows. The core creates
+    // "mouse-pause-policy" on the libvlc object from the configuration when VLC starts
+    // (src/libvlc.c) and reads that variable when a file opens, so it is set here from the
+    // saved "Single click on the video" choice (a Settings change then applies from the next
+    // file, not only after a restart), or to "disabled"; the saved choice is never changed
+    libvlc_int_t* libvlc = vlc_object_instance(p_intf);
+    if (action == Action::PlayPause)
     {
-        libvlc_int_t* libvlc = vlc_object_instance(p_intf);
-        if (block)
-        {
-            var_Create(libvlc, "mouse-pause-policy", VLC_VAR_STRING);
-            var_SetString(libvlc, "mouse-pause-policy", "disabled");
-        }
-        else
-        {
-            var_Destroy(libvlc, "mouse-pause-policy");
-        }
-        m_singleClickPauseBlocked = block;
+        var_SetString(libvlc, "mouse-pause-policy", "disabled");
+    }
+    else
+    {
+        char* policy = config_GetPsz("mouse-pause-policy");
+        var_SetString(libvlc, "mouse-pause-policy", policy ? policy : "");
+        free(policy);
     }
 
     if (m_videoSurfaceProvider)

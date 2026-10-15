@@ -497,9 +497,8 @@ protected:
     int m_maxVolume = 125;
     int m_fsSensitivity = 40;
     // redesign (S2-05): "qt-video-double-click"; with Play / Pause, the core's single click
-    // pause is turned off by a "mouse-pause-policy" variable on the libvlc object
+    // pause is turned off through the libvlc object's "mouse-pause-policy" variable
     int m_videoDoubleClick = 0;
-    bool m_singleClickPauseBlocked = false;
     void applyVideoDoubleClick();
     // redesign (S2-10): "qt-cast-discovery", applied once the window has shown
     bool m_castDiscovery = true;
