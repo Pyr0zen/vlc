@@ -315,6 +315,11 @@ static void ShowDialog   ( intf_thread_t *, int, int, intf_dialog_args_t * );
 #define SEEK_THUMBNAILS_LONGTEXT N_( "Hovering or dragging the seek bar shows a frame of the video at that position. " \
     "Only for video files on this computer; other media show the time only." )
 
+#define SEEK_WAVEFORM_TEXT N_( "Show waveform on seek bar" )
+#define SEEK_WAVEFORM_LONGTEXT N_( "The seek bar draws the audio waveform of the file playing. " \
+    "Only for files on this computer: their audio is scanned once in the background and kept in " \
+    "the user data folder." )
+
 #define ACCENT_COLOR_TEXT N_( "Accent color" )
 #define ACCENT_COLOR_LONGTEXT N_( "Adjusts the accent color, special values are 'default' and 'system' (requires Qt 6.6) ." )
 
@@ -568,6 +573,9 @@ vlc_module_begin ()
 
     /* redesign: seek bar preview card (P2-04; Figma "Settings - playback": on) */
     add_bool( "qt-seek-thumbnails", true, SEEK_THUMBNAILS_TEXT, SEEK_THUMBNAILS_LONGTEXT )
+
+    /* redesign: waveform seek bar (P6-06; the Playback tab's "Show Waveform on Seekbar": off) */
+    add_bool( "qt-seek-waveform", false, SEEK_WAVEFORM_TEXT, SEEK_WAVEFORM_LONGTEXT )
 
     cannot_unload_broken_library()
 

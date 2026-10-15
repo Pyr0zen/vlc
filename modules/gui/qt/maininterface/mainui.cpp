@@ -36,6 +36,8 @@
 #include "player/rd_effects.hpp"
 #include "player/rd_presets.hpp"
 #include "player/rd_seek_thumbnailer.hpp"
+#include "player/rd_waveform.hpp"
+#include "player/rd_waveform_item.hpp"
 #include "player/rd_media_info.hpp"
 
 #include "dialogs/toolbar/controlbar_profile_model.hpp"
@@ -352,6 +354,10 @@ void MainUI::registerQMLTypes()
         m_seekThumbnailer = new RdSeekThumbnailer(m_intf, m_intf->p_mainPlayerController, this);
         qmlRegisterSingletonInstance<RdSeekThumbnailer>(uri, versionMajor, versionMinor, "RdSeekThumbnailer",
                                                         m_seekThumbnailer);
+        // redesign: waveform seek bar (P6-06): the playing file's waveform, and its bars
+        qmlRegisterSingletonInstance<RdWaveform>(uri, versionMajor, versionMinor, "RdWaveform",
+                                                 new RdWaveform(m_intf, m_intf->p_mainPlayerController, this));
+        qmlRegisterType<RdWaveformItem>(uri, versionMajor, versionMinor, "RdWaveformItem");
         // redesign: the Show Statistics and Show Metadata panels of the player (W4.3b)
         qmlRegisterType<RdInputStats>(uri, versionMajor, versionMinor, "RdInputStats");
         qmlRegisterType<RdMediaMeta>(uri, versionMajor, versionMinor, "RdMediaMeta");

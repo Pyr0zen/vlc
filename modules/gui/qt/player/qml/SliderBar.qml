@@ -99,6 +99,15 @@ T.ProgressBar {
     // the position under the pointer (0..1); the current time label shows it while dragging
     readonly property real scrubPosition: control.width > 0 ? control._scrubX / control.width : 0
 
+    // redesign: waveform seek bar (P6-06 / IB-24, Figma Controls "Property 1=waveform"). With the
+    // Playback tab's "Show Waveform on Seekbar" on, the thick bar draws the playing file's
+    // waveform once its background scan is ready (RdWaveform); until then the plain fill stays,
+    // then the bars fade in over it and the playhead narrows to 4 px around the same center.
+    // The layer takes no input: hover, drag, the preview card, wheel, keys and the right click
+    // stay the bar's
+    readonly property bool _waveformOption: RdEffects.values[RdEffects.optionKey("qt-seek-waveform")] === true
+    readonly property bool waveformShown: waveform.ready
+
     function _updatePreview() {
         if (control._previewShown)
             RdSeekThumbnailer.request(control.scrubPosition)
@@ -529,7 +538,9 @@ T.ProgressBar {
             x: control._inset
             y: control._inset
             width: Math.max(0, control.visualPosition * (parent.width - 2 * control._inset))
-            visible: control.thick || !Player.hasChapters
+            visible: (control.thick || !Player.hasChapters) && opacity > 0
+            opacity: control.waveformShown ? 0 : 1
+            Behavior on opacity { NumberAnimation { duration: VLCStyle.duration_short } }
             color: control.thick ? VLCStyle.palette.rdBgAccentBright : theme.fg.primary
             height: control.barHeight - 2 * control._inset
             radius: control.thick ? VLCStyle.rd_radius_small : control._seekPointsRadius
@@ -544,6 +555,33 @@ T.ProgressBar {
                 value: (Player.playingState === Player.PLAYING_STATE_PLAYING) ? Item.DynamicMutabilityGroup
                                                                               : Item.StaticMutabilityGroup
             }
+        }
+
+        // the bars of the waveform, cut around the playhead (played: Accent/DIm, the others
+        // FG/A4; both follow the live accent and theme)
+        RdWaveformItem {
+            id: waveform
+
+            anchors.fill: parent
+            visible: opacity > 0
+            opacity: ready ? 1 : 0
+            Behavior on opacity { NumberAnimation { duration: VLCStyle.duration_short } }
+
+            source: RdWaveform
+            active: control.thick && control._waveformOption
+
+            playheadX: sliderHandle.x + sliderHandle.width / 2
+            playheadWidth: sliderHandle.width
+            playheadGap: VLCStyle.rd_waveformPlayheadGap
+            playedColor: VLCStyle.palette.rdAccentDim
+            unplayedColor: VLCStyle.palette.rdFgA4
+
+            barWidth: VLCStyle.rd_waveformBarWidth
+            barSpacing: VLCStyle.rd_waveformBarSpacing
+            barMinHeight: VLCStyle.rd_waveformBarMinHeight
+            barMaxHeight: VLCStyle.rd_waveformBarMaxHeight
+            barStep: VLCStyle.rd_waveformBarStep
+            horizontalPadding: VLCStyle.rd_waveformPadding
         }
 
         Rectangle {
@@ -674,7 +712,14 @@ T.ProgressBar {
                          : (control.visualPosition * control.availableWidth) - width / 2
         y: (control.barHeight - height) / 2
 
-        implicitWidth: control.thick ? VLCStyle.rd_seekHandleWidth : sliderHandle._size
+        implicitWidth: control.thick ? (control.waveformShown ? VLCStyle.rd_waveformPlayheadWidth
+                                                              : VLCStyle.rd_seekHandleWidth)
+                                     : sliderHandle._size
+        // the thick bar's playhead narrows with the waveform (the thin bar animates by states)
+        Behavior on implicitWidth {
+            enabled: control.thick
+            NumberAnimation { duration: VLCStyle.duration_short }
+        }
         implicitHeight: control.thick ? control.barHeight - 2 * control._inset : sliderHandle._size
         radius: control.thick ? VLCStyle.rd_radius_small : VLCStyle.margin_small
         color: theme.fg.primary

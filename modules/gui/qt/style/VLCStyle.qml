@@ -362,6 +362,17 @@ QtObject {
     readonly property int rd_seekBarHeight: MainCtx.dp(28, scale)
     readonly property int rd_seekFillHeight: MainCtx.dp(24, scale)
     readonly property int rd_seekHandleWidth: MainCtx.dp(8, scale)
+    // waveform seek bar (Figma Controls "Property 1=waveform", "Frame 21"): 2 px bars every
+    // 5 px, the first 6 px from the left end, 2 to 14 px tall in 2 px steps; the playhead is
+    // 4x24 with 3 px free on both sides
+    readonly property int rd_waveformBarWidth: MainCtx.dp(2, scale)
+    readonly property int rd_waveformBarSpacing: MainCtx.dp(3, scale)
+    readonly property int rd_waveformBarMinHeight: MainCtx.dp(2, scale)
+    readonly property int rd_waveformBarMaxHeight: MainCtx.dp(14, scale)
+    readonly property int rd_waveformBarStep: MainCtx.dp(2, scale)
+    readonly property int rd_waveformPadding: MainCtx.dp(6, scale)
+    readonly property int rd_waveformPlayheadWidth: MainCtx.dp(4, scale)
+    readonly property int rd_waveformPlayheadGap: MainCtx.dp(3, scale)
     // narrow window: the seek bar never gets narrower than a time label
     readonly property int rd_seekBarMinimumWidth: MainCtx.dp(76, scale)
     // seek bar preview card (Figma "thumbnail" 272x189: padding 10, gap 10, picture 252x142 r4,
