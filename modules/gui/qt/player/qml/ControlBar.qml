@@ -61,6 +61,10 @@ T.Pane {
 
     signal requestLockUnlockAutoHide(bool lock)
 
+    // redesign: a right click on the seek bar (the owner opens the right-click menu, as for a
+    // right click anywhere else on the bar)
+    signal contextMenuRequested()
+
     ///incomming signal to request all menu and popup to close
     signal forceUnlock()
 
@@ -394,6 +398,8 @@ T.Pane {
                 Keys.onPressed: (event) => {
                     Navigation.defaultKeyAction(event)
                 }
+
+                onRightClicked: root.contextMenuRequested()
             },
             Loader {
                 id: bookmarksLoader

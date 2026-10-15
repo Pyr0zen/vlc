@@ -48,6 +48,11 @@ T.ProgressBar {
     readonly property real _inset: thick ? VLCStyle.dp(2, VLCStyle.scale) : 0
     property real touchHandlerMargin: VLCStyle.touchHandlerMargin
 
+    // redesign: a right click on the bar, for the owner's context menu. The bar (a Control)
+    // accepts every mouse button, so a right-click handler of an item below or around it never
+    // sees the click
+    signal rightClicked()
+
     Keys.onRightPressed: Player.jumpFwd()
     Keys.onLeftPressed: Player.jumpBwd()
 
@@ -220,6 +225,17 @@ T.ProgressBar {
                     seekpointTimer.restart()
             }
         }
+    }
+
+    // on the bar itself, not in contentItem: there the Control would accept the press after the
+    // handler and the right click would also reach the handlers around the bar
+    TapHandler {
+        acceptedButtons: Qt.RightButton
+
+        // a right button held longer than a tap still counts, as a context menu on release
+        longPressThreshold: 0
+
+        onTapped: control.rightClicked()
     }
 
     contentItem: Item {

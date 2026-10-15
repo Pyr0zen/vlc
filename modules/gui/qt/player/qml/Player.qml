@@ -1752,6 +1752,10 @@ FocusScope {
 
         onRequestLockUnlockAutoHide: (lock) => rootPlayer.lockUnlockAutoHide(lock)
 
+        // a right click on the seek bar opens the right-click menu like the rest of the bar
+        // (the TapHandler below never sees it: the seek bar accepts every mouse button)
+        onContextMenuRequested: playerMenu.popupAtCursor()
+
         identifier: (Player.hasVideoOutput) ? PlayerControlbarModel.Videoplayer
                                             : PlayerControlbarModel.Audioplayer
 
@@ -2038,10 +2042,12 @@ FocusScope {
 
     // redesign: a right click on the control bar (its buttons included) opens the right-click
     // menu too, like a right click on the video; the top bar keeps the window menu of its
-    // client-side decorations
+    // client-side decorations. The seek bar sends its own right click (onContextMenuRequested)
     TapHandler {
         parent: controlBar
         acceptedButtons: Qt.RightButton
+        // a right button held longer than a tap still opens the menu on release, as on the video
+        longPressThreshold: 0
 
         onTapped: playerMenu.popupAtCursor()
     }
