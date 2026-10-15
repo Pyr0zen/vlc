@@ -23,11 +23,15 @@
 #include "settings_catalog.hpp"
 
 #include <QCollator>
+#include <QCoreApplication>
+#include <QDateTime>
 #include <QDesktopServices>
 #include <QDir>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QPointer>
+#include <QProcess>
+#include <QTemporaryFile>
 
 #include <algorithm>
 #include <cfloat>
@@ -39,6 +43,8 @@
 
 #ifdef _WIN32
 #include <windows.h>
+#include <shellapi.h>
+#include <string>
 #include "util/registry.hpp"
 #elif defined(__unix__) || defined(__APPLE__)
 #include <cerrno>
@@ -362,6 +368,7 @@ SettingsCatalog::SettingsCatalog(qt_intf_t* intf, QObject* parent)
     , p_intf(intf)
 {
     m_pool.setMaxThreadCount(1);
+    m_rescanPool.setMaxThreadCount(1);
 
     // VLC raises its priority in vlc_threads_setup() (src/win32/thread.c), before it reads its
     // configuration file, so only "--high-priority" on the command line had an effect: the saved
@@ -381,6 +388,7 @@ SettingsCatalog::SettingsCatalog(qt_intf_t* intf, QObject* parent)
 SettingsCatalog::~SettingsCatalog()
 {
     m_pool.waitForDone();
+    m_rescanPool.waitForDone();
 }
 
 void SettingsCatalog::load()
@@ -719,6 +727,122 @@ bool SettingsCatalog::setPriority(bool high, int level) const
 #else
     return false;
 #endif
+}
+
+void SettingsCatalog::rescanPlugins()
+{
+    if (m_rescanning)
+        return;
+
+    // VLC's plugin folder and its cache generator (bin/cachegen.c, installed next to vlc.exe on
+    // Windows): it writes plugins.dat as "--reset-plugins-cache" does
+    char* dir = config_GetSysPath(VLC_PKG_LIB_DIR, "plugins");
+#ifdef _WIN32
+    char* tool = config_GetSysPath(VLC_PKG_LIBEXEC_DIR, "vlc-cache-gen.exe");
+#else
+    char* tool = config_GetSysPath(VLC_PKG_LIBEXEC_DIR, "vlc-cache-gen");
+#endif
+    const QString plugins = dir ? qfu(dir) : QString();
+    const QString program = tool ? qfu(tool) : QString();
+    free(dir);
+    free(tool);
+    if (plugins.isEmpty() || !QFileInfo::exists(program))
+    {
+        msg_Warn(p_intf, "cannot rescan the plugins: vlc-cache-gen not found");
+        emit rescanFinished(false);
+        return;
+    }
+
+    const QString cacheFile = QDir(plugins).filePath(QStringLiteral("plugins.dat"));
+    // vlc-cache-gen exits with 0 even when it could not write: the file tells (with some slack
+    // for the file system's time resolution)
+    const QDateTime started = QDateTime::currentDateTime().addSecs(-2);
+
+    bool writable = false;
+    {
+        QTemporaryFile probe(QDir(plugins).filePath(QStringLiteral("rescan-XXXXXX.tmp")));
+        writable = probe.open();
+    }
+
+    // the elevated run's process (Windows)
+    void* elevated = nullptr;
+    if (!writable)
+    {
+#ifdef _WIN32
+        // VLC's folder needs administrator rights (Program Files): Windows asks the user. Here,
+        // on the UI thread (COM is set up for the shell); the wait runs on the worker
+        const std::wstring file = QDir::toNativeSeparators(program).toStdWString();
+        const std::wstring parameters = (QLatin1Char('"') + QDir::toNativeSeparators(plugins)
+                                         + QLatin1Char('"')).toStdWString();
+        SHELLEXECUTEINFOW info {};
+        info.cbSize = sizeof(info);
+        info.fMask = SEE_MASK_NOCLOSEPROCESS;
+        info.lpVerb = L"runas";
+        info.lpFile = file.c_str();
+        info.lpParameters = parameters.c_str();
+        info.nShow = SW_HIDE;
+        if (!ShellExecuteExW(&info) || !info.hProcess)
+        {
+            msg_Dbg(p_intf, "plugin rescan refused or cancelled");
+            emit rescanFinished(false);
+            return;
+        }
+        elevated = info.hProcess;
+#else
+        msg_Warn(p_intf, "cannot rescan the plugins: %s is not writable", qtu(plugins));
+        emit rescanFinished(false);
+        return;
+#endif
+    }
+
+    m_rescanning = true;
+    emit rescanningChanged();
+
+    QPointer<SettingsCatalog> self(this);
+    m_rescanPool.start([self, program, plugins, cacheFile, started, elevated]() {
+        bool ran = false;
+#ifndef _WIN32
+        Q_UNUSED(elevated);
+#else
+        if (elevated)
+        {
+            WaitForSingleObject(static_cast<HANDLE>(elevated), INFINITE);
+            CloseHandle(static_cast<HANDLE>(elevated));
+            ran = true;
+        }
+        else
+#endif
+        {
+            QProcess cachegen;
+#ifdef _WIN32
+            // a console program: no console window
+            cachegen.setCreateProcessArgumentsModifier([](QProcess::CreateProcessArguments* args) {
+                args->flags |= CREATE_NO_WINDOW;
+            });
+#endif
+            cachegen.start(program, { QDir::toNativeSeparators(plugins) });
+            ran = cachegen.waitForFinished(-1) && cachegen.exitStatus() == QProcess::NormalExit
+                  && cachegen.exitCode() == 0;
+        }
+        const QFileInfo cache(cacheFile);
+        const bool ok = ran && cache.exists() && cache.lastModified() >= started;
+        QMetaObject::invokeMethod(self, [self, ok]() {
+            if (!self)
+                return;
+            self->m_rescanning = false;
+            emit self->rescanningChanged();
+            emit self->rescanFinished(ok);
+        }, Qt::QueuedConnection);
+    });
+}
+
+bool SettingsCatalog::startNewInstance() const
+{
+    // with "Only allow one VLC window", the new VLC would hand over to this one and leave
+    QStringList arguments;
+    if (config_FindConfig("one-instance"))
+        arguments << QStringLiteral("--no-one-instance");
+    return QProcess::startDetached(QCoreApplication::applicationFilePath(), arguments);
 }
 
 void SettingsCatalog::setLanguage(const QString& iso)

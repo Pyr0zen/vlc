@@ -52,6 +52,8 @@ class SettingsCatalog : public QObject
     Q_PROPERTY(bool ready READ ready NOTIFY readyChanged FINAL)
     // the interface language can be chosen (Windows: VLC reads it from the registry)
     Q_PROPERTY(bool languageSupported READ languageSupported CONSTANT FINAL)
+    // the plugin cache is being rebuilt (rescanPlugins())
+    Q_PROPERTY(bool rescanning READ rescanning NOTIFY rescanningChanged FINAL)
 
 public:
     explicit SettingsCatalog(qt_intf_t* intf, QObject* parent = nullptr);
@@ -59,6 +61,7 @@ public:
 
     bool ready() const { return m_ready; }
     bool languageSupported() const;
+    bool rescanning() const { return m_rescanning; }
 
     // reads the option list in the background, once
     Q_INVOKABLE void load();
@@ -106,10 +109,20 @@ public:
     // False when the system refused the change (raising it needs privileges outside Windows)
     Q_INVOKABLE bool setPriority(bool high, int level) const;
 
+    // S2-08: rebuilds VLC's plugin cache (plugins.dat) with vlc-cache-gen in the background,
+    // so added or removed plugins are found; Windows asks for administrator rights when VLC's
+    // folder is not writable (Program Files). VLC uses it the next time it starts
+    Q_INVOKABLE void rescanPlugins();
+    // starts VLC again, without handing over to this instance; the caller then quits this one
+    Q_INVOKABLE bool startNewInstance() const;
+
 signals:
     void readyChanged();
     // after resetAll(): the pages read their values again
     void resetDone();
+    void rescanningChanged();
+    // rescanPlugins() ended: the cache was written, or not (refused, cancelled, no tool)
+    void rescanFinished(bool ok);
 
 public:
     struct Option
@@ -150,8 +163,11 @@ private:
 
     qt_intf_t* p_intf = nullptr;
     QThreadPool m_pool;
+    // vlc-cache-gen runs here (it may wait for the administrator rights prompt)
+    QThreadPool m_rescanPool;
     bool m_loading = false;
     bool m_ready = false;
+    bool m_rescanning = false;
     // the process priority VLC started with, put back for Normal: the Windows priority class
     // (0: not known), elsewhere the nice value
     unsigned long m_startPriority = 0;

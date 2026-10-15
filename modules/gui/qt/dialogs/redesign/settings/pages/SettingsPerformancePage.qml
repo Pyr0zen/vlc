@@ -206,6 +206,64 @@ SettingsPage {
                 color: VLCStyle.palette.rdFgA3
             }
         }
+
+        // S2-08 (video 18:20): Figma "Rescan" button 320x32. VLC's plugin cache is rebuilt in
+        // the background; a running VLC keeps its plugins, so the result offers a restart
+        SettingsRow {
+            id: rescanRow
+
+            // "": not run yet, "done", "failed"
+            property string result: ""
+
+            text: qsTr("Rescan plugins")
+            description: qsTr("Looks through VLC's plugin folder again and rebuilds the list of plugins, so plugins you added or removed are found. VLC uses the new list the next time it starts. In the Program Files folder, Windows asks for administrator rights.")
+            keywords: "plugins cache rescan reset-plugins-cache vlc-cache-gen"
+            belowShown: result !== ""
+
+            Connections {
+                target: SettingsCatalog
+
+                function onRescanFinished(ok) {
+                    rescanRow.result = ok ? "done" : "failed"
+                }
+            }
+
+            Widgets.RdButton {
+                style: Widgets.RdButton.Style.Plain
+                implicitWidth: VLCStyle.dp(320)
+                text: SettingsCatalog.rescanning ? qsTr("Rescanning...") : qsTr("Rescan")
+                enabled: !SettingsCatalog.rescanning
+                onClicked: {
+                    rescanRow.result = ""
+                    SettingsCatalog.rescanPlugins()
+                }
+            }
+
+            below: Row {
+                spacing: VLCStyle.dp(10)
+
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: rescanRow.result === "done"
+                          ? qsTr("Done. VLC uses the new list of plugins the next time it starts.")
+                          : qsTr("VLC could not rebuild its list of plugins.")
+                    font.family: VLCStyle.rd_fontFamily
+                    font.pixelSize: VLCStyle.rd_fontSize_label
+                    color: VLCStyle.palette.rdFgA3
+                }
+
+                Widgets.RdButton {
+                    anchors.verticalCenter: parent.verticalCenter
+                    visible: rescanRow.result === "done"
+                    style: Widgets.RdButton.Style.Link
+                    text: qsTr("Restart now")
+                    onClicked: {
+                        if (SettingsCatalog.startNewInstance())
+                            DialogsProvider.quit()
+                    }
+                }
+            }
+        }
     }
 
     advanced: [
