@@ -310,6 +310,12 @@ static void ShowDialog   ( intf_thread_t *, int, int, intf_dialog_args_t * );
     "With Play / Pause, a single click on the video does not pause, so it never " \
     "waits for a second click (from the next file)." )
 
+#define PROCESS_PRIORITY_TEXT N_( "Process priority" )
+#define PROCESS_PRIORITY_LONGTEXT N_( "How much processor time the system gives VLC " \
+    "next to other programs. High and Highest help playback on a busy computer, " \
+    "Lowest and Low leave more to other programs. \"Give VLC high priority\" " \
+    "keeps it at High or above." )
+
 static const int initial_prefs_view_list[] = { 0, 1, 2 };
 static const char *const initial_prefs_view_list_texts[] =
     { N_("Simple"), N_("Advanced"), N_("Expert") };
@@ -331,6 +337,11 @@ static const char *const psz_raise_list_text[] =
 static const int i_video_double_click_list[] = { 0, 1, 2 };
 static const char *const psz_video_double_click_text[] =
     { N_( "Toggle fullscreen" ), N_( "Play / Pause" ), N_( "Nothing" ) };
+
+/* redesign (S2-07, Decision 35): SettingsCatalog::setPriority */
+static const int i_process_priority_list[] = { -2, -1, 0, 1, 2 };
+static const char *const psz_process_priority_text[] =
+    { N_( "Lowest" ), N_( "Low" ), N_( "Normal" ), N_( "High" ), N_( "Highest" ) };
 
 static const char *const compositor_vlc[] = {
     "auto",
@@ -497,6 +508,11 @@ vlc_module_begin ()
     add_bool( "qt-use-scroll-handler", true, SCROLL_HANDLER_TEXT, SCROLL_HANDLER_LONGTEXT )
 
     add_bool( "qt-verbose", false, VERBOSE_TEXT, VERBOSE_LONGTEXT )
+
+    /* redesign: Settings > Performance > Smooth Playback (S2-07) */
+    add_integer( "qt-process-priority", 0, PROCESS_PRIORITY_TEXT, PROCESS_PRIORITY_LONGTEXT )
+        change_integer_range( -2, 2 )
+        change_integer_list( i_process_priority_list, psz_process_priority_text )
 
     add_bool( "qt-close-to-system-tray", false, HIDE_WINDOW_ON_CLOSE_TEXT, HIDE_WINDOW_ON_CLOSE_LONGTEXT )
 

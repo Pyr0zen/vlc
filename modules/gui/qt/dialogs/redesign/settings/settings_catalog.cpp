@@ -40,6 +40,9 @@
 #ifdef _WIN32
 #include <windows.h>
 #include "util/registry.hpp"
+#elif defined(__unix__) || defined(__APPLE__)
+#include <cerrno>
+#include <sys/resource.h>
 #endif
 
 #include "maininterface/mainctx.hpp"
@@ -104,7 +107,7 @@ const QSet<QString>& curatedOptions()
         "http-proxy-pwd", "gnutls-system-trust", "gnutls-priorities", "ipv4-timeout", "mtu",
         // Performance
         "hw-dec", "dec-dev", "postproc-q", "avcodec-skiploopfilter", "avcodec-threads", "drop-late-frames",
-        "high-priority", "codec", "clock-synchro", "clock-jitter", "cr-average",
+        "high-priority", "qt-process-priority", "codec", "clock-synchro", "clock-jitter", "cr-average",
         // Recording
         "input-record-path", "input-record-native", "sout-chromecast-conversion-quality",
         "sout-display", "sout-audio", "sout-video", "sout-spu", "sout-x264-preset", "sout-x264-tune",
@@ -337,6 +340,20 @@ QStringList filterWords(const QString& filter)
     return filter.toLower().split(QLatin1Char(' '), Qt::SkipEmptyParts);
 }
 
+#ifndef _WIN32
+// the nice value VLC started with (0 when unknown)
+int startNice()
+{
+#if defined(__unix__) || defined(__APPLE__)
+    errno = 0;
+    const int value = getpriority(PRIO_PROCESS, 0);
+    return errno == 0 ? value : 0;
+#else
+    return 0;
+#endif
+}
+#endif
+
 } // namespace
 
 SettingsCatalog::SettingsCatalog(qt_intf_t* intf, QObject* parent)
@@ -345,14 +362,19 @@ SettingsCatalog::SettingsCatalog(qt_intf_t* intf, QObject* parent)
 {
     m_pool.setMaxThreadCount(1);
 
-#ifdef _WIN32
     // VLC raises its priority in vlc_threads_setup() (src/win32/thread.c), before it reads its
     // configuration file, so only "--high-priority" on the command line had an effect: the saved
-    // option applies here, when the interface starts (created once, from MainUI)
+    // options apply here, when the interface starts (created once, from MainUI)
+#ifdef _WIN32
     m_startPriority = GetPriorityClass(GetCurrentProcess());
-    if (var_InheritBool(p_intf, "high-priority"))
-        setHighPriority(true);
+    const bool high = var_InheritBool(p_intf, "high-priority");
+#else
+    m_startNice = startNice();
+    const bool high = false;
 #endif
+    const int level = var_InheritInteger(p_intf, "qt-process-priority");
+    if (high || level != 0)
+        setPriority(high, level);
 }
 
 SettingsCatalog::~SettingsCatalog()
@@ -590,8 +612,8 @@ void SettingsCatalog::resetAll()
         mainCtx->reloadPrefs();
 #ifdef _WIN32
     setLanguage(QStringLiteral("auto"));
-    setHighPriority(false);
 #endif
+    setPriority(false, 0);
     emit resetDone();
 }
 
@@ -663,26 +685,38 @@ QString SettingsCatalog::language() const
 #endif
 }
 
-void SettingsCatalog::setHighPriority(bool high) const
+bool SettingsCatalog::setPriority(bool high, int level) const
 {
+    // Decision 35: Lowest / Low / Normal / High / Highest; "high-priority" raises it as
+    // vlc_threads_setup() does (above normal), so to at least High
+    level = std::clamp(level, -2, 2);
+    if (high)
+        level = std::max(level, 1);
 #ifdef _WIN32
-    // as vlc_threads_setup(): above normal, else high; when turned off, the class VLC started
-    // with (normal if it started raised, by --high-priority)
-    const HANDLE process = GetCurrentProcess();
-    if (!high)
-    {
-        const bool raised = m_startPriority == ABOVE_NORMAL_PRIORITY_CLASS
-                            || m_startPriority == HIGH_PRIORITY_CLASS;
-        SetPriorityClass(process, (m_startPriority == 0 || raised) ? NORMAL_PRIORITY_CLASS
-                                                                   : m_startPriority);
-    }
-    else if (SetPriorityClass(process, ABOVE_NORMAL_PRIORITY_CLASS)
-             || SetPriorityClass(process, HIGH_PRIORITY_CLASS))
-        msg_Dbg(p_intf, "raised process priority");
-    else
-        msg_Dbg(p_intf, "could not raise process priority");
+    static const DWORD classes[] = { IDLE_PRIORITY_CLASS, BELOW_NORMAL_PRIORITY_CLASS,
+                                     NORMAL_PRIORITY_CLASS, ABOVE_NORMAL_PRIORITY_CLASS,
+                                     HIGH_PRIORITY_CLASS };
+    DWORD wanted = classes[level + 2];
+    // Normal: the class VLC started with (normal if it started raised, by --high-priority)
+    const bool raised = m_startPriority == ABOVE_NORMAL_PRIORITY_CLASS
+                        || m_startPriority == HIGH_PRIORITY_CLASS;
+    if (level == 0 && m_startPriority != 0 && !raised)
+        wanted = m_startPriority;
+    if (SetPriorityClass(GetCurrentProcess(), wanted))
+        return true;
+    msg_Warn(p_intf, "could not change the process priority");
+    return false;
+#elif defined(__unix__) || defined(__APPLE__)
+    // nice values; Normal is the one VLC started with. Raising the priority (or lowering the
+    // nice value again) needs privileges the system may refuse
+    static const int nices[] = { 19, 10, 0, -5, -10 };
+    const int wanted = level == 0 ? m_startNice : nices[level + 2];
+    if (setpriority(PRIO_PROCESS, 0, wanted) == 0)
+        return true;
+    msg_Warn(p_intf, "could not change the process priority: %s", vlc_strerror_c(errno));
+    return false;
 #else
-    Q_UNUSED(high);
+    return false;
 #endif
 }
 

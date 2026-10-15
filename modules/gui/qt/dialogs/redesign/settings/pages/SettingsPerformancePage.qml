@@ -33,6 +33,14 @@ SettingsPage {
         return RdEffects.values[RdEffects.optionKey(name)]
     }
 
+    // the system refused the last priority change (raising it needs privileges outside Windows)
+    property bool _priorityRefused: false
+
+    function _applyPriority() {
+        _priorityRefused = !SettingsCatalog.setPriority(highPriorityRow.value === true,
+                                                        Number(processPriorityRow.value ?? 0))
+    }
+
     // VLC tries the listed decoders first, then all the others ("codec" is not strict)
     readonly property var _decoderChoices: {
         const list = [{ value: "any", text: qsTr("Automatic") }]
@@ -156,12 +164,46 @@ SettingsPage {
         // Windows: VLC's process priority, raised at once and when VLC starts (the core reads
         // the option before the configuration file, so SettingsCatalog applies the saved value)
         SettingsOption {
+            id: highPriorityRow
+
             option: "high-priority"
             text: qsTr("Give VLC high priority")
 
             onValueChanged: {
                 if (typeof value === "boolean")
-                    SettingsCatalog.setHighPriority(value)
+                    root._applyPriority()
+            }
+        }
+
+        // S2-07 (video 18:20), Decision 35: in words; applied at once and when VLC starts
+        // (SettingsCatalog). Figma's row is a 38 high text input
+        SettingsOption {
+            id: processPriorityRow
+
+            option: "qt-process-priority"
+            minimumLineHeight: VLCStyle.dp(38)
+            text: qsTr("Process priority")
+            choices: [
+                { value: -2, text: qsTr("Lowest") },
+                { value: -1, text: qsTr("Low") },
+                { value: 0, text: qsTr("Normal") },
+                { value: 1, text: qsTr("High") },
+                { value: 2, text: qsTr("Highest") }
+            ]
+
+            onValueChanged: {
+                if (value !== undefined)
+                    root._applyPriority()
+            }
+
+            belowShown: root._priorityRefused
+            below: Text {
+                width: processPriorityRow.width
+                wrapMode: Text.WordWrap
+                text: qsTr("The system did not let VLC change its priority.")
+                font.family: VLCStyle.rd_fontFamily
+                font.pixelSize: VLCStyle.rd_fontSize_label
+                color: VLCStyle.palette.rdFgA3
             }
         }
     }

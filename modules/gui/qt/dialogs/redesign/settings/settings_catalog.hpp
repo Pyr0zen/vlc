@@ -100,8 +100,11 @@ public:
     Q_INVOKABLE QString language() const;
     Q_INVOKABLE void setLanguage(const QString& iso);
 
-    // Windows: VLC's process priority raised ("high-priority") or back to normal
-    Q_INVOKABLE void setHighPriority(bool high) const;
+    // VLC's process priority from "Give VLC high priority" ("high-priority", Windows only, as
+    // VLC) and "Process priority" ("qt-process-priority", -2 Lowest .. +2 Highest): high
+    // priority raises it to at least High; Normal without it is the priority VLC started with.
+    // False when the system refused the change (raising it needs privileges outside Windows)
+    Q_INVOKABLE bool setPriority(bool high, int level) const;
 
 signals:
     void readyChanged();
@@ -149,9 +152,12 @@ private:
     QThreadPool m_pool;
     bool m_loading = false;
     bool m_ready = false;
-    // Windows: the process priority class VLC started with, put back when the option is
-    // turned off (0: not known)
+    // the process priority VLC started with, put back for Normal: the Windows priority class
+    // (0: not known), elsewhere the nice value
     unsigned long m_startPriority = 0;
+#ifndef _WIN32
+    int m_startNice = 0;
+#endif
     Catalog m_catalog;
 };
 
