@@ -35,6 +35,10 @@ Row {
 
     property bool showFullscreenButton: false
 
+    // redesign (W8.1b): an item shown between maximize and close, where Figma's top bar has its
+    // fullscreen button: the right zone of the editable top bar (TopBar.qml)
+    property Item middleItem: null
+
     readonly property bool useWinIcons: ((MainCtx.osName === MainCtx.Windows)&&(MainCtx.osVersion >= 10))
 
     readonly property bool buttonHovered: {
@@ -161,6 +165,20 @@ Row {
         iconTxt: (MainCtx.intfMainWindow.visibility === Window.FullScreen) ? VLCIcons.defullscreen : VLCIcons.fullscreen
         rdIcon: (MainCtx.intfMainWindow.visibility === Window.FullScreen) ? "fullscreen_state-active" : "fullscreen"
         onClicked: MainCtx.toggleInterfaceFullScreen()
+    }
+
+    Item {
+        id: middleSlot
+
+        width: windowButtonGroup.middleItem ? windowButtonGroup.middleItem.width : 0
+        height: windowButtonGroup.height
+
+        Binding {
+            target: windowButtonGroup.middleItem
+            when: !!windowButtonGroup.middleItem
+            property: "parent"
+            value: middleSlot
+        }
     }
 
     Repeater {

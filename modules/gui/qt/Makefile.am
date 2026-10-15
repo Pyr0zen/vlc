@@ -327,6 +327,8 @@ libqt_plugin_la_SOURCES = \
 	player/rd_seek_thumbnailer.hpp \
 	player/rd_now_playing.cpp \
 	player/rd_now_playing.hpp \
+	dialogs/toolbar/rd_profiles.cpp \
+	dialogs/toolbar/rd_profiles.hpp \
 	player/rd_media_info.cpp \
 	player/rd_media_info.hpp \
 	player/player_controller.cpp player/player_controller.hpp player/player_controller_p.hpp \
@@ -544,6 +546,7 @@ nodist_libqt_plugin_la_SOURCES = \
 	player/rd_effects.moc.cpp \
 	player/rd_seek_thumbnailer.moc.cpp \
 	player/rd_now_playing.moc.cpp \
+	dialogs/toolbar/rd_profiles.moc.cpp \
 	player/rd_media_info.moc.cpp \
 	player/input_models.moc.cpp \
 	player/player_controller.moc.cpp \
@@ -1332,6 +1335,7 @@ libqml_module_dialogs_a_QML = \
 	dialogs/toolbar/qml/CustomizePalette.qml \
 	dialogs/toolbar/qml/CustomizePaletteTile.qml \
 	dialogs/toolbar/qml/CustomizeBar.qml \
+	dialogs/toolbar/qml/CustomizeTopBar.qml \
 	dialogs/toolbar/qml/CustomizeZone.qml \
 	dialogs/toolbar/qml/CustomizeZoneItem.qml \
 	dialogs/toolbar/qml/CustomizeNamePrompt.qml \
@@ -1524,6 +1528,7 @@ libqml_module_player_a_QML = \
 	player/qml/ResumeDialog.qml \
 	player/qml/SliderBar.qml \
 	player/qml/TopBar.qml \
+	player/qml/RdTopBarZone.qml \
 	player/qml/TracksMenu.qml \
 	player/qml/TracksPopup.qml \
 	player/qml/RdSidePanel.qml \

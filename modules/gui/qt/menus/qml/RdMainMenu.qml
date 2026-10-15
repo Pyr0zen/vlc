@@ -42,6 +42,20 @@ RdCascadeMenu {
                      keyboard)
     }
 
+    // W8.1b: the "..." button in a bar at the bottom of the window opens the menu above it, its
+    // bottom edge 8 px above the button (the rows are counted before the menu opens)
+    function popupAbove(button, keyboard) {
+        root.model.build()
+        const rows = root.model.count - root.model.separatorCount
+        const height = rows * VLCStyle.rd_menuRowHeight + root.model.separatorCount * VLCStyle.dp(1)
+                       + 2 * VLCStyle.rd_menuPadding
+        const iconX = (button.width - VLCStyle.rd_iconSize) / 2
+        root.popupAt(button,
+                     iconX - VLCStyle.dp(17, VLCStyle.scale),
+                     -height - VLCStyle.dp(8, VLCStyle.scale),
+                     keyboard)
+    }
+
     model: RdMenuModel {
         kind: "main"
         ctx: MainCtx

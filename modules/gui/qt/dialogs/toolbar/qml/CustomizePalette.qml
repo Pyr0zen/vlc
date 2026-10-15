@@ -41,6 +41,8 @@ GridView {
 
     // PlayerControlbarModel of the selected profile and player
     property var playerModel: null
+    // and of the selected profile's top bar (W8.1b): its items are not in the box either
+    property var topBarModel: null
 
     readonly property bool removeHintVisible: removeDrop.containsDrag
 
@@ -241,12 +243,15 @@ GridView {
                || id === ControlListModel.RD_DIVIDER
     }
 
-    // ids used by the edited bar
+    // ids used by the edited bars
     function _usedIds() {
         const used = []
-        if (!playerModel)
-            return used
-        for (const m of [playerModel.left, playerModel.center, playerModel.right]) {
+        const zones = []
+        if (playerModel)
+            zones.push(playerModel.left, playerModel.center, playerModel.right)
+        if (topBarModel)
+            zones.push(topBarModel.left, topBarModel.center, topBarModel.right)
+        for (const m of zones) {
             const n = m.rowCount()
             for (let i = 0; i < n; ++i)
                 used.push(m.data(m.index(i, 0), Qt.UserRole))
@@ -285,6 +290,7 @@ GridView {
     }
 
     onPlayerModelChanged: refresh()
+    onTopBarModelChanged: refresh()
 
     Connections {
         target: root.editor
@@ -304,6 +310,18 @@ GridView {
     }
     Connections {
         target: root.playerModel ? root.playerModel.right : null
+        function onCountChanged() { root.scheduleRefresh() }
+    }
+    Connections {
+        target: root.topBarModel ? root.topBarModel.left : null
+        function onCountChanged() { root.scheduleRefresh() }
+    }
+    Connections {
+        target: root.topBarModel ? root.topBarModel.center : null
+        function onCountChanged() { root.scheduleRefresh() }
+    }
+    Connections {
+        target: root.topBarModel ? root.topBarModel.right : null
         function onCountChanged() { root.scheduleRefresh() }
     }
 
