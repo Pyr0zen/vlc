@@ -45,6 +45,8 @@ public:
         QString normalized;
         // the words before the episode (without release tags), or every word without one
         QStringList titleTokens;
+        // the same words as written ("The Wand")
+        QString title;
         // the words after the episode (language, forced, SDH, an episode title...)
         QStringList variantTokens;
         // two letter language code found in the variant ("en"), empty when none

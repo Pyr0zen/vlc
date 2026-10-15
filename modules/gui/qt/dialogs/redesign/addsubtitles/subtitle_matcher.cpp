@@ -137,14 +137,19 @@ bool isNumber(const QString& token)
     return true;
 }
 
-// the words of a name: lower case, letters and digits only
-QStringList tokenize(const QString& base)
+// the words of a name: letters and digits only
+QStringList words(const QString& base)
 {
     QString text;
     text.reserve(base.size());
     for (const QChar c : base)
-        text += c.isLetterOrNumber() ? c.toLower() : QChar(' ');
+        text += c.isLetterOrNumber() ? c : QChar(' ');
     return text.split(QChar(' '), Qt::SkipEmptyParts);
+}
+
+QStringList tokenize(const QString& base)
+{
+    return words(base.toLower());
 }
 
 double overlap(const QStringList& a, const QStringList& b)
@@ -209,6 +214,7 @@ SubtitleMatcher::Name SubtitleMatcher::parse(const QString& fileName)
     if (dot > 0 && base.size() - dot <= 5)
         base.truncate(dot);
 
+    const QStringList original = words(base);
     const QStringList tokens = tokenize(base);
     name.normalized = tokens.join(QChar(' '));
 
@@ -296,6 +302,9 @@ SubtitleMatcher::Name SubtitleMatcher::parse(const QString& fileName)
         if (t == QLatin1String("season") || (i > 0 && tokens.at(i - 1) == QLatin1String("season")))
             continue;
         name.titleTokens.append(t);
+        // lower case changes no word count: the same index in the original words
+        if (original.size() == tokens.size())
+            name.title += (name.title.isEmpty() ? QString() : QStringLiteral(" ")) + original.at(i);
     }
 
     // without an episode, the language is at the end ("Movie.English.srt", "movie_en.srt")
