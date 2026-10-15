@@ -259,7 +259,8 @@ void RdProfiles::rename(int index, const QString& name)
 {
     ControlbarProfileModel* profiles = model();
     ControlbarProfile* profile = profiles ? profiles->getProfile(index) : nullptr;
-    if (!profile)
+    // a switch in progress stores the settings under the profile's name when it ends
+    if (!profile || m_busy)
         return;
     const QString trimmed = name.trimmed();
     if (trimmed.isEmpty() || trimmed == profile->name())
