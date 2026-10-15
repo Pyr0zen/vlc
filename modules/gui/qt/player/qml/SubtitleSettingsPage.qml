@@ -300,7 +300,8 @@ RdSidePanelPage {
             from: 0
             to: 255
             stepSize: 255 / 20
-            showTicks: false
+            // Figma 848:1693: 9 inner ticks (tenths)
+            tickIntervals: 10
             value: root.opt("freetype-background-opacity")
             onMoved: (v) => RdEffects.setOption("freetype-background-opacity", Math.round(v))
         }

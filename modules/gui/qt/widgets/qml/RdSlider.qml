@@ -34,6 +34,8 @@ T.Slider {
     property bool bipolar: false
     property real zeroValue: 0
     property bool showTicks: stepSize > 0 && (to - from) / stepSize <= 40
+    // intervals between the ticks (default: one per step)
+    property int tickIntervals: stepSize > 0 ? Math.round((to - from) / stepSize) : 0
     // labels under the track, spread from the left end to the right end (Figma "Frame 205")
     property var labels: []
     // top of the label row: 10 px under the 16 px track (Figma "wrapper" 1905:7365: labels at
@@ -83,19 +85,18 @@ T.Slider {
                 color: control.rdPalette.rdBgAccentBright
             }
 
+            // Figma "degrees" (5187:24548, 848:1693): 2x6 ticks in BG/Accent Dark on the fill and
+            // the track alike, spread over the fill span; the first and last are hidden
             Repeater {
-                model: control.showTicks ? Math.round((control.to - control.from) / control.stepSize) + 1 : 0
+                model: control.showTicks ? Math.max(0, control.tickIntervals - 1) : 0
 
                 delegate: Rectangle {
                     required property int index
-                    readonly property int count: Math.round((control.to - control.from) / control.stepSize)
-
-                    x: control._inset + (count > 0 ? index * (fill.span - width) / count : 0)
+                    x: control._inset + (index + 1) * fill.span / control.tickIntervals - width / 2
                     anchors.verticalCenter: parent.verticalCenter
-                    width: VLCStyle.dp(1)
+                    width: VLCStyle.dp(2)
                     height: VLCStyle.dp(6)
-                    color: (x >= fill.x && x < fill.x + fill.width) ? control.rdPalette.rdAccentDim
-                                                                     : control.rdPalette.rdFgA4
+                    color: control.rdPalette.rdBgAccentDark
                 }
             }
         }

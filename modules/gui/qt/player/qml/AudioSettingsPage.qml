@@ -329,7 +329,9 @@ RdSidePanelPage {
             to: 12
             stepSize: 0.25
             bipolar: true
-            showTicks: false
+            // Figma 612:1416: one tick at 0
+            showTicks: true
+            tickIntervals: 2
             value: pitchCommit.shown
             onMoved: (v) => pitchCommit.push(v)
         }
