@@ -21,7 +21,7 @@
 // background blur).
 // - the body is opaque BG/B1: the video is a native surface under the QML scene and cannot be
 //   blurred, and without the blur its 5 % would show through as a sharp ghost image
-// - tab header 50 px, BG/B2, then a 1 px Divider/Dim line: icon 20 + label Inter 12; active
+// - tab header 50 px, BG/B2, then a 1 px gap: icon 20 + label Inter 12; active
 //   tab: two-tone icon, FG/A2 label and a 2 px accent underline as wide as the Figma tab content
 //   frame (centered); inactive: plain icon, FG/A3 label
 // - pages (RdSidePanelPageLoader) are created on first use and cross-fade when the tab changes
@@ -154,13 +154,13 @@ Widgets.RdPanel {
         }
     }
 
-    Rectangle {
-        id: headerDivider
+    // Figma panel gap 1: the panel fill shows between the header and the page, no line
+    Item {
+        id: headerGap
 
         anchors.top: header.bottom
         width: parent.width
         height: VLCStyle.dp(1)
-        color: root.rdPalette.rdDividerDim
     }
 
     // pages: each RdSidePanelPageLoader shows its page when its key is the current one
@@ -177,7 +177,7 @@ Widgets.RdPanel {
             restoreMode: Binding.RestoreNone
         }
 
-        anchors.top: headerDivider.bottom
+        anchors.top: headerGap.bottom
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: footerArea.top
