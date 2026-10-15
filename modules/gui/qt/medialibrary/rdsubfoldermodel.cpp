@@ -152,7 +152,7 @@ RdSubfolderModel::Loader::Loader(const RdSubfolderModel& model)
         const QString key = RdLibraryItems::mrlKey(mrl);
         m_mine.insert(key);
         if (!m_mineOrder.contains(key))
-            m_mineOrder.insert(key, m_mineOrder.size());
+            m_mineOrder.insert(key, static_cast<int>(m_mineOrder.size()));
     }
     for (const QString& mrl : model.m_otherMrls)
         m_others.insert(RdLibraryItems::mrlKey(mrl));
