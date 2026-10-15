@@ -1,0 +1,151 @@
+diff --git a/modules/gui/qt/maininterface/mainui.cpp b/modules/gui/qt/maininterface/mainui.cpp
+index 65c835195c..6fcf4a6bdd 100644
+--- a/modules/gui/qt/maininterface/mainui.cpp
++++ b/modules/gui/qt/maininterface/mainui.cpp
+@@ -35,6 +35,8 @@
+ #include "player/delay_estimator.hpp"
+ #include "player/rd_effects.hpp"
+ #include "player/rd_seek_thumbnailer.hpp"
++#include "player/rd_waveform.hpp"
++#include "player/rd_waveform_item.hpp"
+ #include "player/rd_media_info.hpp"
+ 
+ #include "dialogs/toolbar/controlbar_profile_model.hpp"
+@@ -349,6 +351,10 @@ void MainUI::registerQMLTypes()
+         m_seekThumbnailer = new RdSeekThumbnailer(m_intf, m_intf->p_mainPlayerController, this);
+         qmlRegisterSingletonInstance<RdSeekThumbnailer>(uri, versionMajor, versionMinor, "RdSeekThumbnailer",
+                                                         m_seekThumbnailer);
++        // redesign: waveform seek bar (P6-06): the playing file's waveform, and its bars
++        qmlRegisterSingletonInstance<RdWaveform>(uri, versionMajor, versionMinor, "RdWaveform",
++                                                 new RdWaveform(m_intf, m_intf->p_mainPlayerController, this));
++        qmlRegisterType<RdWaveformItem>(uri, versionMajor, versionMinor, "RdWaveformItem");
+         // redesign: the Show Statistics and Show Metadata panels of the player (W4.3b)
+         qmlRegisterType<RdInputStats>(uri, versionMajor, versionMinor, "RdInputStats");
+         qmlRegisterType<RdMediaMeta>(uri, versionMajor, versionMinor, "RdMediaMeta");
+diff --git a/modules/gui/qt/player/qml/SliderBar.qml b/modules/gui/qt/player/qml/SliderBar.qml
+index 4402f7ce2b..541615bad1 100644
+--- a/modules/gui/qt/player/qml/SliderBar.qml
++++ b/modules/gui/qt/player/qml/SliderBar.qml
+@@ -99,6 +99,13 @@ T.ProgressBar {
+     // the position under the pointer (0..1); the current time label shows it while dragging
+     readonly property real scrubPosition: control.width > 0 ? control._scrubX / control.width : 0
+ 
++    // redesign: waveform seek bar (P6-06 / IB-24, Figma Controls "Property 1=waveform"). With the
++    // Playback tab's "Show Waveform on Seekbar" on, the thick bar draws the playing file's
++    // waveform once its background scan is ready (RdWaveform); until then the plain fill stays,
++    // then the bars fade in over it and the playhead narrows to 4 px around the same center
++    readonly property bool _waveformOption: RdEffects.values[RdEffects.optionKey("qt-seek-waveform")] === true
++    readonly property bool waveformShown: waveform.ready
++
+     function _updatePreview() {
+         if (control._previewShown)
+             RdSeekThumbnailer.request(control.scrubPosition)
+@@ -529,7 +536,9 @@ T.ProgressBar {
+             x: control._inset
+             y: control._inset
+             width: Math.max(0, control.visualPosition * (parent.width - 2 * control._inset))
+-            visible: control.thick || !Player.hasChapters
++            visible: (control.thick || !Player.hasChapters) && opacity > 0
++            opacity: control.waveformShown ? 0 : 1
++            Behavior on opacity { NumberAnimation { duration: VLCStyle.duration_short } }
+             color: control.thick ? VLCStyle.palette.rdBgAccentBright : theme.fg.primary
+             height: control.barHeight - 2 * control._inset
+             radius: control.thick ? VLCStyle.rd_radius_small : control._seekPointsRadius
+@@ -546,6 +555,33 @@ T.ProgressBar {
+             }
+         }
+ 
++        // the bars of the waveform, cut around the playhead (played: Accent/DIm, the others
++        // FG/A4; both follow the live accent and theme)
++        RdWaveformItem {
++            id: waveform
++
++            anchors.fill: parent
++            visible: opacity > 0
++            opacity: ready ? 1 : 0
++            Behavior on opacity { NumberAnimation { duration: VLCStyle.duration_short } }
++
++            source: RdWaveform
++            active: control.thick && control._waveformOption
++
++            playheadX: sliderHandle.x + sliderHandle.width / 2
++            playheadWidth: sliderHandle.width
++            playheadGap: VLCStyle.rd_waveformPlayheadGap
++            playedColor: VLCStyle.palette.rdAccentDim
++            unplayedColor: VLCStyle.palette.rdFgA4
++
++            barWidth: VLCStyle.rd_waveformBarWidth
++            barSpacing: VLCStyle.rd_waveformBarSpacing
++            barMinHeight: VLCStyle.rd_waveformBarMinHeight
++            barMaxHeight: VLCStyle.rd_waveformBarMaxHeight
++            barStep: VLCStyle.rd_waveformBarStep
++            horizontalPadding: VLCStyle.rd_waveformPadding
++        }
++
+         Rectangle {
+             id: bufferRect
+             property int bufferAnimWidth: VLCStyle.dp(100, VLCStyle.scale)
+@@ -674,7 +710,14 @@ T.ProgressBar {
+                          : (control.visualPosition * control.availableWidth) - width / 2
+         y: (control.barHeight - height) / 2
+ 
+-        implicitWidth: control.thick ? VLCStyle.rd_seekHandleWidth : sliderHandle._size
++        implicitWidth: control.thick ? (control.waveformShown ? VLCStyle.rd_waveformPlayheadWidth
++                                                              : VLCStyle.rd_seekHandleWidth)
++                                     : sliderHandle._size
++        // the thick bar's playhead narrows with the waveform (the thin bar animates by states)
++        Behavior on implicitWidth {
++            enabled: control.thick
++            NumberAnimation { duration: VLCStyle.duration_short }
++        }
+         implicitHeight: control.thick ? control.barHeight - 2 * control._inset : sliderHandle._size
+         radius: control.thick ? VLCStyle.rd_radius_small : VLCStyle.margin_small
+         color: theme.fg.primary
+diff --git a/modules/gui/qt/qt.cpp b/modules/gui/qt/qt.cpp
+index ece3d98dcf..15badbb336 100644
+--- a/modules/gui/qt/qt.cpp
++++ b/modules/gui/qt/qt.cpp
+@@ -315,6 +315,11 @@ static void ShowDialog   ( intf_thread_t *, int, int, intf_dialog_args_t * );
+ #define SEEK_THUMBNAILS_LONGTEXT N_( "Hovering or dragging the seek bar shows a frame of the video at that position. " \
+     "Only for video files on this computer; other media show the time only." )
+ 
++#define SEEK_WAVEFORM_TEXT N_( "Show waveform on seek bar" )
++#define SEEK_WAVEFORM_LONGTEXT N_( "The seek bar draws the audio waveform of the file playing. " \
++    "Only for files on this computer: their audio is scanned once in the background and kept in " \
++    "the user data folder." )
++
+ #define ACCENT_COLOR_TEXT N_( "Accent color" )
+ #define ACCENT_COLOR_LONGTEXT N_( "Adjusts the accent color, special values are 'default' and 'system' (requires Qt 6.6) ." )
+ 
+@@ -569,6 +574,9 @@ vlc_module_begin ()
+     /* redesign: seek bar preview card (P2-04; Figma "Settings - playback": on) */
+     add_bool( "qt-seek-thumbnails", true, SEEK_THUMBNAILS_TEXT, SEEK_THUMBNAILS_LONGTEXT )
+ 
++    /* redesign: waveform seek bar (P6-06; the Playback tab's "Show Waveform on Seekbar": off) */
++    add_bool( "qt-seek-waveform", false, SEEK_WAVEFORM_TEXT, SEEK_WAVEFORM_LONGTEXT )
++
+     cannot_unload_broken_library()
+ 
+     add_submodule ()
+diff --git a/modules/gui/qt/style/VLCStyle.qml b/modules/gui/qt/style/VLCStyle.qml
+index 412cb78c1b..312718fda0 100644
+--- a/modules/gui/qt/style/VLCStyle.qml
++++ b/modules/gui/qt/style/VLCStyle.qml
+@@ -362,6 +362,17 @@ QtObject {
+     readonly property int rd_seekBarHeight: MainCtx.dp(28, scale)
+     readonly property int rd_seekFillHeight: MainCtx.dp(24, scale)
+     readonly property int rd_seekHandleWidth: MainCtx.dp(8, scale)
++    // waveform seek bar (Figma Controls "Property 1=waveform", "Frame 21"): 2 px bars every
++    // 5 px, the first 6 px from the left end, 2 to 14 px tall in 2 px steps; the playhead is
++    // 4x24 with 3 px free on both sides
++    readonly property int rd_waveformBarWidth: MainCtx.dp(2, scale)
++    readonly property int rd_waveformBarSpacing: MainCtx.dp(3, scale)
++    readonly property int rd_waveformBarMinHeight: MainCtx.dp(2, scale)
++    readonly property int rd_waveformBarMaxHeight: MainCtx.dp(14, scale)
++    readonly property int rd_waveformBarStep: MainCtx.dp(2, scale)
++    readonly property int rd_waveformPadding: MainCtx.dp(6, scale)
++    readonly property int rd_waveformPlayheadWidth: MainCtx.dp(4, scale)
++    readonly property int rd_waveformPlayheadGap: MainCtx.dp(3, scale)
+     // narrow window: the seek bar never gets narrower than a time label
+     readonly property int rd_seekBarMinimumWidth: MainCtx.dp(76, scale)
+     // seek bar preview card (Figma "thumbnail" 272x189: padding 10, gap 10, picture 252x142 r4,
