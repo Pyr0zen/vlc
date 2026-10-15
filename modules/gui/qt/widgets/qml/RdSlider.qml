@@ -59,6 +59,14 @@ T.Slider {
 
     readonly property real _inset: VLCStyle.dp(2)
 
+    // Figma draws the marks in BG/Accent Dark with the "screen" blend mode: the color it gives
+    // over each background (QML has no blend modes)
+    function _screen(c, bg) {
+        return Qt.rgba(c.r + bg.r - c.r * bg.r, c.g + bg.g - c.g * bg.g, c.b + bg.b - c.b * bg.b, 1)
+    }
+    readonly property color _tickOnTrack: _screen(rdPalette.rdBgAccentDark, rdPalette.rdBgB2)
+    readonly property color _tickOnFill: _screen(rdPalette.rdBgAccentDark, rdPalette.rdBgAccentBright)
+
     function _pos(v) {
         return (to === from) ? 0 : (v - from) / (to - from)
     }
@@ -103,11 +111,11 @@ T.Slider {
                     x: control._inset + (index + 1) * (fill.span - width) / ticks.segments
                     anchors.verticalCenter: parent.verticalCenter
                     // Figma "degrees": 6 px lines stroked 2 px with round caps (2 x 8 drawn),
-                    // BG/Accent Dark
+                    // BG/Accent Dark screened over the track or the fill (dark: #221E19 / #4B3217)
                     width: VLCStyle.dp(2)
                     height: VLCStyle.dp(8)
                     radius: width / 2
-                    color: control.rdPalette.rdBgAccentDark
+                    color: (x >= fill.x && x < fill.x + fill.width) ? control._tickOnFill : control._tickOnTrack
                 }
             }
         }
