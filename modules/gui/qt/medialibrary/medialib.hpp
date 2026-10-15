@@ -63,6 +63,12 @@ public:
 
     Q_INVOKABLE void mlInputItem(const QVector<MLItemId>& itemIdVector, QJSValue callback);
 
+    // redesign (S2-04, "Never remember items matching", "qt-history-filter"): forgets the
+    // history entries (Recent, Continue Watching, their positions) whose path, file name or
+    // title matches one of `patterns` ("*.part; C:/Private/*; Family"); `all` checks the whole
+    // history, else its newest entries (run after every history change)
+    Q_INVOKABLE void filterHistory(const QString& patterns, bool all = true);
+
     inline bool idle() const { return m_idle; }
     inline int discoveryPending() const { return m_discoveryPending; }
     inline QString discoveryEntryPoint() const { return m_discoveryEntryPoint; }

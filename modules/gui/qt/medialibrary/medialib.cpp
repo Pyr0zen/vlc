@@ -22,8 +22,79 @@
 #include "util/shared_input_item.hpp"
 
 #include <utility>
+#include <vector>
 
 #include <QQmlEngine>
+#include <QRegularExpression>
+#include <QUrl>
+
+namespace {
+
+// redesign (S2-04): the patterns of "qt-history-filter", separated by ';' (or '|', as VLC 3's
+// filter): with * or ? a wildcard for a whole path, file name or title, else a piece of text
+// found in one of them; case-insensitive, '\' and '/' alike
+std::vector<QRegularExpression> historyPatterns(const QString& patterns)
+{
+    std::vector<QRegularExpression> result;
+    const QStringList parts = patterns.split(QRegularExpression(QStringLiteral("[;|\\n]")),
+                                             Qt::SkipEmptyParts);
+    for (QString part : parts)
+    {
+        part = part.trimmed();
+        if (part.isEmpty())
+            continue;
+        part.replace(QLatin1Char('\\'), QLatin1Char('/'));
+
+        const bool wildcard = part.contains(QLatin1Char('*')) || part.contains(QLatin1Char('?'));
+        QString expression;
+        for (const QChar c : std::as_const(part))
+        {
+            if (c == QLatin1Char('*'))
+                expression += QLatin1String(".*");
+            else if (c == QLatin1Char('?'))
+                expression += QLatin1Char('.');
+            else
+                expression += QRegularExpression::escape(QString(c));
+        }
+        if (wildcard)
+            expression = QLatin1Char('^') + expression + QLatin1Char('$');
+        result.emplace_back(expression, QRegularExpression::CaseInsensitiveOption);
+    }
+    return result;
+}
+
+bool matchesHistoryPattern(const std::vector<QRegularExpression>& patterns, const vlc_ml_media_t& media)
+{
+    QStringList texts;
+    if (media.psz_title)
+        texts << qfu(media.psz_title);
+    if (media.psz_filename)
+        texts << qfu(media.psz_filename);
+    if (media.p_files)
+    {
+        for (const vlc_ml_file_t& file : ml_range_iterate<vlc_ml_file_t>(media.p_files))
+        {
+            if (file.i_type != VLC_ML_FILE_TYPE_MAIN || !file.psz_mrl)
+                continue;
+            const QUrl url = QUrl::fromEncoded(file.psz_mrl);
+            texts << (url.isLocalFile() ? url.toLocalFile() : url.toString(QUrl::RemovePassword));
+        }
+    }
+    for (QString& text : texts)
+        text.replace(QLatin1Char('\\'), QLatin1Char('/'));
+
+    for (const QRegularExpression& pattern : patterns)
+    {
+        for (const QString& text : std::as_const(texts))
+        {
+            if (pattern.match(text).hasMatch())
+                return true;
+        }
+    }
+    return false;
+}
+
+} // namespace
 
 MediaLib::MediaLib(qt_intf_t *_intf, vlc::playlist::PlaylistController* playlistController, QObject *_parent)
     : QObject( _parent )
@@ -341,6 +412,32 @@ void MediaLib::mlInputItem(const QVector<MLItemId>& itemIdVector, QJSValue callb
     });
 }
 
+void MediaLib::filterHistory(const QString& patterns, bool all)
+{
+    std::vector<QRegularExpression> expressions = historyPatterns(patterns);
+    if (expressions.empty())
+        return;
+    // a history change adds at the top: its newest entries are enough then (0: all)
+    const uint32_t count = all ? 0 : 20;
+    const std::function<void(vlc_medialibrary_t*)> filter =
+        [expressions = std::move(expressions), count](vlc_medialibrary_t* ml)
+    {
+        vlc_ml_query_params_t params = vlc_ml_query_params_create();
+        params.i_nbResults = count;
+        ml_unique_ptr<vlc_ml_media_list_t> list{ vlc_ml_list_history( ml, &params, VLC_ML_HISTORY_TYPE_GLOBAL ) };
+        if (!list)
+            return;
+        // VLC_ML_MEDIA_SET_PLAYED false: removeFromHistory(), which also forgets the position;
+        // the history change it sends finds nothing more to remove
+        for (const vlc_ml_media_t& media : ml_range_iterate<vlc_ml_media_t>(list))
+        {
+            if (matchesHistoryPattern(expressions, media))
+                vlc_ml_media_set_played(ml, media.i_id, false);
+        }
+    };
+    runOnMLThread(this, filter, static_cast<const char*>("MLHistoryFilter"));
+}
+
 vlc_ml_event_callback_t* MediaLib::registerEventListener( void (*callback)(void*, const vlc_ml_event_t*), void* data)
 {
     return vlc_ml_event_register_callback( m_ml , callback , data ) ;
@@ -393,6 +490,18 @@ void MediaLib::onMediaLibraryEvent( void* data, const vlc_ml_event_t* event )
                 self->m_discoveryPending = false;
                 self->emit discoveryPendingChanged(self->m_discoveryPending);
                 self->emit discoveryCompleted();
+            });
+            break;
+        }
+        case VLC_ML_EVENT_HISTORY_CHANGED:
+        {
+            // redesign (S2-04): forget at once what "Never remember items matching" names
+            QMetaObject::invokeMethod(self, [self]() {
+                char* patterns = var_InheritString(self->m_intf, "qt-history-filter");
+                const QString text = qfu(patterns);
+                free(patterns);
+                if (!text.trimmed().isEmpty())
+                    self->filterHistory(text, false);
             });
             break;
         }

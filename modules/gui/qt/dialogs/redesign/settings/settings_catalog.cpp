@@ -67,7 +67,7 @@ const QSet<QString>& curatedOptions()
         "qt-notification", "playlist-tree", "qt-opacity", "qt-pause-minimized", "qt-auto-raise",
         "qt-bgcone", "qt-embedded-open", "qt-icon-change", "qt-fs-opacity", "qt-fs-sensitivity",
         // Privacy
-        "save-recentplay", "restore-playback-pos", "metadata-network-access", "lastfm-username",
+        "save-recentplay", "restore-playback-pos", "qt-history-filter", "metadata-network-access", "lastfm-username",
         "lastfm-password", "scrobbler-url", "qt-privacy-ask",
         // Controls
         "extrashort-jump-size", "short-jump-size", "medium-jump-size", "long-jump-size",
