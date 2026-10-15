@@ -40,6 +40,7 @@
 #include <vlc_player.h>
 #include <vlc_url.h>
 
+#include <algorithm>
 #include <cmath>
 #include <memory>
 
@@ -269,6 +270,31 @@ Qt::CaseSensitivity pathCase()
 #endif
 }
 
+// "Default Preset" is VLC's own behavior: it keeps none of the values VLC starts again for every
+// file (the delays, zoom, aspect ratio and crop), so a delay fixed for one file does not follow
+// every file played after it. The speed, subtitle speed, stereo mode and visualizer VLC itself
+// keeps from file to file: so does "Default Preset".
+void stripPerFile(QJsonObject& values)
+{
+    for (const Entry& entry : entries())
+    {
+        const bool kept = entry.kind == Kind::Rate || entry.kind == Kind::SubFps
+                || qstrcmp(entry.name, "stereo-mode") == 0 || qstrcmp(entry.name, "visual") == 0;
+        if (entry.perFile && !kept)
+            values.remove(keyOf(entry));
+    }
+}
+
+// the values "Default Preset" applies: its own, and the file's delays at VLC's start values, so
+// leaving a show's preset puts them back
+QJsonObject defaultValues(const QJsonObject& values)
+{
+    QJsonObject result = values;
+    result.insert(keyOf({ Kind::SubDelay, "sub-delay", true }), 0);
+    result.insert(keyOf({ Kind::AudioDelay, "audio-delay", true }), 0);
+    return result;
+}
+
 } // namespace
 
 RdPresets::RdPresets(qt_intf_t* intf, RdEffects* effects, QObject* parent)
@@ -312,7 +338,7 @@ RdPresets::RdPresets(qt_intf_t* intf, RdEffects* effects, QObject* parent)
         QFile file(storePath());
         if (file.open(QIODevice::ReadOnly))
             *data = QJsonDocument::fromJson(file.readAll()).object();
-        QMetaObject::invokeMethod(self, [self, data]() {
+        QMetaObject::invokeMethod(self.data(), [self, data]() {
             if (self)
                 self->load(*data);
         }, Qt::QueuedConnection);
@@ -427,7 +453,7 @@ void RdPresets::select(const QString& id)
     }
 
     m_currentId = id;
-    apply(find(id)->values, false);
+    apply(*find(id), false);
     emit currentChanged();
     save();
 }
@@ -510,7 +536,7 @@ void RdPresets::remove(const QString& id)
     {
         m_captureTimer.stop();
         m_currentId = defaultId;
-        apply(find(defaultId)->values, false);
+        apply(*find(defaultId), false);
         emit currentChanged();
     }
     m_presets.erase(std::remove_if(m_presets.begin(), m_presets.end(),
@@ -637,8 +663,10 @@ QJsonObject RdPresets::capture() const
     return values;
 }
 
-void RdPresets::apply(const QJsonObject& values, bool perFileOnly)
+void RdPresets::apply(const Preset& preset, bool perFileOnly)
 {
+    const QJsonObject values = preset.id == defaultId ? defaultValues(preset.values) : preset.values;
+
     // the values this changes are not a change of the user's
     const bool wasBlocked = m_captureBlocked;
     m_captureBlocked = true;
@@ -762,7 +790,9 @@ void RdPresets::captureIntoCurrent()
 
     // values VLC cannot read now (no file playing) stay as they were
     bool changed = false;
-    const QJsonObject values = capture();
+    QJsonObject values = capture();
+    if (preset->id == defaultId)
+        stripPerFile(values);
     for (auto it = values.begin(); it != values.end(); ++it)
     {
         if (!preset->values.contains(it.key()) || !sameValue(preset->values.value(it.key()), it.value()))
@@ -855,7 +885,7 @@ void RdPresets::onInputChanged(bool hasInput)
     }
     // the options read when the file opens (default tracks, subtitle style) go out at once
     if (const Preset* preset = find(m_currentId))
-        apply(preset->values, false);
+        apply(*preset, false);
 }
 
 void RdPresets::onPlayingStateChanged()
@@ -871,7 +901,7 @@ void RdPresets::onPlayingStateChanged()
     if (const Preset* preset = find(m_currentId))
     {
         m_captureBlocked = true;
-        apply(preset->values, true);
+        apply(*preset, true);
     }
     m_captureBlocked = false;
 }
@@ -882,7 +912,7 @@ void RdPresets::onOutputsChanged()
             || m_player->getPlayingState() == PlayerController::PLAYING_STATE_STOPPED)
         return;
     if (const Preset* preset = find(m_currentId))
-        apply(preset->values, true);
+        apply(*preset, true);
 }
 
 QString RdPresets::linkedPreset(const QString& folder) const
@@ -927,6 +957,7 @@ void RdPresets::load(const QJsonObject& data)
         builtin.values = capture();
         m_presets.append(builtin);
     }
+    stripPerFile(find(defaultId)->values);
 
     m_currentId = data.value(QStringLiteral("current")).toString();
     if (!find(m_currentId))
@@ -943,7 +974,7 @@ void RdPresets::load(const QJsonObject& data)
         if (!linked.isEmpty())
             m_currentId = linked;
         emit currentChanged();
-        apply(find(m_currentId)->values, false);
+        apply(*find(m_currentId), false);
         onPlayingStateChanged();
     }
 }

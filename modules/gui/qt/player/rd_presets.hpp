@@ -113,7 +113,8 @@ private:
 
     // the settings as they are now, and applying stored ones (only those that differ)
     QJsonObject capture() const;
-    void apply(const QJsonObject& values, bool perFileOnly);
+    // "Default Preset" also puts the delays of the file back to 0
+    void apply(const Preset& preset, bool perFileOnly);
     void scheduleCapture();
     void captureIntoCurrent();
 
