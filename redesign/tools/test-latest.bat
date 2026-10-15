@@ -2,8 +2,10 @@
 setlocal EnableExtensions
 rem Test VLC Redesign: downloads the newest successful build of the redesign branch from
 rem GitHub Actions and starts it in portable mode (its own settings, never the installed VLC's).
-rem Builds are kept in "<TEST_MEDIA_DIR>\builds\<run number>"; a run that is
-rem already there is not downloaded again, and its settings stay between runs.
+rem Builds are downloaded to "<TEST_MEDIA_DIR>\builds\<run number>" (a run that
+rem is already there is not downloaded again) and copied into the fixed folder "builds\current",
+rem where VLC runs from: one fixed vlc.exe path, so Windows Firewall asks only once, and one
+rem portable settings folder (builds\current\portable) that every build keeps using.
 title Test VLC Redesign
 
 set "REPO=Pyr0zen/vlc"
@@ -56,12 +58,30 @@ if exist "%VLCDIR%\vlc.exe" (
     )
 )
 
+set "CURRENT=%BUILDS%\current"
+
+rem the build in "current" cannot be replaced while it runs
+powershell -NoProfile -Command "if (Get-Process vlc -ErrorAction SilentlyContinue | Where-Object { $_.Path -like '%CURRENT%\*' }) { exit 1 }"
+if errorlevel 1 (
+    echo VLC Redesign is still running from "%CURRENT%". Close it and start this again.
+    goto :fail
+)
+
+echo Copying build %RUN% into "%CURRENT%" ^(its settings in "portable" are kept^)...
+rem /MIR makes "current" an exact copy of the build; /XD keeps the portable settings folder
+robocopy "%VLCDIR%" "%CURRENT%" /MIR /XD "%CURRENT%\portable" /NFL /NDL /NJH /NJS /NP >nul
+if errorlevel 8 (
+    echo Copying the build failed.
+    goto :fail
+)
+> "%CURRENT%\build-run.txt" echo %RUN%
+
 rem portable mode: a "portable" folder next to vlc.exe keeps vlcrc, the interface settings and
-rem the media library inside this build folder
-if not exist "%VLCDIR%\portable" mkdir "%VLCDIR%\portable"
+rem the media library, never the installed VLC's
+if not exist "%CURRENT%\portable" mkdir "%CURRENT%\portable"
 
 echo Starting VLC Redesign build %RUN%...
-start "" /D "%VLCDIR%" "%VLCDIR%\vlc.exe" --no-qt-privacy-ask --no-qt-updates-notif
+start "" /D "%CURRENT%" "%CURRENT%\vlc.exe" --no-qt-privacy-ask --no-qt-updates-notif
 exit /b 0
 
 :fail
