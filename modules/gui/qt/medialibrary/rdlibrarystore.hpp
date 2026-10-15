@@ -123,6 +123,9 @@ public:
     // the playlist's own thumbnail, an empty URL when it has none
     Q_INVOKABLE QUrl playlistCover(const MLItemId& playlistId) const;
     Q_INVOKABLE void exportPlaylist(const MLItemId& playlistId, const QString& name);
+    // the media addresses of a playlist, in its order: callback([mrl]) (the Add Subtitles
+    // dialog's "To This Playlist", W6.5)
+    Q_INVOKABLE void playlistMedia(const MLItemId& playlistId, QJSValue callback);
 
     // media and containers
     Q_INVOKABLE void setWatched(const QVariantList& mediaIds, bool watched);

@@ -42,6 +42,7 @@
 #include "dialogs/redesign/hotkeys_model.hpp"
 #include "dialogs/redesign/onboarding_helper.hpp"
 #include "dialogs/redesign/settings/settings_catalog.hpp"
+#include "dialogs/redesign/addsubtitles/add_subtitles.hpp"
 
 #include "playlist/playlist_model.hpp"
 #include "playlist/playlist_controller.hpp"
@@ -300,6 +301,11 @@ void MainUI::registerQMLTypes()
         // redesign: VLC's options by Settings category, plugins, pickers (Settings pages)
         qmlRegisterSingletonInstance<SettingsCatalog>( uri, versionMajor, versionMinor, "SettingsCatalog",
                                                        new SettingsCatalog( m_intf, this ) );
+        // redesign (W6.5): the Add Subtitles dialog's logic; it also adds the saved subtitles
+        // when a video starts, so it exists from startup
+        qmlRegisterSingletonInstance<AddSubtitles>( uri, versionMajor, versionMinor, "AddSubtitles",
+                                                    new AddSubtitles( m_intf, this ) );
+        qmlRegisterUncreatableType<AddSubtitlesModel>( uri, versionMajor, versionMinor, "AddSubtitlesModel", "" );
 
         qmlRegisterModule(uri, versionMajor, versionMinor);
         qmlProtectModule(uri, versionMajor);

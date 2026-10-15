@@ -956,6 +956,34 @@ void RdLibraryStore::exportPlaylist(const MLItemId& playlistId, const QString& n
     });
 }
 
+void RdLibraryStore::playlistMedia(const MLItemId& playlistId, QJSValue callback)
+{
+    if (!m_mediaLib || !playlistId.isValid() || !callback.isCallable())
+        return;
+
+    struct Ctx {
+        QStringList mrls;
+    };
+    const int64_t id = playlistId.id;
+    m_mediaLib->runOnMLThread<Ctx>(this,
+    [id](vlc_medialibrary_t* ml, Ctx& ctx) {
+        ml_unique_ptr<vlc_ml_media_list_t> media(vlc_ml_list_media_of(ml, nullptr, VLC_ML_PARENT_PLAYLIST, id));
+        if (!media)
+            return;
+        for (const vlc_ml_media_t& m : ml_range_iterate<vlc_ml_media_t>(media))
+        {
+            if (m.p_files && m.p_files->i_nb_items > 0 && m.p_files->p_items[0].psz_mrl)
+                ctx.mrls.append(qfu(m.p_files->p_items[0].psz_mrl));
+        }
+    },
+    [this, callback](quint64, Ctx& ctx) mutable {
+        QJSEngine* engine = qjsEngine(this);
+        if (!engine)
+            return;
+        callback.call({ engine->toScriptValue(ctx.mrls) });
+    });
+}
+
 /* media */
 
 void RdLibraryStore::setWatched(const QVariantList& mediaIds, bool watched)
