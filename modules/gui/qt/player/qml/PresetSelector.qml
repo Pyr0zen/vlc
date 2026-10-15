@@ -96,6 +96,14 @@ T.Control {
     Accessible.description: RdPresets.currentName
     Accessible.onPressAction: root.openList()
 
+    // the footer hides on the Playback tab and with the sidebar: the list and its menu go too
+    onVisibleChanged: {
+        if (!visible) {
+            presetMenu.close()
+            list.close()
+        }
+    }
+
     Keys.onPressed: (event) => {
         if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter || event.key === Qt.Key_Space
                 || event.key === Qt.Key_Up) {
