@@ -82,6 +82,7 @@ READY TO BUILD. Next session: read CLAUDE.md, VIDEO_INDEX.md, FIGMA_FLOWS.md and
 ## Privacy and copyright (Sticky, 2026-10-15, permanent)
 - The repo is public. Never commit anything personal or from Sticky's PC: no real names, Windows user name, PC paths, e-mail addresses (commits use the noreply identity), personal files or their names, his music, his test videos or screenshots of his screen. Committed files use neutral placeholders (<TEST_MEDIA_DIR>, <WORK_DIR>, <TEST_VIDEO>, ...); the real values live only in the gitignored CLAUDE.local.md and *.local.* settings files.
 - Never commit the designer's video content (frames, transcript, the video, quotes from it); her Figma file (CC BY 4.0) may be committed, with credit (CREDITS.md).
+- Committed files refer to the owner only as Sticky (studio tag; GitHub Pyr0zen), never by real name; the private word list catches the real name.
 - Before every commit and push run `python redesign/tools/privacycheck.py` (generic checks plus the private word list in the gitignored redesign/tools/privacy.local.txt); it must print `privacycheck: 0 problem(s)`. Public screenshots show only the VLC window with generated or public test media.
 
 ## Decision questions to Sticky (Sticky, 2026-10-15, permanent)
