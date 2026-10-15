@@ -325,6 +325,8 @@ libqt_plugin_la_SOURCES = \
 	player/rd_effects.hpp \
 	player/rd_seek_thumbnailer.cpp \
 	player/rd_seek_thumbnailer.hpp \
+	player/rd_now_playing.cpp \
+	player/rd_now_playing.hpp \
 	player/rd_media_info.cpp \
 	player/rd_media_info.hpp \
 	player/player_controller.cpp player/player_controller.hpp player/player_controller_p.hpp \
@@ -541,6 +543,7 @@ nodist_libqt_plugin_la_SOURCES = \
 	player/delay_estimator.moc.cpp \
 	player/rd_effects.moc.cpp \
 	player/rd_seek_thumbnailer.moc.cpp \
+	player/rd_now_playing.moc.cpp \
 	player/rd_media_info.moc.cpp \
 	player/input_models.moc.cpp \
 	player/player_controller.moc.cpp \
@@ -1606,6 +1609,30 @@ libqml_module_playercontrols_a_QML = \
 	player/qml/controlbarcontrols/TeletextColorButton.qml \
 	player/qml/controlbarcontrols/TeletextWidget.qml \
 	player/qml/controlbarcontrols/VolumeWidget.qml \
+	player/qml/controlbarcontrols/AddBookmarkButton.qml \
+	player/qml/controlbarcontrols/ArtistNameWidget.qml \
+	player/qml/controlbarcontrols/ChaptersButton.qml \
+	player/qml/controlbarcontrols/ChoiceMenuButton.qml \
+	player/qml/controlbarcontrols/DividerWidget.qml \
+	player/qml/controlbarcontrols/FavoriteButton.qml \
+	player/qml/controlbarcontrols/FileNameWidget.qml \
+	player/qml/controlbarcontrols/FolderChipWidget.qml \
+	player/qml/controlbarcontrols/FolderNameWidget.qml \
+	player/qml/controlbarcontrols/HdrButton.qml \
+	player/qml/controlbarcontrols/HomeButton.qml \
+	player/qml/controlbarcontrols/LibraryButton.qml \
+	player/qml/controlbarcontrols/MainMenuButton.qml \
+	player/qml/controlbarcontrols/MediaTitleWidget.qml \
+	player/qml/controlbarcontrols/PlaylistNameWidget.qml \
+	player/qml/controlbarcontrols/PlaylistsButton.qml \
+	player/qml/controlbarcontrols/ReplayButton.qml \
+	player/qml/controlbarcontrols/RightSidebarButton.qml \
+	player/qml/controlbarcontrols/SettingsButton.qml \
+	player/qml/controlbarcontrols/SkipBack10Button.qml \
+	player/qml/controlbarcontrols/SkipForward10Button.qml \
+	player/qml/controlbarcontrols/TextInfoWidget.qml \
+	player/qml/controlbarcontrols/ThumbnailWidget.qml \
+	player/qml/controlbarcontrols/ZoomButton.qml \
 	player/qml/controlbarcontrols/Fallback.qml
 libqml_module_playercontrols_a_Singleton_QML =
 libqml_module_playercontrols_a_SOURCES = $(QML_MODULE_playercontrols_SRC)

@@ -1,0 +1,40 @@
+/*****************************************************************************
+ * Copyright (C) 2026 VLC authors and VideoLAN
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * ( at your option ) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ *****************************************************************************/
+
+// redesign (W8.1b, Figma "Player - customize" item "Playlist Name"): the media library
+// playlist that holds the playing media (the first one by name; RdNowPlaying)
+import QtQuick
+
+import VLC.Player
+
+TextInfoWidget {
+    id: root
+
+    text: paintOnly ? "" : RdNowPlaying.playlistName
+    placeholder: qsTr("Playlist Name")
+
+    // the library is asked about the media only while the name is shown
+    Component.onCompleted: {
+        if (!paintOnly)
+            RdNowPlaying.watch()
+    }
+    Component.onDestruction: {
+        if (!paintOnly)
+            RdNowPlaying?.unwatch()
+    }
+}
