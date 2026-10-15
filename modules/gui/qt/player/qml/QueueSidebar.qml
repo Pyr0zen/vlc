@@ -81,12 +81,21 @@ RdSidePanel {
                 return true
             }
 
+            // a control outside the queue shows the keyboard focus (in the player only such a
+            // control gets the keys, MainCtx.preferHotkeys): its Delete is its own (a library list
+            // of the compact library removes from its playlist)
+            readonly property bool _keyboardElsewhere: {
+                const focused = queuePage.Window.activeFocusItem
+                return !!focused && focused.visualFocus === true && !root.containsItem(focused)
+            }
+
             // Delete removes the row with the keyboard focus, else the selected row (a click
             // selects it), as the remove button does; a text field with the focus keeps its Delete
             Shortcut {
                 sequences: [StandardKey.Delete]
                 context: Qt.WindowShortcut
-                enabled: queuePage.shown && (queuePage.selectedIndex >= 0 || queueView.activeFocus)
+                enabled: queuePage.shown && (queueView.activeFocus
+                                             || (queuePage.selectedIndex >= 0 && !queuePage._keyboardElsewhere))
 
                 onActivated: {
                     const window = queuePage.Window.window
