@@ -37,6 +37,11 @@ T.Control {
     property bool showSwatch: false
     property bool framed: true
     property int fontSize: VLCStyle.rd_fontSize_label
+    // a name inside the box, left of the value (Figma Crop "Frame 87" 774:1024: "Top" FG/A3 at
+    // 12, the value FG/A2 ending 40 px from the right edge)
+    property string prefix: ""
+    // a unit after the value, in FG/A4 (Figma "0 px": the "px" is overridden to FG/A4)
+    property string suffix: ""
     // input validation while typing
     property var validator: null
 
@@ -52,7 +57,8 @@ T.Control {
     leftPadding: framed ? VLCStyle.dp(14) : VLCStyle.dp(12)
     // the swatch sits 5 px inside the frame's 2 px stroke (Figma 4046:12377), 5 px from the edge
     // of a frameless box (800:1149)
-    rightPadding: showSwatch ? (framed ? VLCStyle.dp(7) : VLCStyle.dp(5)) : VLCStyle.dp(18)
+    rightPadding: showSwatch ? (framed ? VLCStyle.dp(7) : VLCStyle.dp(5))
+                             : (prefix !== "" ? VLCStyle.dp(40) : VLCStyle.dp(18))
 
     hoverEnabled: true
     // disabled: Figma's 30 % rows ("Settings - library")
@@ -66,11 +72,25 @@ T.Control {
     }
 
     contentItem: Item {
+        Text {
+            id: prefixText
+
+            visible: control.prefix !== ""
+            anchors.left: parent.left
+            anchors.verticalCenter: parent.verticalCenter
+            text: control.prefix
+            font.family: VLCStyle.rd_fontFamily
+            font.pixelSize: control.fontSize
+            color: control.rdPalette.rdFgA3
+        }
+
         TextInput {
             id: input
 
-            anchors.left: parent.left
-            anchors.right: swatchRect.visible ? swatchRect.left : parent.right
+            anchors.left: prefixText.visible ? prefixText.right : parent.left
+            anchors.leftMargin: prefixText.visible ? VLCStyle.dp(8) : 0
+            anchors.right: swatchRect.visible ? swatchRect.left : (suffixText.visible ? suffixText.left : parent.right)
+            horizontalAlignment: prefixText.visible ? TextInput.AlignRight : TextInput.AlignLeft
             anchors.rightMargin: swatchRect.visible ? VLCStyle.dp(8) : 0
             anchors.verticalCenter: parent.verticalCenter
 
@@ -82,7 +102,7 @@ T.Control {
             validator: control.validator
             font.family: VLCStyle.rd_fontFamily
             font.pixelSize: control.fontSize
-            color: control.framed ? control.rdPalette.rdFgA2 : control.rdPalette.rdFgA3
+            color: (control.framed || control.prefix !== "") ? control.rdPalette.rdFgA2 : control.rdPalette.rdFgA3
             selectionColor: control.rdPalette.rdAccentMain
             selectedTextColor: control.rdPalette.rdFgB1
             cursorDelegate: Rectangle {
@@ -121,6 +141,18 @@ T.Control {
                 focus = false
                 event.accepted = true
             }
+        }
+
+        Text {
+            id: suffixText
+
+            visible: control.suffix !== ""
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            text: " " + control.suffix
+            font.family: VLCStyle.rd_fontFamily
+            font.pixelSize: control.fontSize
+            color: control.rdPalette.rdFgA4
         }
 
         Rectangle {

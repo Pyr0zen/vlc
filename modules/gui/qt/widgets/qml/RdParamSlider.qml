@@ -49,6 +49,7 @@ ColumnLayout {
     property alias zeroValue: slider.zeroValue
     property alias showTicks: slider.showTicks
     property alias tickIntervals: slider.tickIntervals
+    property alias dimmed: slider.dimmed
     property alias labels: slider.labels
     readonly property alias pressed: slider.pressed
 

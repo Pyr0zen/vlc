@@ -34,6 +34,9 @@ T.Slider {
     property bool bipolar: false
     property real zeroValue: 0
     property bool showTicks: stepSize > 0 && (to - from) / stepSize <= 40
+    // the setting's filter is off: Figma draws the slider in luminosity blend (614:1472), a gray
+    // thumb and fill; moving it still works (and turns the filter on)
+    property bool dimmed: false
     // intervals between the ticks (default: one per step)
     property int tickIntervals: stepSize > 0 ? Math.round((to - from) / stepSize) : 0
     // labels under the track, spread from the left end to the right end (Figma "Frame 205")
@@ -84,7 +87,7 @@ T.Slider {
                 width: Math.max(control.bipolar ? 0 : VLCStyle.dp(8), Math.abs(thumbX - zeroX))
                 height: track.height - 2 * control._inset
                 radius: VLCStyle.rd_radius_small
-                color: control.rdPalette.rdBgAccentBright
+                color: control.dimmed ? control.rdPalette.rdBgA1 : control.rdPalette.rdBgAccentBright
             }
 
             // Figma "degrees" (5187:24548, 848:1693): 2x6 ticks in BG/Accent Dark on the fill and
@@ -139,7 +142,8 @@ T.Slider {
         width: VLCStyle.dp(8)
         height: VLCStyle.dp(24)
         radius: VLCStyle.rd_radius_small
-        color: (control.pressed || control.hovered || control.visualFocus) ? control.rdPalette.rdAccentMain
-                                                                           : control.rdPalette.rdAccentDim
+        color: (control.pressed || control.hovered || control.visualFocus)
+               ? (control.dimmed ? control.rdPalette.rdFgA2 : control.rdPalette.rdAccentMain)
+               : (control.dimmed ? control.rdPalette.rdFgA3 : control.rdPalette.rdAccentDim)
     }
 }
