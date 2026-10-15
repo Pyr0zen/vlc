@@ -29,6 +29,11 @@ import VLC.Style
 T.AbstractButton {
     id: row
 
+    // the pointing hand over the clickable controls
+    HoverHandler {
+        cursorShape: Qt.PointingHandCursor
+    }
+
     property int number: 0
     property string title: ""
     property string detail: ""

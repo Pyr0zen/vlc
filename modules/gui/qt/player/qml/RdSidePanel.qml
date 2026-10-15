@@ -141,6 +141,11 @@ Widgets.RdPanel {
                 delegate: T.AbstractButton {
                     id: tab
 
+                    // the pointing hand over the clickable controls
+                    HoverHandler {
+                        cursorShape: Qt.PointingHandCursor
+                    }
+
                     required property var modelData
                     required property int index
                     readonly property bool active: root.currentKey === modelData.key

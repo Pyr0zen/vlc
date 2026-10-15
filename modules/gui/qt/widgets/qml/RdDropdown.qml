@@ -30,6 +30,11 @@ import VLC.Style
 T.ComboBox {
     id: control
 
+    // the pointing hand over the clickable controls
+    HoverHandler {
+        cursorShape: Qt.PointingHandCursor
+    }
+
     property bool openUpward: false
     property int maxVisibleRows: 7
     // a list without a frame or inner row: BG/B1, FG/A3 text (Figma "Gradient" 673:1670)

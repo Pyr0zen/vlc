@@ -124,6 +124,11 @@ Item {
                     delegate: T.AbstractButton {
                         id: tabButton
 
+                        // the pointing hand over the clickable controls
+                        HoverHandler {
+                            cursorShape: Qt.PointingHandCursor
+                        }
+
                         required property var modelData
                         required property int index
                         readonly property bool active: root.tab === modelData.key
@@ -343,6 +348,11 @@ Item {
     // one selectable row: accent check on the left, label FG/2 (selected or hovered) or FG/A1, 32 px
     component TrackRow: T.AbstractButton {
         id: row
+
+        // the pointing hand over the clickable controls
+        HoverHandler {
+            cursorShape: Qt.PointingHandCursor
+        }
 
         property bool selected: false
         property string label: ""

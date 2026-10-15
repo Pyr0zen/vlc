@@ -454,6 +454,11 @@ SettingsPage {
     component VolumeChoice: T.AbstractButton {
         id: choice
 
+        // the pointing hand over the clickable controls
+        HoverHandler {
+            cursorShape: Qt.PointingHandCursor
+        }
+
         property bool selected: false
 
         implicitHeight: VLCStyle.dp(36)

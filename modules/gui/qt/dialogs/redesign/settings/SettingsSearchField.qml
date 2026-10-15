@@ -89,6 +89,11 @@ T.TextField {
     T.AbstractButton {
         id: clearButton
 
+        // the pointing hand over the clickable controls
+        HoverHandler {
+            cursorShape: Qt.PointingHandCursor
+        }
+
         visible: control.text !== ""
         anchors.right: parent.right
         anchors.rightMargin: VLCStyle.dp(4)

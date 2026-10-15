@@ -58,6 +58,11 @@ Rectangle {
         T.AbstractButton {
             id: header
 
+            // the pointing hand over the clickable controls
+            HoverHandler {
+                cursorShape: Qt.PointingHandCursor
+            }
+
             anchors.horizontalCenter: parent.horizontalCenter
             implicitWidth: headerRow.implicitWidth + VLCStyle.dp(12)
             implicitHeight: VLCStyle.dp(24)

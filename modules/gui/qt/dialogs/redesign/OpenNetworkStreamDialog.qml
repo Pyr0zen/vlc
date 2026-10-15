@@ -227,6 +227,11 @@ T.Popup {
             T.Button {
                 id: closeButton
 
+                // the pointing hand over the clickable controls
+                HoverHandler {
+                    cursorShape: Qt.PointingHandCursor
+                }
+
                 anchors.right: parent.right
                 anchors.rightMargin: VLCStyle.dp(9, VLCStyle.scale)
                 anchors.verticalCenter: parent.verticalCenter

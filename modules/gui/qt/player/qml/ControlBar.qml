@@ -341,8 +341,11 @@ T.Pane {
                     }
                 }
 
+                // clickable (length / remaining time): the pointing hand
                 HoverHandler {
                     id: mediaRemainingTimeHover
+
+                    cursorShape: Qt.PointingHandCursor
                 }
 
                 Widgets.ToolTipExt {

@@ -28,6 +28,11 @@ import VLC.Util
 T.ToolButton {
     id: control
 
+    // the pointing hand over the clickable controls
+    HoverHandler {
+        cursorShape: Qt.PointingHandCursor
+    }
+
     // Properties
 
     property bool paintOnly: false

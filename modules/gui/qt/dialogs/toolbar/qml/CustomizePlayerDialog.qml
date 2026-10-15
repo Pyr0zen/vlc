@@ -608,6 +608,11 @@ T.Popup {
     component HeaderButton: T.Button {
         id: headerButton
 
+        // the pointing hand over the clickable controls
+        HoverHandler {
+            cursorShape: Qt.PointingHandCursor
+        }
+
         property string iconName: ""
 
         implicitWidth: VLCStyle.dp(32)
@@ -670,6 +675,11 @@ T.Popup {
 
                 delegate: T.Button {
                     id: tab
+
+                    // the pointing hand over the clickable controls
+                    HoverHandler {
+                        cursorShape: Qt.PointingHandCursor
+                    }
 
                     required property int index
                     required property var modelData

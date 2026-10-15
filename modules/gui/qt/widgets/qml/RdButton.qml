@@ -37,6 +37,11 @@ import VLC.Style
 T.Button {
     id: control
 
+    // the pointing hand over the clickable controls
+    HoverHandler {
+        cursorShape: Qt.PointingHandCursor
+    }
+
     enum Style { Standard, Save, Primary, Bar, Plain, Destructive, Link }
 
     property int style: RdButton.Style.Standard

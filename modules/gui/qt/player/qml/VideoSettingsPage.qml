@@ -170,6 +170,11 @@ RdSidePanelPage {
             T.AbstractButton {
                 id: renderButton
 
+                // the pointing hand over the clickable controls
+                HoverHandler {
+                    cursorShape: Qt.PointingHandCursor
+                }
+
                 implicitWidth: VLCStyle.dp(220)
                 implicitHeight: VLCStyle.dp(48)
 

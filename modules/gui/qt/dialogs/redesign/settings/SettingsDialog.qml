@@ -421,6 +421,11 @@ Item {
                 T.AbstractButton {
                     id: closeButton
 
+                    // the pointing hand over the clickable controls
+                    HoverHandler {
+                        cursorShape: Qt.PointingHandCursor
+                    }
+
                     anchors.right: parent.right
                     anchors.rightMargin: VLCStyle.dp(14)
                     anchors.verticalCenter: parent.verticalCenter

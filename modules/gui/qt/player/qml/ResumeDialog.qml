@@ -222,6 +222,11 @@ FocusScope {
         T.Button {
             id: closeBtn
 
+            // the pointing hand over the clickable controls
+            HoverHandler {
+                cursorShape: Qt.PointingHandCursor
+            }
+
             Layout.alignment: Qt.AlignVCenter
             implicitWidth: VLCStyle.dp(44, VLCStyle.scale)
             implicitHeight: VLCStyle.dp(32, VLCStyle.scale)

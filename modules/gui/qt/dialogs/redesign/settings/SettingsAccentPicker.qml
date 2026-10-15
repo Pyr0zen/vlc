@@ -83,6 +83,11 @@ Rectangle {
             delegate: T.AbstractButton {
                 id: cell
 
+                // the pointing hand over the clickable controls
+                HoverHandler {
+                    cursorShape: Qt.PointingHandCursor
+                }
+
                 required property int index
 
                 readonly property bool selected: root.currentIndex === index

@@ -129,6 +129,8 @@ T.Control {
         anchors.fill: parent
 
         hoverEnabled: true
+        // redesign: the pointing hand over the clickable controls
+        cursorShape: root.paintOnly ? undefined : Qt.PointingHandCursor
 
         onPressed: (mouse) => {
             if (root.paintOnly) {

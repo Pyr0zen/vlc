@@ -30,6 +30,11 @@ import VLC.Widgets as Widgets
 T.AbstractButton {
     id: control
 
+    // the pointing hand over the clickable controls
+    HoverHandler {
+        cursorShape: Qt.PointingHandCursor
+    }
+
     // Figma icon name (pixmaps/redesign/<icon>.svg)
     property string iconName: ""
     property bool selected: false
