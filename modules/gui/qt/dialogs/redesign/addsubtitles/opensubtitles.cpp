@@ -229,7 +229,8 @@ QByteArray OpenSubtitles::download(vlc_object_t* obj, const Account& account, qi
     const QString link = answer.value(QStringLiteral("link")).toString();
     if (fileName)
         *fileName = answer.value(QStringLiteral("file_name")).toString();
-    if (link.isEmpty())
+    // the file comes from OpenSubtitles' servers: HTTPS only, like the API
+    if (link.isEmpty() || !link.startsWith(QLatin1String("https://"), Qt::CaseInsensitive))
     {
         if (error)
             *error = statusError(reply);
