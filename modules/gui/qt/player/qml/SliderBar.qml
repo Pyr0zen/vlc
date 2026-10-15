@@ -119,15 +119,20 @@ T.ProgressBar {
     }
 
     // above every bar and panel of the window, centered on the pointer, its bottom edge
-    // rd_seekPreviewGap above the bar, kept inside the window
+    // rd_seekPreviewGap above the bar, kept inside the window. It joins the window overlay
+    // only while shown (an overlay with children stays visible over the whole window)
+    readonly property Item _windowOverlay: T.Overlay.overlay
+
     RdSeekPreview {
         id: seekPreview
 
-        parent: T.Overlay.overlay
-        visible: control._previewShown && !!parent
+        readonly property Item _overlay: control._previewShown ? control._windowOverlay : null
 
-        readonly property point _anchor: (visible && parent) ? control.mapToItem(parent, control._scrubX, 0)
-                                                             : Qt.point(0, 0)
+        parent: _overlay ?? control
+        visible: !!_overlay
+
+        readonly property point _anchor: _overlay ? control.mapToItem(_overlay, control._scrubX, 0)
+                                                  : Qt.point(0, 0)
 
         x: Helpers.clamp(_anchor.x - width / 2, VLCStyle.rd_seekPreviewEdgeMargin,
                          (parent ? parent.width : 0) - width - VLCStyle.rd_seekPreviewEdgeMargin)
