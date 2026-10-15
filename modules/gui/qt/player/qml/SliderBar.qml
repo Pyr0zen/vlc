@@ -107,6 +107,13 @@ T.ProgressBar {
             RdSeekThumbnailer.request(control.scrubPosition)
     }
 
+    // a bar removed while its card is shown (control bar layout change, player page closed)
+    // leaves no request running
+    Component.onDestruction: {
+        if (control._previewShown)
+            RdSeekThumbnailer?.stop()
+    }
+
     // frames are made at the card's size in device pixels
     readonly property real _devicePixelRatio: Screen.devicePixelRatio
 
@@ -114,6 +121,8 @@ T.ProgressBar {
         target: RdSeekThumbnailer
         property: "frameSize"
         when: control.thick
+        // several thick bars may exist: none puts back an older size when it goes
+        restoreMode: Binding.RestoreNone
         value: Qt.size(Math.round(VLCStyle.rd_seekPreviewPictureWidth * control._devicePixelRatio),
                        Math.round(VLCStyle.rd_seekPreviewPictureHeight * control._devicePixelRatio))
     }
