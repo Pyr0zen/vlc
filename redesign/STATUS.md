@@ -32,7 +32,7 @@ a66c6eec71 Merge the Settings dialog category pages (W6.2) with integration and 
 - Redesign motion scenarios skipped (VLC lost the foreground); rerun when Sticky is away. Write into PERF.md.
 
 ## Open branches (all backed up on origin as wip/<id>, none merged)
-1. wip/a84f3cfa07ac47ba6 UX leftovers (menu closes before dialogs, N2-N5, toggle hover, cursors, tooltips, queue drag ghost IB-15, plus the 4 bugs above): stopped mid-work, check its last commits, finish, review, merge.
+1. wip/a84f3cfa07ac47ba6 UX leftovers: done except bug 4 (right-click on the seek bar: SliderBar.qml tap/drag handlers block the bar's right-click handler, Player.qml ~2042). Includes a C++ change (DialogsProvider dialogOpening signal, never compiled). Needs an independent review, then merge.
 2. wip/a1e06ae1c89fa4775 W3.3b seek preview thumbnails: done, reviewed. Fix before merging: M1 (cancelled request clears the wanted bucket, rd_seek_thumbnailer.cpp:492-498: clear m_wanted only for non-cancelled results), M2 (length change resets cache and stops preview, :238 and :288-295: keep item/cache on same URI), LOWs L1-L9 in the review (stale threshold 600-1000 ms, re-check on throttle tick, timeouts count double, one image_handler per thread, setSupported(false) when the preparser fails, stop on SliderBar destruction, notes wording).
 3. wip/a9364ffaea8630df4 Step 2 Settings rows S2-02..S2-10 and S2-03 (own tray popup): done, NOT reviewed. Needs an independent review (C++ never compiled), then merge and build. Night mode is ready for Sticky's listening test once built (Decision 38).
 
