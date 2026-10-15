@@ -33,12 +33,14 @@
 
 namespace {
 
-// options that are not settings of a profile: the first-run question, and the last volume of
-// each audio output (a state, kept per output)
+// options that are not settings of a profile: the first-run question, the play queue's
+// shuffle and repeat (states the interface writes on every click of its buttons, which would
+// otherwise follow the profile and ask for a restart), and the last volume of each audio output
+// (a state, kept per output)
 const QSet<QByteArray>& excludedOptions()
 {
     static const QSet<QByteArray> names {
-        "qt-privacy-ask", "mmdevice-volume", "waveout-volume", "directx-volume", "alsa-gain",
+        "qt-privacy-ask", "random", "loop", "repeat", "mmdevice-volume", "waveout-volume", "directx-volume", "alsa-gain",
         "pulse-volume", "auhal-volume", "sndio-volume", "oss-volume", "jack-gain",
     };
     return names;
