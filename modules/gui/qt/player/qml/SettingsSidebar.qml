@@ -65,10 +65,14 @@ RdSidePanel {
         sourceComponent: SubtitleSettingsPage { }
     }
 
-    // Figma "Button": 360x32, BG/B2, 20 px gear, FG/A3 text
+    // Figma "playback" (5187:24308) has no footer; the other tabs keep "Frame 68" (812:1580)
+    footerVisible: currentKey !== "playback"
+
+    // Figma "Button" 812:1585: 360x32 with its fill cleared (video 7:58: no button), 20 px gear,
+    // FG/A3 text, FG/A2 on hover (Decision (Sticky) 43)
     footer: Widgets.RdButton {
         width: root.width - 2 * VLCStyle.dp(20)
-        style: Widgets.RdButton.Style.Bar
+        style: Widgets.RdButton.Style.Link
         rdIcon: "settings"
         text: qsTr("Open Advanced Settings")
         // opens the Settings dialog on the matching category (Figma prototype, F-08)

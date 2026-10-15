@@ -46,6 +46,8 @@ Widgets.RdPanel {
     property string currentKey: ""
     default property alias pages: pageHost.data
     property alias footer: footerHost.data
+    // false hides the footer on a tab that has none in Figma
+    property bool footerVisible: true
 
     signal tabClicked(string key)
 
@@ -189,8 +191,9 @@ Widgets.RdPanel {
     Item {
         id: footerArea
 
-        readonly property bool used: footerHost.children.length > 0
+        readonly property bool used: root.footerVisible && footerHost.children.length > 0
 
+        visible: used
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: parent.bottom
