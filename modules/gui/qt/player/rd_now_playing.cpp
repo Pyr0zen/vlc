@@ -21,10 +21,12 @@
 
 #include "rd_now_playing.hpp"
 
+#include <QDir>
 #include <QStringList>
 #include <QUrl>
 
 #include <vlc_media_library.h>
+#include <vlc_url.h>
 
 #include "maininterface/mainctx.hpp"
 #include "medialibrary/medialib.hpp"
@@ -35,6 +37,24 @@ namespace {
 
 // a library with many playlists is not read through for one name
 constexpr size_t kMaxPlaylists = 200;
+
+// the library keeps the MRL VLC made from the path (vlc_path2uri encodes more characters than
+// QUrl, e.g. the brackets of "Show (2020).mkv"): both spellings are asked
+QList<QByteArray> mrlCandidates(const QUrl& url, const QString& mrl)
+{
+    QList<QByteArray> candidates { mrl.toUtf8() };
+    if (url.isLocalFile())
+    {
+        if (char* uri = vlc_path2uri(qtu(QDir::toNativeSeparators(url.toLocalFile())), "file"))
+        {
+            const QByteArray vlcMrl(uri);
+            free(uri);
+            if (!candidates.contains(vlcMrl))
+                candidates.append(vlcMrl);
+        }
+    }
+    return candidates;
+}
 
 } // namespace
 
@@ -93,11 +113,17 @@ void RdNowPlaying::query()
         QString playlistName;
     };
 
-    const QByteArray mrl = m_mrl.toUtf8();
+    const QList<QByteArray> candidates = mrlCandidates(m_player->getUrl(), m_mrl);
     const int generation = m_generation;
     mediaLib->runOnMLThread<Ctx>(this,
-    [mrl](vlc_medialibrary_t* ml, Ctx& ctx) {
-        ml_unique_ptr<vlc_ml_media_t> media(vlc_ml_get_media_by_mrl(ml, mrl.constData()));
+    [candidates](vlc_medialibrary_t* ml, Ctx& ctx) {
+        ml_unique_ptr<vlc_ml_media_t> media;
+        for (const QByteArray& mrl : candidates)
+        {
+            media.reset(vlc_ml_get_media_by_mrl(ml, mrl.constData()));
+            if (media)
+                break;
+        }
         if (!media)
             return;
         ctx.mediaId = media->i_id;
