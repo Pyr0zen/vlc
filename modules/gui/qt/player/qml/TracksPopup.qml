@@ -406,7 +406,14 @@ Item {
         property var model
         property bool tracks: true
 
+        // bumped when a row is created, removed or (un)selected: the rows can be created after
+        // the count changed (asynchronous creation of a prewarmed panel), so a binding over
+        // rows.itemAt() alone could miss them and keep "None" checked next to a track
+        property int _selectionRevision: 0
+
         readonly property bool _anySelected: {
+            if (list._selectionRevision < 0)
+                return false
             for (let i = 0; i < rows.count; ++i) {
                 const item = rows.itemAt(i)
                 if (item && item.selected)
@@ -440,11 +447,15 @@ Item {
 
             model: list.model
 
+            onItemAdded: list._selectionRevision += 1
+            onItemRemoved: list._selectionRevision += 1
+
             delegate: TrackRow {
                 required property var model
                 required property int index
 
                 selected: !!model.checked
+                onSelectedChanged: list._selectionRevision += 1
                 label: list.tracks ? String(model.display).replace(/ - \[(.*)\]$/, " - $1") : model.display
 
                 onClicked: model.checked = true
