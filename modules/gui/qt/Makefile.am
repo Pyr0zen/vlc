@@ -331,6 +331,12 @@ libqt_plugin_la_SOURCES = \
 	player/rd_waveform_item.hpp \
 	player/rd_waveform_scanner.cpp \
 	player/rd_waveform_scanner.hpp \
+	player/rd_now_playing.cpp \
+	player/rd_now_playing.hpp \
+	dialogs/toolbar/rd_profiles.cpp \
+	dialogs/toolbar/rd_profiles.hpp \
+	dialogs/toolbar/rd_profile_settings.cpp \
+	dialogs/toolbar/rd_profile_settings.hpp \
 	player/rd_media_info.cpp \
 	player/rd_media_info.hpp \
 	player/rd_presets.cpp \
@@ -552,6 +558,8 @@ nodist_libqt_plugin_la_SOURCES = \
 	player/rd_seek_thumbnailer.moc.cpp \
 	player/rd_waveform.moc.cpp \
 	player/rd_waveform_item.moc.cpp \
+	player/rd_now_playing.moc.cpp \
+	dialogs/toolbar/rd_profiles.moc.cpp \
 	player/rd_media_info.moc.cpp \
 	player/rd_presets.moc.cpp \
 	player/input_models.moc.cpp \
@@ -1342,9 +1350,11 @@ libqml_module_dialogs_a_QML = \
 	dialogs/toolbar/qml/CustomizePalette.qml \
 	dialogs/toolbar/qml/CustomizePaletteTile.qml \
 	dialogs/toolbar/qml/CustomizeBar.qml \
+	dialogs/toolbar/qml/CustomizeTopBar.qml \
 	dialogs/toolbar/qml/CustomizeZone.qml \
 	dialogs/toolbar/qml/CustomizeZoneItem.qml \
 	dialogs/toolbar/qml/CustomizeNamePrompt.qml \
+	dialogs/toolbar/qml/RdProfileNotice.qml \
 	dialogs/redesign/settings/SettingsAdvancedBar.qml \
 	dialogs/redesign/settings/SettingsCategoryButton.qml \
 	dialogs/redesign/settings/SettingsDialog.qml \
@@ -1534,6 +1544,7 @@ libqml_module_player_a_QML = \
 	player/qml/ResumeDialog.qml \
 	player/qml/SliderBar.qml \
 	player/qml/TopBar.qml \
+	player/qml/RdTopBarZone.qml \
 	player/qml/TracksMenu.qml \
 	player/qml/TracksPopup.qml \
 	player/qml/RdSidePanel.qml \
@@ -1620,6 +1631,30 @@ libqml_module_playercontrols_a_QML = \
 	player/qml/controlbarcontrols/TeletextColorButton.qml \
 	player/qml/controlbarcontrols/TeletextWidget.qml \
 	player/qml/controlbarcontrols/VolumeWidget.qml \
+	player/qml/controlbarcontrols/AddBookmarkButton.qml \
+	player/qml/controlbarcontrols/ArtistNameWidget.qml \
+	player/qml/controlbarcontrols/ChaptersButton.qml \
+	player/qml/controlbarcontrols/ChoiceMenuButton.qml \
+	player/qml/controlbarcontrols/DividerWidget.qml \
+	player/qml/controlbarcontrols/FavoriteButton.qml \
+	player/qml/controlbarcontrols/FileNameWidget.qml \
+	player/qml/controlbarcontrols/FolderChipWidget.qml \
+	player/qml/controlbarcontrols/FolderNameWidget.qml \
+	player/qml/controlbarcontrols/HdrButton.qml \
+	player/qml/controlbarcontrols/HomeButton.qml \
+	player/qml/controlbarcontrols/LibraryButton.qml \
+	player/qml/controlbarcontrols/MainMenuButton.qml \
+	player/qml/controlbarcontrols/MediaTitleWidget.qml \
+	player/qml/controlbarcontrols/PlaylistNameWidget.qml \
+	player/qml/controlbarcontrols/PlaylistsButton.qml \
+	player/qml/controlbarcontrols/ReplayButton.qml \
+	player/qml/controlbarcontrols/RightSidebarButton.qml \
+	player/qml/controlbarcontrols/SettingsButton.qml \
+	player/qml/controlbarcontrols/SkipBack10Button.qml \
+	player/qml/controlbarcontrols/SkipForward10Button.qml \
+	player/qml/controlbarcontrols/TextInfoWidget.qml \
+	player/qml/controlbarcontrols/ThumbnailWidget.qml \
+	player/qml/controlbarcontrols/ZoomButton.qml \
 	player/qml/controlbarcontrols/Fallback.qml
 libqml_module_playercontrols_a_Singleton_QML =
 libqml_module_playercontrols_a_SOURCES = $(QML_MODULE_playercontrols_SRC)
