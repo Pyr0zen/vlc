@@ -140,9 +140,33 @@ SettingsPage {
             text: qsTr("Enable audio")
         }
 
+        // VLC's outputs declare no device list: the devices of the running output, as in the
+        // tracks popup (Player.audioDevices); the default device (empty id) reads "System
+        // default" (Figma). Choosing one switches the output now and is kept for the next start
         SettingsOption {
+            id: deviceRow
+
+            property int _revision: 0
+
             option: root._deviceOption
             text: qsTr("Output device")
+            kind: "dropdown"
+            choices: {
+                void _revision
+                const devices = Player.audioDevices.devices()
+                if (!devices.some((d) => d.value === ""))
+                    devices.unshift({ value: "", text: "" })
+                return devices.map((d) => d.value === "" ? { value: "", text: qsTr("System default") } : d)
+            }
+            onApplied: (value) => Player.audioDevices.select(String(value))
+
+            Connections {
+                target: Player.audioDevices
+
+                function onModelReset() { ++deviceRow._revision }
+                function onRowsInserted() { ++deviceRow._revision }
+                function onRowsRemoved() { ++deviceRow._revision }
+            }
         }
 
         SettingsOption {

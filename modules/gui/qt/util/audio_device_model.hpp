@@ -53,6 +53,13 @@ public:
     // redesign: re-read the output devices (refresh button of the tracks popup, video 4:41)
     Q_INVOKABLE void refresh();
 
+    // redesign: the devices as [{ value: id, text: name }] for the Settings dialog's "Output
+    // device" dropdown (Figma "Settings - audio"); the default device has an empty id
+    Q_INVOKABLE QVariantList devices() const;
+
+    // redesign: switches the output to the device `id` (one of devices())
+    Q_INVOKABLE void select(const QString &id);
+
 private:
     int m_inputs = 0;
     char **m_names = nullptr;

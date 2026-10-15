@@ -165,6 +165,21 @@ void AudioDeviceModel::refresh()
     endResetModel();
 }
 
+QVariantList AudioDeviceModel::devices() const
+{
+    QVariantList list;
+    for (int i = 0; i < m_inputs; i++)
+        list << QVariantMap{ { QStringLiteral("value"), qfu(m_ids[i]) },
+                             { QStringLiteral("text"), qfu(m_names[i]) } };
+    return list;
+}
+
+void AudioDeviceModel::select(const QString &id)
+{
+    if (m_aout)
+        aout_DeviceSet(m_aout, qtu(id));
+}
+
 QHash<int, QByteArray> AudioDeviceModel::roleNames() const
 {
     return QHash<int, QByteArray>{

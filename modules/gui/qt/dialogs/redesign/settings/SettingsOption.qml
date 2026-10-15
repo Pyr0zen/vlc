@@ -109,8 +109,12 @@ SettingsRow {
     // a slider being dragged: the interface reads the value once it is released
     property bool _dragging: false
 
+    // a value chosen in the row, after it was written to VLC's configuration
+    signal applied(var value)
+
     function apply(v) {
         RdEffects.setOption(option, v)
+        applied(v)
         if (_readByInterface && !_dragging)
             _reloadPending = true
     }
