@@ -65,9 +65,13 @@ RdSidePanelPage {
         title: qsTr("Defaults")
         showDivider: false
 
+        // Figma "Frame 106" / "Frame 61" (6114:13496): the label 26 px under the header (row 29 at
+        // 20), 14 px to the segments (63 under the header)
         Widgets.RdSettingRow {
             text: qsTr("Flip")
-            rowHeight: VLCStyle.dp(37)
+            Layout.topMargin: VLCStyle.dp(10)
+            rowHeight: VLCStyle.dp(29)
+            spacing: VLCStyle.dp(14)
 
             below: Widgets.RdSegmented {
                 width: parent.width
@@ -89,8 +93,10 @@ RdSidePanelPage {
             }
         }
 
+        // "Frame 110": 21 px under the segments
         Widgets.RdSettingRow {
             text: qsTr("Rotate")
+            Layout.topMargin: VLCStyle.dp(16)
 
             Widgets.RdValueBox {
                 text: Math.round(root._rotation) + " " + qsTr("deg")
@@ -324,10 +330,10 @@ RdSidePanelPage {
         }
     }
 
-    // label on the left, a 220 px dropdown on the right (Figma "video settings": rows 68 px
-    // apart, i.e. 63 plus the 5 px row spacing)
+    // label on the left, a 220 px dropdown on the right (Figma "Frame 112" / "Frame 115": the
+    // 48 px dropdown 20 px under the row above, 68 px apart; 15 + the 5 px row spacing)
     component DropdownRow: Widgets.RdSettingRow {
-        rowHeight: VLCStyle.dp(63)
+        Layout.topMargin: VLCStyle.dp(15)
     }
 
     // dropdown over the choices VLC declares for an option
