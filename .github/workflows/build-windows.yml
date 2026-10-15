@@ -10,6 +10,9 @@ on:
     paths-ignore:
       - 'redesign/**'
       - 'CLAUDE.md'
+      - 'README.md'
+      - 'CREDITS.md'
+      - 'docs/**'
       - '.github/ISSUE_TEMPLATE/**'
   workflow_dispatch: {}
 

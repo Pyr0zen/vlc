@@ -1,10 +1,132 @@
 **Juxtopposed's VLC Redesign, fully working on real VLC 4.** Not a skin: a new player, sidebars, library and settings, on the same VLC engine.
 
+![VLC Redesign: the library with the mini player (Figma design by Juxtopposed)](docs/images/hero.png)
+
+<sub>Images on this page are frames of Juxtopposed's Figma design, which this build implements. Screenshots of the build itself are added next to them as each area is verified.</sub>
+
 > **About this fork:** this is an unofficial redesign of VLC's interface based on
 > ["VLC Redesign" by Juxtopposed](https://www.figma.com/community/file/1691465999134370980/vlc-redesign)
 > ([video](https://youtu.be/ERFeOgqk324)); the Figma design is used under
 > [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). This project is not affiliated with
 > VideoLAN or with Juxtopposed. See [CREDITS.md](CREDITS.md).
+
+## What's built
+
+Built on VLC master (VLC 4, Qt 6 / QML). Everything below runs on VLC's real data and engine; nothing is a mockup.
+
+| Area | Status | What it covers |
+|---|---|---|
+| Player | Done | Thin control bar, thick seek bar, cone volume 0-200 %, click-to-type time, bars that fade in a window and show per edge in fullscreen, Hide UI, inset video frame, resume prompt |
+| Tracks popup | Done | Subtitles / Audio / Video tabs with embedded and external tracks and output devices |
+| Settings sidebar | Done | Playback, Video, Audio and Subtitles tabs: speed, flip / rotate / zoom / crop, equalizer and filters, subtitle sync sliders and appearance |
+| Queue sidebar | Done | Queue, Bookmarks and Chapters tabs |
+| Menus | Done | Main "..." menu and right-click menu, final Figma versions, wired to real actions |
+| Library | Done | Icon rail, compact panel over the video and full window, Home with Continue Watching and Latest Streams, Videos, Music (songs, albums, artists, genres, music player view), Network streams, Playlists, Recent, pins, watched / unwatched sorting |
+| Mini player | Done | Mini player with its attached queue, draggable to the corners |
+| Settings dialog | Done | All 13 categories mapped to VLC's own options, search, info popovers, Advanced Options |
+| Dialogs | Done | Keyboard Shortcuts, Open Network Stream, open dialogs split and restyled |
+| Customize Player | Done | Restyled toolbar editor |
+| Onboarding | Done | Welcome and media folder, theme and accent color with live recolor, shortcuts |
+| Themes | Done | Dark, Light, 9 accent colors |
+| Seek preview thumbnails | In progress | Thumbnail above the seek bar while hovering |
+| Settings rows VLC has no option for | In progress | Night mode, own tray popup and the other rows shown in the design |
+| Subtitle sync without stalls | In progress | Changing subtitle speed or delay no longer freezes the video (small core change, own build) |
+| Playback tab extras | Planned | Sleep timer, Show Statistics, Show Metadata panel |
+| Per-show presets | Planned | One preset per show across all tabs |
+| Add Subtitles dialog | Planned | File, folder or playlist targets, episode auto-matching, from link or OpenSubtitles |
+| Subtitle timeline, waveform seek bar | Planned | On the seek bar |
+| Profiles, new Customize controls | Planned | Layouts and settings per profile |
+| Release | Planned | Installer and portable zip on GitHub Releases |
+
+## The design being built
+
+Every screen below exists in this build and runs on VLC's real data. Side by side screenshots of the build are added here as each area is verified.
+
+| | |
+|---|---|
+| **Player**<br><img src="docs/images/figma-player.png" alt="Player"> | **Home**<br><img src="docs/images/figma-home.png" alt="Home"> |
+| **Library and mini player**<br><img src="docs/images/figma-library.png" alt="Library and mini player"> | **Compact library**<br><img src="docs/images/figma-sidebar.png" alt="Compact library"> |
+| **Settings**<br><img src="docs/images/figma-settings.png" alt="Settings"> | **Customize Player**<br><img src="docs/images/figma-customize.png" alt="Customize Player"> |
+| **Onboarding**<br><img src="docs/images/figma-onboarding.png" alt="Onboarding"> | **Keyboard Shortcuts**<br><img src="docs/images/figma-shortcuts.png" alt="Keyboard Shortcuts"> |
+| **Light theme**<br><img src="docs/images/figma-light.png" alt="Light theme"> | |
+
+## Design system
+
+The icons and colors come straight from the Figma file. In the Light theme, FG/1, FG/2 and FG/A4 are
+corrected here (the Figma file repeats the dark values there).
+
+<p align="center"><img src="docs/images/figma-palette.png" width="49%" alt="Color palette"> <img src="docs/images/figma-icons.png" width="35%" alt="Icon set"></p>
+
+## Roadmap
+
+- [x] Windows build on GitHub Actions
+- [x] Colors, fonts, icons and component kit
+- [x] Player: top bar, control bar, seek bar, cone volume, bars show / hide
+- [x] Tracks popup, settings sidebar, queue / bookmarks / chapters sidebar
+- [x] Main menu and right-click menu
+- [x] Library: home, videos, music, network streams, playlists, recent, pins, mini player
+- [x] Settings dialog, Keyboard Shortcuts, Open Network Stream
+- [x] Customize Player, onboarding, light theme and accent colors
+- [ ] Seek preview thumbnails
+- [ ] Settings rows VLC has no option for (night mode and the rest)
+- [ ] Sleep timer, statistics, metadata panel, Ctrl+B bookmarks
+- [ ] Per-show presets
+- [ ] Add Subtitles dialog with episode auto-matching
+- [ ] Subtitle timeline and waveform seek bar
+- [ ] On-screen messages show the pressed shortcut
+- [ ] Profiles and new Customize controls
+- [ ] Installer and portable zip on GitHub Releases
+
+## FAQ
+
+**Can I download it?**
+Not as a release yet. Every push builds a Windows 64-bit package on GitHub Actions: open the
+[build-windows workflow](https://github.com/Pyr0zen/vlc-redesign-juxtopposed/actions/workflows/build-windows.yml),
+pick the latest green run and download the `vlc-redesign-win64` artifact (needs a GitHub login).
+It tracks VLC 4 development code, so treat it as experimental. An installer and a portable zip
+will come on the Releases page.
+
+**Is this official?**
+No. It is an independent, unofficial project, not affiliated with, endorsed or sponsored by
+VideoLAN or by Juxtopposed. The design is Juxtopposed's, used under CC BY 4.0.
+
+**Does it change how VLC plays media?**
+No. Playback, codecs and the engine are VLC's own. The work is in VLC's Qt interface
+(`modules/gui/qt`); the few small core changes a feature truly needs are kept separate and listed
+in `redesign/VIDEO_INDEX.md`.
+
+**How was it built?**
+With Claude Code, working from the Figma file (every size, color and spacing taken from its node
+values) and the designer's video for behavior. Each change is checked with real screenshots of the
+build side by side with the Figma frames, plus a usability pass.
+
+**Is it as fast as stock VLC?**
+That is the first rule of the project, measured every round against stock VLC 4 on the same PC
+([redesign/PERF.md](redesign/PERF.md)). Latest round: startup about 1 s for both, playing at
+0.1 % CPU and about 310 MB RAM for both, 4K60 at 80 Mbit/s with the same dropped frames as stock,
+and a 520-item queue that scrolls at least as smoothly as stock.
+
+## How to build
+
+The build runs on GitHub Actions with VideoLAN's own Windows toolchain image and build script
+(`extras/package/win32/build.sh`), the same as VLC's official win64 CI job. To build your own:
+fork this repository, enable Actions on the fork and run the **build-windows** workflow
+(`.github/workflows/build-windows.yml`); the artifact is a ready-to-run VLC folder. Building
+VLC itself is documented on the [VideoLAN wiki](https://wiki.videolan.org/Win32Compile/).
+
+## Credits
+
+- Design: ["VLC Redesign" by Juxtopposed](https://www.figma.com/community/file/1691465999134370980/vlc-redesign)
+  ([video](https://youtu.be/ERFeOgqk324)), CC BY 4.0.
+- VLC media player by VideoLAN and its contributors, GPLv2 or later (libVLC LGPLv2 or later).
+- Fonts: Inter and DM Mono, SIL Open Font License.
+- Built by Pyr0zen (Sticky). Details in [CREDITS.md](CREDITS.md).
+
+---
+
+# About VLC
+
+*VideoLAN's original README follows.*
 
 # VLC media player
 
