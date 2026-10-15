@@ -61,6 +61,9 @@ T.Slider {
     // the ticks and labels belong to values (zeroValue / labelAnchor + n steps), not to fixed
     // places on the track: they scroll when from..to moves (RdEndlessSlider)
     property bool scaleScrolls: false
+    // the scale has scrolled away from its normal view: the zero edge label may show (never in
+    // the normal view, which stays as in Figma even when the zero value lies outside it)
+    property bool scrolled: false
     // no label for a value the slider cannot reach (an endless slider's window may start before
     // VLC's lowest value)
     property real labelMin: -Infinity
@@ -105,9 +108,9 @@ T.Slider {
     readonly property real _valueEpsilon: (to - from) * 1e-6
 
     // where the zero value lies while the scale has scrolled it out of view: -1 left, 1 right
-    readonly property int _zeroSide: !scaleScrolls ? 0
-                                                   : zeroValue < from - _valueEpsilon ? -1
-                                                   : zeroValue > to + _valueEpsilon ? 1 : 0
+    readonly property int _zeroSide: !(scaleScrolls && scrolled) ? 0
+                                     : zeroValue < from - _valueEpsilon ? -1
+                                     : zeroValue > to + _valueEpsilon ? 1 : 0
 
     background: Item {
         // Figma "range": 16 px, radius 6, BG/B2, 2 px padding around a 12 px fill (radius 4)

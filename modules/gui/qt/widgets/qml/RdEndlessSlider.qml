@@ -91,6 +91,7 @@ RdSlider {
     // T.Slider clamps the value to from..to: read again whenever the window moves
     value: _clamped(from, to)
     scaleScrolls: endless
+    scrolled: endless && Math.abs(_windowFrom - rangeFrom) > _eps
     labelMin: limitFrom
     labelMax: limitTo
 
