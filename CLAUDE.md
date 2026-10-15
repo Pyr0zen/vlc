@@ -16,10 +16,8 @@
 - Use the GitHub CLI (`gh`, already logged in) to watch runs and read failed logs: `gh run watch`, `gh run view --log-failed`.
 - Sticky downloads the build artifact from the Actions tab and tests it on Windows.
 
-## Design reference (local, in `redesign/reference/`)
-- `vlc_redesign.mp4` the designer's full video. LOCAL ONLY, excluded from git, never commit it.
-- `vlc_redesign.en.srt` its transcript, with her reasoning for every change.
-- `frames/` scene-change frames already extracted.
+## Design reference (in `redesign/reference/`)
+- The designer's video (https://youtu.be/ERFeOgqk324), its transcript and every frame extracted from it are LOCAL ONLY (gitignored, never committed: her copyrighted content). Their file names are in CLAUDE.local.md: `vlc_redesign.mp4`, `vlc_redesign.en.srt` (her reasoning for every change), `frames/` (scene-change frames), `frames_library/`, `frames_settings/`, `frames_work/`.
 - `figma/figma_file.json` full Figma file from the API (committed 2026-10-13 at Sticky's request so other sessions have the exact specs; the Figma file is a public Community file); `redesign/FIGMA_FLOWS.md` summarizes its prototype interactions and exact specs.
 - `redesign/BUILD_PLAN.md` architecture map, work packages (Step 1 UI only, then Step 2 new features), Phase 1 workflow, test loop, risks.
 - `redesign/RESIDUAL_AUDIT.md` every element of VLC's current interface marked KEEP / MOVE / NOT IN VIDEO. Remove nothing until Sticky decides.
@@ -45,14 +43,14 @@ For every element, every time:
 ## Branches and git
 - Work only on the branch `redesign`. Never push to `master`. Never open pull requests to upstream videolan repos.
 - Never commit build outputs, the mp4, or frames_work/.
-- figma/, frames/, the srt and styles.txt may be committed (small files, useful for contributors).
+- figma/ and styles.txt may be committed (her Figma file is CC BY 4.0, credited in CREDITS.md). Never commit the video, the transcript, video frames or quotes from her narration.
 
 ## Parallel work (Sticky, 2026-10-13)
 - Agent pacing (Sticky, 2026-10-14, updated): 10 parallel agents burned 24 % of the 5-hour session limit in minutes; with agents starting their own sub-agents 19 tasks ran at once and the limit hit 50 %. Hitting it pauses everything for hours. Rules: (1) only the main session starts agents; no agent may start sub-agents of its own: agents do all their work themselves, sequentially (reviews included), and every agent prompt says so; (2) never more than 4 agents alive at once in total across the whole session, sub-agents counted; queue the rest and start the next only when a slot frees; (3) running agents finish their current step, never stop them for this; (4) queue priority: library and settings integrations first, then UX and playback-stall fixes, then the rest; (5) Opus for all agents; (6) tight prompts: the exact files and VIDEO_INDEX rows, not the whole project; (7) keep the queue in redesign/STATUS.md.
 - **Phase 5 belongs to the web session:** a second Claude Code session on the web builds Phase 5 (library shell, music, playlists, network streams, home, recent, pins, mini player, drag to queue: W5.1-W5.9, Step 1 and Step 2 parts), fully wired to VLC's real data, on branch `redesign-library`. The local session does not touch Phase 5 files (modules/gui/qt/medialibrary/qml, network/qml, maininterface/qml/MainDisplay.qml, LocalTopbar.qml, MainViewLoader.qml, NoMedialibHome.qml, playlist/qml/PlaylistDetachedWindow.qml, player/qml/MiniPlayer.qml / PIPPlayer.qml). Shared files (Player.qml, palette, MainCtx, meson.build, Makefile.am, widgets) are edited by both only where needed and merged carefully.
 - **Settings pages belong to a web session too (Sticky, 2026-10-14):** the web session builds the Settings dialog category pages (W6.2 and the related rows, everything except the Add Subtitles dialog W6.5) on branch `redesign-settings`, branched from `redesign`, using `reference/frames_settings/` (506 frames at 2 fps, see its README). The local session does not touch `modules/gui/qt/dialogs/redesign/settings/pages/*`. When Sticky says it pushed: review, merge, build and test it like the library.
 - **Merging redesign-library:** when Sticky says it pushed: independent review of the whole branch diff, `redesign/tools/qmlcheck.py`, merge into `redesign`, one build, full test round on this PC against the video like everything else.
-- **Web session notes:** it has the transcript (`reference/vlc_redesign.en.srt`), the 97 key frames (`reference/frames/`), the Phase 5 segments at 2 frames per second (`reference/frames_library/`, see its README), the Figma PNGs and `figma/figma_file.json`, VIDEO_INDEX.md and FIGMA_FLOWS.md; it does not have the mp4 or `frames_work/`. CI builds only `redesign`, so it verifies with qmlcheck; the on-PC test happens after the merge.
+- **Web session notes:** web sessions only have the committed material (the Figma PNGs and `figma/figma_file.json`, VIDEO_INDEX.md and FIGMA_FLOWS.md); the video, transcript and frames are local to the PC session only. CI builds only `redesign`, so it verifies with qmlcheck; the on-PC test happens after the merge.
 - **Local session:** while a build is tested, subagents code the next independent work packages in separate git worktrees (one package or tightly coupled pair per agent, never two agents on the same files), each following every rule in this file; then independent review, qmlcheck, merge into `redesign` as the next batch. The 5-packages-per-build rule and the full test loop stay.
 
 ## Current phase
