@@ -21,7 +21,7 @@
 // background blur).
 // - the body is opaque BG/B1: the video is a native surface under the QML scene and cannot be
 //   blurred, and without the blur its 5 % would show through as a sharp ghost image
-// - tab header 50 px, BG/B2, then a 1 px Divider/Dim line: icon 20 + label Inter 12; active
+// - tab header 50 px, BG/B2, then a 1 px gap: icon 20 + label Inter 12; active
 //   tab: two-tone icon, FG/A2 label and a 2 px accent underline as wide as the Figma tab content
 //   frame (centered); inactive: plain icon, FG/A3 label
 // - pages (RdSidePanelPageLoader) are created on first use and cross-fade when the tab changes
@@ -37,12 +37,17 @@ import VLC.Widgets as Widgets
 Widgets.RdPanel {
     id: root
 
-    // [{ key, label, icon, width, underline }]; icon is a Figma icon name, the active tab uses
-    // "<icon>_two-tone-yes"; underline is the Figma underline width (default: icon and label)
+    // [{ key, label, icon, width, underline, activeIcon, inactiveIcon, activeColor }]; icon is a
+    // Figma icon name: the active tab uses activeIcon (default "<icon>_two-tone-yes"), an inactive
+    // one inactiveIcon (default icon); underline is the Figma underline width (default: icon and
+    // label). Figma colours: the active icon in activeColor (default FG/A3) with its two-tone part
+    // in Accent/DIm, inactive icons all FG/A4.
     property var tabs: []
     property string currentKey: ""
     default property alias pages: pageHost.data
     property alias footer: footerHost.data
+    // false hides the footer on a tab that has none in Figma
+    property bool footerVisible: true
 
     signal tabClicked(string key)
 
@@ -106,10 +111,15 @@ Widgets.RdPanel {
                             spacing: VLCStyle.dp(8)
 
                             Widgets.RdIcon {
+                                readonly property color inactiveColor: tab.hovered ? root.rdPalette.rdFgA3
+                                                                                   : root.rdPalette.rdFgA4
+
                                 anchors.verticalCenter: parent.verticalCenter
-                                name: tab.active ? tab.modelData.icon + "_two-tone-yes" : tab.modelData.icon
+                                name: tab.active ? (tab.modelData.activeIcon ?? tab.modelData.icon + "_two-tone-yes")
+                                                 : (tab.modelData.inactiveIcon ?? tab.modelData.icon)
                                 size: VLCStyle.dp(20)
-                                color: tab.active || tab.hovered ? root.rdPalette.rdFgA2 : root.rdPalette.rdFgA3
+                                color: tab.active ? (tab.modelData.activeColor ?? root.rdPalette.rdFgA3) : inactiveColor
+                                color2: tab.active ? root.rdPalette.rdAccentDim : inactiveColor
                             }
 
                             Text {
@@ -146,13 +156,13 @@ Widgets.RdPanel {
         }
     }
 
-    Rectangle {
-        id: headerDivider
+    // Figma panel gap 1: the panel fill shows between the header and the page, no line
+    Item {
+        id: headerGap
 
         anchors.top: header.bottom
         width: parent.width
         height: VLCStyle.dp(1)
-        color: root.rdPalette.rdDividerDim
     }
 
     // pages: each RdSidePanelPageLoader shows its page when its key is the current one
@@ -169,7 +179,7 @@ Widgets.RdPanel {
             restoreMode: Binding.RestoreNone
         }
 
-        anchors.top: headerDivider.bottom
+        anchors.top: headerGap.bottom
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: footerArea.top
@@ -181,8 +191,9 @@ Widgets.RdPanel {
     Item {
         id: footerArea
 
-        readonly property bool used: footerHost.children.length > 0
+        readonly property bool used: root.footerVisible && footerHost.children.length > 0
 
+        visible: used
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: parent.bottom

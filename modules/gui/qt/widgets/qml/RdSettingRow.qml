@@ -33,6 +33,8 @@ ColumnLayout {
     default property alias control: controlSlot.data
     property alias below: belowSlot.data
     property real rowHeight: VLCStyle.dp(48)
+    // label inset: 4 in section rows, 0 in the rows of an expander card (Figma 614:1576)
+    property real textInset: VLCStyle.dp(4)
 
     readonly property SystemPalette rdPalette: VLCStyle.palette
 
@@ -47,7 +49,7 @@ ColumnLayout {
             id: label
 
             anchors.left: parent.left
-            anchors.leftMargin: VLCStyle.dp(4)
+            anchors.leftMargin: root.textInset
             anchors.right: controlSlot.left
             anchors.rightMargin: VLCStyle.dp(10)
             anchors.verticalCenter: parent.verticalCenter

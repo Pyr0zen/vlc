@@ -96,8 +96,13 @@ RdSidePanelPage {
             }
         }
 
+        // Figma "Frame 102" (1052:2920): 10 px under the rows above, a 52 px label row, 10 px,
+        // then the dropdown
         Widgets.RdSettingRow {
             text: qsTr("Stereo Mode")
+            Layout.topMargin: VLCStyle.dp(5)
+            rowHeight: VLCStyle.dp(52)
+            spacing: VLCStyle.dp(10)
 
             below: Widgets.RdChoiceDropdown {
                 width: parent.width
@@ -141,8 +146,10 @@ RdSidePanelPage {
         }
     }
 
+    // Figma "Frame 70" (536:1109): 10 px between the label, preset list, card and 2 Pass
     Widgets.RdSettingsSection {
         title: qsTr("Filters")
+        rowSpacing: VLCStyle.dp(10)
 
         // "Equalizer" sub-label, then the preset list (None = equalizer off)
         Text {
@@ -171,6 +178,7 @@ RdSidePanelPage {
 
                 width: ListView.view ? ListView.view.width : implicitWidth
                 height: VLCStyle.dp(44)
+                radius: VLCStyle.rd_radius_small
                 text: modelData
                 selected: eqPresets.currentIndex === index
                 highlighted: eqPresets.highlightedIndex === index
@@ -184,16 +192,21 @@ RdSidePanelPage {
             }
         }
 
+        // Figma "Audio - Equalizer" expanded (6114:13615): 90 px per band, a 56 px name row with
+        // the value box (Inter 12) and the slider right under it, 10 px padding under each
         Widgets.RdExpander {
             Layout.fillWidth: true
 
             ColumnLayout {
                 width: parent.width
-                spacing: VLCStyle.dp(5)
+                spacing: VLCStyle.dp(10)
 
                 Widgets.RdParamSlider {
                     text: qsTr("Preamp")
                     valueBox: true
+                    valueFontSize: VLCStyle.rd_fontSize_toggle
+                    textInset: 0
+                    spacing: 0
                     valueText: root._eqPreamp.toFixed(1) + " " + qsTr("dB")
                     from: -20
                     to: 20
@@ -224,6 +237,9 @@ RdSidePanelPage {
 
                         text: modelData
                         valueBox: true
+                        valueFontSize: VLCStyle.rd_fontSize_toggle
+                        textInset: 0
+                        spacing: 0
                         valueText: gain.toFixed(1) + " " + qsTr("dB")
                         from: -20
                         to: 20
@@ -258,7 +274,7 @@ RdSidePanelPage {
     }
 
     FilterSection {
-        title: qsTr("Compressor")
+        name: qsTr("Compressor")
         module: "compressor"
         params: [
             { name: "compressor-rms-peak", label: qsTr("RMS / Peak"), unit: "", from: 0, to: 1, step: 0.001, scale: 1 },
@@ -272,7 +288,7 @@ RdSidePanelPage {
     }
 
     FilterSection {
-        title: qsTr("Spatializer")
+        name: qsTr("Spatializer")
         module: "spatializer"
         params: [
             { name: "spatializer-roomsize", label: qsTr("Size"), unit: "", from: 0, to: 1.1, step: 0.1, scale: 10 },
@@ -284,7 +300,7 @@ RdSidePanelPage {
     }
 
     FilterSection {
-        title: qsTr("Stereo Widener")
+        name: qsTr("Stereo Widener")
         module: "stereo_widen"
         params: [
             { name: "stereowiden-delay", label: qsTr("Delay Time"), unit: qsTr("ms"), from: 1, to: 100, step: 1, scale: 1 },
@@ -329,27 +345,35 @@ RdSidePanelPage {
             to: 12
             stepSize: 0.25
             bipolar: true
-            showTicks: false
+            // Figma 612:1416: one tick at 0
+            showTicks: true
+            tickIntervals: 2
             value: pitchCommit.shown
             onMoved: (v) => pitchCommit.push(v)
         }
     }
 
-    // one audio filter: on/off toggle, then its parameters in an "Expand Settings" card
+    // one audio filter (Figma "Frame 103" 2375:8984): no section header, a 37 px row with the
+    // name and the on/off toggle, 10 px, then its parameters in an "Expand Settings" card
+    // (76 px per parameter: 37 px name row, 5, slider, 10)
     component FilterSection: Widgets.RdSettingsSection {
         id: filter
 
+        property string name
         property string module
         property var params: []
 
         readonly property bool filterEnabled: RdEffects.values[RdEffects.audioFilterKey(module)]
 
+        rowSpacing: VLCStyle.dp(10)
+
         Widgets.RdSettingRow {
-            text: filter.title
+            text: filter.name
+            rowHeight: VLCStyle.dp(37)
 
             Widgets.RdToggle {
                 checked: filter.filterEnabled
-                Accessible.name: filter.title
+                Accessible.name: filter.name
                 onToggled: RdEffects.setAudioFilterEnabled(filter.module, checked)
             }
         }
@@ -359,7 +383,7 @@ RdSidePanelPage {
 
             ColumnLayout {
                 width: parent.width
-                spacing: VLCStyle.dp(5)
+                spacing: VLCStyle.dp(10)
 
                 Repeater {
                     model: filter.params
@@ -369,6 +393,7 @@ RdSidePanelPage {
 
                         readonly property real current: RdEffects.values[RdEffects.audioKey(modelData.name)]
 
+                        textInset: 0
                         text: modelData.label
                         valueText: (current * modelData.scale).toFixed(1) + (modelData.unit !== "" ? " " + modelData.unit : "")
                         from: modelData.from

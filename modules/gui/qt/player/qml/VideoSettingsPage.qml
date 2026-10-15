@@ -65,9 +65,13 @@ RdSidePanelPage {
         title: qsTr("Defaults")
         showDivider: false
 
+        // Figma "Frame 106" / "Frame 61" (6114:13496): the label 26 px under the header (row 29 at
+        // 20), 14 px to the segments (63 under the header)
         Widgets.RdSettingRow {
             text: qsTr("Flip")
-            rowHeight: VLCStyle.dp(37)
+            Layout.topMargin: VLCStyle.dp(10)
+            rowHeight: VLCStyle.dp(29)
+            spacing: VLCStyle.dp(14)
 
             below: Widgets.RdSegmented {
                 width: parent.width
@@ -89,8 +93,10 @@ RdSidePanelPage {
             }
         }
 
+        // "Frame 110": 21 px under the segments
         Widgets.RdSettingRow {
             text: qsTr("Rotate")
+            Layout.topMargin: VLCStyle.dp(16)
 
             Widgets.RdValueBox {
                 text: Math.round(root._rotation) + " " + qsTr("deg")
@@ -203,7 +209,7 @@ RdSidePanelPage {
                         id: chevron
 
                         anchors.right: parent.right
-                        anchors.rightMargin: VLCStyle.dp(14)
+                        anchors.rightMargin: VLCStyle.dp(16)
                         anchors.verticalCenter: parent.verticalCenter
                         name: "chevron_direction-down"
                         color: VLCStyle.palette.rdFgA2
@@ -219,115 +225,120 @@ RdSidePanelPage {
         }
     }
 
-    Widgets.RdSettingsSection {
-        title: qsTr("Filters")
-
-        FilterGroup {
-            text: qsTr("Essential")
-            entries: [
-                { kind: "slider", module: "adjust", name: "hue", label: qsTr("Hue"), unit: "°", decimals: 0 },
-                { kind: "slider", module: "adjust", name: "brightness", label: qsTr("Brightness"), decimals: 2 },
-                { kind: "slider", module: "adjust", name: "contrast", label: qsTr("Contrast"), decimals: 2 },
-                { kind: "slider", module: "adjust", name: "saturation", label: qsTr("Saturation"), decimals: 2 },
-                { kind: "slider", module: "adjust", name: "gamma", label: qsTr("Gamma"), decimals: 2 },
-                { kind: "toggle", module: "sharpen", label: qsTr("Sharpen") },
-                { kind: "slider", module: "sharpen", name: "sharpen-sigma", label: qsTr("Sharpen Sigma"), decimals: 2 },
-                { kind: "toggle", module: "gradfun", label: qsTr("Banding Removal") },
-                { kind: "slider", module: "gradfun", name: "gradfun-radius", label: qsTr("Banding Removal Radius"), decimals: 0 },
-                { kind: "toggle", module: "grain", label: qsTr("Film Grain") },
-                { kind: "slider", module: "grain", name: "grain-variance", label: qsTr("Film Grain Variance"), decimals: 1 }
-            ]
-        }
-
-        // VLC's live crop of the video output, in pixels
-        FilterGroup {
-            text: qsTr("Crop")
-            entries: [
-                { kind: "pixels", name: "crop-top", label: qsTr("Top") },
-                { kind: "pixels", name: "crop-bottom", label: qsTr("Bottom") },
-                { kind: "pixels", name: "crop-left", label: qsTr("Left") },
-                { kind: "pixels", name: "crop-right", label: qsTr("Right") }
-            ]
-        }
-
-        FilterGroup {
-            text: qsTr("Colors")
-            entries: [
-                { kind: "toggle", module: "extract", label: qsTr("Color Extraction") },
-                { kind: "color", module: "extract", name: "extract-component", label: qsTr("Color") },
-                { kind: "toggle", module: "colorthres", label: qsTr("Color Threshold") },
-                { kind: "color", module: "colorthres", name: "colorthres-color", label: qsTr("Color") },
-                { kind: "slider", module: "colorthres", name: "colorthres-saturationthres", label: qsTr("Saturation"), decimals: 0, from: 0, to: 100 },
-                { kind: "slider", module: "colorthres", name: "colorthres-similaritythres", label: qsTr("Similarity"), decimals: 0, from: 0, to: 100 },
-                { kind: "toggle", module: "invert", label: qsTr("Negate Colors") },
-                { kind: "toggle", module: "posterize", label: qsTr("Posterize") },
-                { kind: "slider", module: "posterize", name: "posterize-level", label: qsTr("Posterize Level"), decimals: 0 },
-                { kind: "toggle", module: "gradient", label: qsTr("Gradient") },
-                { kind: "choice", module: "gradient", name: "gradient-mode", label: qsTr("Gradient") },
-                { kind: "flag", module: "gradient", name: "gradient-color", label: qsTr("Color") },
-                { kind: "flag", module: "gradient", name: "gradient-cartoon", label: qsTr("Cartoon") },
-                { kind: "toggle", module: "sepia", label: qsTr("Sepia") },
-                { kind: "slider", module: "sepia", name: "sepia-intensity", label: qsTr("Sepia Intensity"), decimals: 0 }
-            ]
-        }
-
-        FilterGroup {
-            text: qsTr("Geometry")
-            entries: [
-                { kind: "toggle", module: "magnify", label: qsTr("Interactive Zoom") },
-                { kind: "toggle", module: "wall", label: qsTr("Wall") },
-                { kind: "number", module: "wall", name: "wall-cols", label: qsTr("Columns") },
-                { kind: "number", module: "wall", name: "wall-rows", label: qsTr("Rows") },
-                { kind: "toggle", module: "puzzle", label: qsTr("Puzzle Game") },
-                { kind: "number", module: "puzzle", name: "puzzle-cols", label: qsTr("Columns") },
-                { kind: "number", module: "puzzle", name: "puzzle-rows", label: qsTr("Rows") }
-            ]
-        }
-
-        FilterGroup {
-            text: qsTr("Overlay")
-            entries: [
-                { kind: "toggle", module: "logo", label: qsTr("Logo") },
-                { kind: "text", module: "logo", name: "logo-file", label: qsTr("Logo File") },
-                { kind: "slider", module: "logo", name: "logo-opacity", label: qsTr("Opacity"), decimals: 0 },
-                { kind: "toggle", module: "marq", label: qsTr("Marquee") },
-                { kind: "text", module: "marq", name: "marq-marquee", label: qsTr("Text") },
-                { kind: "toggle", module: "erase", label: qsTr("Logo Erase") },
-                { kind: "text", module: "erase", name: "erase-mask", label: qsTr("Mask File") }
-            ]
-        }
-
-        FilterGroup {
-            text: qsTr("Advanced")
-            entries: [
-                { kind: "toggle", module: "anaglyph", label: qsTr("Anaglyph 3D") },
-                { kind: "toggle", module: "mirror", label: qsTr("Mirror") },
-                { kind: "toggle", module: "psychedelic", label: qsTr("Psychedelic") },
-                { kind: "toggle", module: "wave", label: qsTr("Waves") },
-                { kind: "toggle", module: "ripple", label: qsTr("Water Effect") },
-                { kind: "toggle", module: "motiondetect", label: qsTr("Motion Detect") },
-                { kind: "toggle", module: "gaussianblur", label: qsTr("Spatial Blur") },
-                // read when the filter starts (not a command variable of gaussianblur)
-                { kind: "slider", module: "gaussianblur", name: "gaussianblur-sigma", label: qsTr("Sigma"), decimals: 1, live: false },
-                { kind: "toggle", module: "motionblur", label: qsTr("Motion Blur") },
-                { kind: "slider", module: "motionblur", name: "blur-factor", label: qsTr("Factor"), decimals: 0 },
-                { kind: "toggle", module: "antiflicker", label: qsTr("Anti-Flickering") },
-                { kind: "slider", module: "antiflicker", name: "antiflicker-softening-size", label: qsTr("Softening"), decimals: 0 },
-                { kind: "toggle", module: "hqdn3d", label: qsTr("Denoiser") },
-                { kind: "slider", module: "hqdn3d", name: "hqdn3d-luma-spat", label: qsTr("Spatial Luma Strength"), decimals: 1 },
-                { kind: "slider", module: "hqdn3d", name: "hqdn3d-luma-temp", label: qsTr("Temporal Luma Strength"), decimals: 1 },
-                { kind: "slider", module: "hqdn3d", name: "hqdn3d-chroma-spat", label: qsTr("Spatial Chroma Strength"), decimals: 1 },
-                { kind: "slider", module: "hqdn3d", name: "hqdn3d-chroma-temp", label: qsTr("Temporal Chroma Strength"), decimals: 1 },
-                { kind: "toggle", module: "clone", label: qsTr("Clone") },
-                { kind: "number", module: "clone", name: "clone-count", label: qsTr("Number of Clones") }
-            ]
-        }
+    // Figma 536:1772: the Filters header, then one block per group, divided by lines
+    FilterGroup {
+        first: true
+        label: qsTr("Essential")
+        entries: [
+            { kind: "slider", module: "adjust", name: "hue", label: qsTr("Hue"), decimals: 0 },
+            { kind: "slider", module: "adjust", name: "brightness", label: qsTr("Brightness"), decimals: 2 },
+            { kind: "slider", module: "adjust", name: "contrast", label: qsTr("Contrast"), decimals: 2 },
+            { kind: "slider", module: "adjust", name: "saturation", label: qsTr("Saturation"), decimals: 2 },
+            { kind: "slider", module: "adjust", name: "gamma", label: qsTr("Gamma"), decimals: 2 },
+            { kind: "toggle", module: "sharpen", label: qsTr("Sharpen") },
+            { kind: "slider", module: "sharpen", name: "sharpen-sigma", label: qsTr("Sharpen Sigma"), decimals: 2 },
+            { kind: "toggle", module: "gradfun", label: qsTr("Banding Removal") },
+            { kind: "slider", module: "gradfun", name: "gradfun-radius", label: qsTr("Banding Removal Radius"), decimals: 0 },
+            { kind: "toggle", module: "grain", label: qsTr("Film Grain") },
+            { kind: "slider", module: "grain", name: "grain-variance", label: qsTr("Film Grain Variance"), decimals: 1 }
+        ]
     }
 
-    // label on the left, a 220 px dropdown on the right (Figma "video settings": rows 68 px
-    // apart, i.e. 63 plus the 5 px row spacing)
+    // VLC's live crop of the video output, in pixels
+    FilterGroup {
+        label: qsTr("Crop")
+        cropGrid: true
+        entries: [
+            { name: "crop-top", label: qsTr("Top") },
+            { name: "crop-bottom", label: qsTr("Bottom") },
+            { name: "crop-left", label: qsTr("Left") },
+            { name: "crop-right", label: qsTr("Right") }
+        ]
+    }
+
+    // Figma "Video - Colors" expanded (614:1435): block paddings [top, bottom, gap]
+    FilterGroup {
+        label: qsTr("Colors")
+        blockPadding: ({
+            extract: [6, 20], colorthres: [20, 20], invert: [20, 10], posterize: [10, 10],
+            gradient: [15, 15, 15], sepia: [10, 10]
+        })
+        entries: [
+            { kind: "toggle", module: "extract", label: qsTr("Color Extraction") },
+            { kind: "color", module: "extract", name: "extract-component", label: qsTr("Color") },
+            { kind: "toggle", module: "colorthres", label: qsTr("Color Threshold") },
+            { kind: "color", module: "colorthres", name: "colorthres-color", label: qsTr("Color") },
+            { kind: "slider", module: "colorthres", name: "colorthres-saturationthres", label: qsTr("Saturation"), decimals: 0, from: 0, to: 100 },
+            { kind: "slider", module: "colorthres", name: "colorthres-similaritythres", label: qsTr("Similarity"), decimals: 0, from: 0, to: 100 },
+            { kind: "toggle", module: "invert", label: qsTr("Negate Colors") },
+            { kind: "toggle", module: "posterize", label: qsTr("Posterize") },
+            { kind: "slider", module: "posterize", name: "posterize-level", label: qsTr("Posterize Level"), decimals: 0 },
+            { kind: "toggle", module: "gradient", label: qsTr("Gradient") },
+            { kind: "choice", module: "gradient", name: "gradient-mode", label: qsTr("Gradient") },
+            { kind: "flag", module: "gradient", name: "gradient-color", label: qsTr("Color") },
+            { kind: "flag", module: "gradient", name: "gradient-cartoon", label: qsTr("Cartoon") },
+            { kind: "toggle", module: "sepia", label: qsTr("Sepia") },
+            // Figma 673:1697: ticks at thirds
+            { kind: "slider", module: "sepia", name: "sepia-intensity", label: qsTr("Sepia Intensity"), decimals: 0, ticks: 3 }
+        ]
+    }
+
+    FilterGroup {
+        label: qsTr("Geometry")
+        entries: [
+            { kind: "toggle", module: "magnify", label: qsTr("Interactive Zoom") },
+            { kind: "toggle", module: "wall", label: qsTr("Wall") },
+            { kind: "number", module: "wall", name: "wall-cols", label: qsTr("Columns") },
+            { kind: "number", module: "wall", name: "wall-rows", label: qsTr("Rows") },
+            { kind: "toggle", module: "puzzle", label: qsTr("Puzzle Game") },
+            { kind: "number", module: "puzzle", name: "puzzle-cols", label: qsTr("Columns") },
+            { kind: "number", module: "puzzle", name: "puzzle-rows", label: qsTr("Rows") }
+        ]
+    }
+
+    FilterGroup {
+        label: qsTr("Overlay")
+        entries: [
+            { kind: "toggle", module: "logo", label: qsTr("Logo") },
+            { kind: "text", module: "logo", name: "logo-file", label: qsTr("Logo File") },
+            { kind: "slider", module: "logo", name: "logo-opacity", label: qsTr("Opacity"), decimals: 0 },
+            { kind: "toggle", module: "marq", label: qsTr("Marquee") },
+            { kind: "text", module: "marq", name: "marq-marquee", label: qsTr("Text") },
+            { kind: "toggle", module: "erase", label: qsTr("Logo Erase") },
+            { kind: "text", module: "erase", name: "erase-mask", label: qsTr("Mask File") }
+        ]
+    }
+
+    FilterGroup {
+        label: qsTr("Advanced")
+        entries: [
+            { kind: "toggle", module: "anaglyph", label: qsTr("Anaglyph 3D") },
+            { kind: "toggle", module: "mirror", label: qsTr("Mirror") },
+            { kind: "toggle", module: "psychedelic", label: qsTr("Psychedelic") },
+            { kind: "toggle", module: "wave", label: qsTr("Waves") },
+            { kind: "toggle", module: "ripple", label: qsTr("Water Effect") },
+            { kind: "toggle", module: "motiondetect", label: qsTr("Motion Detect") },
+            { kind: "toggle", module: "gaussianblur", label: qsTr("Spatial Blur") },
+            // read when the filter starts (not a command variable of gaussianblur)
+            { kind: "slider", module: "gaussianblur", name: "gaussianblur-sigma", label: qsTr("Sigma"), decimals: 1, live: false },
+            { kind: "toggle", module: "motionblur", label: qsTr("Motion Blur") },
+            { kind: "slider", module: "motionblur", name: "blur-factor", label: qsTr("Factor"), decimals: 0 },
+            { kind: "toggle", module: "antiflicker", label: qsTr("Anti-Flickering") },
+            { kind: "slider", module: "antiflicker", name: "antiflicker-softening-size", label: qsTr("Softening"), decimals: 0 },
+            { kind: "toggle", module: "hqdn3d", label: qsTr("Denoiser") },
+            { kind: "slider", module: "hqdn3d", name: "hqdn3d-luma-spat", label: qsTr("Spatial Luma Strength"), decimals: 1 },
+            { kind: "slider", module: "hqdn3d", name: "hqdn3d-luma-temp", label: qsTr("Temporal Luma Strength"), decimals: 1 },
+            { kind: "slider", module: "hqdn3d", name: "hqdn3d-chroma-spat", label: qsTr("Spatial Chroma Strength"), decimals: 1 },
+            { kind: "slider", module: "hqdn3d", name: "hqdn3d-chroma-temp", label: qsTr("Temporal Chroma Strength"), decimals: 1 },
+            { kind: "toggle", module: "clone", label: qsTr("Clone") },
+            { kind: "number", module: "clone", name: "clone-count", label: qsTr("Number of Clones") }
+        ]
+    }
+
+    // label on the left, a 220 px dropdown on the right (Figma "Frame 112" / "Frame 115": the
+    // 48 px dropdown 20 px under the row above, 68 px apart; 15 + the 5 px row spacing)
     component DropdownRow: Widgets.RdSettingRow {
-        rowHeight: VLCStyle.dp(63)
+        Layout.topMargin: VLCStyle.dp(15)
     }
 
     // dropdown over the choices VLC declares for an option
@@ -343,12 +354,23 @@ RdSidePanelPage {
         onActivated: (index) => RdEffects.setOption(option, _choices[index].value)
     }
 
-    // "Essential", "Crop"... sub-label, then the group's settings in an "Expand Settings" card
-    component FilterGroup: ColumnLayout {
+    // one filter group (Figma "Frame 72"... 1065:3941): its own block under a divider (the first
+    // one under the "Filters" header): padding 10,20,20,20, a 37 px name row, 10 px, then the
+    // group's settings in an "Expand Settings" card. Inside the card the settings of one filter
+    // form a block, with a Divider/Dim line across the card between blocks ("Video - Colors"
+    // 614:1435): toggle rows 32 px, sliders 37 + 5 + 24, 6 px from a toggle to its first slider
+    // and 10 between sliders; block padding from Figma where it has the block (blockPadding:
+    // module -> [top, bottom, gap]), else 20 / 20 around a toggle block (6 at the top of the
+    // card) and 10 / 10 around a block of sliders only (0 at the top of the card).
+    component FilterGroup: Widgets.RdSettingsSection {
         id: group
 
-        property alias text: groupLabel.text
+        property string label
+        property bool first: false
         property var entries: []
+        property var blockPadding: ({})
+        // Crop: the four values as a 2x2 grid of boxes with a link button per row
+        property bool cropGrid: false
 
         // (inline components cannot use the page's functions)
         function parseNumber(text) {
@@ -359,16 +381,44 @@ RdSidePanelPage {
             return "#" + ("000000" + Number(value).toString(16)).slice(-6).toUpperCase()
         }
 
-        Layout.fillWidth: true
-        spacing: VLCStyle.dp(5)
+        readonly property var blocks: {
+            const out = []
+            for (const e of group.entries) {
+                const last = out.length > 0 ? out[out.length - 1] : null
+                const lastRow = last ? last.rows[last.rows.length - 1] : null
+                // a filter's colour goes on its toggle row (Figma "Color Extraction")
+                if (e.kind === "color" && lastRow && lastRow.kind === "toggle" && lastRow.module === e.module) {
+                    last.rows[last.rows.length - 1] = Object.assign({}, lastRow, { color: e })
+                    continue
+                }
+                if (!last || (e.module ?? "") !== last.module)
+                    out.push({ module: e.module ?? "", rows: [] })
+                out[out.length - 1].rows.push(e)
+            }
+            return out.map((b, index) => {
+                const sliderOnly = b.rows.every((r) => r.kind === "slider")
+                const pad = group.blockPadding[b.module]
+                const top = pad ? pad[0] : (index === 0 ? (sliderOnly ? 0 : 6) : (sliderOnly ? 10 : 20))
+                const bottom = pad ? pad[1] : (sliderOnly ? 10 : 20)
+                const gap = pad && pad.length > 2 ? pad[2] : 10
+                const hasToggle = b.rows.some((r) => r.kind === "toggle")
+                const rows = b.rows.map((r, i) => Object.assign({}, r, {
+                    gapBefore: i === 0 ? 0 : (r.kind === "slider" && b.rows[i - 1].kind !== "slider" ? 6 : gap),
+                    hasToggle: hasToggle
+                }))
+                return { module: b.module, rows: rows, top: top, bottom: bottom, divider: index > 0 }
+            })
+        }
+
+        title: first ? qsTr("Filters") : ""
+        rowSpacing: VLCStyle.dp(10)
 
         Text {
-            id: groupLabel
-
             Layout.fillWidth: true
             Layout.preferredHeight: VLCStyle.dp(37)
             leftPadding: VLCStyle.dp(4)
             verticalAlignment: Text.AlignVCenter
+            text: group.label
             font.family: VLCStyle.rd_fontFamily
             font.pixelSize: VLCStyle.rd_fontSize_label
             color: VLCStyle.palette.rdFgA3
@@ -376,52 +426,178 @@ RdSidePanelPage {
 
         Widgets.RdExpander {
             Layout.fillWidth: true
+            // the blocks carry their own padding; the card adds its 10 px
+            bottomPadding: group.cropGrid ? VLCStyle.dp(16) : VLCStyle.dp(10)
 
-            ColumnLayout {
+            Loader {
                 width: parent.width
-                spacing: VLCStyle.dp(5)
+                sourceComponent: group.cropGrid ? cropContent : blockContent
+            }
+        }
+
+        // Figma "Video - Crop" expanded (543:995): rows padded 6,16,10,16 and 6,16,6,16, each with
+        // two 141x33 boxes 8 px apart and a 30x32 link button
+        Component {
+            id: cropContent
+
+            Column {
+                topPadding: VLCStyle.dp(6)
+                spacing: VLCStyle.dp(16)
 
                 Repeater {
-                    model: group.entries
+                    model: [[group.entries[0], group.entries[1]], [group.entries[2], group.entries[3]]]
 
-                    delegate: Loader {
+                    delegate: Row {
+                        id: cropRow
+
                         required property var modelData
 
-                        Layout.fillWidth: true
-                        sourceComponent: {
-                            switch (modelData.kind) {
-                            case "toggle": return toggleEntry
-                            case "slider": return sliderEntry
-                            case "color": return colorEntry
-                            case "choice": return choiceEntry
-                            case "flag": return flagEntry
-                            case "text": return textEntry
-                            case "number": return numberEntry
-                            case "pixels": return pixelsEntry
-                            default: return null
+                        // the link keeps both sides of the row equal (VLC's "synchronize" crop)
+                        property bool linked: false
+
+                        spacing: VLCStyle.dp(8)
+
+                        Repeater {
+                            model: cropRow.modelData
+
+                            delegate: Widgets.RdValueBox {
+                                required property var modelData
+
+                                implicitWidth: VLCStyle.dp(141)
+                                implicitHeight: VLCStyle.dp(33)
+                                framed: false
+                                prefix: modelData.label
+                                suffix: qsTr("px")
+                                text: String(Number(RdEffects.values[RdEffects.videoKey(modelData.name)]) || 0)
+                                Accessible.name: modelData.label
+                                onEdited: (value) => {
+                                    const n = Math.round(group.parseNumber(value))
+                                    if (isNaN(n))
+                                        return
+                                    for (const e of (cropRow.linked ? cropRow.modelData : [modelData]))
+                                        RdEffects.setVideoValue(e.name, Math.max(0, n))
+                                }
                             }
                         }
 
-                        readonly property var entry: modelData
+                        Widgets.IconToolButton {
+                            anchors.verticalCenter: parent.verticalCenter
+                            rdMinimumWidth: VLCStyle.rd_iconButtonWidth
+                            rdMinimumHeight: VLCStyle.rd_iconButtonHeight
+                            rdIcon: "link"
+                            font.pixelSize: VLCStyle.rd_iconSize
+                            text: "link"
+                            description: qsTr("Same value on both sides")
+                            checkable: true
+                            checked: cropRow.linked
+                            onClicked: cropRow.linked = checked
+                        }
+                    }
+                }
+            }
+        }
 
-                    // a filter on / off
+        Component {
+            id: blockContent
+
+            ColumnLayout {
+                spacing: 0
+
+                Repeater {
+                    model: group.blocks
+
+                    delegate: ColumnLayout {
+                        id: block
+
+                        required property var modelData
+
+                        Layout.fillWidth: true
+                        spacing: 0
+
+                        // across the whole card, 0 px tall like Figma's line
+                        Item {
+                            visible: block.modelData.divider
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 0
+
+                            Rectangle {
+                                x: -VLCStyle.dp(16)
+                                width: parent.width + 2 * VLCStyle.dp(16)
+                                height: VLCStyle.dp(1)
+                                color: VLCStyle.palette.rdDividerDim
+                            }
+                        }
+
+                        Repeater {
+                            model: block.modelData.rows
+
+                            delegate: Loader {
+                                required property var modelData
+                                required property int index
+
+                                readonly property var entry: modelData
+
+                                Layout.fillWidth: true
+                                Layout.topMargin: (index === 0 ? block.modelData.top : entry.gapBefore)
+                                Layout.bottomMargin: index === block.modelData.rows.length - 1 ? block.modelData.bottom : 0
+                                sourceComponent: {
+                                    switch (entry.kind) {
+                                    case "toggle": return toggleEntry
+                                    case "slider": return sliderEntry
+                                    case "color": return colorEntry
+                                    case "choice": return choiceEntry
+                                    case "flag": return flagEntry
+                                    case "text": return textEntry
+                                    case "number": return numberEntry
+                                    default: return null
+                                    }
+                                }
+
+                    // a filter on / off, with its colour box when it has one (Figma "Frame 85")
                     Component {
                         id: toggleEntry
 
                         Widgets.RdSettingRow {
                             text: entry.label
+                            textInset: 0
+                            rowHeight: VLCStyle.dp(32)
 
-                            Widgets.RdToggle {
-                                checked: RdEffects.values[RdEffects.videoFilterKey(entry.module)]
-                                Accessible.name: entry.label
-                                onToggled: RdEffects.setVideoFilterEnabled(entry.module, checked)
+                            Row {
+                                spacing: VLCStyle.dp(8)
+
+                                Widgets.RdValueBox {
+                                    readonly property string hex: entry.color
+                                                                  ? group.colorText(RdEffects.values[RdEffects.videoKey(entry.color.name)])
+                                                                  : ""
+
+                                    visible: !!entry.color
+                                    implicitWidth: VLCStyle.dp(116)
+                                    framed: false
+                                    textColor: VLCStyle.palette.rdFgA3
+                                    text: hex
+                                    showSwatch: true
+                                    swatch: hex
+                                    Accessible.name: entry.color ? entry.label + " " + entry.color.label : ""
+                                    onEdited: (value) => {
+                                        const v = parseInt(String(value).replace("#", "").trim(), 16)
+                                        if (!isNaN(v))
+                                            RdEffects.setVideoValue(entry.color.name, v & 0xFFFFFF)
+                                    }
+                                }
+
+                                Widgets.RdToggle {
+                                    checked: RdEffects.values[RdEffects.videoFilterKey(entry.module)]
+                                    Accessible.name: entry.label
+                                    onToggled: RdEffects.setVideoFilterEnabled(entry.module, checked)
+                                }
                             }
                         }
                     }
 
                     // a numeric parameter; moving it turns its filter on. A parameter the filter
                     // reads only when it starts ("live: false") restarts the whole filter chain
-                    // on every change: it is applied when the slider is released.
+                    // on every change: it is applied when the slider is released. While its
+                    // filter is off the slider is grey (Figma "Frame 78" 614:1472: luminosity).
                     Component {
                         id: sliderEntry
 
@@ -448,11 +624,15 @@ RdSidePanelPage {
                             }
 
                             text: entry.label
-                            valueText: shown.toFixed(entry.decimals ?? 1) + (entry.unit ?? "")
+                            textInset: 0
+                            // Figma's video filter rows show only the name (536:1865, 614:1473, 673:1692)
+                            valueText: ""
+                            dimmed: entry.hasToggle && !RdEffects.values[RdEffects.videoFilterKey(entry.module)]
                             from: entry.from ?? range.min ?? 0
                             to: entry.to ?? range.max ?? 1
                             stepSize: (entry.decimals ?? 1) === 0 ? 1 : Math.pow(10, -(entry.decimals ?? 1))
-                            showTicks: false
+                            showTicks: entry.ticks !== undefined
+                            tickIntervals: entry.ticks ?? 0
                             value: shown
                             onMoved: (v) => {
                                 if (live)
@@ -462,16 +642,17 @@ RdSidePanelPage {
                             }
                         }
                     }
-
                     Component {
                         id: colorEntry
-
                         Widgets.RdSettingRow {
                             text: entry.label
-
+                            textInset: 0
+                            rowHeight: VLCStyle.dp(32)
                             Widgets.RdValueBox {
                                 readonly property string hex: group.colorText(RdEffects.values[RdEffects.videoKey(entry.name)])
-
+                                implicitWidth: VLCStyle.dp(116)
+                                framed: false
+                                textColor: VLCStyle.palette.rdFgA3
                                 text: hex
                                 showSwatch: true
                                 swatch: hex
@@ -484,34 +665,26 @@ RdSidePanelPage {
                             }
                         }
                     }
-
+                    // full-width list without a label (Figma "Gradient" 673:1670)
                     Component {
                         id: choiceEntry
-
-                        Widgets.RdSettingRow {
-                            text: entry.label
-                            rowHeight: VLCStyle.dp(58)
-
-                            Widgets.RdDropdown {
-                                readonly property var _choices: RdEffects.optionChoices(entry.name)
-                                readonly property var _current: RdEffects.values[RdEffects.videoKey(entry.name)]
-
-                                implicitWidth: VLCStyle.dp(180)
-                                model: _choices.map((c) => c.text)
-                                currentIndex: _choices.findIndex((c) => String(c.value) === String(_current))
-                                Accessible.name: entry.label
-                                onActivated: (index) => RdEffects.setVideoValue(entry.name, _choices[index].value)
-                            }
+                        Widgets.RdDropdown {
+                            readonly property var _choices: RdEffects.optionChoices(entry.name)
+                            readonly property var _current: RdEffects.values[RdEffects.videoKey(entry.name)]
+                            frameless: true
+                            model: _choices.map((c) => c.text)
+                            currentIndex: _choices.findIndex((c) => String(c.value) === String(_current))
+                            Accessible.name: entry.label
+                            onActivated: (index) => RdEffects.setVideoValue(entry.name, _choices[index].value)
                         }
                     }
-
                     // a boolean (or 0 / 1) option of a filter
                     Component {
                         id: flagEntry
-
                         Widgets.RdSettingRow {
                             text: entry.label
-
+                            textInset: 0
+                            rowHeight: VLCStyle.dp(32)
                             Widgets.RdToggle {
                                 checked: !!Number(RdEffects.values[RdEffects.videoKey(entry.name)])
                                 Accessible.name: entry.label
@@ -519,13 +692,12 @@ RdSidePanelPage {
                             }
                         }
                     }
-
                     Component {
                         id: textEntry
-
                         Widgets.RdSettingRow {
                             text: entry.label
-
+                            textInset: 0
+                            rowHeight: VLCStyle.dp(36)
                             Widgets.RdValueBox {
                                 implicitWidth: VLCStyle.dp(200)
                                 text: String(RdEffects.values[RdEffects.videoKey(entry.name)])
@@ -534,13 +706,12 @@ RdSidePanelPage {
                             }
                         }
                     }
-
                     Component {
                         id: numberEntry
-
                         Widgets.RdSettingRow {
                             text: entry.label
-
+                            textInset: 0
+                            rowHeight: VLCStyle.dp(36)
                             Widgets.RdValueBox {
                                 text: String(RdEffects.values[RdEffects.videoKey(entry.name)])
                                 Accessible.name: entry.label
@@ -552,24 +723,8 @@ RdSidePanelPage {
                             }
                         }
                     }
-
-                    Component {
-                        id: pixelsEntry
-
-                        Widgets.RdSettingRow {
-                            text: entry.label
-
-                            Widgets.RdValueBox {
-                                text: qsTr("%1 px").arg(Number(RdEffects.values[RdEffects.videoKey(entry.name)]) || 0)
-                                Accessible.name: entry.label
-                                onEdited: (value) => {
-                                    const n = Math.round(group.parseNumber(value))
-                                    if (!isNaN(n))
-                                        RdEffects.setVideoValue(entry.name, Math.max(0, n))
-                                }
                             }
                         }
-                    }
                     }
                 }
             }

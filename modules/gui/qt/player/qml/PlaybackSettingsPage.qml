@@ -40,9 +40,10 @@ RdSidePanelPage {
     Widgets.RdSettingsSection {
         showDivider: false
 
+        // Figma "Frame 111": the 48 px dropdown row with 20 px under it (15 + the 5 px spacing)
         Widgets.RdSettingRow {
             text: qsTr("Audio Visualizer")
-            rowHeight: VLCStyle.dp(58)
+            Layout.bottomMargin: VLCStyle.dp(15)
 
             Widgets.RdChoiceDropdown {
                 implicitWidth: VLCStyle.dp(220)
@@ -52,10 +53,17 @@ RdSidePanelPage {
         }
 
         // the video's speed slider: 0.25 to 2 in 0.25 steps with a label under each step;
-        // the value box also takes VLC's other speeds (up to 4x)
+        // the value box also takes VLC's other speeds (up to 4x). Figma "Frame 105": a 44 px row
+        // with a frameless 140x32 box, 10 px, then the slider wrapper (4 px padding, labels 34
+        // under the thumb top)
         Widgets.RdParamSlider {
             text: qsTr("Speed")
             valueBox: true
+            valueFramed: false
+            valueTextColor: VLCStyle.palette.rdFgA3
+            rowHeight: VLCStyle.dp(44)
+            spacing: VLCStyle.dp(14)
+            labelSpacing: VLCStyle.dp(14)
             valueText: root.rateText(Player.rate)
             from: 0.25
             to: 2

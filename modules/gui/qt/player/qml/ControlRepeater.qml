@@ -129,9 +129,20 @@ Repeater {
         onLoaded: {
             // control should not request focus if they are not enabled:
             item.focus = Qt.binding(function() { return item.enabled && item.visible })
-            // redesign: icon buttons get the Figma "Icon Wrapper" width (30) in the player's bar
+            // redesign: icon buttons get the Figma "Icon Wrapper" size (30x32) in the player's bar;
+            // previous / next sit in the 28 px transport row next to the play pill (Figma
+            // "Frame 8" / "Frame 10": 30x28)
             if (item.rdMinimumWidth !== undefined)
                 item.rdMinimumWidth = Qt.binding(function() { return repeater.figmaGaps ? VLCStyle.rd_iconButtonWidth : 0 })
+            if (item.rdMinimumHeight !== undefined) {
+                const transport = (loader.controlId === ControlListModel.PREVIOUS_BUTTON
+                                   || loader.controlId === ControlListModel.NEXT_BUTTON)
+                item.rdMinimumHeight = Qt.binding(function() {
+                    if (!repeater.figmaGaps)
+                        return 0
+                    return transport ? VLCStyle.rd_playButtonHeight : VLCStyle.rd_iconButtonHeight
+                })
+            }
 
             // navigation parent of control is always controlLayout
             // so it can be set here unlike leftItem and rightItem:

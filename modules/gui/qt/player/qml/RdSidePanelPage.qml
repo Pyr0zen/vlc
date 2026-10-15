@@ -43,7 +43,18 @@ Flickable {
     contentWidth: width
     contentHeight: column.implicitHeight
 
-    T.ScrollBar.vertical: Widgets.ScrollBarExt { }
+    // Figma draws no scroll bar: it shows only while the page scrolls or the pointer is on it
+    T.ScrollBar.vertical: Widgets.ScrollBarExt {
+        id: scrollBar
+
+        opacity: (scrollBar.active || scrollBar.interacting) ? 1 : 0
+
+        Behavior on opacity {
+            NumberAnimation {
+                duration: VLCStyle.duration_short
+            }
+        }
+    }
 
     ColumnLayout {
         id: column

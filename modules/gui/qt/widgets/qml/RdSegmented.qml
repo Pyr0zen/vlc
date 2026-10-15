@@ -38,6 +38,7 @@ Rectangle {
 
     radius: VLCStyle.rd_radius_normal
     color: rdPalette.rdBgB2
+    opacity: enabled ? 1 : VLCStyle.rd_disabledRowOpacity
 
     // keyboard: Tab reaches the control, Left / Right pick the previous / next segment; the
     // focus ring is the FG/A3 border of the other redesign controls (not in Figma)
@@ -95,10 +96,12 @@ Rectangle {
                     text: segment.modelData
                     font.family: VLCStyle.rd_fontFamily
                     font.pixelSize: VLCStyle.rd_fontSize_label
-                    // Figma "Values": FG/A3 on the segments not chosen (dark only in Figma; the
-                    // light FG/A3 would be 2.5:1 on BG/A4, so FG/A2 there)
+                    // Figma "Values" (804:1208): FG/A3 on the segments not chosen, FG/A2 while
+                    // hovered (dark only in Figma; the light FG/A3 would be 2.5:1 on BG/A4, so
+                    // FG/A2 there)
                     color: segment.selected ? (root.rdPalette.isDark ? root.rdPalette.rdAccentMain : root.rdPalette.rdBgA1)
-                                            : (root.rdPalette.isDark ? root.rdPalette.rdFgA3 : root.rdPalette.rdFgA2)
+                                            : ((mouse.containsMouse || !root.rdPalette.isDark) ? root.rdPalette.rdFgA2
+                                                                                               : root.rdPalette.rdFgA3)
                 }
 
                 MouseArea {

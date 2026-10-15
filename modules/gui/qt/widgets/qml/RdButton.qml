@@ -22,7 +22,9 @@
 // - Save: BG/Accent Bright + Accent/Main (dialog Save, Test); disabled is gray (BG/A1 + FG/A2)
 //   at 50% opacity, as the Figma "Open network stream" export and the video (13:10) show it
 // - Primary: Accent/Main + FG/B1 (Next, Finish, Continue Watching)
-// - Bar: full-width BG/B2 + FG/A3, regular weight (Show Preferences, Open Advanced Settings)
+// - Bar: full-width BG/B2 + FG/A3, regular weight (Show Preferences)
+// - Link: the Bar layout without a fill, FG/A3, FG/A2 on hover (Open Advanced Settings: the
+//   Figma instance 812:1585 clears the fill, the video at 7:58 shows no button)
 // - Plain: Standard on BG/A4, the Settings pages' buttons (Figma "Settings - *" "Frame 141":
 //   Browse, Open, Reset picture, Edit Keyboard Shortcuts)
 // - Destructive: red text on a red-tinted fill (Settings > General "Reset all settings")
@@ -35,13 +37,14 @@ import VLC.Style
 T.Button {
     id: control
 
-    enum Style { Standard, Save, Primary, Bar, Plain, Destructive }
+    enum Style { Standard, Save, Primary, Bar, Plain, Destructive, Link }
 
     property int style: RdButton.Style.Standard
     property string rdIcon: ""            // optional Figma icon (Widgets.RdIcon) shown before the text
     // Figma dialog buttons use Inter 14; onboarding buttons Inter 16 (Next 600, Browse 400)
     property int fontPixelSize: VLCStyle.rd_fontSize_label
-    property int fontWeight: style === RdButton.Style.Bar ? Font.Normal : Font.DemiBold
+    property int fontWeight: (style === RdButton.Style.Bar || style === RdButton.Style.Link) ? Font.Normal
+                                                                                            : Font.DemiBold
 
     readonly property SystemPalette rdPalette: VLCStyle.palette
 
@@ -68,6 +71,7 @@ T.Button {
         case RdButton.Style.Save: return enabled ? rdPalette.rdBgAccentBright : rdPalette.rdBgA1
         case RdButton.Style.Primary: return hovered ? rdPalette.rdAccentBright : rdPalette.rdAccentMain
         case RdButton.Style.Bar: return hovered ? rdPalette.rdBgA4 : rdPalette.rdBgB2
+        case RdButton.Style.Link: return "transparent"
         case RdButton.Style.Destructive:
             return hovered ? Qt.lighter(rdPalette.rdBgDestructive, 1.3) : rdPalette.rdBgDestructive
         default:
@@ -81,14 +85,17 @@ T.Button {
         switch (style) {
         case RdButton.Style.Save: return enabled ? rdPalette.rdAccentMain : rdPalette.rdFgA2
         case RdButton.Style.Primary: return rdPalette.rdFgB1
-        case RdButton.Style.Bar: return hovered ? rdPalette.rdFgA2 : rdPalette.rdFgA3
+        case RdButton.Style.Bar:
+        case RdButton.Style.Link:
+            return hovered ? rdPalette.rdFgA2 : rdPalette.rdFgA3
         case RdButton.Style.Destructive: return rdPalette.rdFgDestructive
         default: return rdPalette.isDark ? rdPalette.rdFgA2 : rdPalette.rdBgA1
         }
     }
 
     background: Rectangle {
-        radius: control.style === RdButton.Style.Bar ? VLCStyle.rd_radius_small : VLCStyle.rd_radius_normal
+        radius: (control.style === RdButton.Style.Bar || control.style === RdButton.Style.Link)
+                ? VLCStyle.rd_radius_small : VLCStyle.rd_radius_normal
         color: control._bg
         border.width: control.visualFocus ? VLCStyle.dp(1) : 0
         // the light Standard button is dark itself: its focus ring is the accent

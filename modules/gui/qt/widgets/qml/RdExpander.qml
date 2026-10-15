@@ -36,6 +36,9 @@ Item {
     property bool expanded: false
     property string expandText: qsTr("Expand Settings")
     property string collapseText: qsTr("Collapse Settings")
+    // under the content: the card's 10 px plus the last row's 10 (content whose blocks carry
+    // their own padding sets 10)
+    property real bottomPadding: VLCStyle.dp(20)
 
     readonly property SystemPalette rdPalette: VLCStyle.palette
 
@@ -46,9 +49,12 @@ Item {
         id: card
 
         width: parent.width
-        height: header.height + (root.expanded ? inner.height + VLCStyle.dp(16) : 0)
+        // Figma expanded variants (536:1860, 6114:13615): BG/A3, rows padded 0,16,10,16 right
+        // under the header, 10 px card padding at the bottom (20 under the last row's slider
+        // with the row's own 10)
+        height: header.height + (root.expanded ? inner.height + root.bottomPadding : 0)
         radius: VLCStyle.rd_radius_normal
-        color: root.expanded ? root.rdPalette.rdBgA2 : root.rdPalette.rdBgB2
+        color: root.expanded ? root.rdPalette.rdBgA3 : root.rdPalette.rdBgB2
 
         // Figma "Video - Essential" bar: 360x48, radius 6, padding 0,10,0,16
         T.AbstractButton {
@@ -103,9 +109,9 @@ Item {
             id: inner
 
             visible: root.expanded
-            x: VLCStyle.dp(12)
-            y: header.height + VLCStyle.dp(4)
-            width: parent.width - VLCStyle.dp(24)
+            x: VLCStyle.dp(16)
+            y: header.height
+            width: parent.width - VLCStyle.dp(32)
 
             active: false
             sourceComponent: root.content

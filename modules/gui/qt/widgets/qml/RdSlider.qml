@@ -34,13 +34,19 @@ T.Slider {
     property bool bipolar: false
     property real zeroValue: 0
     // tick marks every tickStep (the step by default; a percentage slider moving by 1 marks
-    // every 10, Figma "Text opacity")
+    // every 10, Figma "Text opacity"); tickIntervals sets the count directly (Background
+    // Opacity: tenths, Adjust Pitch: one mark at 0)
     property real tickStep: stepSize
     property bool showTicks: tickStep > 0 && (to - from) / tickStep <= 40
+    property int tickIntervals: tickStep > 0 ? Math.round((to - from) / tickStep) : 0
+    // the setting's filter is off: Figma draws the slider in luminosity blend (614:1472), a gray
+    // thumb and fill; moving it still works (and turns the filter on)
+    property bool dimmed: false
     // labels under the track, spread from the left end to the right end (Figma "Frame 205")
     property var labels: []
     // Figma "wrapper" auto layout: the track 4 px down (8 in the Settings rows whose slider is
-    // wrapped twice), then the gap to the labels (10; 8 in some Settings rows)
+    // wrapped twice), then the gap to the labels (10; 8 in some Settings rows; 14 under the
+    // sidebar's Speed slider, whose wrapper is wrapped again: labels 34 under the thumb top)
     property real trackTop: VLCStyle.dp(4)
     property real labelSpacing: VLCStyle.dp(10)
 
@@ -53,6 +59,8 @@ T.Slider {
                                      : trackTop + VLCStyle.dp(16) + VLCStyle.dp(4)
 
     focusPolicy: Qt.StrongFocus
+    // disabled: Figma's 30 % rows ("Settings - library")
+    opacity: enabled ? 1 : VLCStyle.rd_disabledRowOpacity
 
     Keys.priority: Keys.AfterItem
     Keys.onPressed: (event) => Navigation.defaultKeyAction(event)
@@ -94,21 +102,18 @@ T.Slider {
                 width: Math.max(control.bipolar ? 0 : VLCStyle.dp(8), Math.abs(thumbX - zeroX))
                 height: track.height - 2 * control._inset
                 radius: VLCStyle.rd_radius_small
-                color: control.rdPalette.rdBgAccentBright
+                color: control.dimmed ? control.rdPalette.rdBgA1 : control.rdPalette.rdBgAccentBright
             }
 
-            // Figma "degrees": the marks between the ends (its first and last are hidden)
+            // Figma "degrees" (5187:24548, 848:1693): the marks between the ends (the first and
+            // last are hidden), centred on the steps of the fill span
             Repeater {
-                id: ticks
-
-                readonly property int segments: control.showTicks ? Math.round((control.to - control.from) / control.tickStep) : 0
-
-                model: Math.max(0, segments - 1)
+                model: control.showTicks ? Math.max(0, control.tickIntervals - 1) : 0
 
                 delegate: Rectangle {
                     required property int index
 
-                    x: control._inset + (index + 1) * (fill.span - width) / ticks.segments
+                    x: control._inset + (index + 1) * fill.span / control.tickIntervals - width / 2
                     anchors.verticalCenter: parent.verticalCenter
                     // Figma "degrees": 6 px lines stroked 2 px with round caps (2 x 8 drawn),
                     // BG/Accent Dark screened over the track or the fill (dark: #221E19 / #4B3217)
@@ -156,7 +161,8 @@ T.Slider {
         width: VLCStyle.dp(8)
         height: VLCStyle.dp(24)
         radius: VLCStyle.rd_radius_small
-        color: (control.pressed || control.hovered || control.visualFocus) ? control.rdPalette.rdAccentMain
-                                                                           : control.rdPalette.rdAccentDim
+        color: (control.pressed || control.hovered || control.visualFocus)
+               ? (control.dimmed ? control.rdPalette.rdFgA2 : control.rdPalette.rdAccentMain)
+               : (control.dimmed ? control.rdPalette.rdFgA3 : control.rdPalette.rdAccentDim)
     }
 }

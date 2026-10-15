@@ -157,7 +157,7 @@ public:
     COLOR_DEFINITION(rdShadow, QColor(0x00, 0x00, 0x00, 117)); // Figma effect drop shadow #000000 46%
     COLOR_DEFINITION(rdCardShadow, QColor(0x00, 0x00, 0x00, 97)); // Figma onboarding drop shadow #000000 38% (y 4, blur 11.8)
     COLOR_DEFINITION(rdKeyShadow, QColor(0x5C, 0x5C, 0x5C, 64)); // Figma onboarding keycap drop shadow #5C5C5C 25% (y 6, no blur)
-    // Figma "volume" component fills of each theme's Player frame: the cone's empty part and the
+    COLOR_DEFINITION(rdListShadow, QColor(0x00, 0x00, 0x00, 89)); // Figma open dropdown list drop shadow #000000 35% (y 4, blur 13.8)    // Figma "volume" component fills of each theme's Player frame: the cone's empty part and the
     // tint over its gradient (Dark: BG/B2 and #000000 20 %, Light: BG/A5 and #FFFFFF 20 %)
     COLOR_DEFINITION(rdVolumeEmpty, "#090909");
     COLOR_DEFINITION(rdVolumeTint, QColor(0x00, 0x00, 0x00, 51));

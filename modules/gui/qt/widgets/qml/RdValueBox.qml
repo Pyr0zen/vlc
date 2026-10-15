@@ -20,6 +20,8 @@
 // 2 px BG/A4 inside stroke (accent while typing), Inter 14
 // FG/A2). Shows a value; when editable, clicking it lets the user type a new one (Enter applies,
 // Escape cancels). An optional color swatch (22x22, radius 2) sits at the right (Text Color).
+// framed: false is a box without the stroke, 32 px tall (Settings colour fields "Frame 87", the
+// Playback tab's Speed box "Frame 86" 5187:24542); the accent stroke still shows while typing.
 import QtQuick
 import QtQuick.Templates as T
 
@@ -33,13 +35,20 @@ T.Control {
     property bool editable: true
     property color swatch: "transparent"
     property bool showSwatch: false
+    property int fontSize: VLCStyle.rd_fontSize_label
+    // a name inside the box, left of the value (Figma Crop "Frame 87" 774:1024: "Top" FG/A3 at
+    // 12, the value FG/A2 ending 40 px from the right edge)
+    property string prefix: ""
+    // a unit after the value, in FG/A4 (Figma "0 px": the "px" is overridden to FG/A4)
+    property string suffix: ""
     // input validation while typing
     property var validator: null
     // the 2 px BG/A4 frame (Figma "text_input"); the color fields of Settings ("Frame 87") and
     // the start volume box have none
     property bool framed: true
     property real backgroundRadius: VLCStyle.rd_radius_normal
-    // the text color (Figma shows a value not in use at 40 %)
+    // the text color: FG/A2 (FG/A3 in the sidebar's Speed box and Colors card; Figma shows a
+    // value not in use at 40 %)
     property color textColor: rdPalette.rdFgA2
 
     signal edited(string text)
@@ -50,12 +59,18 @@ T.Control {
     readonly property bool dirty: editing && input.text !== control.text
 
     implicitWidth: VLCStyle.dp(140)
-    implicitHeight: VLCStyle.dp(36)
+    implicitHeight: framed ? VLCStyle.dp(36) : VLCStyle.dp(32)
 
-    leftPadding: VLCStyle.dp(12)
-    rightPadding: showSwatch ? VLCStyle.dp(5) : VLCStyle.dp(18)
+    // the text sits 12 px inside the frame's 2 px stroke (Figma text at 14)
+    leftPadding: framed ? VLCStyle.dp(14) : VLCStyle.dp(12)
+    // the swatch sits 5 px inside the frame's 2 px stroke (Figma 4046:12377), 5 px from the edge
+    // of a frameless box (800:1149)
+    rightPadding: showSwatch ? (framed ? VLCStyle.dp(7) : VLCStyle.dp(5))
+                             : (prefix !== "" ? VLCStyle.dp(40) : VLCStyle.dp(18))
 
     hoverEnabled: true
+    // disabled: Figma's 30 % rows ("Settings - library")
+    opacity: enabled ? 1 : VLCStyle.rd_disabledRowOpacity
 
     background: Rectangle {
         radius: control.backgroundRadius
@@ -66,11 +81,25 @@ T.Control {
     }
 
     contentItem: Item {
+        Text {
+            id: prefixText
+
+            visible: control.prefix !== ""
+            anchors.left: parent.left
+            anchors.verticalCenter: parent.verticalCenter
+            text: control.prefix
+            font.family: VLCStyle.rd_fontFamily
+            font.pixelSize: control.fontSize
+            color: control.rdPalette.rdFgA3
+        }
+
         TextInput {
             id: input
 
-            anchors.left: parent.left
-            anchors.right: swatchRect.visible ? swatchRect.left : parent.right
+            anchors.left: prefixText.visible ? prefixText.right : parent.left
+            anchors.leftMargin: prefixText.visible ? VLCStyle.dp(8) : 0
+            anchors.right: swatchRect.visible ? swatchRect.left : (suffixText.visible ? suffixText.left : parent.right)
+            horizontalAlignment: prefixText.visible ? TextInput.AlignRight : TextInput.AlignLeft
             anchors.rightMargin: swatchRect.visible ? VLCStyle.dp(8) : 0
             anchors.verticalCenter: parent.verticalCenter
 
@@ -81,7 +110,7 @@ T.Control {
             selectByMouse: true
             validator: control.validator
             font.family: VLCStyle.rd_fontFamily
-            font.pixelSize: VLCStyle.rd_fontSize_label
+            font.pixelSize: control.fontSize
             color: control.textColor
             selectionColor: control.rdPalette.rdAccentMain
             selectedTextColor: control.rdPalette.rdFgB1
@@ -123,6 +152,18 @@ T.Control {
             }
         }
 
+        Text {
+            id: suffixText
+
+            visible: control.suffix !== ""
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            text: " " + control.suffix
+            font.family: VLCStyle.rd_fontFamily
+            font.pixelSize: control.fontSize
+            color: control.rdPalette.rdFgA4
+        }
+
         Rectangle {
             id: swatchRect
 
@@ -133,7 +174,7 @@ T.Control {
             height: VLCStyle.dp(22)
             radius: VLCStyle.rd_radius_xsmall
             color: control.swatch
-            // Figma: #FFFFFF 21 %, 1.5 px
+            // Figma: #FFFFFF 21 %, 1.5 px (dp() would round it to 2)
             border.width: 1.5 * VLCStyle.scale
             border.color: control.rdPalette.rdSwatchStroke
         }

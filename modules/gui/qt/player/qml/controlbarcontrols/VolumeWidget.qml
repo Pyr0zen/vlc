@@ -140,19 +140,23 @@ T.Pane {
 
                 implicitWidth: VLCStyle.rd_volumeWidth
                 implicitHeight: VLCStyle.rd_seekBarHeight
-                width: volControl.availableWidth
+                // the Figma cone vector ("Rectangle 6", 89x28) overhangs the 88 px slider by 1 px
+                width: volControl.availableWidth * 89 / 88
                 height: volControl.availableHeight
 
                 readonly property size size: Qt.size(width, height)
-                readonly property real tipRadius: height * 0.12
                 readonly property color emptyColor: VLCStyle.palette.rdVolumeEmpty
                 readonly property color tint: VLCStyle.palette.rdVolumeTint
+                // fraction of the cone's width; the fill mask is measured on the 88 px slider
                 readonly property real level: {
                     const v = volControl.value
                     const knee = 63 / 88
+                    let l
                     if (v <= 1)
-                        return Math.max(0, v) * knee
-                    return Math.min(1, knee + (v - 1) * (1 - knee) / Math.max(0.01, root._maxvolpos - 1))
+                        l = Math.max(0, v) * knee
+                    else
+                        l = Math.min(1, knee + (v - 1) * (1 - knee) / Math.max(0.01, root._maxvolpos - 1))
+                    return l * 88 / 89
                 }
 
                 blending: true

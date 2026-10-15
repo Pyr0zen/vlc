@@ -32,6 +32,8 @@ T.AbstractButton {
     implicitHeight: VLCStyle.dp(32)
 
     focusPolicy: Qt.StrongFocus
+    // disabled: Figma's 30 % rows ("Settings - library")
+    opacity: enabled ? 1 : VLCStyle.rd_disabledRowOpacity
 
     Accessible.role: Accessible.CheckBox
     Accessible.checked: control.checked
@@ -49,7 +51,8 @@ T.AbstractButton {
     }
 
     contentItem: Item {
-        // knob side highlight (Figma "Rectangle 11", 33x26)
+        // highlight behind the ON / OFF text, opposite the knob (Figma "Rectangle 11", 33x26:
+        // x 3 when on, x 32 when off)
         Rectangle {
             id: track
 
@@ -57,7 +60,7 @@ T.AbstractButton {
             height: VLCStyle.dp(26)
             radius: VLCStyle.dp(3)
             anchors.verticalCenter: parent.verticalCenter
-            x: control.checked ? parent.width - width - VLCStyle.dp(3) : VLCStyle.dp(3)
+            x: control.checked ? VLCStyle.dp(3) : parent.width - width - VLCStyle.dp(3)
             color: control.checked ? control.rdPalette.rdBgAccentBright : control.rdPalette.rdBgA4
         }
 
