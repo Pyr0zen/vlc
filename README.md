@@ -1,3 +1,9 @@
+> **About this fork:** this is an unofficial redesign of VLC's interface based on
+> ["VLC Redesign" by Juxtopposed](https://www.figma.com/community/file/1691465999134370980/vlc-redesign)
+> ([video](https://youtu.be/ERFeOgqk324)); the Figma design is used under
+> [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). This project is not affiliated with
+> VideoLAN or with Juxtopposed. See [CREDITS.md](CREDITS.md).
+
 # VLC media player
 
 **VLC** is a libre and open source **media player** and **multimedia engine**,
