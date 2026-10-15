@@ -172,6 +172,12 @@ SettingsPage {
             checkedValue: false
             uncheckedValue: true
         }
+
+        // the seek bar preview card (P2-04); Figma: on
+        SettingsOption {
+            option: "qt-seek-thumbnails"
+            text: qsTr("Show thumbnail while scrubbing")
+        }
     }
 
     SettingsSection {

@@ -73,7 +73,7 @@ const QSet<QString>& curatedOptions()
         // Playback
         "playlist-autostart", "rate", "playlist-cork", "preferred-resolution", "menu-language",
         "audio-track", "sub-track", "loop", "repeat", "random", "play-and-stop", "play-and-exit",
-        "play-and-pause", "input-fast-seek", "dvd", "avi-index", "mkv-preload-local-dir",
+        "play-and-pause", "input-fast-seek", "qt-seek-thumbnails", "dvd", "avi-index", "mkv-preload-local-dir",
         "input-timeshift-path", "input-timeshift-granularity",
         // Video
         "video", "fullscreen", "disable-screensaver", "video-wallpaper", "deinterlace",
