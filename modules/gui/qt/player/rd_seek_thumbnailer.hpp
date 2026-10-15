@@ -43,7 +43,7 @@ struct vlc_preparser_req;
  * position. One VLC thumbnailer request (vlc_preparser, its own input thread, software decode,
  * fast keyframe seek) runs at a time, at most one starts per throttle interval, and the newest
  * position replaces any position still waiting; a running request that no longer matches the
- * pointer is cancelled once it is older than the interval. Frames are scaled to the card's
+ * pointer is cancelled once it has run for a while (stale). Frames are scaled to the card's
  * pixel size on the thumbnailer thread and kept in a small LRU cache keyed by time bucket, so
  * going back over the bar shows them at once. stop() (pointer gone) cancels everything; the
  * thumbnailer itself is created on the first request, so nothing runs before the first hover.
@@ -81,6 +81,7 @@ public:
     Q_INVOKABLE void stop();
 
     struct Cache;
+    struct Converter;
 
 signals:
     void supportedChanged();
@@ -89,11 +90,15 @@ signals:
 
 private:
     void onInputChanged();
+    void updateSupported();
     void setSupported(bool supported);
+    void setUnavailable();
     void resetMedia();
     void setSource(qint64 bucket);
     void startNext();
-    void onRequestEnded(vlc_preparser_req* req, qint64 bucket, int generation, bool cancelled,
+    void armTimer(int ms);
+    void cancelInflight();
+    void onRequestEnded(vlc_preparser_req* req, qint64 bucket, int generation, int status,
                         const QImage& image);
 
     static void onThumbnailEnded(vlc_preparser_req* req, int status, picture_t* picture, void* data);
@@ -103,8 +108,12 @@ private:
 
     vlc_preparser_t* m_preparser = nullptr;
     std::shared_ptr<Cache> m_cache;
+    // the frame scaler, used on the thumbnailer thread only (it has a single thread)
+    std::unique_ptr<Converter> m_converter;
 
     bool m_supported = false;
+    // VLC's thumbnailer could not be created: no previews for the rest of the session
+    bool m_unavailable = false;
     QUrl m_source;
     QSize m_frameSize;
 
@@ -116,7 +125,7 @@ private:
     vlc_tick_t m_bucketLength = 0;
     // bumped whenever the media or the frame size changes: older frames are dropped
     int m_generation = 0;
-    // failed requests in a row for this media
+    // failed requests in a row for this media (a timeout counts twice)
     int m_failures = 0;
 
     // the position under the pointer, as a time bucket (-1: none waiting)
@@ -128,7 +137,8 @@ private:
     bool m_inflightCancelled = false;
     QElapsedTimer m_inflightAge;
 
-    // throttle: at most one request starts per interval; single shot, only armed while a
+    // throttle: at most one request starts per interval, and a running request for a position
+    // the pointer has left is checked again once it is stale; single shot, only armed while a
     // position waits
     QElapsedTimer m_lastStart;
     QTimer m_throttle;

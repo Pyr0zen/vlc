@@ -48,8 +48,10 @@ namespace {
 
 // at most one thumbnailer request starts per interval while the pointer moves (ms)
 constexpr int kThrottleMs = 150;
-// a running request for a position the pointer has left is cancelled after this long (ms)
-constexpr int kStaleMs = 2 * kThrottleMs;
+// a running request for a position the pointer has left is cancelled after this long (ms):
+// long enough for a keyframe seek and decode of a large file to finish, so a pointer that
+// keeps moving still gets frames instead of cancelling every request
+constexpr int kStaleMs = 800;
 // frames kept per media (about 250 KB each at 125 % scaling)
 constexpr int kCacheSize = 24;
 // the bar is split into this many time buckets at most, each at least kMinBucket long
@@ -57,20 +59,62 @@ constexpr int kMaxBuckets = 300;
 constexpr vlc_tick_t kMinBucket = VLC_TICK_FROM_SEC(1);
 // a stuck request (slow disk, broken file) gives up after this long
 constexpr vlc_tick_t kTimeout = VLC_TICK_FROM_SEC(3);
-// failed requests in a row after which the media counts as not previewable
+// failed requests in a row after which the media counts as not previewable; a timeout counts
+// twice (each one kept the thumbnailer busy for kTimeout)
 constexpr int kMaxFailures = 3;
+
+} // namespace
+
+// the image handler scaling the frames: created on the first frame and reused while the frame
+// and output sizes stay the same (the frames of one media at one card size), so its scaler is
+// not set up again for every frame. The thumbnailer runs a single thread; the lock only guards
+// against a second one
+struct RdSeekThumbnailer::Converter
+{
+    explicit Converter(vlc_object_t* obj) : obj(obj) {}
+    ~Converter() { reset(); }
+
+    // call with the lock held
+    image_handler_t* handlerFor(const QSize& in, const QSize& out)
+    {
+        if (handler && (in != inSize || out != outSize))
+            reset();
+        if (!handler)
+        {
+            handler = image_HandlerCreate(obj);
+            inSize = in;
+            outSize = out;
+        }
+        return handler;
+    }
+
+    void reset()
+    {
+        if (handler)
+            image_HandlerDelete(handler);
+        handler = nullptr;
+    }
+
+    QMutex lock;
+    vlc_object_t* const obj;
+    image_handler_t* handler = nullptr;
+    QSize inSize;
+    QSize outSize;
+};
+
+namespace {
 
 struct Job
 {
     RdSeekThumbnailer* self;
-    vlc_object_t* obj;
+    RdSeekThumbnailer::Converter* converter;
     qint64 bucket;
     int generation;
     QSize box;
 };
 
 // the decoded frame, scaled to fit `box` with its display aspect and orientation, as RGBA
-QImage frameToImage(vlc_object_t* obj, picture_t* picture, const QSize& box)
+QImage frameToImage(RdSeekThumbnailer::Converter& converter, picture_t* picture, const QSize& box)
 {
     video_format_t fmtIn = picture->format;
     if (fmtIn.i_sar_num == 0 || fmtIn.i_sar_den == 0)
@@ -102,25 +146,28 @@ QImage frameToImage(vlc_object_t* obj, picture_t* picture, const QSize& box)
     // the converter only scales (it refuses to change the orientation); Qt turns it below
     fmtOut.orientation = fmtIn.orientation;
 
-    image_handler_t* handler = image_HandlerCreate(obj);
-    if (!handler)
-        return {};
-
     QImage image;
-    picture_t* rgba = image_Convert(handler, picture, &fmtIn, &fmtOut);
-    if (rgba)
     {
-        const plane_t& plane = rgba->p[0];
-        const int rowBytes = storedWidth * 4;
-        if (plane.i_pitch >= rowBytes && plane.i_visible_lines >= storedHeight)
+        QMutexLocker locker(&converter.lock);
+        image_handler_t* handler = converter.handlerFor(QSize(int(fmtIn.i_width), int(fmtIn.i_height)),
+                                                        QSize(storedWidth, storedHeight));
+        if (!handler)
+            return {};
+
+        picture_t* rgba = image_Convert(handler, picture, &fmtIn, &fmtOut);
+        if (rgba)
         {
-            image = QImage(storedWidth, storedHeight, QImage::Format_RGBA8888);
-            for (int y = 0; y < storedHeight; ++y)
-                memcpy(image.scanLine(y), plane.p_pixels + y * plane.i_pitch, rowBytes);
+            const plane_t& plane = rgba->p[0];
+            const int rowBytes = storedWidth * 4;
+            if (plane.i_pitch >= rowBytes && plane.i_visible_lines >= storedHeight)
+            {
+                image = QImage(storedWidth, storedHeight, QImage::Format_RGBA8888);
+                for (int y = 0; y < storedHeight; ++y)
+                    memcpy(image.scanLine(y), plane.p_pixels + y * plane.i_pitch, rowBytes);
+            }
+            picture_Release(rgba);
         }
-        picture_Release(rgba);
     }
-    image_HandlerDelete(handler);
 
     if (image.isNull())
         return image;
@@ -230,6 +277,7 @@ RdSeekThumbnailer::RdSeekThumbnailer(qt_intf_t* intf, PlayerController* player, 
     , m_intf(intf)
     , m_player(player)
     , m_cache(std::make_shared<Cache>())
+    , m_converter(std::make_unique<Converter>(VLC_OBJECT(intf)))
 {
     m_throttle.setSingleShot(true);
     connect(&m_throttle, &QTimer::timeout, this, &RdSeekThumbnailer::startNext);
@@ -243,7 +291,8 @@ RdSeekThumbnailer::~RdSeekThumbnailer()
 {
     m_throttle.stop();
     // ends the thumbnailer thread; the callback of the request in flight runs before this
-    // returns, and its result (queued to this object) is dropped with it
+    // returns, and its result (queued to this object) is dropped with it. The converter is
+    // deleted after this, once no thread uses it any more
     if (m_preparser)
         vlc_preparser_Delete(m_preparser);
     if (m_inflight)
@@ -285,14 +334,30 @@ void RdSeekThumbnailer::onInputChanged()
         }
     }
 
-    if (uri == m_uri && length == m_length)
+    if (uri == m_uri)
+    {
+        // the same media with a new length (known only after the start, or a file still being
+        // written): its item, frames and time buckets stay valid, a preview on screen goes on
+        if (length != m_length)
+        {
+            m_length = length;
+            updateSupported();
+        }
         return;
+    }
 
     resetMedia();
     m_uri = uri;
     m_length = length;
-    // local files only: a stream would be opened a second time over the network
-    setSupported(m_uri.startsWith("file://") && m_length > 0);
+    updateSupported();
+}
+
+void RdSeekThumbnailer::updateSupported()
+{
+    // local files only: a stream would be opened a second time over the network; a media whose
+    // frames keep failing stays on the time-only tooltip
+    setSupported(!m_unavailable && m_failures < kMaxFailures
+                 && m_uri.startsWith("file://") && m_length > 0);
 }
 
 void RdSeekThumbnailer::setSupported(bool supported)
@@ -362,14 +427,6 @@ void RdSeekThumbnailer::request(double position)
         return;
     m_wanted = bucket;
 
-    // the running request is for a position the pointer has left: once it has had its
-    // chance, cancel it so the new position starts sooner
-    if (m_inflight && !m_inflightCancelled && m_inflightBucket != bucket && m_inflightAge.elapsed() >= kStaleMs)
-    {
-        m_inflightCancelled = true;
-        vlc_preparser_Cancel(m_preparser, m_inflight);
-    }
-
     startNext();
 }
 
@@ -377,23 +434,57 @@ void RdSeekThumbnailer::stop()
 {
     m_wanted = -1;
     m_throttle.stop();
-    if (m_inflight && !m_inflightCancelled)
-    {
-        m_inflightCancelled = true;
-        vlc_preparser_Cancel(m_preparser, m_inflight);
-    }
+    cancelInflight();
     setSource(-1);
 }
 
+void RdSeekThumbnailer::cancelInflight()
+{
+    if (!m_inflight || m_inflightCancelled)
+        return;
+    m_inflightCancelled = true;
+    vlc_preparser_Cancel(m_preparser, m_inflight);
+}
+
+void RdSeekThumbnailer::setUnavailable()
+{
+    stop();
+    m_unavailable = true;
+    updateSupported();
+}
+
+// the timer fires after `ms` at the latest (an earlier tick only re-checks)
+void RdSeekThumbnailer::armTimer(int ms)
+{
+    if (!m_throttle.isActive() || m_throttle.remainingTime() > ms)
+        m_throttle.start(std::max(0, ms));
+}
+
+// runs on each new pointer position and on each tick of the single shot timer
 void RdSeekThumbnailer::startNext()
 {
-    if (m_inflight || m_wanted < 0 || !m_item)
+    if (m_wanted < 0 || !m_item)
         return;
+
+    if (m_inflight)
+    {
+        // the running request is for a position the pointer has left: once it is stale, cancel
+        // it so the wanted position starts sooner; until then, check again when it gets stale
+        // (the pointer may not move any more)
+        if (!m_inflightCancelled && m_inflightBucket != m_wanted)
+        {
+            const qint64 age = m_inflightAge.elapsed();
+            if (age >= kStaleMs)
+                cancelInflight();
+            else
+                armTimer(int(kStaleMs - age));
+        }
+        return;
+    }
 
     if (m_lastStart.isValid() && m_lastStart.elapsed() < kThrottleMs)
     {
-        if (!m_throttle.isActive())
-            m_throttle.start(int(kThrottleMs - m_lastStart.elapsed()));
+        armTimer(int(kThrottleMs - m_lastStart.elapsed()));
         return;
     }
 
@@ -408,14 +499,17 @@ void RdSeekThumbnailer::startNext()
         m_preparser = vlc_preparser_New(VLC_OBJECT(vlc_object_instance(m_intf)), &cfg);
         if (!m_preparser)
         {
-            m_wanted = -1;
+            // no thumbnailer: the seek bar keeps the time-only tooltip
+            setUnavailable();
             return;
         }
     }
 
     const qint64 bucket = m_wanted;
-    // the middle of the bucket, a little before the end for the last one
-    const vlc_tick_t time = std::min<vlc_tick_t>(bucket * m_bucketLength + m_bucketLength / 2,
+    // the start of the bar is the first frame (no seek, the card reads 00:00:00 there);
+    // otherwise the middle of the bucket, a little before the end for the last one
+    const vlc_tick_t time = (bucket == 0) ? 0
+                          : std::min<vlc_tick_t>(bucket * m_bucketLength + m_bucketLength / 2,
                                                  std::max<vlc_tick_t>(0, m_length - VLC_TICK_FROM_MS(500)));
 
     struct vlc_thumbnailer_arg arg{};
@@ -426,7 +520,7 @@ void RdSeekThumbnailer::startNext()
 
     static const struct vlc_thumbnailer_cbs cbs = { &RdSeekThumbnailer::onThumbnailEnded };
 
-    Job* job = new Job{ this, VLC_OBJECT(m_intf), bucket, m_generation, m_frameSize };
+    Job* job = new Job{ this, m_converter.get(), bucket, m_generation, m_frameSize };
     vlc_preparser_req* req = vlc_preparser_req_NewThumbnail(m_preparser, m_item.get(), &arg, &cbs, job);
     if (!req)
     {
@@ -458,36 +552,43 @@ void RdSeekThumbnailer::onThumbnailEnded(vlc_preparser_req* req, int status, pic
 
     QImage image;
     if (status == VLC_SUCCESS && picture)
-        image = frameToImage(job.obj, picture, job.box);
+        image = frameToImage(*job.converter, picture, job.box);
 
     RdSeekThumbnailer* self = job.self;
-    const bool cancelled = (status == -EINTR);
-    QMetaObject::invokeMethod(self, [self, req, job, cancelled, image]() {
-        self->onRequestEnded(req, job.bucket, job.generation, cancelled, image);
+    QMetaObject::invokeMethod(self, [self, req, job, status, image]() {
+        self->onRequestEnded(req, job.bucket, job.generation, status, image);
     }, Qt::QueuedConnection);
 }
 
 void RdSeekThumbnailer::onRequestEnded(vlc_preparser_req* req, qint64 bucket, int generation,
-                                       bool cancelled, const QImage& image)
+                                       int status, const QImage& image)
 {
     if (req == m_inflight)
         m_inflight = nullptr;
     vlc_preparser_req_Release(req);
 
-    if (generation == m_generation)
+    // a cancelled request says nothing about the media, and its position may be wanted again
+    // (the pointer came back to it): it is started again below
+    const bool cancelled = (status == -EINTR);
+
+    if (generation == m_generation && !cancelled)
     {
         if (!image.isNull())
         {
             m_failures = 0;
             m_cache->insert(generation, bucket, image);
         }
-        else if (!cancelled && ++m_failures >= kMaxFailures)
+        else
         {
-            // VLC cannot make frames of this media (codec, damaged file, too slow): the seek
-            // bar falls back to the time-only tooltip until another media plays
-            stop();
-            setSupported(false);
-            return;
+            m_failures += (status == VLC_ETIMEOUT) ? 2 : 1;
+            if (m_failures >= kMaxFailures)
+            {
+                // VLC cannot make frames of this media (codec, damaged file, too slow): the
+                // seek bar falls back to the time-only tooltip until another media plays
+                stop();
+                updateSupported();
+                return;
+            }
         }
         if (bucket == m_wanted)
         {
