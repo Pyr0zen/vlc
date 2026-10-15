@@ -40,6 +40,9 @@ namespace {
 // reach it (a video packet comes between audio packets; a broken file must not read forever)
 constexpr double kSampleSeconds = 0.25;
 constexpr int kSampleMaxPackets = 4000;
+// a file that has shown no audio track after this many packets has none (a video-only file
+// is not read to its end for nothing)
+constexpr int kNoAudioPackets = 2000;
 
 struct Track
 {
@@ -616,8 +619,11 @@ QByteArray RdWaveformScanner::Scan::execute()
 
         if (!sampled)
         {
-            while (!stopped() && demux_Demux(demux) == VLC_DEMUXER_SUCCESS)
-                ;
+            for (int packet = 0; !stopped() && demux_Demux(demux) == VLC_DEMUXER_SUCCESS; ++packet)
+            {
+                if (!audio && packet >= kNoAudioPackets)
+                    break;
+            }
             if (audio && !stopped())
                 process(audio, nullptr);
         }
@@ -638,8 +644,12 @@ QByteArray RdWaveformScanner::Scan::execute()
                 {
                     if (demux_Demux(demux) != VLC_DEMUXER_SUCCESS)
                         break;
+                    if (!audio && packet >= kNoAudioPackets)
+                        break;
                 }
                 targetBin = -1;
+                if (!audio)
+                    break;
             }
         }
 
