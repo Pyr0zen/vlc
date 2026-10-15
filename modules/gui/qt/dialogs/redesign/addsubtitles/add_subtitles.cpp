@@ -891,31 +891,48 @@ void AddSubtitles::rebuild()
     }
     else
     {
-        const QVector<Video>& videos = m_target == TargetFolder ? m_folderVideos : m_playlistVideos;
-        const QHash<QString, int> manual = m_manual.value(m_source);
-
-        QVector<SubtitleMatcher::Name> names;
-        names.reserve(candidates.size());
-        for (const Candidate& candidate : candidates)
-            names.append(candidate.parsed);
-
-        QVector<AddSubtitlesModel::Row> rows;
-        rows.reserve(videos.size());
-        for (const Video& video : videos)
-        {
-            AddSubtitlesModel::Row row;
-            row.videoName = video.name;
-            row.videoMrl = video.mrl;
-            const auto it = manual.constFind(video.mrl);
-            row.manual = it != manual.cend();
-            row.candidate = row.manual ? it.value() : SubtitleMatcher::bestMatch(video.parsed, names, pref);
-            if (row.candidate >= candidates.size())
-                row.candidate = -1;
-            if (row.candidate >= 0)
-                row.name = candidates.at(row.candidate).name;
-            rows.append(row);
-        }
-        m_matches.setRows(rows);
+        // every video against every subtitle: on a worker thread (a large folder takes a while)
+        const QVector<Video> videos = m_target == TargetFolder ? m_folderVideos : m_playlistVideos;
+        auto rows = std::make_shared<QVector<AddSubtitlesModel::Row>>();
+        const int serial = ++m_rebuildSerial;
+        const int source = m_source;
+        run([rows, videos, candidates, pref](vlc_object_t*) {
+                QVector<SubtitleMatcher::Name> names;
+                names.reserve(candidates.size());
+                for (const Candidate& candidate : candidates)
+                    names.append(candidate.parsed);
+                rows->reserve(videos.size());
+                for (const Video& video : videos)
+                {
+                    AddSubtitlesModel::Row row;
+                    row.videoName = video.name;
+                    row.videoMrl = video.mrl;
+                    row.candidate = SubtitleMatcher::bestMatch(video.parsed, names, pref);
+                    if (row.candidate >= 0)
+                        row.name = candidates.at(row.candidate).name;
+                    rows->append(row);
+                }
+            },
+            [this, rows, serial, source]() {
+                // a newer rebuild (other target, source, files) replaced this one
+                if (serial != m_rebuildSerial || source != m_source)
+                    return;
+                // the matches made by hand meanwhile win
+                const QHash<QString, int> manual = m_manual.value(m_source);
+                const QVector<Candidate>& current = pool();
+                for (AddSubtitlesModel::Row& row : *rows)
+                {
+                    const auto it = manual.constFind(row.videoMrl);
+                    if (it == manual.cend())
+                        continue;
+                    row.manual = true;
+                    row.candidate = it.value() < current.size() ? it.value() : -1;
+                    row.name = row.candidate >= 0 ? current.at(row.candidate).name : QString();
+                }
+                m_matches.setRows(*rows);
+                updateMessage();
+                emit canSaveChanged();
+            }, false, false);
     }
 
     updateMessage();

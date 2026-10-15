@@ -228,6 +228,8 @@ private:
     QList<std::shared_ptr<Job>> m_jobs;
     // results of older requests are dropped
     int m_generation = 0;
+    // the folder rows of an older rebuild are dropped
+    int m_rebuildSerial = 0;
     int m_busyCount = 0;
     bool m_saving = false;
 
