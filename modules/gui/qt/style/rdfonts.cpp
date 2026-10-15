@@ -24,13 +24,15 @@
 
 void loadRedesignFonts(QGuiApplication& app)
 {
-    // the five weights used by the design: 300, 400, 500, 600, 700
+    // Inter in the five weights used by the design (300, 400, 500, 600, 700), DM Mono 400
     static const char* const fontFiles[] = {
         ":/fonts/Inter-Light.ttf",
         ":/fonts/Inter-Regular.ttf",
         ":/fonts/Inter-Medium.ttf",
         ":/fonts/Inter-SemiBold.ttf",
         ":/fonts/Inter-Bold.ttf",
+        // keyboard shortcut keycaps (Figma "Keyboard Shortcuts": DM Mono 400, Decision 42)
+        ":/fonts/DMMono-Regular.ttf",
     };
 
     bool hasInter = false;

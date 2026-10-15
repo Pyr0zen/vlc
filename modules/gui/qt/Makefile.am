@@ -826,6 +826,8 @@ libqt_plugin_la_RES = \
 	pixmaps/fonts/Inter-SemiBold.ttf \
 	pixmaps/fonts/Inter-Bold.ttf \
 	pixmaps/fonts/LICENSE-Inter.txt \
+	pixmaps/fonts/DMMono-Regular.ttf \
+	pixmaps/fonts/LICENSE-DMMono.txt \
 	pixmaps/redesign/accessibility.svg \
 	pixmaps/redesign/add.svg \
 	pixmaps/redesign/album.svg \
