@@ -21,6 +21,7 @@
 #include <QMessageBox>
 
 class VLCVarChoiceModel;
+class RdSeekThumbnailer;
 
 class MainUI : public QObject
 {
@@ -49,6 +50,9 @@ private:
     QQuickItem* m_rootItem = nullptr;
 
     QPointer<QQmlEngine> m_engineBound;
+
+    // redesign: seek bar preview frames (P2-04), shared with the "rdseekthumb" image provider
+    RdSeekThumbnailer* m_seekThumbnailer = nullptr;
 };
 
 namespace vlc {

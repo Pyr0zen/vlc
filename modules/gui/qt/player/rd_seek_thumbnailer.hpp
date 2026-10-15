@@ -1,0 +1,137 @@
+/*****************************************************************************
+ * Copyright (C) 2026 VLC authors and VideoLAN
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * ( at your option ) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ *****************************************************************************/
+#ifndef RD_SEEK_THUMBNAILER_HPP
+#define RD_SEEK_THUMBNAILER_HPP
+
+#include <QByteArray>
+#include <QElapsedTimer>
+#include <QImage>
+#include <QObject>
+#include <QSize>
+#include <QTimer>
+#include <QUrl>
+
+#include <memory>
+
+#include "qt.hpp"
+#include "util/shared_input_item.hpp"
+
+class PlayerController;
+class QQuickImageProvider;
+struct vlc_preparser_t;
+struct vlc_preparser_req;
+
+/**
+ * redesign: frames for the seek bar preview card (P2-04, video 3:24-3:31, Figma "thumbnail").
+ *
+ * While the pointer hovers or drags the seek bar, QML calls request() with the hovered
+ * position. One VLC thumbnailer request (vlc_preparser, its own input thread, software decode,
+ * fast keyframe seek) runs at a time, at most one starts per throttle interval, and the newest
+ * position replaces any position still waiting; a running request that no longer matches the
+ * pointer is cancelled once it is older than the interval. Frames are scaled to the card's
+ * pixel size on the thumbnailer thread and kept in a small LRU cache keyed by time bucket, so
+ * going back over the bar shows them at once. stop() (pointer gone) cancels everything; the
+ * thumbnailer itself is created on the first request, so nothing runs before the first hover.
+ *
+ * Only local files are previewed (`supported`); streams and other media keep the time-only
+ * tooltip. The frames reach QML through the "rdseekthumb" image provider: `source` is the
+ * URL of the frame to show, empty while none is ready.
+ */
+class RdSeekThumbnailer : public QObject
+{
+    Q_OBJECT
+
+    Q_PROPERTY(bool supported READ supported NOTIFY supportedChanged FINAL)
+    Q_PROPERTY(QUrl source READ source NOTIFY sourceChanged FINAL)
+    // pixel size of the card's picture (device pixels); frames keep their aspect inside it
+    Q_PROPERTY(QSize frameSize READ frameSize WRITE setFrameSize NOTIFY frameSizeChanged FINAL)
+
+public:
+    static constexpr const char* providerId = "rdseekthumb";
+
+    RdSeekThumbnailer(qt_intf_t* intf, PlayerController* player, QObject* parent = nullptr);
+    ~RdSeekThumbnailer() override;
+
+    bool supported() const { return m_supported; }
+    QUrl source() const { return m_source; }
+    QSize frameSize() const { return m_frameSize; }
+    void setFrameSize(const QSize& size);
+
+    // the image provider reading this thumbnailer's cache (owned by the QML engine)
+    QQuickImageProvider* createImageProvider() const;
+
+    // the pointer is over the seek bar at `position` (0..1)
+    Q_INVOKABLE void request(double position);
+    // the pointer left the seek bar: drop the waiting position, cancel the running request
+    Q_INVOKABLE void stop();
+
+    struct Cache;
+
+signals:
+    void supportedChanged();
+    void sourceChanged();
+    void frameSizeChanged();
+
+private:
+    void onInputChanged();
+    void setSupported(bool supported);
+    void resetMedia();
+    void setSource(qint64 bucket);
+    void startNext();
+    void onRequestEnded(vlc_preparser_req* req, qint64 bucket, int generation, bool cancelled,
+                        const QImage& image);
+
+    static void onThumbnailEnded(vlc_preparser_req* req, int status, picture_t* picture, void* data);
+
+    qt_intf_t* m_intf = nullptr;
+    PlayerController* m_player = nullptr;
+
+    vlc_preparser_t* m_preparser = nullptr;
+    std::shared_ptr<Cache> m_cache;
+
+    bool m_supported = false;
+    QUrl m_source;
+    QSize m_frameSize;
+
+    // the media being previewed: the playing item's URI, and a copy of the item made on the
+    // first request (see request())
+    QByteArray m_uri;
+    SharedInputItem m_item;
+    vlc_tick_t m_length = 0;
+    vlc_tick_t m_bucketLength = 0;
+    // bumped whenever the media or the frame size changes: older frames are dropped
+    int m_generation = 0;
+    // failed requests in a row for this media
+    int m_failures = 0;
+
+    // the position under the pointer, as a time bucket (-1: none waiting)
+    qint64 m_wanted = -1;
+
+    // the single request in flight
+    vlc_preparser_req* m_inflight = nullptr;
+    qint64 m_inflightBucket = -1;
+    bool m_inflightCancelled = false;
+    QElapsedTimer m_inflightAge;
+
+    // throttle: at most one request starts per interval; single shot, only armed while a
+    // position waits
+    QElapsedTimer m_lastStart;
+    QTimer m_throttle;
+};
+
+#endif // RD_SEEK_THUMBNAILER_HPP
