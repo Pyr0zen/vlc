@@ -472,6 +472,26 @@ Item {
             }
         }
 
+        // redesign (S2-03): VLC's own track-change popup near the tray (VLCSystray asks for it);
+        // its own window, created with the first popup
+        Loader {
+            id: trayPopupLoader
+
+            active: false
+            sourceComponent: Component {
+                TrayPopup { }
+            }
+
+            Connections {
+                target: MainCtx
+
+                function onTrackPopupRequested(name, artwork, area, duration) {
+                    trayPopupLoader.active = true
+                    trayPopupLoader.item.popup(name, artwork, area, duration)
+                }
+            }
+        }
+
         Loader {
             active: {
                 const windowVisibility = MainCtx.intfMainWindow.visibility

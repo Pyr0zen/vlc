@@ -719,6 +719,7 @@ qml_modules += {
         qml_maininterface_extra_files,
         'maininterface/qml/SideNavigationPane.qml',
         'maininterface/qml/SideNavigationDelegate.qml',
+        'maininterface/qml/TrayPopup.qml',
     ),
 }
 qml_modules += {

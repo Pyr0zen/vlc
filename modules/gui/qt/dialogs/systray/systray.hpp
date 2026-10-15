@@ -49,8 +49,6 @@ private:
     MainCtx* m_ctx = nullptr;
     qt_intf_t* m_intf = nullptr;
 
-    int m_notificationSetting = 0;
-
     std::unique_ptr<QMenu> m_menu;
 };
 

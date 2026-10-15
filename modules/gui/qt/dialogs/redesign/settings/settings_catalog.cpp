@@ -70,7 +70,7 @@ const QSet<QString>& curatedOptions()
         "intf", "skins2-last", "embedded-video", "qt-video-autoresize", "qt-remember-window", "video-on-top", "qt-titlebar",
         "qt-name-in-title", "qt-fullscreen-screennumber", "qt-minimal-view", "qt-pin-controls",
         "mouse-hide-timeout", "qt-fs-controller", "qt-system-tray", "qt-start-minimized",
-        "qt-notification", "playlist-tree", "qt-opacity", "qt-pause-minimized", "qt-auto-raise",
+        "qt-notification", "qt-notification-duration", "playlist-tree", "qt-opacity", "qt-pause-minimized", "qt-auto-raise",
         "qt-bgcone", "qt-embedded-open", "qt-icon-change", "qt-fs-opacity", "qt-fs-sensitivity",
         // Privacy
         "save-recentplay", "restore-playback-pos", "qt-history-filter", "metadata-network-access", "lastfm-username",

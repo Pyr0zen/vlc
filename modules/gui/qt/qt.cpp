@@ -177,6 +177,15 @@ static void ShowDialog   ( intf_thread_t *, int, int, intf_dialog_args_t * );
     "Show a notification popup with the artist and track name when " \
     "the current play queue item changes, when VLC is minimized or hidden." )
 
+#define NOTIFICATION_DURATION_TEXT N_( "Popup duration" )
+#define NOTIFICATION_DURATION_LONGTEXT N_( \
+    "How long the track change popup stays on the screen, in milliseconds." )
+
+#define SYSTEM_NOTIFICATION_TEXT N_( "Use the system's notification for the track change popup" )
+#define SYSTEM_NOTIFICATION_LONGTEXT N_( \
+    "Show the track change popup as a notification of the system instead of VLC's own. " \
+    "Windows may keep it for its own time instead of the popup duration." )
+
 #define OPACITY_TEXT N_( "Windows opacity between 0.1 and 1" )
 #define OPACITY_LONGTEXT N_( "Sets the windows opacity between 0.1 and 1 " \
                              "for main interface, play queue and extended panel."\
@@ -408,6 +417,11 @@ vlc_module_begin ()
                  NOTIFICATION_TEXT,
                  NOTIFICATION_LONGTEXT )
             change_integer_list( i_notification_list, psz_notification_list_text )
+    /* redesign: Settings > Interface > Notifications and System Tray (S2-03) */
+    add_integer_with_range( "qt-notification-duration", 4000, 1000, 10000,
+                            NOTIFICATION_DURATION_TEXT, NOTIFICATION_DURATION_LONGTEXT )
+    add_bool( "qt-system-notification", false, SYSTEM_NOTIFICATION_TEXT,
+              SYSTEM_NOTIFICATION_LONGTEXT )
 
     add_bool( "qt-start-minimized", false, MINIMIZED_TEXT,
               MINIMIZED_LONGTEXT)

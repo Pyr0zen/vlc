@@ -18,7 +18,11 @@
 
 #include "systray.hpp"
 
+#include <QGuiApplication>
 #include <QImageReader>
+#include <QScreen>
+
+#include <algorithm>
 
 #include "maininterface/mainctx.hpp"
 #include "menus/menus.hpp"
@@ -36,8 +40,6 @@ VLCSystray::VLCSystray(MainCtx* ctx, QObject* parent)
 {
     assert(ctx);
     assert(m_intf);
-
-    m_notificationSetting = var_InheritInteger(m_intf, "qt-notification");
 
     QIcon iconVLC;
     if( m_ctx->useXmasCone() )
@@ -124,16 +126,35 @@ void VLCSystray::updateTooltipName( const QString& name )
     {
         setToolTip( name );
         const auto windowVisiblity = m_ctx->interfaceVisibility();
-        if( ( m_notificationSetting == NOTIFICATION_ALWAYS ) ||
-            ( m_notificationSetting == NOTIFICATION_MINIMIZED && (windowVisiblity == QWindow::Hidden || windowVisiblity == QWindow::Minimized)))
+        // redesign: read now, the Settings change them while VLC runs
+        const int notificationSetting = var_InheritInteger( m_intf, "qt-notification" );
+        if( ( notificationSetting == NOTIFICATION_ALWAYS ) ||
+            ( notificationSetting == NOTIFICATION_MINIMIZED && (windowVisiblity == QWindow::Hidden || windowVisiblity == QWindow::Minimized)))
         {
-            const auto showMessageTemplate = [this, &name](const auto &icon) {
-                showMessage( qtr( "VLC media player" ), name, icon, 3000 );
-            };
-
+            // redesign (S2-03, Decision 34): "Popup duration". Windows takes the tray balloon's
+            // time only as a hint and keeps its own ("Show notifications for"), so VLC draws its
+            // own popup (TrayPopup.qml); "qt-system-notification" keeps the system's one (to
+            // test whether this Windows honours the time)
+            const int duration = std::clamp<int>( var_InheritInteger( m_intf, "qt-notification-duration" ),
+                                                  1000, 10000 );
             assert(m_intf);
             assert(m_intf->p_mainPlayerController);
             const QUrl& art = m_intf->p_mainPlayerController->getArtwork();
+
+            if( !var_InheritBool( m_intf, "qt-system-notification" ) )
+            {
+                const QScreen* screen = QGuiApplication::primaryScreen();
+                emit m_ctx->trackPopupRequested( name, art,
+                                                 screen ? screen->availableGeometry() : QRect(),
+                                                 duration );
+                update();
+                return;
+            }
+
+            const auto showMessageTemplate = [this, &name, duration](const auto &icon) {
+                showMessage( qtr( "VLC media player" ), name, icon, duration );
+            };
+
             if (art.isValid())
             {
                 // If there is artwork, use it but only when it is (almost) square:

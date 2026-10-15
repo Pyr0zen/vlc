@@ -31,6 +31,8 @@
 #include <QQuickItem>
 #include <QTimer>
 #include <QColor>
+#include <QRect>
+#include <QUrl>
 
 Q_MOC_INCLUDE( "dialogs/toolbar/controlbar_profile_model.hpp" )
 Q_MOC_INCLUDE( "util/csdbuttonmodel.hpp" )
@@ -591,6 +593,9 @@ signals:
     void askBoss();
     void askRaise();
     void kc_pressed(); /* easter eggs */
+    // redesign (S2-03): the track-change popup near the system tray (VLCSystray), drawn by
+    // TrayPopup.qml in `area` (the primary screen's free area) for `duration` ms
+    void trackPopupRequested(const QString& name, const QUrl& artwork, const QRect& area, int duration);
 
     void playerPlaylistWidthChanged(double);
     void interfaceAlwaysOnTopChanged(bool);
