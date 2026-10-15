@@ -130,9 +130,11 @@ QtObject {
         DialogsProvider.openNetDialog()
     }
 
-    // a folder of `category` picked by the user; the library opens it once it is scanned
-    function addFolder(category) {
-        const url = RdLibraryStore.pickFolder(qsTr("Add Folder"))
+    // a folder of `category` picked by the user; the library opens it once it is scanned. The
+    // picker opens in `startMrl` (the library folder on screen: its subfolders are one click
+    // away), else in the user's Videos or Music folder
+    function addFolder(category, startMrl) {
+        const url = RdLibraryStore.pickFolder(qsTr("Add Folder"), startMrl ?? "", category)
         if (url.toString() === "")
             return
         RdLibraryStore.addFolder(category, url)

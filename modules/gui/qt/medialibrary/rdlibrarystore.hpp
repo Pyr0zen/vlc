@@ -78,8 +78,11 @@ public:
     QString compactViewMode() const { return m_compactViewMode; }
     void setCompactViewMode(const QString& mode);
 
-    // file pickers (native dialogs); empty when cancelled
-    Q_INVOKABLE QUrl pickFolder(const QString& title) const;
+    // file pickers (native dialogs); empty when cancelled. The folder picker opens in `start`
+    // (a local folder URL), else in the user's Videos or Music folder for `category`, else in
+    // the user's home folder
+    Q_INVOKABLE QUrl pickFolder(const QString& title, const QUrl& start = {},
+                                const QString& category = {}) const;
     Q_INVOKABLE QList<QUrl> pickFiles(const QString& title, bool images) const;
 
     // library folders of a category ("video" or "music")
@@ -153,6 +156,10 @@ private:
     static void onMlEvent(void* data, const struct vlc_ml_event_t* event);
     void onFolderEvent();
     void onScanCompleted();
+    // the user's Videos and Music folders, when they are library folders in no category
+    // (added by the onboarding, VLC's first-run wizard or VLC's preferences), join their own
+    // category instead of showing in both
+    void sortStandardFolders();
     QVariantList frequentIds(const QString& kind) const;
     void save(const char* key, const QVariant& value);
     QString coverDirectory() const;

@@ -85,10 +85,6 @@ FocusScope {
 
     // sort orders of the page (Figma "Sorting Options", P5-13, IB-03): criteria of VLC's models,
     // sorted by the media library
-    readonly property var _titleOptions: [
-        { key: "title", text: qsTr("Title A-Z"), criteria: "title", desc: false },
-        { key: "titleDesc", text: qsTr("Title Z-A"), criteria: "title", desc: true }
-    ]
     readonly property var _nameOptions: [
         { key: "title", text: qsTr("Title A-Z"), criteria: "name", desc: false },
         { key: "titleDesc", text: qsTr("Title Z-A"), criteria: "name", desc: true }
@@ -127,6 +123,14 @@ FocusScope {
         { key: "newest", text: qsTr("Newest First"), criteria: "release_year", desc: true },
         { key: "oldest", text: qsTr("Oldest First"), criteria: "release_year", desc: false }
     ]
+    // the category roots (Videos, Music > Songs): her order is the order the folders were
+    // added in (video 11:58 "Shows, Youtube Footage, Courses, Films, Anime"; Figma sidebar)
+    readonly property var _rootFolderOptions: [
+        { key: "newest", text: qsTr("Newest First"), criteria: "insertion", desc: true },
+        { key: "oldest", text: qsTr("Oldest First"), criteria: "insertion", desc: false },
+        { key: "title", text: qsTr("Title A-Z"), criteria: "title", desc: false },
+        { key: "titleDesc", text: qsTr("Title Z-A"), criteria: "title", desc: true }
+    ]
     readonly property var _playlistOptions: [
         { key: "title", text: qsTr("Title A-Z"), criteria: "title", desc: false },
         { key: "titleDesc", text: qsTr("Title Z-A"), criteria: "title", desc: true }
@@ -142,7 +146,7 @@ FocusScope {
             return _playlistOptions
         case "videos":
         case "songs":
-            return _titleOptions
+            return _rootFolderOptions
         case "albums":
             return _albumOptions
         case "artists":
@@ -157,6 +161,8 @@ FocusScope {
         switch (location.page) {
         case "collection": return location.kind === "album" ? "track" : "title"
         case "playlist": return ""   // the playlist's own order
+        case "videos":
+        case "songs": return "oldest"
         default: return sortOptions.length > 0 ? "title" : ""
         }
     }
@@ -186,15 +192,30 @@ FocusScope {
         return playingMrl !== "" && !!mrl && RdLibraryNav.mrlKey(mrl) === playingMrl
     }
 
+    readonly property bool _folderHasAddRow: {
+        if (location.page !== "folder")
+            return false
+        if (category === "music")
+            return true
+        if (subfolderModel && subfolderModel.count > 0)
+            return true
+        // empty, not just without search results
+        return searchText === "" && !!dataModel && !dataModel.loading && dataModel.count === 0
+               && !!subfolderModel && !subfolderModel.loading
+    }
+
     // rows above the items: "+ Add" rows (isAction) and the fixed entries of Music and Network
     readonly property var fixedRows: {
         switch (location.page) {
         case "folder":
-            // Figma: a folder of media has no Add row, a level of folders has it
-            if (!(page.subfolderModel && page.subfolderModel.count > 0))
+            // Figma sidebar and video 10:59 / 12:00: a Videos folder of media only (S01) has no
+            // Add row; a level of folders (Shows, The Wand), a Music folder (My Songs) and an
+            // empty folder have it. A Videos folder decides once its rows are loaded, so the
+            // row does not show and then vanish
+            if (!page._folderHasAddRow)
                 return []
             return [{ kind: "action", isAction: true, title: qsTr("Add"), icon: "add",
-                      run: () => RdLibraryActions.addFolder(page.category) }]
+                      run: () => RdLibraryActions.addFolder(page.category, page.location.mrl) }]
         case "videos":
         case "songs":
         case "albums":
@@ -319,8 +340,9 @@ FocusScope {
             // folders of this category are
             otherMrls: (page.category === "music" ? RdLibraryStore.videoFolders : RdLibraryStore.musicFolders)
                        .concat(RdLibraryStore.hiddenRoots)
-            sortCriteria: "title"
-            sortOrder: page.location.page === "folder" || page.sortKey !== "titleDesc" ? Qt.AscendingOrder : Qt.DescendingOrder
+            // a folder's subfolders by title (S01, S02), the roots as the page's sort says
+            sortCriteria: page.location.page === "folder" ? "title" : page.sortCriteria
+            sortOrder: page.location.page === "folder" ? Qt.AscendingOrder : page.sortOrder
             searchPattern: page.searchText
             onCountChanged: page.loaded()
         }
@@ -666,8 +688,11 @@ FocusScope {
             }
 
             Text {
+                // a folder's subfolders load next to its media: wait for both, so a folder of
+                // folders does not flash the text
                 visible: !!page.dataModel && page.dataModel.count === 0 && !page.dataModel.loading
-                         && !(page.subfolderModel && page.subfolderModel.count > 0) && page.searchText === ""
+                         && !(page.subfolderModel && (page.subfolderModel.count > 0 || page.subfolderModel.loading))
+                         && page.searchText === ""
                 width: parent.width
                 wrapMode: Text.WordWrap
                 text: {

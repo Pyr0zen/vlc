@@ -132,6 +132,8 @@ RdLibraryStore::RdLibraryStore(qt_intf_t* intf, MediaLib* mediaLib, QObject* par
     m_viewMode = settings->value(RD_LIBRARY_KEY("viewMode"), QStringLiteral("grid")).toString();
     m_compactViewMode = settings->value(RD_LIBRARY_KEY("compactViewMode"), QStringLiteral("list")).toString();
     m_hiddenRoots = settings->value(RD_LIBRARY_KEY("hiddenRoots")).toStringList();
+
+    sortStandardFolders();
 }
 
 RdLibraryStore::~RdLibraryStore()
@@ -145,8 +147,10 @@ void RdLibraryStore::onMlEvent(void* data, const vlc_ml_event_t* event)
     auto* self = static_cast<RdLibraryStore*>(data);
     switch (event->i_type)
     {
-    case VLC_ML_EVENT_FOLDER_ADDED:
     case VLC_ML_EVENT_ENTRY_POINT_ADDED:
+        QMetaObject::invokeMethod(self, &RdLibraryStore::sortStandardFolders, Qt::QueuedConnection);
+        [[fallthrough]];
+    case VLC_ML_EVENT_FOLDER_ADDED:
         QMetaObject::invokeMethod(self, &RdLibraryStore::onFolderEvent, Qt::QueuedConnection);
         break;
     case VLC_ML_EVENT_DISCOVERY_COMPLETED:
@@ -194,9 +198,23 @@ void RdLibraryStore::setCompactViewMode(const QString& mode)
     emit viewModeChanged();
 }
 
-QUrl RdLibraryStore::pickFolder(const QString& title) const
+QUrl RdLibraryStore::pickFolder(const QString& title, const QUrl& start, const QString& category) const
 {
-    return QFileDialog::getExistingDirectoryUrl(nullptr, title, QUrl::fromLocalFile(QDir::homePath()));
+    // the start folder is not checked: the native dialog falls back by itself when it is gone
+    QUrl dir;
+    if (start.isLocalFile())
+        dir = start;
+    else if (!category.isEmpty())
+    {
+        // the folder sortStandardFolders() gives the category, as VLC names it
+        const QString standard = QVLCUserDir(category == QLatin1String("music") ? VLC_MUSIC_DIR
+                                                                                : VLC_VIDEOS_DIR);
+        if (!standard.isEmpty())
+            dir = QUrl::fromLocalFile(QDir::fromNativeSeparators(standard));
+    }
+    if (dir.isEmpty())
+        dir = QUrl::fromLocalFile(QDir::homePath());
+    return QFileDialog::getExistingDirectoryUrl(nullptr, title, dir);
 }
 
 QList<QUrl> RdLibraryStore::pickFiles(const QString& title, bool images) const
@@ -301,6 +319,73 @@ void RdLibraryStore::addFolder(const QString& category, const QUrl& url)
             emit foldersChanged();
         }
         emit folderAdded(category, mrl);
+    });
+}
+
+void RdLibraryStore::sortStandardFolders()
+{
+    if (!m_mediaLib)
+        return;
+
+    struct Ctx {
+        QStringList roots;
+        QString videosKey;
+        QString musicKey;
+    };
+    m_mediaLib->runOnMLThread<Ctx>(this,
+    [](vlc_medialibrary_t* ml, Ctx& ctx) {
+        ml_unique_ptr<vlc_ml_folder_list_t> roots(vlc_ml_list_entry_points(ml, nullptr));
+        if (!roots)
+            return;
+        for (const vlc_ml_folder_t& root : ml_range_iterate<vlc_ml_folder_t>(roots))
+        {
+            if (root.psz_mrl && !root.b_banned)
+                ctx.roots.append(RdLibraryItems::normalizedMrl(qfu(root.psz_mrl)));
+        }
+
+        // the user folders may be read from disk (XDG user-dirs): here, off the UI thread
+        const auto userDirKey = [](vlc_userdir_t type) -> QString {
+            const QString path = QVLCUserDir(type);
+            if (path.isEmpty())
+                return {};
+            return RdLibraryItems::mrlKey(QUrl::fromLocalFile(QDir::fromNativeSeparators(path))
+                                              .toString(QUrl::FullyEncoded));
+        };
+        const QString homeKey = userDirKey(VLC_HOME_DIR);
+        ctx.videosKey = userDirKey(VLC_VIDEOS_DIR);
+        ctx.musicKey = userDirKey(VLC_MUSIC_DIR);
+        // a system without its own Videos or Music folder names the home folder: that one
+        // stays in both categories
+        if (ctx.videosKey == homeKey || ctx.videosKey == ctx.musicKey)
+            ctx.videosKey.clear();
+        if (ctx.musicKey == homeKey)
+            ctx.musicKey.clear();
+    },
+    [this](quint64, Ctx& ctx) {
+        if (ctx.videosKey.isEmpty() && ctx.musicKey.isEmpty())
+            return;
+
+        bool changed = false;
+        for (const QString& root : std::as_const(ctx.roots))
+        {
+            if (RdLibraryItems::containsMrl(m_videoFolders, root)
+                || RdLibraryItems::containsMrl(m_musicFolders, root)
+                || RdLibraryItems::containsMrl(m_hiddenRoots, root))
+                continue;
+            const QString key = RdLibraryItems::mrlKey(root);
+            if (!ctx.videosKey.isEmpty() && key == ctx.videosKey)
+                m_videoFolders.append(root);
+            else if (!ctx.musicKey.isEmpty() && key == ctx.musicKey)
+                m_musicFolders.append(root);
+            else
+                continue;
+            changed = true;
+        }
+        if (!changed)
+            return;
+        save(RD_LIBRARY_KEY("videoFolders"), m_videoFolders);
+        save(RD_LIBRARY_KEY("musicFolders"), m_musicFolders);
+        emit foldersChanged();
     });
 }
 
