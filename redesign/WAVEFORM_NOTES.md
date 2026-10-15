@@ -239,7 +239,7 @@ Offscreen render of `RdWaveformItem` (Qt 6.4) with the Figma frame's 244 bar hei
 
 ## 8. Performance risks to measure first (PERF.md)
 
-The marks in VLC's debug log (verbosity 2, added on the PC): `waveform scan (full|sampled|large, not seekable|no duration): levels|no waveform|cancelled in N ms` (the scan alone, worker thread) and `waveform: ready|no waveform from the cache|from the scan, N ms after the job started` (GUI thread: the bars' data arrived).
+The marks in VLC's debug log (verbosity 2, added on the PC): `waveform: job started for the playing file` (GUI thread: the option is on and a thick seek bar shows it), `waveform scan (full|sampled|large, not seekable|no duration): levels|no waveform|no waveform, over the time budget|cancelled in N ms` (the scan alone, worker thread; the scan line comes from the libvlc instance, `main libvlc debug`) and `waveform: ready|no waveform from the cache|from the scan, N ms after the job started` (GUI thread: the bars' data arrived). A scan stops after 60 s (`kTimeBudgetSeconds`; the file is then cached as "no waveform"), and quitting waits at most 500 ms for a cancelled one.
 
 1. **The scan while playing a large local video.**
    - The sampled scan seeks through the same file the player reads. On a hard disk, the head moves between both, so watch for dropped frames during the first seconds of a 4K file with the option on.

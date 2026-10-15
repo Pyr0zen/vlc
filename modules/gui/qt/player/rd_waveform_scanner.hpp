@@ -40,7 +40,8 @@
  *
  * run() blocks and is meant for a low priority worker thread. cancel() may be called from any
  * thread: run() then returns an empty array within one demuxed packet (the VLC interrupt
- * context of the run also aborts blocking reads).
+ * context of the run also aborts blocking reads). A run never lasts much longer than
+ * `kTimeBudgetSeconds`: past it, the file gets no waveform.
  *
  * Result: `kBins` bytes, the RMS loudness of each slice scaled so the loudest slice is 255;
  * empty when the file has no decodable audio, no known duration, or the run was cancelled.
@@ -50,9 +51,11 @@ class RdWaveformScanner
 public:
     static constexpr int kBins = 1000;
     static constexpr quint64 kFullScanMaxBytes = 256ull * 1024 * 1024;
+    // the longest a run may take (a 256 MB file decodes in a few seconds)
+    static constexpr int kTimeBudgetSeconds = 60;
 
-    // `parent`: the VLC object the scan's objects hang from (the interface); `url`: a file://
-    // URL; `lengthHint`: the duration the player knows, used when the demuxer gives none
+    // `parent`: the VLC object the scan's objects hang from (the libvlc instance); `url`: a
+    // file:// URL; `lengthHint`: the duration the player knows, used when the demuxer gives none
     RdWaveformScanner(vlc_object_t* parent, const QByteArray& url, vlc_tick_t lengthHint);
     ~RdWaveformScanner();
 
