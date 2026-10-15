@@ -52,6 +52,7 @@ The same option can be changed in several places: the right sidebar tabs, the Se
 
 ## 5. Seek bar modes
 The seek bar has several looks that can combine: thick bar (default), chapter segments (IB-46), subtitle timeline (P3-16, zoomed window with asterisk times), waveform (P6-06, music and the "Show Waveform" option), hover thumbnail (Decision 6), bookmarks marks. Build the seek bar so these are layers / modes of one component, not separate copies.
+- Waveform (P6-06, redesign/WAVEFORM_NOTES.md): a layer of SliderBar's background (RdWaveformItem over the trough, the plain fill fading out under it), shown while the option `qt-seek-waveform` is on and the playing file's scan is ready (RdWaveform singleton). It never takes input: hover, drag, the preview card, wheel and keys stay SliderBar's. It reads the playhead's center and width from the handle, so a later mode that moves or resizes the playhead keeps the bars cut around it. Only one waveform scan runs at a time, at the lowest thread priority, and only while a thick seek bar shows the option.
 
 ## 6. Library and playback
 - The folder chip and sidebar toggle open the compact library over the video (W5.1); the full library, mini player and queue card share the same models and selection.
