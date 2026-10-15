@@ -37,6 +37,8 @@ SettingsPage {
     readonly property int _yWheel: Number(_option("hotkeys-y-wheel-mode") ?? 0)
     readonly property int _xWheel: Number(_option("hotkeys-x-wheel-mode") ?? 2)
     readonly property bool _webRemote: webRemoteRow.checked
+    // S2-05: a double click set to Play / Pause turns the single click pause off (Decision 37)
+    readonly property bool _doubleClickPlays: Number(_option("qt-video-double-click") ?? 0) === 1
 
     Component {
         id: hotkeysModelComponent
@@ -122,13 +124,26 @@ SettingsPage {
     SettingsSection {
         title: qsTr("Mouse")
 
+        // Decision 37: off (dimmed) while the double click plays / pauses
         SettingsOption {
             option: "mouse-pause-policy"
             text: qsTr("Single click on the video")
+            available: !root._doubleClickPlays
             choices: [
                 { value: "auto", text: qsTr("Play / Pause") },
                 { value: "pause-on-released", text: qsTr("Play / Pause when released") },
                 { value: "disabled", text: qsTr("Nothing") }
+            ]
+        }
+
+        // S2-05 (video 17:56): MainCtx reads it again after the write (SettingsOption)
+        SettingsOption {
+            option: "qt-video-double-click"
+            text: qsTr("Double click on the video")
+            choices: [
+                { value: 0, text: qsTr("Toggle fullscreen") },
+                { value: 1, text: qsTr("Play / Pause") },
+                { value: 2, text: qsTr("Nothing") }
             ]
         }
 

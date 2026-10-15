@@ -68,7 +68,7 @@ const QSet<QString>& curatedOptions()
         "lastfm-password", "scrobbler-url", "qt-privacy-ask",
         // Controls
         "extrashort-jump-size", "short-jump-size", "medium-jump-size", "long-jump-size",
-        "mouse-pause-policy", "hotkeys-y-wheel-mode", "hotkeys-x-wheel-mode", "http-port",
+        "mouse-pause-policy", "qt-video-double-click", "hotkeys-y-wheel-mode", "hotkeys-x-wheel-mode", "http-port",
         "http-password", "qt-disable-volume-keys", "mouse-events", "keyboard-events",
         // Playback
         "playlist-autostart", "rate", "playlist-cork", "preferred-resolution", "menu-language",

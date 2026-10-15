@@ -305,6 +305,11 @@ static void ShowDialog   ( intf_thread_t *, int, int, intf_dialog_args_t * );
 #define ACCENT_COLOR_TEXT N_( "Accent color" )
 #define ACCENT_COLOR_LONGTEXT N_( "Adjusts the accent color, special values are 'default' and 'system' (requires Qt 6.6) ." )
 
+#define VIDEO_DOUBLE_CLICK_TEXT N_( "Double click on the video" )
+#define VIDEO_DOUBLE_CLICK_LONGTEXT N_( "What a double click on the video does. " \
+    "With Play / Pause, a single click on the video does not pause, so it never " \
+    "waits for a second click (from the next file)." )
+
 static const int initial_prefs_view_list[] = { 0, 1, 2 };
 static const char *const initial_prefs_view_list_texts[] =
     { N_("Simple"), N_("Advanced"), N_("Expert") };
@@ -321,6 +326,11 @@ static const int i_raise_list[] =
 
 static const char *const psz_raise_list_text[] =
     { N_( "Never" ), N_( "Video" ), N_( "Audio" ), _( "Audio/Video" ) };
+
+/* redesign (S2-05): VideoSurfaceProvider::DoubleClickAction */
+static const int i_video_double_click_list[] = { 0, 1, 2 };
+static const char *const psz_video_double_click_text[] =
+    { N_( "Toggle fullscreen" ), N_( "Play / Pause" ), N_( "Nothing" ) };
 
 static const char *const compositor_vlc[] = {
     "auto",
@@ -439,6 +449,11 @@ vlc_module_begin ()
                nullptr )
 
     add_bool( "qt-pin-controls", false, QT_PIN_CONTROLS_TEXT, QT_PIN_CONTROLS_LONGTEXT )
+
+    /* redesign: Settings > Controls > Mouse (S2-05) */
+    add_integer( "qt-video-double-click", 0, VIDEO_DOUBLE_CLICK_TEXT,
+                 VIDEO_DOUBLE_CLICK_LONGTEXT )
+            change_integer_list( i_video_double_click_list, psz_video_double_click_text )
 
 
     add_obsolete_bool( "qt-advanced-pref" ) /* since 4.0.0 */

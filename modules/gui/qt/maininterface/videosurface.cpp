@@ -20,6 +20,7 @@
 #include <QSGRectangleNode>
 #include <QThreadPool>
 #include <vlc_window.h>
+#include <vlc_mouse.h>
 
 #include <QQuickRenderControl>
 #ifdef QT_DECLARATIVE_PRIVATE
@@ -84,8 +85,18 @@ void VideoSurfaceProvider::onMouseReleased(int vlcButton)
 
 void VideoSurfaceProvider::onMouseDoubleClick(int vlcButton)
 {
-    if (m_voutWindow)
+    if (!m_voutWindow)
+        return;
+    if (vlcButton != MOUSE_BUTTON_LEFT || m_doubleClickAction == DoubleClickAction::Fullscreen)
+    {
         vlc_window_ReportMouseDoubleClick(m_voutWindow, vlcButton);
+        return;
+    }
+    // redesign (S2-05): the core toggles fullscreen on a left double click; report a plain
+    // second press instead, so filters and the core still see the click, then run the choice
+    vlc_window_ReportMousePressed(m_voutWindow, vlcButton);
+    if (m_doubleClickAction == DoubleClickAction::PlayPause)
+        emit playPauseRequested();
 }
 
 void VideoSurfaceProvider::onMouseMoved(float x, float y)

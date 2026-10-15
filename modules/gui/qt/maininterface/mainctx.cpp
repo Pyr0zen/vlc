@@ -365,6 +365,8 @@ MainCtx::~MainCtx()
     var_DelCallback( libvlc, "intf-show", IntfRaiseMainCB, p_intf );
     var_DelCallback( libvlc, "intf-toggle-fscontrol", IntfShowCB, p_intf );
     var_DelCallback( libvlc, "intf-popupmenu", PopupMenuCB, p_intf );
+    if (m_singleClickPauseBlocked)
+        var_Destroy( libvlc, "mouse-pause-policy" );
 
     if (m_medialib)
         delete m_medialib;
@@ -473,6 +475,40 @@ void MainCtx::loadPrefs(const bool callSignals)
     loadFromVLCOption(m_safeArea, "qt-safe-area", &MainCtx::safeAreaChanged);
 
     loadFromVLCOption(m_mouseHideTimeout, "mouse-hide-timeout", &MainCtx::mouseHideTimeoutChanged);
+
+    loadFromVLCOption(m_videoDoubleClick, "qt-video-double-click", nullptr);
+    applyVideoDoubleClick();
+}
+
+void MainCtx::applyVideoDoubleClick()
+{
+    using Action = VideoSurfaceProvider::DoubleClickAction;
+    const Action action = (m_videoDoubleClick == static_cast<int>(Action::PlayPause)
+                           || m_videoDoubleClick == static_cast<int>(Action::Nothing))
+                          ? static_cast<Action>(m_videoDoubleClick) : Action::Fullscreen;
+
+    // Decision 37: a double click that plays / pauses turns the single click pause off, so a
+    // single click never waits to see whether a second one follows. The core reads
+    // "mouse-pause-policy" when a file opens: a variable on the libvlc object overrides the
+    // saved choice (kept for when the double click goes back to fullscreen) from the next file
+    const bool block = action == Action::PlayPause;
+    if (block != m_singleClickPauseBlocked)
+    {
+        libvlc_int_t* libvlc = vlc_object_instance(p_intf);
+        if (block)
+        {
+            var_Create(libvlc, "mouse-pause-policy", VLC_VAR_STRING);
+            var_SetString(libvlc, "mouse-pause-policy", "disabled");
+        }
+        else
+        {
+            var_Destroy(libvlc, "mouse-pause-policy");
+        }
+        m_singleClickPauseBlocked = block;
+    }
+
+    if (m_videoSurfaceProvider)
+        m_videoSurfaceProvider->setDoubleClickAction(action);
 }
 
 void MainCtx::loadFromSettingsImpl(const bool callSignals)
@@ -830,12 +866,22 @@ bool MainCtx::hasEmbededVideo() const
 void MainCtx::setVideoSurfaceProvider(VideoSurfaceProvider* videoSurfaceProvider)
 {
     if (m_videoSurfaceProvider)
+    {
         disconnect(m_videoSurfaceProvider, &VideoSurfaceProvider::hasVideoEmbedChanged, this, &MainCtx::hasEmbededVideoChanged);
+        disconnect(m_videoSurfaceProvider, &VideoSurfaceProvider::playPauseRequested, this, nullptr);
+    }
     m_videoSurfaceProvider = videoSurfaceProvider;
     if (m_videoSurfaceProvider)
+    {
         connect(m_videoSurfaceProvider, &VideoSurfaceProvider::hasVideoEmbedChanged,
                 this, &MainCtx::hasEmbededVideoChanged,
                 Qt::QueuedConnection);
+        // redesign (S2-05): "Double click on the video" set to Play / Pause
+        connect(m_videoSurfaceProvider, &VideoSurfaceProvider::playPauseRequested, this, [this]() {
+            THEMPL->togglePlayPause();
+        });
+        applyVideoDoubleClick();
+    }
     emit hasEmbededVideoChanged(m_videoSurfaceProvider && m_videoSurfaceProvider->hasVideoEmbed());
 }
 

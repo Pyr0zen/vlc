@@ -494,6 +494,11 @@ protected:
 
     int m_maxVolume = 125;
     int m_fsSensitivity = 40;
+    // redesign (S2-05): "qt-video-double-click"; with Play / Pause, the core's single click
+    // pause is turned off by a "mouse-pause-policy" variable on the libvlc object
+    int m_videoDoubleClick = 0;
+    bool m_singleClickPauseBlocked = false;
+    void applyVideoDoubleClick();
     // redesign: options MainCtx writes itself (accent, fullscreen sensitivity) reach the
     // configuration file shortly after a change, not only when VLC quits
     QTimer* m_configSaveTimer = nullptr;
