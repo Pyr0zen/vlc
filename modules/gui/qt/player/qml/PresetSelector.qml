@@ -163,10 +163,12 @@ T.Control {
         height: visibleRows * root._rowHeight + (visibleRows - 1) * root._rowGap + 2 * padding
         padding: VLCStyle.dp(2)
 
-        // a click outside only closes the list (not the sidebar under it)
+        // a click outside only closes the list (not the sidebar under it); while a name is
+        // being edited, Escape puts the old name back instead
         modal: true
         dim: false
-        closePolicy: T.Popup.CloseOnEscape | T.Popup.CloseOnPressOutside
+        closePolicy: root._renamingId !== "" ? T.Popup.CloseOnPressOutside
+                                             : (T.Popup.CloseOnEscape | T.Popup.CloseOnPressOutside)
 
         onAboutToShow: {
             root._renamingId = ""

@@ -837,11 +837,19 @@ void RdPresets::onInputChanged(bool hasInput)
     if (!m_loaded)
         return;
 
-    // an episode of a folder tied to a preset brings that preset back
-    const QString linked = linkedPreset(m_folder);
-    if (!linked.isEmpty() && linked != m_currentId)
+    // an episode of a folder tied to a preset brings that preset back; a media outside the
+    // folders of the preset in use (another show) goes back to "Default Preset", so the show's
+    // preset does not take the other media's changes. A preset picked by hand and tied to no
+    // folder stays.
+    QString next = linkedPreset(m_folder);
+    if (next.isEmpty())
     {
-        m_currentId = linked;
+        const Preset* current = find(m_currentId);
+        next = (current && !current->folders.isEmpty()) ? defaultId : m_currentId;
+    }
+    if (next != m_currentId && find(next))
+    {
+        m_currentId = next;
         emit currentChanged();
         save();
     }
