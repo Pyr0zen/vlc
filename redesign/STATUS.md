@@ -1,6 +1,6 @@
 # STATUS
 
-- Updated: 2026-10-15 00:28 Central Europe Daylight Time
+- Updated: 2026-10-15 12:49 Central Europe Daylight Time
 - Current work: UX pass on everything built (Sticky's reports), library + settings integrations, W8.1a, W8.3 done; build 38644265811 (light theme + control bar fix) running
 
 ## Last 10 commits
@@ -18,15 +18,15 @@ a3d60c6554 redesign: rule: UX logic checklist for every package (Sticky)
 ```
 
 ## Agents (rule: at most 4 alive in total, sub-agents counted; agents never start sub-agents)
-Alive: settings integration (on top of the library; also N1 Settings outside click), visual-audit fixes for the sidebar pages and widgets.
-Merged and pushed, build 38647749799: library (743ce6f5ed), UX pass (51ebef4ce8: outside-click dismissal, Escape order, opaque tracks popup and bar, right-click on the bar), W8.3 onboarding, W8.1a Customize Player, playback-stall Qt fixes, control bar geometry, W8.4 light theme.
+BLOCKED: GitHub Actions is disabled on Pyr0zen/vlc (cancelled builds 38644265811..38647749799 at 00:37 on 2026-10-15); Sticky must re-enable it (Settings > Actions > General). Latest green build: 38609407210 (W8.4). Pushed but never built: control bar fix, W8.3, W8.1a, stall fixes, library, UX pass.
+Alive: visual-audit fixes (sidebar pages/widgets, restarted on redesign base), independent review of the settings integration (wip/a57816e7ded7d7265, tip 46c464404a).
+Done, waiting to merge: settings integration (after its review).
 Queue, in order:
-1. Hands-on test of build 38647749799 when Sticky is away (UX checklist in the scratchpad ux_interaction_findings.md, library checklist, onboarding with --qt-privacy-ask, Customize Player drags, stall tests, light/dark), then perf round 3 back to back with stock.
-2. Core build (Decision 27): cherry-pick 3553e146bc from wip/a839e9d9ddb97595a (subtitle rate change flushes only the subtitle slave).
-3. Settings merge, then a UX pass on the Settings dialog pages and on the library.
-4. Leftover UX items N2-N5 (time field Escape and hint, Escape on bar control leaves the player (stock, Sticky to decide), resume toast vs tracks popup under 1000 px, arrows into a keyboard-opened sidebar, Delete removes a queue row); RdToggle hover; cursors; tooltip names.
-5. Step 2: the 12 Settings rows (VIDEO_INDEX 350-361, Decisions 34-38).
-Waiting for Sticky: A2 (resolved per Figma: bar opaque), B15 Advanced Settings button fill, B16 footer on the Playback tab, E2 dialog dim strength, E6 DM Mono, light FG/A4.
+1. When Actions is back: build redesign + settings, then the hands-on test with real screenshots vs Figma for every changed element (agents' offline renders are not verification), UX checklist (scratchpad ux_interaction_findings.md), SETTINGS_NOTES section 10 crops, perf round 3.
+2. Core build (Decision 27): 3553e146bc from wip/a839e9d9ddb97595a.
+3. Leftover UX items N2-N5; RdToggle hover; cursors; tooltip names.
+4. Step 2: the 12 Settings rows (VIDEO_INDEX 350-361, Decisions 34-38).
+Decision images for Sticky in <TEST_MEDIA_DIR>/decisions: Q1 Playback tab footer, Q2 Advanced Settings link, Q3 dialog dim, Q4 DM Mono; Q5 light FG/A4 needs a light-theme screenshot (idle-time test on 38609407210).
 Backups: every agent branch is pushed to origin wip/<agent id> (no CI on those branches).
 
 ## Latest report
