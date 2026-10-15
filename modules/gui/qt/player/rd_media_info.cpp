@@ -26,7 +26,6 @@
 
 #include <vlc_configuration.h>
 #include <vlc_input_item.h>
-#include <vlc_list.hpp>
 #include <vlc_meta.h>
 #include <vlc_player.h>
 
@@ -263,17 +262,21 @@ void RdMediaMeta::refresh()
 
         // codec details per stream (Codec tab)
         vlc_mutex_locker locker(&item->lock);
-        for (auto& category : vlc::from(item->categories, &info_category_t::node))
+        // the C list macros: vlc_list.hpp defines non-inline operators, so a second
+        // translation unit including it breaks the link (info_panels.cpp includes it)
+        info_category_t* category;
+        vlc_list_foreach(category, &item->categories, node)
         {
-            if (info_category_IsHidden(&category))
+            if (info_category_IsHidden(category))
                 continue;
 
             QVariantList rows;
-            for (auto& info : vlc::from(category.infos, &info_t::node))
-                rows.append(row(qfu(info.psz_name), qfu(info.psz_value)));
+            info_t* info;
+            vlc_list_foreach(info, &category->infos, node)
+                rows.append(row(qfu(info->psz_name), qfu(info->psz_value)));
 
             if (!rows.isEmpty())
-                sections.append(QVariantMap{ { QStringLiteral("title"), qfu(category.psz_name) },
+                sections.append(QVariantMap{ { QStringLiteral("title"), qfu(category->psz_name) },
                                              { QStringLiteral("rows"), rows } });
         }
     }
