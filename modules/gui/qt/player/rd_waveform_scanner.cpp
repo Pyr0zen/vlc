@@ -617,9 +617,11 @@ QByteArray RdWaveformScanner::Scan::execute()
         lengthSeconds = secf_from_vlc_tick(length);
         sumSquares.assign(kBins, 0.0);
         counts.assign(kBins, 0.0);
-        sampled = sizeKnown && size > kFullScanMaxBytes && canSeek;
+        // a large file the demuxer cannot seek in is never read from start to end: no waveform
+        const bool large = sizeKnown && size > kFullScanMaxBytes;
+        sampled = large && canSeek;
 
-        if (!sampled)
+        if (!large)
         {
             for (int packet = 0; !stopped() && demux_Demux(demux) == VLC_DEMUXER_SUCCESS; ++packet)
             {
@@ -629,19 +631,24 @@ QByteArray RdWaveformScanner::Scan::execute()
             if (audio && !stopped())
                 process(audio, nullptr);
         }
-        else
+        else if (sampled)
         {
+            // never more audio per slice than the slice holds: a short file of a high bitrate
+            // (a 30 s 4K clip) decodes at most its own audio, not 0.25 s per 1/1000 of it
+            const double slice = lengthSeconds / kBins;
+            const double sampleSeconds = std::min(kSampleSeconds, slice);
             for (int bin = 0; bin < kBins && !stopped(); ++bin)
             {
-                // a stretch centered in the slice
-                const double center = (bin + 0.5) * lengthSeconds / kBins;
-                const vlc_tick_t time = vlc_tick_from_sec(std::max(0.0, center - kSampleSeconds / 2));
-                if (demux_SetTime(demux, time, false) != VLC_SUCCESS)
+                // a stretch centered in the slice; by time, else by position (demuxers without
+                // an index, such as an MPEG-TS recording, seek better by position)
+                const double start = std::max(0.0, (bin + 0.5) * slice - sampleSeconds / 2);
+                if (demux_SetTime(demux, vlc_tick_from_sec(start), false) != VLC_SUCCESS
+                    && demux_SetPosition(demux, start / lengthSeconds, false) != VLC_SUCCESS)
                     continue;
                 if (audio)
                     flush(audio);
                 targetBin = bin;
-                sampleLeft = kSampleSeconds;
+                sampleLeft = sampleSeconds;
                 for (int packet = 0; packet < kSampleMaxPackets && sampleLeft > 0 && !stopped(); ++packet)
                 {
                     if (demux_Demux(demux) != VLC_DEMUXER_SUCCESS)

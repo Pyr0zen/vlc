@@ -34,7 +34,9 @@
  *
  * - Files up to `kFullScanMaxBytes` are decoded from start to end, as fast as the decoder goes.
  * - Larger files (films, long recordings) are sampled: one short stretch of audio is decoded
- *   after a seek to each slice, so a 50 GB file costs about `kBins` seeks, not a full read.
+ *   after a seek to each slice, so a 50 GB file costs about `kBins` seeks, not a full read. A
+ *   stretch is never longer than its slice. A large file the demuxer cannot seek in gets no
+ *   waveform rather than a full read.
  *
  * run() blocks and is meant for a low priority worker thread. cancel() may be called from any
  * thread: run() then returns an empty array within one demuxed packet (the VLC interrupt
