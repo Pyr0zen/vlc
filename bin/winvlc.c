@@ -42,6 +42,17 @@
 
 #include "../lib/libvlc_internal.h"
 
+/* redesign (brand layer, public profile): Cone reads its interface language from its own key
+ * and writes crash dumps in its own folder, never an installed VLC's
+ * (modules/gui/qt/util/brand.hpp BRAND_REGISTRY_KEY, src/win32/dirs.c APP_DIR_NAME) */
+#ifdef VLC_BRAND_PUBLIC
+# define LANG_REGISTRY_KEY "Software\\Cone\\"
+# define CRASHDUMP_DIR L"\\Cone\\crashdump"
+#else
+# define LANG_REGISTRY_KEY "Software\\VideoLAN\\VLC\\"
+# define CRASHDUMP_DIR L"\\vlc\\crashdump"
+#endif
+
 #ifdef HAVE_BREAKPAD
 void CheckCrashDump( const wchar_t* crashdump_path );
 void* InstallCrashHandler( const wchar_t* crashdump_path );
@@ -168,11 +179,11 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
         else
         {
             const size_t pathlen = wcslen( copath );
-            wchar_t *path = malloc( ( pathlen + wcslen(L"\\vlc\\crashdump") + 1 ) * sizeof(*path) );
+            wchar_t *path = malloc( ( pathlen + wcslen(CRASHDUMP_DIR) + 1 ) * sizeof(*path) );
             if ( path != NULL)
             {
                 memcpy( path, copath, pathlen * sizeof(*path) );
-                memcpy( &path[pathlen], L"\\vlc\\crashdump", (wcslen(L"\\vlc\\crashdump") + 1)  * sizeof(*path) );
+                memcpy( &path[pathlen], CRASHDUMP_DIR, (wcslen(CRASHDUMP_DIR) + 1)  * sizeof(*path) );
                 CheckCrashDump( path );
                 eh = InstallCrashHandler( path );
                 free( path );
@@ -190,7 +201,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
     if (!lang)
     {
         HKEY h_key;
-        if( RegOpenKeyEx( HKEY_CURRENT_USER, TEXT("Software\\VideoLAN\\VLC\\"), 0, KEY_READ, &h_key )
+        if( RegOpenKeyEx( HKEY_CURRENT_USER, TEXT(LANG_REGISTRY_KEY), 0, KEY_READ, &h_key )
                 == ERROR_SUCCESS )
         {
             WCHAR szData[256];

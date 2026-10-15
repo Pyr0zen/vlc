@@ -34,6 +34,7 @@
 #include "util/color_scheme_model.hpp"
 #include "util/proxycolumnmodel.hpp"
 #include "medialibrary/mlrecentmediamodel.hpp"
+#include "util/brand.hpp"
 
 #include <vlc_config_cat.h>
 #include <vlc_configuration.h>
@@ -709,7 +710,7 @@ SPrefsPanel::SPrefsPanel( qt_intf_t *_p_intf, QWidget *_parent,
 
             HKEY h_key;
             char *langReg = NULL;
-            if( RegOpenKeyEx( HKEY_CURRENT_USER, TEXT("Software\\VideoLAN\\VLC\\"), 0, KEY_READ, &h_key )
+            if( RegOpenKeyEx( HKEY_CURRENT_USER, TEXT(BRAND_REGISTRY_KEY), 0, KEY_READ, &h_key )
                     == ERROR_SUCCESS )
             {
                 WCHAR szData[256];
@@ -1378,9 +1379,11 @@ void SPrefsPanel::configML()
 
 void SPrefsPanel::cleanLang() {
     QVLCRegistry qvReg( HKEY_CURRENT_USER );
-    qvReg.DeleteValue( "Software\\VideoLAN\\VLC\\", "Lang" );
+    qvReg.DeleteValue( BRAND_REGISTRY_KEY, "Lang" );
+#ifndef VLC_BRAND_PUBLIC
     qvReg.DeleteKey( "Software\\VideoLAN\\", "VLC" );
     qvReg.DeleteKey( "Software\\", "VideoLAN" );
+#endif
 }
 
 void SPrefsPanel::saveLang() {
@@ -1392,7 +1395,7 @@ void SPrefsPanel::saveLang() {
     else
     {
         QVLCRegistry qvReg( HKEY_CURRENT_USER );
-        qvReg.WriteRegistry( "Software\\VideoLAN\\VLC\\", "Lang", lang );
+        qvReg.WriteRegistry( BRAND_REGISTRY_KEY, "Lang", lang );
     }
 }
 
