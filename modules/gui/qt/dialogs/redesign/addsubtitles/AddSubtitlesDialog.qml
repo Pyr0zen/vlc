@@ -48,6 +48,10 @@ T.Popup {
     readonly property bool _online: _source === 1
     readonly property bool _link: _source === 2
     readonly property Item _list: _fileTarget ? fileList : matchList
+    // the header field takes the focus in its text input when it is editable
+    readonly property Item _fieldFocus: field.editable ? field.input : field
+    // the item before the list in the tab order
+    readonly property Item _beforeList: _online ? languageDropdown : _fieldFocus
     readonly property bool _listEmpty: _fileTarget ? AddSubtitles.files.count === 0
                                                    : AddSubtitles.matches.count === 0
 
@@ -299,7 +303,7 @@ T.Popup {
                     ]
                     currentIndex: AddSubtitles.source
 
-                    KeyNavigation.tab: field
+                    KeyNavigation.tab: root._fieldFocus
                     KeyNavigation.backtab: targetDropdown
 
                     onActivated: (index) => AddSubtitles.source = index
@@ -407,7 +411,7 @@ T.Popup {
                 T.ScrollBar.vertical: Widgets.ScrollBarExt { }
 
                 KeyNavigation.tab: cancelButton
-                KeyNavigation.backtab: field
+                KeyNavigation.backtab: root._beforeList
 
                 Keys.onSpacePressed: AddSubtitles.toggle(currentIndex)
                 Keys.onReturnPressed: AddSubtitles.toggle(currentIndex)
@@ -448,7 +452,7 @@ T.Popup {
                 T.ScrollBar.vertical: Widgets.ScrollBarExt { }
 
                 KeyNavigation.tab: cancelButton
-                KeyNavigation.backtab: field
+                KeyNavigation.backtab: root._beforeList
 
                 Keys.onSpacePressed: currentItem && currentItem.openChoices()
                 Keys.onReturnPressed: currentItem && currentItem.openChoices()
