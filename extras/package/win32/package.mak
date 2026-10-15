@@ -51,6 +51,10 @@ package-win-sdk: package-win-install
 package-win-common: package-win-install package-win-sdk
 # Executables, major libs
 	find $(prefix) -maxdepth 4 \( -name "*$(LIBEXT)" -o -name "*$(EXEEXT)" \) -exec cp {} "$(win32_destdir)/" \;
+if BRAND_PUBLIC
+# redesign: brand layer, the public profile's exe name (configure --with-brand)
+	mv -f "$(win32_destdir)/vlc$(EXEEXT)" "$(win32_destdir)/$(BRAND_EXE)"
+endif
 if ENABLE_PDB
 	for dir in bin lib src; do \
 	  cp $$dir/.libs/*.pdb $(win32_destdir); \
@@ -66,7 +70,7 @@ endif
 	done
 	cp "$(srcdir)/README.md" "$(win32_destdir)/README.txt"
 
-	cp $(srcdir)/share/icons/vlc.ico $(win32_destdir)
+	cp $(srcdir)/$(BRAND_ICON_SRC) $(win32_destdir)
 	for plugindir in $(pkglibdir)/plugins/*/; do \
 		plugin_destdir="$(win32_destdir)/plugins/`basename $$plugindir`"; \
 		mkdir -p "$$plugin_destdir"; \

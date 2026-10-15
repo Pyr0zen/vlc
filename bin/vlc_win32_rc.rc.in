@@ -3,7 +3,7 @@
 
 #include <winuser.h>
 
-VLC_ICON ICON "vlc.ico"
+VLC_ICON ICON "@BRAND_ICON_RC@"
 
 1 VERSIONINFO
 FILETYPE 1
@@ -15,13 +15,13 @@ BEGIN
   BEGIN
     BLOCK "040904E4"
     BEGIN
-      VALUE "CompanyName", "VideoLAN"
-      VALUE "ProductName", "VLC media player"
+      VALUE "CompanyName", "@BRAND_COMPANY@"
+      VALUE "ProductName", "@BRAND_PRODUCT_NAME@"
       VALUE "ProductVersion", VERSION_NUMBER_STR
-      VALUE "InternalName", "vlc"
-      VALUE "OriginalFilename", "vlc.exe"
+      VALUE "InternalName", "@BRAND_INTERNAL_NAME@"
+      VALUE "OriginalFilename", "@BRAND_EXE@"
       VALUE "FileVersion", "@VERSION@"
-      VALUE "FileDescription", "VLC media player"
+      VALUE "FileDescription", "@BRAND_PRODUCT_NAME@"
       VALUE "LegalCopyright", "Copyright \251 @COPYRIGHT_YEARS@ VideoLAN and VLC Authors"
       VALUE "LegalTrademarks", "VLC media player, VideoLAN and x264 are registered trademarks from VideoLAN"
     END

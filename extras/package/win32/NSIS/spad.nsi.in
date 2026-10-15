@@ -6,6 +6,10 @@
 
 !include LogicLib.nsh
 
+; redesign: brand layer (configure --with-brand: vlc / public)
+!define PRODUCT_NAME "@BRAND_PRODUCT_NAME@"
+!define PRODUCT_EXE "@BRAND_EXE@"
+
 Function GetOptions
 	!define GetOptions `!insertmacro GetOptionsCall`
  
@@ -117,14 +121,14 @@ FunctionEnd
 !macro HideIcons
   WriteRegDWORD HKLM "Software\Clients\Media\VLC\InstallInfo" "IconsVisible" 0
   SetShellVarContext all  ; Set $DESKTOP to All Users
-  ${Unless} ${FileExists} "$DESKTOP\VLC media player.lnk"
+  ${Unless} ${FileExists} "$DESKTOP\${PRODUCT_NAME}.lnk"
     SetShellVarContext current  ; Set $DESKTOP to the current user's desktop
   ${EndUnless}
-  ${If} ${FileExists} "$DESKTOP\VLC media player.lnk"
-    Delete "$DESKTOP\VLC media player.lnk"
+  ${If} ${FileExists} "$DESKTOP\${PRODUCT_NAME}.lnk"
+    Delete "$DESKTOP\${PRODUCT_NAME}.lnk"
   ${EndIf}
-  ${If} ${FileExists} "$QUICKLAUNCH\VLC media player.lnk"
-    Delete "$QUICKLAUNCH\VLC media player.lnk"
+  ${If} ${FileExists} "$QUICKLAUNCH\${PRODUCT_NAME}.lnk"
+    Delete "$QUICKLAUNCH\${PRODUCT_NAME}.lnk"
   ${EndIf}
 !macroend
 !define HideIcons "!insertmacro HideIcons"
@@ -133,11 +137,11 @@ FunctionEnd
 !macro ShowIcons
   WriteRegDWORD HKLM "Software\Clients\Media\VLC\InstallInfo" "IconsVisible" 1
   SetShellVarContext all  ; Set $DESKTOP to All Users
-  ${Unless} ${FileExists} "$DESKTOP\VLC media player.lnk"
-    CreateShortCut "$DESKTOP\VLC media player.lnk" "$EXEDIR\vlc.exe" "" "$EXEDIR\vlc.exe" 0
+  ${Unless} ${FileExists} "$DESKTOP\${PRODUCT_NAME}.lnk"
+    CreateShortCut "$DESKTOP\${PRODUCT_NAME}.lnk" "$EXEDIR\${PRODUCT_EXE}" "" "$EXEDIR\${PRODUCT_EXE}" 0
   ${EndUnless}
-  ${Unless} ${FileExists} "$QUICKLAUNCH\VLC media player.lnk"
-    CreateShortCut "$QUICKLAUNCH\VLC media player.lnk" "$EXEDIR\vlc.exe" "" "$EXEDIR\vlc.exe" 0
+  ${Unless} ${FileExists} "$QUICKLAUNCH\${PRODUCT_NAME}.lnk"
+    CreateShortCut "$QUICKLAUNCH\${PRODUCT_NAME}.lnk" "$EXEDIR\${PRODUCT_EXE}" "" "$EXEDIR\${PRODUCT_EXE}" 0
   ${EndUnless}
 !macroend
 !define ShowIcons "!insertmacro ShowIcons"

@@ -43,11 +43,12 @@ OPTIONS:
                      g: GPLv3 (default)
                      l: LGPLv3 + ad-clauses
                      a: LGPLv2 + ad-clauses
+   -B <profile>  Brand profile of the redesign: vlc (default) or public
 EOF
 }
 
 ARCH="x86_64"
-while getopts "hra:pcli:W:sb:dD:txS:uwzo:mg:" OPTION
+while getopts "hra:pcli:W:sb:dD:txS:uwzo:mg:B:" OPTION
 do
      case $OPTION in
          r)
@@ -111,6 +112,9 @@ do
          ;;
          g)
              LICENSE=$OPTARG
+         ;;
+         B)
+             BRAND=$OPTARG
          ;;
          h|*)
              usage
@@ -564,6 +568,11 @@ else
 fi
 if [ -n "$INSTALL_PATH" ]; then
     CONFIGFLAGS="$CONFIGFLAGS --with-packagedir=$INSTALL_PATH"
+fi
+# redesign: brand layer (configure --with-brand, meson -Dbrand)
+if [ -n "$BRAND" ]; then
+    CONFIGFLAGS="$CONFIGFLAGS --with-brand=$BRAND"
+    MCONFIGFLAGS="$MCONFIGFLAGS -Dbrand=$BRAND"
 fi
 
 if [ "$INSTALLER" = "n" ]; then

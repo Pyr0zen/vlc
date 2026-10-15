@@ -5244,6 +5244,86 @@ AC_SUBST([LIBVLC_ABI_MAJOR])
 AC_SUBST([LIBVLC_ABI_MINOR])
 AC_SUBST([LIBVLC_ABI_MICRO])
 AC_SUBST([COPYRIGHT_YEARS])
+
+dnl
+dnl  redesign: brand layer (modules/gui/qt/util/brand.hpp, redesign/BUILD_NOTES.md)
+dnl  vlc: VLC's name and cone; public: "Cone" and its logo
+dnl
+AC_ARG_WITH([brand],
+  AS_HELP_STRING([--with-brand=PROFILE],
+    [name and logo of the app: vlc or public (default vlc)]),, [with_brand="vlc"])
+AS_CASE(["${with_brand}"],
+  [vlc], [
+    BRAND_PRODUCT_NAME="VLC media player"
+    BRAND_COMPANY="VideoLAN"
+    BRAND_INTERNAL_NAME="vlc"
+    BRAND_EXE="vlc.exe"
+    BRAND_ICON_SRC="share/icons/vlc.ico"
+    BRAND_ICON_RC="vlc.ico"
+    BRAND_ICON_FILE="vlc.ico"
+    BRAND_WEBSITE="https://www.videolan.org/"
+    BRAND_FINISH_LINK="https://www.videolan.org/vlc/"
+    BRAND_REGKEY='Software\VideoLAN\VLC'
+    BRAND_INSTALL_DIR='VideoLAN\VLC'
+    BRAND_PRODUCT_ID="{ea92ef52-afe4-4212-bacb-dfe9fca94cd6}"
+    BRAND_NSIS_BITMAP_TRUE=""
+  ],
+  [public], [
+    dnl the approved logo files the public profile builds with
+    for brand_file in \
+        modules/gui/qt/pixmaps/brand/public/cone-logo.svg \
+        modules/gui/qt/pixmaps/brand/public/cone-logo-16.svg \
+        modules/gui/qt/pixmaps/brand/public/cone-logo-24.svg \
+        modules/gui/qt/pixmaps/brand/public/cone-16.png \
+        modules/gui/qt/pixmaps/brand/public/cone-24.png \
+        modules/gui/qt/pixmaps/brand/public/cone-32.png \
+        modules/gui/qt/pixmaps/brand/public/cone-48.png \
+        modules/gui/qt/pixmaps/brand/public/cone-64.png \
+        modules/gui/qt/pixmaps/brand/public/cone-128.png \
+        modules/gui/qt/pixmaps/brand/public/cone-256.png \
+        extras/package/win32/brand/public/cone.ico; do
+      AS_IF([test -f "${srcdir}/${brand_file}"],, [
+        AC_MSG_ERROR([--with-brand=public needs the Cone logo file ${brand_file}; build with --with-brand=vlc until it is added])
+      ])
+    done
+    dnl the in-app logo follows the accent color: the SVG colorizer replaces the color FF8800
+    for brand_file in cone-logo.svg cone-logo-16.svg cone-logo-24.svg; do
+      AS_IF([grep -qi 'ff8800' "${srcdir}/modules/gui/qt/pixmaps/brand/public/${brand_file}"],, [
+        AC_MSG_ERROR([modules/gui/qt/pixmaps/brand/public/${brand_file} must fill the logo with the color FF8800 (the accent slot of the SVG colorizer)])
+      ])
+    done
+    BRAND_PRODUCT_NAME="Cone"
+    BRAND_COMPANY="Sticky"
+    BRAND_INTERNAL_NAME="cone"
+    BRAND_EXE="Cone.exe"
+    BRAND_ICON_SRC="extras/package/win32/brand/public/cone.ico"
+    BRAND_ICON_RC="brand/public/cone.ico"
+    BRAND_ICON_FILE="cone.ico"
+    BRAND_WEBSITE="https://github.com/Pyr0zen/vlc-redesign-juxtopposed"
+    BRAND_FINISH_LINK="https://github.com/Pyr0zen/vlc-redesign-juxtopposed"
+    BRAND_REGKEY='Software\Cone'
+    BRAND_INSTALL_DIR='Cone'
+    BRAND_PRODUCT_ID="{f00e45bf-087b-49ef-90e7-4cd5e2e4bd72}"
+    dnl the installer's welcome / finish bitmap shows VLC's cone: NSIS's default one instead
+    BRAND_NSIS_BITMAP_TRUE=";"
+    AC_DEFINE([VLC_BRAND_PUBLIC], [1], [Define to build the public brand (Cone) instead of VLC's name and cone])
+  ],
+  [AC_MSG_ERROR([--with-brand must be vlc or public (got ${with_brand})])])
+AM_CONDITIONAL([BRAND_PUBLIC], [test "${with_brand}" = "public"])
+AC_SUBST([BRAND_PRODUCT_NAME])
+AC_SUBST([BRAND_COMPANY])
+AC_SUBST([BRAND_INTERNAL_NAME])
+AC_SUBST([BRAND_EXE])
+AC_SUBST([BRAND_ICON_SRC])
+AC_SUBST([BRAND_ICON_RC])
+AC_SUBST([BRAND_ICON_FILE])
+AC_SUBST([BRAND_WEBSITE])
+AC_SUBST([BRAND_FINISH_LINK])
+AC_SUBST([BRAND_REGKEY])
+AC_SUBST([BRAND_INSTALL_DIR])
+AC_SUBST([BRAND_PRODUCT_ID])
+AC_SUBST([BRAND_NSIS_BITMAP_TRUE])
+
 AS_IF([test -z "$VLC_COMPILE_BY"],[
    VLC_COMPILE_BY=`whoami|sed -e 's/\\\/\\\\\\\/g'`
 ])
