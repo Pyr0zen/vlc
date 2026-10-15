@@ -313,18 +313,20 @@ RdSidePanel {
                 text: qsTr("%1 Bookmark", "%1 Bookmarks", bookmarkLoader.item ? bookmarkLoader.item.count : 0)
                           .arg(bookmarkLoader.item ? bookmarkLoader.item.count : 0)
 
-                // Ctrl+B and the instant bookmark are new features (BUILD_PLAN.md W4.8b); until then
-                // both buttons open VLC's bookmark editor
+                // "-" removes the selected bookmark, "+" adds one at the current time at once,
+                // like Ctrl+B (video 15:03-15:16, W4.8b)
                 HeaderButton {
                     rdIcon: "remove"
-                    description: qsTr("Remove a bookmark")
-                    onClicked: DialogsProvider.bookmarksDialog()
+                    description: qsTr("Remove the selected bookmark")
+                    enabled: !!bookmarkLoader.item && bookmarkLoader.item.selectedIndex >= 0
+                    onClicked: bookmarkLoader.item.removeSelected()
                 }
 
                 HeaderButton {
                     rdIcon: "add"
-                    description: qsTr("Add a bookmark")
-                    onClicked: DialogsProvider.bookmarksDialog()
+                    description: qsTr("Add a bookmark at the current time (Ctrl + B)")
+                    enabled: !!bookmarkLoader.item && Player.isStarted
+                    onClicked: bookmarkLoader.item.addBookmark()
                 }
             }
 

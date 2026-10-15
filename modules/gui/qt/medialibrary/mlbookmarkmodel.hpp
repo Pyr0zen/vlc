@@ -78,7 +78,10 @@ public:
     MediaLib* ml() const;
     void setMl(MediaLib* ml);
 
-    void add();
+    // redesign: Ctrl+B and the Bookmarks tab of the queue sidebar add and remove bookmarks
+    // directly (W4.8b)
+    Q_INVOKABLE void add();
+    Q_INVOKABLE void removeBookmark( int row );
     void remove( const QModelIndexList& indexes );
     void clear();
     Q_INVOKABLE void select( const QModelIndex& index );

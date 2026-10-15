@@ -19,7 +19,8 @@
 // redesign: bookmarks of the current file in the queue sidebar's Bookmarks tab (video
 // 15:08-15:16). Part of the media library module: VLC keeps bookmarks in the media library, so
 // the sidebar loads this list only when the media library is available. The rows are created on
-// demand (RdListView).
+// demand (RdListView). The header's "+" adds a bookmark at the current time, like Ctrl+B
+// (W4.8b); a click on a row jumps to it and selects it for the header's "-".
 import QtQuick
 
 import VLC.MainInterface
@@ -31,6 +32,20 @@ import VLC.Widgets as Widgets
 Widgets.RdListView {
     id: root
 
+    // the row the header's "-" removes
+    property int selectedIndex: -1
+
+    function addBookmark() {
+        bookmarkModel.add()
+    }
+
+    function removeSelected() {
+        if (selectedIndex < 0)
+            return
+        bookmarkModel.removeBookmark(selectedIndex)
+        selectedIndex = -1
+    }
+
     model: MLBookmarkModel {
         id: bookmarkModel
 
@@ -38,8 +53,16 @@ Widgets.RdListView {
         ml: MediaLib
     }
 
+    // a bookmark was added or removed, or the media changed: the old row numbers no longer hold
+    onCountChanged: selectedIndex = -1
+
+    function _jumpTo(index) {
+        selectedIndex = index
+        bookmarkModel.select(bookmarkModel.index(index, 0))
+    }
+
     // Enter on the current row jumps to it
-    onActionAtIndex: (index) => bookmarkModel.select(bookmarkModel.index(index, 0))
+    onActionAtIndex: (index) => root._jumpTo(index)
 
     delegate: Widgets.RdListRow {
         required property int index
@@ -49,12 +72,13 @@ Widgets.RdListView {
 
         title: model.name ?? ""
         detail: model.time ?? ""
+        selected: root.selectedIndex === index
 
         Navigation.upAction: function() { root.focusRow(index - 1) }
         Navigation.downAction: function() { root.focusRow(index + 1) }
         // Enter acts on the focused row, also when it got focus by Tab
         onActiveFocusChanged: if (activeFocus) ListView.view.currentIndex = index
 
-        onClicked: bookmarkModel.select(bookmarkModel.index(index, 0))
+        onClicked: root._jumpTo(index)
     }
 }

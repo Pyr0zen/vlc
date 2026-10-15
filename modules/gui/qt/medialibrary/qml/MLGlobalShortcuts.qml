@@ -18,11 +18,21 @@
 import QtQuick
 
 import VLC.MediaLibrary
-import VLC.Dialogs
+import VLC.Player
 import VLC.Menus
 
 Item {
-    ShortcutExt{ sequence:"Ctrl+B"; onActivated: DialogsProvider.bookmarksDialog() }
+    // redesign: Ctrl+B creates a bookmark at the current time at once, no dialog (video
+    // 15:03-15:08, Decision 22); the queue sidebar's Bookmarks tab shows it. VLC keeps
+    // bookmarks in the media library, so the shortcut lives here.
+    MLBookmarkModel {
+        id: bookmarkModel
+
+        player: Player
+        ml: MediaLib
+    }
+
+    ShortcutExt{ sequence:"Ctrl+B"; onActivated: bookmarkModel.add() }
 
     MLRecentMediaModel {
         id: recentModel
