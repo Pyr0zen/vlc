@@ -295,7 +295,9 @@ SettingsPage {
     SettingsSection {
         title: qsTr("Timing")
 
-        // VLC counts tenths of a second
+        // VLC counts tenths of a second and declares no range; the slider scrolls on past
+        // -5 / +5 s up to the -600 to 600 s of VLC's own Synchronization panel
+        // (dialogs/extended/extended_panels.cpp, SyncWidget), 5 s per second (Decision 46)
         SettingsOption {
             option: "sub-delay"
             text: qsTr("Subtitle delay")
@@ -304,9 +306,16 @@ SettingsPage {
             valueScale: 10
             from: -5
             to: 5
+            limitFrom: -600
+            limitTo: 600
+            scrollSpeed: 5
             step: 0.1
             decimals: 1
-            labels: [qsTr("-5 s"), qsTr("0 s"), qsTr("+5 s")]
+            labelStep: 5
+            labelText: (v) => {
+                const s = Math.round(v * 10) / 10
+                return qsTr("%1 s").arg((s > 0 ? "+" : "") + s)
+            }
         }
     }
 
@@ -323,6 +332,8 @@ SettingsPage {
             text: qsTr("Show filename when a video starts")
         }
 
+        // VLC declares no range (milliseconds): the slider scrolls on past 10 s, up to a minute
+        // (Decision 46)
         SettingsOption {
             option: "video-title-timeout"
             text: qsTr("Show filename for")
@@ -330,8 +341,11 @@ SettingsPage {
             valueScale: 1000
             from: 1
             to: 10
+            limitTo: 60
             step: 0.5
-            labels: [qsTr("1 s"), qsTr("10 s")]
+            labelStep: 9
+            labelAnchor: 1
+            labelText: (v) => qsTr("%1 s").arg(Math.round(v * 10) / 10)
             available: root._title
         }
     }
