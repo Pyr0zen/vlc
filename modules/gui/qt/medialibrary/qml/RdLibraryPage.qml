@@ -85,10 +85,6 @@ FocusScope {
 
     // sort orders of the page (Figma "Sorting Options", P5-13, IB-03): criteria of VLC's models,
     // sorted by the media library
-    readonly property var _titleOptions: [
-        { key: "title", text: qsTr("Title A-Z"), criteria: "title", desc: false },
-        { key: "titleDesc", text: qsTr("Title Z-A"), criteria: "title", desc: true }
-    ]
     readonly property var _nameOptions: [
         { key: "title", text: qsTr("Title A-Z"), criteria: "name", desc: false },
         { key: "titleDesc", text: qsTr("Title Z-A"), criteria: "name", desc: true }
@@ -127,6 +123,14 @@ FocusScope {
         { key: "newest", text: qsTr("Newest First"), criteria: "release_year", desc: true },
         { key: "oldest", text: qsTr("Oldest First"), criteria: "release_year", desc: false }
     ]
+    // the category roots (Videos, Music > Songs): her order is the order the folders were
+    // added in (video 11:58 "Shows, Youtube Footage, Courses, Films, Anime"; Figma sidebar)
+    readonly property var _rootFolderOptions: [
+        { key: "newest", text: qsTr("Newest First"), criteria: "insertion", desc: true },
+        { key: "oldest", text: qsTr("Oldest First"), criteria: "insertion", desc: false },
+        { key: "title", text: qsTr("Title A-Z"), criteria: "title", desc: false },
+        { key: "titleDesc", text: qsTr("Title Z-A"), criteria: "title", desc: true }
+    ]
     readonly property var _playlistOptions: [
         { key: "title", text: qsTr("Title A-Z"), criteria: "title", desc: false },
         { key: "titleDesc", text: qsTr("Title Z-A"), criteria: "title", desc: true }
@@ -142,7 +146,7 @@ FocusScope {
             return _playlistOptions
         case "videos":
         case "songs":
-            return _titleOptions
+            return _rootFolderOptions
         case "albums":
             return _albumOptions
         case "artists":
@@ -157,6 +161,8 @@ FocusScope {
         switch (location.page) {
         case "collection": return location.kind === "album" ? "track" : "title"
         case "playlist": return ""   // the playlist's own order
+        case "videos":
+        case "songs": return "oldest"
         default: return sortOptions.length > 0 ? "title" : ""
         }
     }
@@ -334,8 +340,9 @@ FocusScope {
             // folders of this category are
             otherMrls: (page.category === "music" ? RdLibraryStore.videoFolders : RdLibraryStore.musicFolders)
                        .concat(RdLibraryStore.hiddenRoots)
-            sortCriteria: "title"
-            sortOrder: page.location.page === "folder" || page.sortKey !== "titleDesc" ? Qt.AscendingOrder : Qt.DescendingOrder
+            // a folder's subfolders by title (S01, S02), the roots as the page's sort says
+            sortCriteria: page.location.page === "folder" ? "title" : page.sortCriteria
+            sortOrder: page.location.page === "folder" ? Qt.AscendingOrder : page.sortOrder
             searchPattern: page.searchText
             onCountChanged: page.loaded()
         }

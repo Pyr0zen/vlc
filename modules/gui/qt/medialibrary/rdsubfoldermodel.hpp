@@ -22,6 +22,7 @@
 #include "mlbasemodel.hpp"
 #include "mlhelper.hpp"
 
+#include <QHash>
 #include <QSet>
 #include <QTimer>
 
@@ -96,6 +97,8 @@ private:
         void addInnerFolders(vlc_medialibrary_t* ml, Folders& result) const;
 
         QSet<QString> m_mine;
+        // the category's folders in the order they were added to it ("Oldest First" at the root)
+        QHash<QString, int> m_mineOrder;
         QSet<QString> m_others;
     };
 

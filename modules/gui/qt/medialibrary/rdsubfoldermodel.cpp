@@ -103,7 +103,12 @@ QVariant RdSubfolderModel::itemRoleData(const MLItem* item, int role) const
 
 vlc_ml_sorting_criteria_t RdSubfolderModel::nameToCriteria(QByteArray name) const
 {
-    return name == QByteArrayLiteral("title") ? VLC_ML_SORTING_ALPHA : VLC_ML_SORTING_DEFAULT;
+    if (name == QByteArrayLiteral("title"))
+        return VLC_ML_SORTING_ALPHA;
+    // the order the folders were added in (the category roots only; elsewhere by title)
+    if (name == QByteArrayLiteral("insertion"))
+        return VLC_ML_SORTING_INSERTIONDATE;
+    return VLC_ML_SORTING_DEFAULT;
 }
 
 std::unique_ptr<MLListCacheLoader> RdSubfolderModel::createMLLoader() const
@@ -143,7 +148,12 @@ RdSubfolderModel::Loader::Loader(const RdSubfolderModel& model)
     : MLOp(model)
 {
     for (const QString& mrl : model.m_categoryMrls)
-        m_mine.insert(RdLibraryItems::mrlKey(mrl));
+    {
+        const QString key = RdLibraryItems::mrlKey(mrl);
+        m_mine.insert(key);
+        if (!m_mineOrder.contains(key))
+            m_mineOrder.insert(key, m_mineOrder.size());
+    }
     for (const QString& mrl : model.m_otherMrls)
         m_others.insert(RdLibraryItems::mrlKey(mrl));
 }
@@ -273,10 +283,26 @@ void RdSubfolderModel::Loader::folders(vlc_medialibrary_t* ml, Folders& result) 
         }
     }
 
+    const bool desc = m_sortDesc;
+
+    if (roots && m_sort == VLC_ML_SORTING_INSERTIONDATE)
+    {
+        // video 11:58, Figma sidebar: the category's folders in the order they were added.
+        // Library folders from before the redesign (in no list, shown in both categories) come
+        // first, in the order the media library got them
+        const auto rank = [this](const vlc_ml_folder_t* folder) -> std::pair<int, int64_t> {
+            const auto it = m_mineOrder.constFind(RdLibraryItems::mrlKey(qfu(folder->psz_mrl)));
+            return { it != m_mineOrder.cend() ? it.value() : -1, folder->i_id };
+        };
+        std::stable_sort(result.sorted.begin(), result.sorted.end(), [&](const vlc_ml_folder_t* a, const vlc_ml_folder_t* b) {
+            return desc ? rank(b) < rank(a) : rank(a) < rank(b);
+        });
+        return;
+    }
+
     QCollator collator;
     collator.setNumericMode(true);
     collator.setCaseSensitivity(Qt::CaseInsensitive);
-    const bool desc = m_sortDesc;
     std::stable_sort(result.sorted.begin(), result.sorted.end(), [&](const vlc_ml_folder_t* a, const vlc_ml_folder_t* b) {
         const int cmp = collator.compare(qfu(a->psz_name), qfu(b->psz_name));
         return desc ? cmp > 0 : cmp < 0;
