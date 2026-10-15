@@ -31,7 +31,6 @@
 #include <QJSEngine>
 #include <QProcess>
 #include <QSettings>
-#include <QStandardPaths>
 #include <QTextStream>
 
 #include <algorithm>
@@ -201,17 +200,17 @@ void RdLibraryStore::setCompactViewMode(const QString& mode)
 
 QUrl RdLibraryStore::pickFolder(const QString& title, const QUrl& start, const QString& category) const
 {
-    // no file system access here: the native dialog falls back by itself when the folder is gone
+    // the start folder is not checked: the native dialog falls back by itself when it is gone
     QUrl dir;
     if (start.isLocalFile())
         dir = start;
     else if (!category.isEmpty())
     {
-        const QString standard = QStandardPaths::writableLocation(category == QLatin1String("music")
-                                                                  ? QStandardPaths::MusicLocation
-                                                                  : QStandardPaths::MoviesLocation);
+        // the folder sortStandardFolders() gives the category, as VLC names it
+        const QString standard = QVLCUserDir(category == QLatin1String("music") ? VLC_MUSIC_DIR
+                                                                                : VLC_VIDEOS_DIR);
         if (!standard.isEmpty())
-            dir = QUrl::fromLocalFile(standard);
+            dir = QUrl::fromLocalFile(QDir::fromNativeSeparators(standard));
     }
     if (dir.isEmpty())
         dir = QUrl::fromLocalFile(QDir::homePath());
@@ -330,6 +329,8 @@ void RdLibraryStore::sortStandardFolders()
 
     struct Ctx {
         QStringList roots;
+        QString videosKey;
+        QString musicKey;
     };
     m_mediaLib->runOnMLThread<Ctx>(this,
     [](vlc_medialibrary_t* ml, Ctx& ctx) {
@@ -341,28 +342,28 @@ void RdLibraryStore::sortStandardFolders()
             if (root.psz_mrl && !root.b_banned)
                 ctx.roots.append(RdLibraryItems::normalizedMrl(qfu(root.psz_mrl)));
         }
-    },
-    [this](quint64, Ctx& ctx) {
+
+        // the user folders may be read from disk (XDG user-dirs): here, off the UI thread
         const auto userDirKey = [](vlc_userdir_t type) -> QString {
-            char* dir = config_GetUserDir(type);
-            if (!dir)
-                return {};
-            const QString path = qfu(dir);
-            free(dir);
+            const QString path = QVLCUserDir(type);
             if (path.isEmpty())
                 return {};
             return RdLibraryItems::mrlKey(QUrl::fromLocalFile(QDir::fromNativeSeparators(path))
                                               .toString(QUrl::FullyEncoded));
         };
         const QString homeKey = userDirKey(VLC_HOME_DIR);
-        QString videosKey = userDirKey(VLC_VIDEOS_DIR);
-        QString musicKey = userDirKey(VLC_MUSIC_DIR);
+        ctx.videosKey = userDirKey(VLC_VIDEOS_DIR);
+        ctx.musicKey = userDirKey(VLC_MUSIC_DIR);
         // a system without its own Videos or Music folder names the home folder: that one
         // stays in both categories
-        if (videosKey == homeKey || videosKey == musicKey)
-            videosKey.clear();
-        if (musicKey == homeKey)
-            musicKey.clear();
+        if (ctx.videosKey == homeKey || ctx.videosKey == ctx.musicKey)
+            ctx.videosKey.clear();
+        if (ctx.musicKey == homeKey)
+            ctx.musicKey.clear();
+    },
+    [this](quint64, Ctx& ctx) {
+        if (ctx.videosKey.isEmpty() && ctx.musicKey.isEmpty())
+            return;
 
         bool changed = false;
         for (const QString& root : std::as_const(ctx.roots))
@@ -372,9 +373,9 @@ void RdLibraryStore::sortStandardFolders()
                 || RdLibraryItems::containsMrl(m_hiddenRoots, root))
                 continue;
             const QString key = RdLibraryItems::mrlKey(root);
-            if (!videosKey.isEmpty() && key == videosKey)
+            if (!ctx.videosKey.isEmpty() && key == ctx.videosKey)
                 m_videoFolders.append(root);
-            else if (!musicKey.isEmpty() && key == musicKey)
+            else if (!ctx.musicKey.isEmpty() && key == ctx.musicKey)
                 m_musicFolders.append(root);
             else
                 continue;
