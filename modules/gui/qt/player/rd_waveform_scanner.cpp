@@ -79,10 +79,19 @@ struct RdWaveformScanner::Scan
     void accumulate(int bin, const audio_format_t& fmt, const uint8_t* data, size_t frames);
     QByteArray result() const;
 
-    bool stopped() const { return failed || scanner.cancelled(); }
+    // the scan ends: a failure, a cancel, or the time budget spent
+    bool stopped()
+    {
+        if (!failed && !overBudget && vlc_tick_now() >= deadline)
+            overBudget = true;
+        return failed || overBudget || scanner.cancelled();
+    }
 
     const RdWaveformScanner& scanner;
     vlc_object_t* obj = nullptr;
+    // the end of the time budget (RdWaveformScanner::kTimeBudgetSeconds), and whether it came
+    vlc_tick_t deadline = VLC_TICK_MAX;
+    bool overBudget = false;
 
     std::vector<Track*> tracks;
     // the measured track: the first audio track whose decoder could be loaded
@@ -419,11 +428,22 @@ void RdWaveformScanner::Scan::process(Track* track, block_t* block)
         return;
     }
 
+    // the packetizer owns `block` from here, whatever it returns: a bytestream packetizer
+    // (MPEG audio, AAC, FLAC ...) keeps it in its queue and leaves `*blockRef` pointing at it,
+    // so it is never released here (as in the input core). The loop always runs until the
+    // packetizer has nothing more for this block; once the scan stops, its packets are dropped
+    // instead of decoded.
     const bool draining = !block;
     block_t** blockRef = draining ? nullptr : &block;
     block_t* packets;
     while ((packets = packetizer->pf_packetize(packetizer, blockRef)) != nullptr)
     {
+        if (stopped())
+        {
+            block_ChainRelease(packets);
+            continue;
+        }
+
         if (!es_format_IsSimilar(track->decoder->fmt_in, &packetizer->fmt_out))
         {
             track->decoder->pf_decode(track->decoder, nullptr);
@@ -433,9 +453,7 @@ void RdWaveformScanner::Scan::process(Track* track, block_t* block)
             {
                 failed = true;
                 block_ChainRelease(packets);
-                if (block)
-                    block_Release(block);
-                return;
+                continue;
             }
         }
 
@@ -447,19 +465,12 @@ void RdWaveformScanner::Scan::process(Track* track, block_t* block)
             {
                 failed = true;
                 block_ChainRelease(next);
-                if (block)
-                    block_Release(block);
-                return;
+                break;
             }
             packets = next;
         }
-
-        if (stopped())
-            break;
     }
-    if (block)
-        block_Release(block);
-    if (draining && track->decoder)
+    if (draining && track->decoder && !stopped())
         track->decoder->pf_decode(track->decoder, nullptr);
 }
 
@@ -726,12 +737,15 @@ QByteArray RdWaveformScanner::run()
         const vlc_tick_t start = vlc_tick_now();
         Scan scan(*this);
         scan.obj = obj;
+        scan.deadline = start + VLC_TICK_FROM_SEC(kTimeBudgetSeconds);
         levels = scan.execute();
         vlc_object_delete(obj);
 
         // the measurements of the PC tests read this line (WAVEFORM_NOTES section 8)
         msg_Dbg(m_parent, "waveform scan (%s): %s in %lld ms", scan.mode,
-                cancelled() ? "cancelled" : levels.isEmpty() ? "no waveform" : "levels",
+                cancelled() ? "cancelled"
+                : scan.overBudget ? "no waveform, over the time budget"
+                : levels.isEmpty() ? "no waveform" : "levels",
                 static_cast<long long>(MS_FROM_VLC_TICK(vlc_tick_now() - start)));
     }
 

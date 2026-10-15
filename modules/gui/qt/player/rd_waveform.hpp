@@ -39,6 +39,9 @@ class RdWaveformScanner;
  * playing file's loudness profile is read from the cache, or scanned (RdWaveformScanner) on a
  * single worker thread at the lowest priority, so playback and the UI never wait for it. A
  * media change cancels the scan in flight; so does the last seek bar letting go (release()).
+ * Switching the option on during playback starts the scan of the playing file at once. A scan
+ * ends on its own within RdWaveformScanner::kTimeBudgetSeconds, and quitting waits at most
+ * `kQuitWaitMs` for a cancelled one.
  *
  * Only local files are scanned (a stream would be read a second time over the network), and
  * only once the player knows their duration.
@@ -57,6 +60,8 @@ class RdWaveform : public QObject
 
 public:
     static constexpr int kCacheMaxEntries = 2000;
+    // the longest quitting waits for a cancelled scan (one normally stops within a millisecond)
+    static constexpr int kQuitWaitMs = 500;
 
     RdWaveform(qt_intf_t* intf, PlayerController* player, QObject* parent = nullptr);
     ~RdWaveform() override;
@@ -84,8 +89,9 @@ private:
     qt_intf_t* m_intf = nullptr;
     PlayerController* m_player = nullptr;
 
-    // one low priority worker thread for every scan
-    QThreadPool m_pool;
+    // one low priority worker thread for every scan (left to the process's end if a scan does
+    // not stop when VLC quits, see ~RdWaveform)
+    std::unique_ptr<QThreadPool> m_pool;
     QString m_cacheDir;
 
     int m_users = 0;

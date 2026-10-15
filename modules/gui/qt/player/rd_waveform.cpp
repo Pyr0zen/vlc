@@ -161,9 +161,10 @@ RdWaveform::RdWaveform(qt_intf_t* intf, PlayerController* player, QObject* paren
     : QObject(parent)
     , m_intf(intf)
     , m_player(player)
+    , m_pool(std::make_unique<QThreadPool>())
 {
-    m_pool.setMaxThreadCount(1);
-    m_pool.setThreadPriority(QThread::LowestPriority);
+    m_pool->setMaxThreadCount(1);
+    m_pool->setThreadPriority(QThread::LowestPriority);
 
     if (char* dir = config_GetUserDir(VLC_USERDATA_DIR))
     {
@@ -179,7 +180,15 @@ RdWaveform::RdWaveform(qt_intf_t* intf, PlayerController* player, QObject* paren
 RdWaveform::~RdWaveform()
 {
     cancelScan();
-    m_pool.waitForDone();
+    // a cancelled scan stops within one demuxed packet. Should a module ever hold it longer,
+    // quitting does not hang on it: the pool is left to the process's end (its job no longer
+    // reports to this object, and the scan's VLC objects hang from the libvlc instance)
+    if (!m_pool->waitForDone(kQuitWaitMs))
+    {
+        msg_Warn(m_intf, "waveform: the scan did not stop within %d ms, not waited for",
+                 kQuitWaitMs);
+        (void)m_pool.release();
+    }
 }
 
 void RdWaveform::acquire()
@@ -238,9 +247,12 @@ void RdWaveform::startScan()
     const QString path = QString::fromUtf8(psz);
     free(psz);
 
-    m_running = std::make_shared<RdWaveformScanner>(VLC_OBJECT(m_intf), m_uri, m_length);
-    m_pool.start(new RdWaveformJob(this, ++m_generation, m_running, path, m_cacheDir));
+    // the scan's objects hang from the libvlc instance, which outlives the interface
+    m_running = std::make_shared<RdWaveformScanner>(VLC_OBJECT(vlc_object_instance(m_intf)),
+                                                    m_uri, m_length);
+    m_pool->start(new RdWaveformJob(this, ++m_generation, m_running, path, m_cacheDir));
     m_scanClock.start();
+    msg_Dbg(m_intf, "waveform: job started for the playing file");
 }
 
 void RdWaveform::cancelScan()
