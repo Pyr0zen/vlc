@@ -20,7 +20,7 @@
 // 5187:24308). Final order (Decision 13: the video's rows plus Figma's Show Statistics):
 // Show Subtitle Timeline on Seekbar, Show Waveform on Seekbar, Show Metadata, Show Statistics,
 // Reverse, Sleep Timer, Audio Visualizer, Speed. The subtitle timeline and waveform toggles come
-// with their seek bar modes, Reverse is postponed (Decision 29).
+// with their seek bar modes (the waveform row is here, P6-06), Reverse is postponed (Decision 29).
 import QtQuick
 import QtQuick.Layouts
 
@@ -66,7 +66,20 @@ RdSidePanelPage {
         // Figma "Frame 78" stacks the rows without spacing; each row keeps its own padding
         rowSpacing: 0
 
-        // Figma "Frame 115" / "Frame 116": 52 px toggle rows (padding 10, 68x32 toggle)
+        // Figma "Frame 115" / "Frame 116": 52 px toggle rows (padding 10, 68x32 toggle). The
+        // waveform row is the video's (Decision 13; no Figma frame), styled like them: VLC's
+        // qt-seek-waveform option, which the thick seek bar reads (P6-06)
+        Widgets.RdSettingRow {
+            text: qsTr("Show Waveform on Seekbar")
+            rowHeight: VLCStyle.dp(52)
+
+            Widgets.RdToggle {
+                checked: RdEffects.values[RdEffects.optionKey("qt-seek-waveform")] === true
+                Accessible.name: qsTr("Show Waveform on Seekbar")
+                onToggled: RdEffects.setOption("qt-seek-waveform", checked)
+            }
+        }
+
         Widgets.RdSettingRow {
             text: qsTr("Show Metadata")
             rowHeight: VLCStyle.dp(52)
