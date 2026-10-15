@@ -16,8 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 // redesign: Settings > Playback ("Playback Preferences", video 17:59-18:01, Figma
-// "Settings - playback" / "Settings - playback-1"); rows: P8-09. "All the settings related to
-// when a file is playing."
+// "Settings - playback" / "Settings - playback-1"); rows: P8-09. The settings for a file
+// while it plays.
 import QtQuick
 
 import VLC.MainInterface

@@ -19,7 +19,7 @@
 // redesign: the compact library next to the video (video 11:37-11:59, 12:00-13:48; P5-23, IB-12,
 // IB-13, IB-14, P5-25; Figma "sidebar" 427 wide = rail 50 + panel 377, panel BG/B1 95% with
 // padding 20 and gap 17, a Divider/Dim line above the rows; Player.png, Player - Music-1.png).
-// "This way, you'd never have to leave the video" (11:41).
+// The user never has to leave the video (11:41).
 //
 // Hosted by the player page (Player.qml, PC session): docked on the left between the top bar and
 // the control bar, the video area to its right; opened and closed by the top bar's sidebar

@@ -17,8 +17,8 @@
  *****************************************************************************/
 
 // redesign (W8.1a, video 19:12-19:28, Figma "Player - customize" 2107:5604): Customize Player,
-// VLC's toolbar editor in the redesign. "One big frame in the center of VLC filled with buttons and
-// icons and outlines": a 1048 wide box over the window (BG/B1, radius 14, shadow; header BG/B2 94
+// VLC's toolbar editor in the redesign. One large frame in the middle of VLC with outlined buttons and
+// icons: a 1048 wide box over the window (BG/B1, radius 14, shadow; header BG/B2 94
 // high with the title and the description; the palette of controls; Cancel / Save footer) and,
 // at the bottom of the window where the control bar is, the edited bar with dashed outlines.
 // Controls are dragged from the box into the bar, around in it, and back into the box to remove

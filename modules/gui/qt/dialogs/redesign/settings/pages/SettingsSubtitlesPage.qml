@@ -18,7 +18,7 @@
 // redesign: Settings > Subtitles ("Subtitle Defaults", video 18:09-18:14 and 7:29-7:40, Figma
 // "Settings - subtitles" / "Settings - subtitles-1"); rows: P8-12, P7-17, P8-01, P3-22.
 // Values in words instead of numbers (video 17:03-17:33), and the font size both in words and
-// as an exact value (7:29-7:40: "the exact font sizes are hidden in the advanced preferences").
+// as an exact value (7:29-7:40: exact font sizes were hidden in the advanced preferences).
 // The text style options are the freetype text renderer's; the size is VLC's subtitle text
 // scale, applied at once (the settings sidebar's).
 import QtQuick
