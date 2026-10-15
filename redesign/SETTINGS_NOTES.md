@@ -175,3 +175,169 @@ Not changed, with reasons:
 3. Opening a plugin with many settings (e.g. x264 under Recording, about 70 rows).
 4. Extensions page: VLC's add-ons model reads the local catalog when the page is created; Find more extensions downloads the online catalog.
 5. Interface rows (maximum volume, hide timeout...): each change makes MainCtx read its options again once.
+
+## 10. Real-build verification on the PC (integration, 2026-10-15)
+
+Offline renders only helped while coding; every page is verified on the built VLC. Method: Windows scaling 100 %, VLC window large enough for the full 1048x865 dialog, dark theme, orange accent. Open Settings (Ctrl+P), pick the category, screenshot the dialog, crop the same rect, scale x2 (the Figma PNGs are 2x exports with the drop shadow margin, 15 px left and 7 px above, so a frame point (x, y) is PNG pixel ((x + 15) * 2, (y + 7) * 2)), and compare side by side at the same scale. The whole dialog is PNG rect 30,14,2096,1730. The "-1" frames show Advanced Options open (click the bar first); audio-1 is scrolled about 761 px (scroll until "Effects" is at the top of the content; its negative rects are above the visible area). The PNGs show Figma's sample values: set the same values first (e.g. General: Save a log ON, Log details Errors only) or compare geometry only.
+
+Rects (PNG pixels x,y,w,h): each visible section (header + rows) and one instance of each control kind.
+
+- **Settings - global.png**
+   section 'Appearance' 510,154,1568,354
+   section 'Startup' 510,548,1568,246
+   section 'Diagnostics' 510,834,1568,430
+   control: dropdown ('Interface language') 1438,242,640,72
+   control: segmented/stacked ('Theme') 1438,334,640,72
+   control: toggle ('Show confirmation and error dialogs') 1942,636,136,64
+   control: field + Browse ('Log file') 1438,1090,640,72
+- **Settings - global-1.png**
+   section 'Appearance' 510,154,1568,354
+   section 'Startup' 510,548,1568,246
+   section 'Diagnostics' 510,834,1568,430
+   control: dropdown ('Interface language') 1438,242,640,72
+   control: segmented/stacked ('Theme') 1438,334,640,72
+   control: toggle ('Show confirmation and error dialogs') 1942,636,136,64
+   control: field + Browse ('Log file') 1438,1090,640,72
+   control: text input ('Additional command line options') 1438,1514,640,72
+- **Settings - interface.png**
+   section 'Skin' 510,154,1568,254
+   section 'Window' 510,448,1568,682
+   section 'Playback Controls' 510,1170,1568,452
+   section 'Notifications and System Tray' 510,1662,1568,82
+   control: toggle ('Use a custom skin') 1942,242,136,64
+   control: field + Browse ('Skin file') 1438,326,640,72
+   control: dropdown ('Resize window to fit video') 1438,620,640,72
+   control: slider ('Hide after') 1438,1434,640,94
+- **Settings - interface-1.png**
+   section 'Skin' 510,154,1568,254
+   section 'Window' 510,448,1568,682
+   section 'Playback Controls' 510,1170,1568,452
+   section 'Notifications and System Tray' 510,1662,1568,82
+   control: toggle ('Use a custom skin') 1942,242,136,64
+   control: field + Browse ('Skin file') 1438,326,640,72
+   control: dropdown ('Resize window to fit video') 1438,620,640,72
+   control: slider ('Hide after') 1438,1434,640,94
+- **Settings - privacy.png**
+   section 'History' 510,154,1568,422
+   section 'Network' 510,616,1568,522
+   control: toggle ('Save recently played items') 1942,242,136,64
+   control: text input ('Never remember items matching') 1438,410,640,72
+   control: button ('Clear history now') 1878,502,200,64
+- **Settings - playback.png**
+   section 'Startup' 510,154,1568,472
+   section 'Tracks' 510,666,1568,446
+   section 'Order' 510,1152,1568,430
+   section 'Seeking' 510,1622,1568,122
+   control: dropdown ('Continue where you left off') 1438,242,640,72
+   control: toggle ('Start playing as soon as a file opens') 1942,334,136,64
+   control: slider ('Default playback speed') 1438,418,640,114
+   control: text input ('Default audio track') 1438,938,640,72
+- **Settings - playback-1.png**
+   section 'Startup' 510,154,1568,472
+   section 'Tracks' 510,666,1568,450
+   section 'Order' 510,1156,1568,430
+   section 'Seeking' 510,1626,1568,118
+   control: dropdown ('Continue where you left off') 1438,242,640,72
+   control: toggle ('Start playing as soon as a file opens') 1942,334,136,64
+   control: slider ('Default playback speed') 1438,418,640,114
+   control: text input ('Default audio track') 1438,940,640,72
+- **Settings - video.png**
+   section 'Output' 510,154,1568,414
+   section 'Picture' 510,608,1568,582
+   section 'Deinterlacing' 510,1230,1568,262
+   section 'Framing' 510,1532,1568,212
+   control: toggle ('Enable video') 1942,242,136,64
+   control: slider ('Hue') 1438,704,640,48
+   control: button ('Reset picture') 1878,1116,200,64
+   control: dropdown ('Deinterlacing') 1438,1318,640,72
+- **Settings - video-1.png**
+   section 'Output' 510,154,1568,414
+   section 'Picture' 510,608,1568,582
+   section 'Deinterlacing' 510,1230,1568,262
+   section 'Framing' 510,1532,1568,212
+   control: toggle ('Enable video') 1942,242,136,64
+   control: slider ('Hue') 1438,704,640,48
+   control: button ('Reset picture') 1878,1116,200,64
+   control: dropdown ('Deinterlacing') 1438,1318,640,72
+- **Settings - audio.png**
+   section 'Output' 510,154,1568,346
+   section 'Volume' 510,540,1568,504
+   section 'Loudness' 510,1084,1568,530
+   section 'Effects' 510,1654,1568,90
+   control: toggle ('Enable audio') 1942,242,136,64
+   control: dropdown ('Output device') 1438,326,640,72
+   control: slider ('Maximum volume') 1438,628,640,114
+   control: segmented/stacked ('Startup volume') 1438,772,640,156
+   control: text input ('Volume step') 1438,960,640,72
+- **Settings - audio-1.png**
+   section 'Output' 510,-1369,1568,346
+   section 'Volume' 510,-983,1568,504
+   section 'Loudness' 510,-439,1568,530
+   section 'Effects' 510,131,1568,1613
+   control: toggle ('Enable audio') 1942,-1281,136,64
+   control: dropdown ('Output device') 1438,-1197,640,72
+   control: slider ('Maximum volume') 1438,-895,640,114
+   control: segmented/stacked ('Startup volume') 1438,-751,640,156
+   control: text input ('Volume step') 1438,-563,640,72
+- **Settings - subtitles.png**
+   section 'Tracks & Languages' 510,154,1568,346
+   section 'Loading Subtitles' 510,540,1568,254
+   section 'Appearance' 510,834,1568,910
+   control: toggle ('Enable subtitles') 1942,242,136,64
+   control: dropdown ('Preferred language') 1438,326,640,72
+   control: text input ('Font') 1438,924,640,72
+   control: segmented/stacked ('Size values') 1438,1020,640,72
+   control: color field ('Text color') 1438,1290,640,64
+   control: slider ('Text opacity') 1438,1374,640,114
+- **Settings - subtitles-1.png**
+   section 'Tracks & Languages' 510,154,1568,346
+   section 'Loading Subtitles' 510,540,1568,254
+   section 'Appearance' 510,834,1568,910
+   control: toggle ('Enable subtitles') 1942,242,136,64
+   control: dropdown ('Preferred language') 1438,326,640,72
+   control: text input ('Font') 1438,924,640,72
+   control: segmented/stacked ('Size values') 1438,1020,640,72
+   control: color field ('Text color') 1438,1290,640,64
+   control: slider ('Text opacity') 1438,1374,640,114
+- **Settings - controls.png**
+   section 'Keyboard Shortcuts' 510,154,1568,246
+   section 'Skip Amounts' 510,440,1568,462
+   section 'Mouse' 510,942,1568,530
+   section 'Remotes' 510,1512,1568,232
+   control: button ('Defaults') 1438,242,640,64
+   control: text input ('Very short skip') 1438,530,640,72
+   control: dropdown ('Single click on the video') 1438,1030,640,72
+   control: toggle ('Reverse scroll direction') 1942,1398,136,64
+- **Settings - library.png**
+   section 'Opening Files' 510,154,1568,506
+   section 'Metadata & Artwork' 510,700,1568,254
+   control: toggle ('Only allow one VLC window') 1942,242,136,64
+   control: dropdown ('When opening a folder') 1438,494,640,72
+- **Settings - network.png**
+   section 'Buffering' 510,154,1568,554
+   section 'Proxy' 510,748,1568,270
+   section 'Security' 510,1058,1568,254
+   control: dropdown ('Buffering') 1438,242,640,72
+   control: text input ('Local files') 1438,336,640,72
+   control: toggle ('Verify certificates against the system trust store') 1942,1146,136,64
+- **Settings - performance.png**
+   section 'Decoding' 510,154,1568,450
+   section 'Smooth Playback' 510,644,1568,426
+   section 'Developer' 510,1226,1568,518
+   control: dropdown ('Hardware-accelerated decoding') 1438,242,640,72
+   control: text input ('Decoding threads') 1438,520,640,72
+   control: toggle ('Drop frames when the system can't keep up') 1942,732,136,64
+   control: button ('Rescan plugins') 1438,996,640,64
+- **Settings - recording.png**
+   section 'Recording' 510,154,1568,258
+   section 'Casting' 510,452,1568,254
+   section 'Streaming' 510,746,1568,598
+   control: field + Browse ('Save recordings to') 1438,244,640,72
+   control: toggle ('Record without re-encoding when possible') 1942,338,136,64
+   control: dropdown ('Cast quality') 1438,624,640,72
+- **Settings - extensions.png**
+   section 'Add-ons' 510,154,1568,656
+   control: search + buttons ('Search') 1268,636,810,64
+   control: toggle ('Load add-ons on startup') 1942,736,136,64
+
+Expected differences (Decisions (Claude) 2026-10-15): rows without a VLC option are missing (S2-01..S2-11); every row has an info icon (Figma omits it on some rows, P7-16); Size values reads Precise (not Pixels); Default audio / subtitle track are dropdowns in words (Figma: a "1" field); "Give VLC high priority" (Figma: real-time); the Last.fm password and web remote password rows exist; Extensions keeps "Extensions" / "Load extensions on startup" (video wording); rows Figma does not show are under Advanced Options > All Other Options.
