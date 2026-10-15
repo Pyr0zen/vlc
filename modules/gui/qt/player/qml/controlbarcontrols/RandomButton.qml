@@ -29,7 +29,8 @@ Widgets.IconToolButton {
     checked: MainPlaylistController.random
     text: VLCIcons.shuffle
     onClicked: MainPlaylistController.toggleRandom()
-    description: qsTr("Random")
+    // redesign: Figma "Shuffle" (Customize Player, queue header)
+    description: qsTr("Shuffle")
 
     AccessibleCompat.id: "randomButton"
 }

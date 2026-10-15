@@ -30,7 +30,7 @@ Widgets.IconToolButton {
     text: Player.fullscreen ? VLCIcons.defullscreen :VLCIcons.fullscreen
     rdIcon: Player.fullscreen ? "fullscreen_state-active" : "fullscreen"
     onClicked: Player.fullscreen = !Player.fullscreen
-    description: qsTr("fullscreen")
+    description: qsTr("Fullscreen")
 
     AccessibleCompat.id: "fullscreenButton"
 }
