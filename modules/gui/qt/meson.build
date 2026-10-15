@@ -283,6 +283,8 @@ qt_plugin_sources = files(
     'dialogs/redesign/addsubtitles/subtitle_matcher.hpp',
     'dialogs/redesign/addsubtitles/subtitle_web.cpp',
     'dialogs/redesign/addsubtitles/subtitle_web.hpp',
+    'dialogs/redesign/addsubtitles/opensubtitles.cpp',
+    'dialogs/redesign/addsubtitles/opensubtitles.hpp',
     'dialogs/redesign/hotkeys_model.cpp',
     'dialogs/redesign/hotkeys_model.hpp',
     'dialogs/redesign/onboarding_helper.cpp',
