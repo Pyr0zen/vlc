@@ -34,6 +34,7 @@
 #include "player/control_list_filter.hpp"
 #include "player/delay_estimator.hpp"
 #include "player/rd_effects.hpp"
+#include "player/rd_media_info.hpp"
 
 #include "dialogs/toolbar/controlbar_profile_model.hpp"
 #include "dialogs/toolbar/controlbar_profile.hpp"
@@ -335,6 +336,9 @@ void MainUI::registerQMLTypes()
         // redesign: effects and options shown in the settings sidebar
         qmlRegisterSingletonInstance<RdEffects>(uri, versionMajor, versionMinor, "RdEffects",
                                                 new RdEffects(m_intf, m_intf->p_mainPlayerController, this));
+        // redesign: the Show Statistics and Show Metadata panels of the player (W4.3b)
+        qmlRegisterType<RdInputStats>(uri, versionMajor, versionMinor, "RdInputStats");
+        qmlRegisterType<RdMediaMeta>(uri, versionMajor, versionMinor, "RdMediaMeta");
         qmlRegisterTypesAndRevisions<TimedText>(uri, versionMajor);
         qmlRegisterType<PlayerHighResolutionTimeUpdater>(uri, versionMajor, versionMinor, "HighResolutionTimeUpdater");
         qmlRegisterUncreatableMetaObject(VLCTickForeign::staticMetaObject, uri, versionMajor, versionMinor, "VLCTick", "Not Instantiable" );

@@ -1892,6 +1892,103 @@ FocusScope {
         }
     }
 
+    // redesign: "Show Metadata" and "Show Statistics" (settings sidebar, Playback tab; W4.3b):
+    // info panels at the top left of the video area, right of the compact library, under the
+    // sidebars where a small window makes them meet. They stay until switched off (their X or
+    // the toggle) and hide with the UI. Each panel and its data source exist only while it is
+    // shown.
+    Column {
+        id: infoPanels
+
+        readonly property real margin: VLCStyle.dp(20, VLCStyle.scale)
+        readonly property int count: (RdPanels.metadataShown ? 1 : 0) + (RdPanels.statisticsShown ? 1 : 0)
+        readonly property real panelWidth: Math.max(0, Math.min(VLCStyle.dp(320, VLCStyle.scale),
+                                                                rootPlayer.width - rootPlayer._videoInset - 2 * margin))
+        // the room between the bars, shared by the panels shown
+        readonly property real panelMaximumHeight: count > 0
+            ? Math.max(0, (controlBar.y - y - margin - (count - 1) * spacing) / count)
+            : 0
+
+        anchors.left: parent.left
+        anchors.leftMargin: rootPlayer._videoInset + margin
+        anchors.top: topBar.bottom
+        anchors.topMargin: margin
+        z: 1
+
+        spacing: margin
+        visible: count > 0 && !RdPanels.uiHidden
+
+        Loader {
+            active: RdPanels.metadataShown
+            visible: active
+
+            sourceComponent: RdInfoPanel {
+                width: infoPanels.panelWidth
+                maximumHeight: infoPanels.panelMaximumHeight
+
+                title: qsTr("Metadata")
+                iconName: "info_two-tone-yes"
+                sections: mediaMeta.sections
+
+                onCloseRequested: RdPanels.metadataShown = false
+
+                RdMediaMeta {
+                    id: mediaMeta
+
+                    player: Player
+                }
+            }
+        }
+
+        Loader {
+            active: RdPanels.statisticsShown
+            visible: active
+
+            sourceComponent: RdInfoPanel {
+                width: infoPanels.panelWidth
+                maximumHeight: infoPanels.panelMaximumHeight
+
+                title: qsTr("Statistics")
+                iconName: "speed"
+                values: inputStats.values
+                placeholder: !inputStats.collecting
+                             ? qsTr("VLC does not collect playback statistics. Turn on \"Collect playback statistics\" in Settings > General > Advanced Options, then play the media again.")
+                             : (!Player.isStarted ? qsTr("No media") : "")
+
+                // VLC's Media Information > Statistics (dialogs/mediainfo/info_panels.cpp)
+                sections: [
+                    { title: qsTr("Input/Read"), rows: [
+                        { label: qsTr("Media data size"), key: "readBytes" },
+                        { label: qsTr("Input bitrate"), key: "inputBitrate" },
+                        { label: qsTr("Demuxed data size"), key: "demuxBytes" },
+                        { label: qsTr("Content bitrate"), key: "demuxBitrate" },
+                        { label: qsTr("Discarded (corrupted)"), key: "corrupted" },
+                        { label: qsTr("Dropped (discontinued)"), key: "discontinuity" }
+                    ] },
+                    { title: qsTr("Video"), rows: [
+                        { label: qsTr("Decoded"), key: "decodedVideo" },
+                        { label: qsTr("Displayed"), key: "displayedPictures" },
+                        { label: qsTr("Late"), key: "latePictures" },
+                        { label: qsTr("Lost"), key: "lostPictures" }
+                    ] },
+                    { title: qsTr("Audio"), rows: [
+                        { label: qsTr("Decoded"), key: "decodedAudio" },
+                        { label: qsTr("Played"), key: "playedBuffers" },
+                        { label: qsTr("Lost"), key: "lostBuffers" }
+                    ] }
+                ]
+
+                onCloseRequested: RdPanels.statisticsShown = false
+
+                RdInputStats {
+                    id: inputStats
+
+                    player: Player
+                }
+            }
+        }
+    }
+
     // an open panel or the compact library keeps both bars visible (F-06, Decision 30)
     property bool _panelLocked: false
 

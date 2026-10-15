@@ -311,6 +311,8 @@ libqt_plugin_la_SOURCES = \
 	player/delay_estimator.hpp \
 	player/rd_effects.cpp \
 	player/rd_effects.hpp \
+	player/rd_media_info.cpp \
+	player/rd_media_info.hpp \
 	player/player_controller.cpp player/player_controller.hpp player/player_controller_p.hpp \
 	player/player_controlbar_model.cpp player/player_controlbar_model.hpp \
 	player/control_list_model.cpp player/control_list_model.hpp \
@@ -522,6 +524,7 @@ nodist_libqt_plugin_la_SOURCES = \
 	style/vlcicons.moc.cpp \
 	player/delay_estimator.moc.cpp \
 	player/rd_effects.moc.cpp \
+	player/rd_media_info.moc.cpp \
 	player/input_models.moc.cpp \
 	player/player_controller.moc.cpp \
 	player/player_controlbar_model.moc.cpp \
@@ -1514,11 +1517,13 @@ libqml_module_player_a_QML = \
 	player/qml/NavigationBox.qml \
 	player/qml/RdPlayerMenu.qml \
 	player/qml/RdMiniQueue.qml \
-	player/qml/RdMiniPlayer.qml
+	player/qml/RdMiniPlayer.qml \
+	player/qml/RdInfoPanel.qml
 
 libqml_module_player_a_Singleton_QML = \
 	player/qml/PlayerControlbarControls.qml \
-	player/qml/RdPanels.qml
+	player/qml/RdPanels.qml \
+	player/qml/RdSleepTimer.qml
 libqml_module_player_a_SOURCES = $(QML_MODULE_player_SRC)
 nodist_libqml_module_player_a_SOURCES = player/qmlassets.cpp $(QML_MODULE_player_NODIST_EXTRA)
 QML_MODULE_LIBS += libqml_module_player.a

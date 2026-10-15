@@ -16,10 +16,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
-// redesign: settings sidebar, Playback tab (video 9:06-9:19 final version; Figma "playback").
-// Step 1 has the rows VLC already supports: Audio Visualizer and Speed. Show Subtitle Timeline,
-// Show Waveform, Show Metadata, Show Statistics, Reverse and Sleep Timer are new features
-// (BUILD_PLAN.md W4.3b) and are added above them in the video's order.
+// redesign: settings sidebar, Playback tab (video 9:06-9:19 final version; Figma "playback"
+// 5187:24308). Final order (Decision 13: the video's rows plus Figma's Show Statistics):
+// Show Subtitle Timeline on Seekbar, Show Waveform on Seekbar, Show Metadata, Show Statistics,
+// Reverse, Sleep Timer, Audio Visualizer, Speed. The subtitle timeline and waveform toggles come
+// with their seek bar modes, Reverse is postponed (Decision 29).
 import QtQuick
 import QtQuick.Layouts
 
@@ -37,13 +38,78 @@ RdSidePanelPage {
         return qsTr("%1x").arg(Math.round(rate * 100) / 100)
     }
 
+    // the sleep timer's time left ("12:34"), from the timer's deadline and `now`
+    function timeLeftText(deadline, now) {
+        const seconds = Math.max(0, Math.ceil((deadline - now) / 1000))
+        const minutes = Math.floor(seconds / 60)
+        return qsTr("%1:%2").arg(minutes).arg(String(seconds % 60).padStart(2, "0"))
+    }
+
+    // the clock of the time left: it runs only while the countdown shows on screen
+    property double _now: Date.now()
+
+    Timer {
+        interval: 1000
+        repeat: true
+        triggeredOnStart: true
+        running: RdSleepTimer.counting && root.active && RdPanels.settingsOpen
+        onTriggered: root._now = Date.now()
+    }
+
     Widgets.RdSettingsSection {
         showDivider: false
+        // Figma "Frame 78" stacks the rows without spacing; each row keeps its own padding
+        rowSpacing: 0
 
-        // Figma "Frame 111": the 48 px dropdown row with 20 px under it (15 + the 5 px spacing)
+        // Figma "Frame 115" / "Frame 116": 52 px toggle rows (padding 10, 68x32 toggle)
+        Widgets.RdSettingRow {
+            text: qsTr("Show Metadata")
+            rowHeight: VLCStyle.dp(52)
+
+            Widgets.RdToggle {
+                checked: RdPanels.metadataShown
+                Accessible.name: qsTr("Show Metadata")
+                onToggled: RdPanels.metadataShown = checked
+            }
+        }
+
+        Widgets.RdSettingRow {
+            text: qsTr("Show Statistics")
+            rowHeight: VLCStyle.dp(52)
+
+            Widgets.RdToggle {
+                checked: RdPanels.statisticsShown
+                Accessible.name: qsTr("Show Statistics")
+                onToggled: RdPanels.statisticsShown = checked
+            }
+        }
+
+        // Figma "Frame 114": 10 px above the 48 px dropdown row, 20 px under it. Off, 15 / 30 /
+        // 45 / 60 min or the end of the current file (Decision 23); a countdown shows its time
+        // left
+        Widgets.RdSettingRow {
+            text: qsTr("Sleep Timer")
+            Layout.topMargin: VLCStyle.dp(10)
+            Layout.bottomMargin: VLCStyle.dp(20)
+
+            Widgets.RdDropdown {
+                implicitWidth: VLCStyle.dp(220)
+                model: [qsTr("Off"), qsTr("15 min"), qsTr("30 min"), qsTr("45 min"), qsTr("60 min"),
+                        qsTr("End of current file")]
+                currentIndex: RdSleepTimer.choice
+                displayText: RdSleepTimer.counting
+                             ? qsTr("%1 (%2 left)").arg(currentText)
+                                                   .arg(root.timeLeftText(RdSleepTimer.deadline, root._now))
+                             : currentText
+                Accessible.name: qsTr("Sleep Timer")
+                onActivated: (index) => RdSleepTimer.set(index)
+            }
+        }
+
+        // Figma "Frame 111": the 48 px dropdown row with 20 px under it
         Widgets.RdSettingRow {
             text: qsTr("Audio Visualizer")
-            Layout.bottomMargin: VLCStyle.dp(15)
+            Layout.bottomMargin: VLCStyle.dp(20)
 
             Widgets.RdChoiceDropdown {
                 implicitWidth: VLCStyle.dp(220)
