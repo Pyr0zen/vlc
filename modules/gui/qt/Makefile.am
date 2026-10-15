@@ -325,6 +325,12 @@ libqt_plugin_la_SOURCES = \
 	player/rd_effects.hpp \
 	player/rd_seek_thumbnailer.cpp \
 	player/rd_seek_thumbnailer.hpp \
+	player/rd_waveform.cpp \
+	player/rd_waveform.hpp \
+	player/rd_waveform_item.cpp \
+	player/rd_waveform_item.hpp \
+	player/rd_waveform_scanner.cpp \
+	player/rd_waveform_scanner.hpp \
 	player/rd_media_info.cpp \
 	player/rd_media_info.hpp \
 	player/player_controller.cpp player/player_controller.hpp player/player_controller_p.hpp \
@@ -541,6 +547,8 @@ nodist_libqt_plugin_la_SOURCES = \
 	player/delay_estimator.moc.cpp \
 	player/rd_effects.moc.cpp \
 	player/rd_seek_thumbnailer.moc.cpp \
+	player/rd_waveform.moc.cpp \
+	player/rd_waveform_item.moc.cpp \
 	player/rd_media_info.moc.cpp \
 	player/input_models.moc.cpp \
 	player/player_controller.moc.cpp \
