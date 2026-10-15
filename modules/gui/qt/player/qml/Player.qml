@@ -1911,8 +1911,8 @@ FocusScope {
     }
 
     // keyboard: a panel opened from a control bar button with the keyboard (Tab, then Space or
-    // Enter) takes the focus, so the arrows act in it at once; Escape closes it and gives the
-    // focus back to that button
+    // Enter) takes the focus, so the arrows act in it at once; closing it (Escape, a click
+    // outside, a dialog opening) gives the focus back to that button
     property Item _panelOpener: null
 
     function _isInside(item, ancestor) {
@@ -1942,12 +1942,23 @@ FocusScope {
         function onCurrentChanged() {
             rootPlayer._updatePanelLock()
 
-            if (RdPanels.current === "") {
-                rootPlayer._panelOpener = null
-                return
-            }
             const window = rootPlayer.Window.window
             const focused = window ? window.activeFocusItem : null
+
+            if (RdPanels.current === "") {
+                // closed another way than Escape (a click outside, its button, a dialog opening):
+                // the keyboard focus still in the panel, or fallen back to the player when the
+                // panel hid, goes back to the button that opened it
+                const opener = rootPlayer._panelOpener
+                rootPlayer._panelOpener = null
+                const lost = !focused || focused === rootPlayer || !focused.visible
+                             || rootPlayer._isInside(focused, tracksPopupLoader)
+                             || rootPlayer._isInside(focused, settingsPanelLoader)
+                             || rootPlayer._isInside(focused, queuePanelLoader)
+                if (opener && opener.visible && opener.enabled && lost)
+                    opener.forceActiveFocus(Qt.TabFocusReason)
+                return
+            }
             if (focused && focused.visualFocus === true && rootPlayer._isInside(focused, controlBar)) {
                 rootPlayer._panelOpener = focused
                 Qt.callLater(rootPlayer._focusOpenPanel)
@@ -1977,14 +1988,8 @@ FocusScope {
         enabled: RdPanels.current !== "" || RdPanels.uiHidden
         onActivated: {
             if (RdPanels.current !== "") {
-                const opener = rootPlayer._panelOpener
-                const window = rootPlayer.Window.window
-                const panel = rootPlayer._openPanelItem()
-                const focusInPanel = !!opener && !!window && !!panel
-                                     && rootPlayer._isInside(window.activeFocusItem, panel)
+                // the keyboard focus goes back to the panel's button (onCurrentChanged above)
                 RdPanels.close()
-                if (focusInPanel && opener.visible && opener.enabled)
-                    opener.forceActiveFocus(Qt.TabFocusReason)
             } else {
                 RdPanels.uiHidden = false
             }
