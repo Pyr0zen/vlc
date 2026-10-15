@@ -463,12 +463,20 @@ void MainCtx::loadPrefs(const bool callSignals)
 
     loadFromVLCOption(m_pinOpacity, "qt-fs-opacity", &MainCtx::pinOpacityChanged);
 
-    // redesign: resolve the accent color once; "default" and "system" stay invalid (palette default)
+    // redesign: resolve the accent color once; "default" and "system" stay invalid (palette default).
+    // Read again after a profile switch or the Settings dialog: the palette follows at once (W8.2)
     {
-        char* accent = var_InheritString(p_intf, "qt-accent-color");
-        if (accent && strcmp(accent, "default") && strcmp(accent, "system"))
-            m_accentColor = QColor(QString::fromUtf8(accent));
-        free(accent);
+        QColor accent;
+        char* value = var_InheritString(p_intf, "qt-accent-color");
+        if (value && strcmp(value, "default") && strcmp(value, "system"))
+            accent = QColor(QString::fromUtf8(value));
+        free(value);
+        if (accent != m_accentColor)
+        {
+            m_accentColor = accent;
+            if (callSignals)
+                emit accentColorChanged();
+        }
     }
 
     loadFromVLCOption(m_safeArea, "qt-safe-area", &MainCtx::safeAreaChanged);
