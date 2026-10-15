@@ -75,12 +75,14 @@ RdSlider {
     readonly property real _lowest: Math.min(rangeFrom, _gridFloor(limitFrom))
     readonly property real _highest: Math.max(rangeFrom, _gridCeil(limitTo) - _span)
 
-    // the pointer held past an end: -1 left, 1 right
+    // the pointer held past an end: -1 the low end, 1 the high end (mirrored: the high end is
+    // on the left)
     readonly property int _edge: {
         if (!endless || !pressed || !pointer.active)
             return 0
         const x = pointer.point.position.x
-        return x < 0 ? -1 : (x > width ? 1 : 0)
+        const side = x < 0 ? -1 : (x > width ? 1 : 0)
+        return mirrored ? -side : side
     }
     readonly property bool _scrolling: _edge > 0 ? _shown < limitTo - _eps
                                                  : (_edge < 0 && _shown > limitFrom + _eps)
