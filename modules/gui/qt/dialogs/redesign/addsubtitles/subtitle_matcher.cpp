@@ -291,6 +291,10 @@ SubtitleMatcher::Name SubtitleMatcher::parse(const QString& fileName)
         }
     }
 
+    // "The Wand S01": the season of a name without an episode (a whole season)
+    if (first < 0 && name.season < 0)
+        name.season = season;
+
     const QSet<QString>& tags = releaseTags();
     const qsizetype titleEnd = first >= 0 ? first : tokens.size();
     for (qsizetype i = 0; i < titleEnd; ++i)

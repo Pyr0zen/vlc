@@ -159,6 +159,10 @@ libqt_plugin_la_SOURCES = \
 	dialogs/redesign/addsubtitles/opensubtitles.hpp \
 	dialogs/redesign/addsubtitles/subtitle_store.cpp \
 	dialogs/redesign/addsubtitles/subtitle_store.hpp \
+	dialogs/redesign/addsubtitles/add_subtitles.cpp \
+	dialogs/redesign/addsubtitles/add_subtitles.hpp \
+	dialogs/redesign/addsubtitles/add_subtitles_model.cpp \
+	dialogs/redesign/addsubtitles/add_subtitles_model.hpp \
 	dialogs/redesign/hotkeys_model.cpp \
 	dialogs/redesign/hotkeys_model.hpp \
 	dialogs/redesign/onboarding_helper.cpp \
@@ -465,6 +469,8 @@ nodist_libqt_plugin_la_SOURCES = \
 	dialogs/preferences/preferences.moc.cpp \
 	dialogs/preferences/preferences_widgets.moc.cpp \
 	dialogs/preferences/simple_preferences.moc.cpp \
+	dialogs/redesign/addsubtitles/add_subtitles.moc.cpp \
+	dialogs/redesign/addsubtitles/add_subtitles_model.moc.cpp \
 	dialogs/redesign/hotkeys_model.moc.cpp \
 	dialogs/redesign/onboarding_helper.moc.cpp \
 	dialogs/redesign/settings/settings_catalog.moc.cpp \
