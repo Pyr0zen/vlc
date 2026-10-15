@@ -115,8 +115,27 @@ gap 19; panel close 8 ms, 90 ms; queue open 35 ms, 90 ms; queue scroll median 10
 Lesson: RAM, GPU and lost frames drift with the machine state, so every comparison runs back to
 back (stock, then redesign, minutes apart) with the same background load.
 
-Round 3 (next): back to back on a quiet PC with Sticky away: redesign input scenarios (panel,
-motion, queue) and 4K fullscreen for both builds, plus the library and settings builds.
+### Round 3 (2026-10-15): stock 38315049322 vs redesign 38727073546, back to back
+Raw results: `perfruns\r3\stock.json` (14:25, background 20 %) and `redesign.json` (14:29,
+background 17 %), four minutes apart under the same load.
+
+| Measure | Stock | Redesign | Verdict |
+|---|---|---|---|
+| Startup to window (ms) | 927/1062/1112 | 1031/981/921 | equal |
+| Open file to first video frame (ms) | 1256/1130/1339 | 1671/1258/1230 | equal except one slow first open; watch it next round |
+| Playing: CPU / RAM private / GPU / decoder | 0.1 % / 310 MB / 8.3 % / 20 % | 0.1 % / 309 MB / 8.9 % / 20 % | equal |
+| Idle paused: CPU / RAM | 0 % / 309 MB | 0 % / 304 MB | equal |
+| Panel open while playing: CPU / RAM | 0.1 % / 313 MB | 0.3 % / 305 MB | equal |
+| Seeking: CPU / RAM | 1.1 % / 442 MB | 1.3 % / 429 MB | equal |
+| 4K60 80 Mbit/s windowed: frames lost | 0 of 1349 | 0 of 1335 | equal |
+| 4K60 80 Mbit/s fullscreen: frames lost | 23 of 1327 | 23 of 1311 | equal (round 1 and 2 gaps were load, not the redesign) |
+| 520-entry queue: RAM | 334 MB | 329 MB | equal |
+| 520-entry queue scroll: gap median / p95 / worst | 11 / 24 / 31 ms | 10 / 20 / 21 ms | redesign smoother |
+| 520-entry queue open: first change | 24 ms (90 ms animation) | 24 ms (instant, Decision 32 style) | equal latency; the capture shows a second change 449 ms later: check what changes |
+
+Stock motion (seek drag median 11 ms / worst 24; volume drag 9 / 22; panel open 29 ms to first
+change, 91 ms animation) is the baseline; the redesign hover, drag and panel captures were
+skipped (VLC lost the foreground while Sticky was active): run them in round 4 with Sticky away.
 
 ## Motion measurements
 | Element | Source | Measured | Built |
