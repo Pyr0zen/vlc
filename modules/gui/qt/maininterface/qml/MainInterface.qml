@@ -342,6 +342,11 @@ Item {
             source: "qrc:///qt/qml/VLC/Menus/GlobalShortcuts.qml"
         }
 
+        // redesign: every dialog below first sends DialogsProvider.dialogOpening(), which closes
+        // the open menus, popups and player panels (RdPanels, RdCascadeMenu, RdMenuPanel,
+        // RdDropdown, RdTooltip), so none stays open behind the dialog; VLC's own dialogs and
+        // file pickers send it from DialogsProvider
+
         // redesign (W6.4): Open Network Stream dialog over the whole window, opened by
         // DialogsProvider.openNetDialog() (main menu, Ctrl+N, library, core requests)
         OpenNetworkStreamDialog {
@@ -352,6 +357,7 @@ Item {
             target: DialogsProvider
 
             function onShowOpenNetworkStreamDialog() {
+                DialogsProvider.dialogOpening()
                 openNetworkStreamDialog.openDialog()
             }
         }
@@ -371,6 +377,7 @@ Item {
                 target: DialogsProvider
 
                 function onShowSettingsDialog(category) {
+                    DialogsProvider.dialogOpening()
                     settingsDialogLoader.active = true
                     if (settingsDialogLoader.item)
                         settingsDialogLoader.item.toggle(category)
@@ -409,6 +416,7 @@ Item {
                 target: DialogsProvider
 
                 function onShowKeyboardShortcutsDialog() {
+                    DialogsProvider.dialogOpening()
                     keyboardShortcutsDialogLoader.asynchronous = false
                     keyboardShortcutsDialogLoader.active = true
                     if (keyboardShortcutsDialogLoader.item)
@@ -442,6 +450,7 @@ Item {
                 target: DialogsProvider
 
                 function onShowOnboarding() {
+                    DialogsProvider.dialogOpening()
                     onboardingLoader.active = true
                     if (onboardingLoader.item)
                         onboardingLoader.item.onboarding.openOnboarding()
@@ -465,6 +474,7 @@ Item {
                 target: DialogsProvider
 
                 function onShowToolbarEditorDialog() {
+                    DialogsProvider.dialogOpening()
                     MainCtx.emitRaise()
                     customizePlayerDialogLoader.active = true
                     customizePlayerDialogLoader.item.openDialog()

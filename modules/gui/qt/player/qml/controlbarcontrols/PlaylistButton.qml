@@ -48,7 +48,8 @@ Widgets.IconToolButton {
     }
     checked: MainCtx.playerView ? RdPanels.queueOpen : MainCtx.playqueuePanel.visible
 
-    description: qsTr("Play Queue")
+    // redesign: the Queue (Decision 3, the sidebar's tab and the video's wording)
+    description: qsTr("Queue")
 
     AccessibleCompat.id: "playqueueButton"
 }

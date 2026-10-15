@@ -27,6 +27,11 @@ import VLC.Style
 T.ToolButton {
     id: control
 
+    // the pointing hand over the clickable controls
+    HoverHandler {
+        cursorShape: Qt.PointingHandCursor
+    }
+
     property url imageSource: ""
 
     property string description

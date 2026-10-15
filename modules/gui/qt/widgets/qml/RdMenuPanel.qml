@@ -26,6 +26,7 @@ import QtQuick
 import QtQuick.Templates as T
 
 import VLC.MainInterface
+import VLC.Dialogs
 import VLC.Style
 
 T.Popup {
@@ -74,6 +75,15 @@ T.Popup {
         control.keyboard = false
         if (opener && opener.visible && opener.enabled)
             opener.forceActiveFocus(Qt.PopupFocusReason)
+    }
+
+    // a dialog opening (Ctrl+P, Ctrl+N, ...) closes the menu first: it never stays behind it
+    readonly property Connections _dialogConnections: Connections {
+        target: DialogsProvider
+
+        function onDialogOpening() {
+            control.close()
+        }
     }
 
     // as RdCascadeMenu: fades in (video 5:08, 60 fps), closes at once

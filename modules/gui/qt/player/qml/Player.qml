@@ -1752,6 +1752,10 @@ FocusScope {
 
         onRequestLockUnlockAutoHide: (lock) => rootPlayer.lockUnlockAutoHide(lock)
 
+        // a right click on the seek bar opens the right-click menu like the rest of the bar
+        // (the TapHandler below never sees it: the seek bar accepts every mouse button)
+        onContextMenuRequested: playerMenu.popupAtCursor()
+
         identifier: (Player.hasVideoOutput) ? PlayerControlbarModel.Videoplayer
                                             : PlayerControlbarModel.Audioplayer
 
@@ -1906,11 +1910,59 @@ FocusScope {
         rootPlayer.lockUnlockAutoHide(open)
     }
 
+    // keyboard: a panel opened from a control bar button with the keyboard (Tab, then Space or
+    // Enter) takes the focus, so the arrows act in it at once; closing it (Escape, a click
+    // outside, a dialog opening) gives the focus back to that button
+    property Item _panelOpener: null
+
+    function _isInside(item, ancestor) {
+        for (let p = item; p; p = p.parent) {
+            if (p === ancestor)
+                return true
+        }
+        return false
+    }
+
+    function _openPanelItem() {
+        const loader = RdPanels.tracksOpen ? tracksPopupLoader
+                     : RdPanels.settingsOpen ? settingsPanelLoader
+                     : RdPanels.queueOpen ? queuePanelLoader : null
+        return loader ? loader.item : null
+    }
+
+    function _focusOpenPanel() {
+        const panel = rootPlayer._openPanelItem()
+        if (panel && typeof panel.focusContent === "function")
+            panel.focusContent(Qt.TabFocusReason)
+    }
+
     Connections {
         target: RdPanels
 
         function onCurrentChanged() {
             rootPlayer._updatePanelLock()
+
+            const window = rootPlayer.Window.window
+            const focused = window ? window.activeFocusItem : null
+
+            if (RdPanels.current === "") {
+                // closed another way than Escape (a click outside, its button, a dialog opening):
+                // the keyboard focus still in the panel, or fallen back to the player when the
+                // panel hid, goes back to the button that opened it
+                const opener = rootPlayer._panelOpener
+                rootPlayer._panelOpener = null
+                const lost = !focused || focused === rootPlayer || !focused.visible
+                             || rootPlayer._isInside(focused, tracksPopupLoader)
+                             || rootPlayer._isInside(focused, settingsPanelLoader)
+                             || rootPlayer._isInside(focused, queuePanelLoader)
+                if (opener && opener.visible && opener.enabled && lost)
+                    opener.forceActiveFocus(Qt.TabFocusReason)
+                return
+            }
+            if (focused && focused.visualFocus === true && rootPlayer._isInside(focused, controlBar)) {
+                rootPlayer._panelOpener = focused
+                Qt.callLater(rootPlayer._focusOpenPanel)
+            }
         }
     }
 
@@ -1935,10 +1987,12 @@ FocusScope {
         sequences: [StandardKey.Cancel]
         enabled: RdPanels.current !== "" || RdPanels.uiHidden
         onActivated: {
-            if (RdPanels.current !== "")
+            if (RdPanels.current !== "") {
+                // the keyboard focus goes back to the panel's button (onCurrentChanged above)
                 RdPanels.close()
-            else
+            } else {
                 RdPanels.uiHidden = false
+            }
         }
     }
 
@@ -1952,20 +2006,31 @@ FocusScope {
         }
     }
 
+    // the tracks popup and the sidebars sit at the right on the same band above the control bar
+    // as the resume toast: while one is open the toast centers in the room left of it (its
+    // 20 px right margin and a 20 px gap), so they never overlap
+    readonly property real _toastRightInset: RdPanels.current !== ""
+                                             ? VLCStyle.rd_sidePanelWidth + 2 * VLCStyle.dp(20, VLCStyle.scale)
+                                             : 0
+    readonly property real _toastRoom: width - _videoInset - _toastRightInset - 2 * VLCStyle.margin_normal
+
     // redesign: resume toast centered just above the control bar (video 14:00-14:10, W3.8)
     ResumeDialog {
         id: resumeToast
 
         anchors.horizontalCenter: parent.horizontalCenter
-        // centered over the video area, right of the compact library
-        anchors.horizontalCenterOffset: rootPlayer._videoInset / 2
+        // centered over the video area, right of the compact library and left of an open panel
+        anchors.horizontalCenterOffset: (rootPlayer._videoInset - rootPlayer._toastRightInset) / 2
         anchors.bottom: controlBar.top
         // Figma "continue": 24 px above the control bar (visual audit A21)
         anchors.bottomMargin: VLCStyle.dp(24, VLCStyle.scale)
         z: 2
 
-        maxWidth: Math.min(VLCStyle.dp(552, VLCStyle.scale),
-                           rootPlayer.width - rootPlayer._videoInset - 2 * VLCStyle.margin_normal)
+        maxWidth: Math.min(VLCStyle.dp(552, VLCStyle.scale), rootPlayer._toastRoom)
+
+        // a window too narrow for both: the toast waits hidden until the panel closes
+        opacity: rootPlayer._toastRoom >= minimumWidth ? 1 : 0
+        enabled: visible && opacity > 0
 
         Navigation.parentItem: rootPlayer
 
@@ -1982,10 +2047,12 @@ FocusScope {
 
     // redesign: a right click on the control bar (its buttons included) opens the right-click
     // menu too, like a right click on the video; the top bar keeps the window menu of its
-    // client-side decorations
+    // client-side decorations. The seek bar sends its own right click (onContextMenuRequested)
     TapHandler {
         parent: controlBar
         acceptedButtons: Qt.RightButton
+        // a right button held longer than a tap still opens the menu on release, as on the video
+        longPressThreshold: 0
 
         onTapped: playerMenu.popupAtCursor()
     }

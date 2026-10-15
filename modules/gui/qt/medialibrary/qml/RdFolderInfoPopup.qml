@@ -22,6 +22,7 @@ import QtQuick
 import QtQuick.Templates as T
 
 import VLC.MainInterface
+import VLC.Dialogs
 import VLC.Player
 import VLC.Style
 import VLC.Widgets as Widgets
@@ -63,6 +64,15 @@ T.Popup {
     Component.onDestruction: {
         if (popup._holdsModal)
             RdPanels.releaseModal()
+    }
+
+    // a dialog opening (Ctrl+P, Ctrl+N, ...) closes the popover first
+    readonly property Connections _dialogConnections: Connections {
+        target: DialogsProvider
+
+        function onDialogOpening() {
+            popup.close()
+        }
     }
 
     property string folderTitle: ""

@@ -48,6 +48,8 @@ RdSidePanelPage {
             Widgets.RdChoiceDropdown {
                 implicitWidth: VLCStyle.dp(220)
                 choices: Player.audioVisualization
+                // Figma "Audio Visualizer" (2372:8639) and the playback tab: "Disabled"
+                displayNames: ({ [qsTr("Disable")]: qsTr("Disabled") })
                 Accessible.name: qsTr("Audio Visualizer")
             }
         }

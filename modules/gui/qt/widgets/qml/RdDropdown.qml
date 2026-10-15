@@ -24,15 +24,30 @@ import QtQuick
 import QtQuick.Templates as T
 
 import VLC.MainInterface
+import VLC.Dialogs
 import VLC.Style
 
 T.ComboBox {
     id: control
 
+    // the pointing hand over the clickable controls
+    HoverHandler {
+        cursorShape: Qt.PointingHandCursor
+    }
+
     property bool openUpward: false
     property int maxVisibleRows: 7
     // a list without a frame or inner row: BG/B1, FG/A3 text (Figma "Gradient" 673:1670)
     property bool frameless: false
+
+    // the design's wording for entries whose text comes from VLC, e.g. { "Disable": "Disabled" }
+    // (Figma labels); entries not listed keep VLC's text
+    property var displayNames: ({})
+
+    function displayName(text) {
+        const name = control.displayNames[text]
+        return name !== undefined ? name : text
+    }
 
     readonly property SystemPalette rdPalette: VLCStyle.palette
 
@@ -68,7 +83,7 @@ T.ComboBox {
         rightPadding: VLCStyle.dp(40)
         verticalAlignment: Text.AlignVCenter
         elide: Text.ElideRight
-        text: control.displayText
+        text: control.displayName(control.displayText)
         font: control.font
         color: control.frameless ? control.rdPalette.rdFgA3 : control.rdPalette.rdFgA2
     }
@@ -92,10 +107,19 @@ T.ComboBox {
         width: ListView.view ? ListView.view.width : implicitWidth
         height: VLCStyle.dp(44)
         radius: VLCStyle.rd_radius_small
-        text: model[control.textRole] !== undefined ? model[control.textRole]
-                                                    : (model.modelData !== undefined ? model.modelData : model.display)
+        text: control.displayName(model[control.textRole] !== undefined ? model[control.textRole]
+                                  : (model.modelData !== undefined ? model.modelData : model.display))
         selected: control.currentIndex === index
         highlighted: control.highlightedIndex === index
+    }
+
+    // a dialog opening (Ctrl+P, Ctrl+N, ...) closes the list first
+    Connections {
+        target: DialogsProvider
+
+        function onDialogOpening() {
+            control.popup.close()
+        }
     }
 
     popup: T.Popup {

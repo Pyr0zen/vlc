@@ -153,7 +153,7 @@ T.AbstractButton {
         visible: dragHandler.active
         width: VLCStyle.dp(337)
         height: VLCStyle.rd_rowHeight
-        opacity: 0.5
+        opacity: VLCStyle.rd_dragGhostOpacity
         z: 1000
 
         // started and dropped by the handler below (a binding could turn the drag off before

@@ -38,6 +38,11 @@ FocusScope {
     implicitHeight: VLCStyle.dp(52, VLCStyle.scale)
     implicitWidth: Math.min(maxWidth, content.implicitWidth + VLCStyle.dp(30, VLCStyle.scale))
 
+    // the narrowest useful toast: both buttons and the sentence elided to its first 120 px
+    readonly property real minimumWidth: content.implicitWidth + VLCStyle.dp(30, VLCStyle.scale)
+                                         - labelRow.Layout.preferredWidth
+                                         + Math.min(labelRow.Layout.preferredWidth, VLCStyle.dp(120, VLCStyle.scale))
+
     baselineOffset: label.baselineOffset
 
     visible: false
@@ -216,6 +221,11 @@ FocusScope {
 
         T.Button {
             id: closeBtn
+
+            // the pointing hand over the clickable controls
+            HoverHandler {
+                cursorShape: Qt.PointingHandCursor
+            }
 
             Layout.alignment: Qt.AlignVCenter
             implicitWidth: VLCStyle.dp(44, VLCStyle.scale)

@@ -61,6 +61,10 @@ T.Pane {
 
     signal requestLockUnlockAutoHide(bool lock)
 
+    // redesign: a right click on the seek bar (the owner opens the right-click menu, as for a
+    // right click anywhere else on the bar)
+    signal contextMenuRequested()
+
     ///incomming signal to request all menu and popup to close
     signal forceUnlock()
 
@@ -203,13 +207,23 @@ T.Pane {
                     color: VLCStyle.palette.rdBgB2
                 }
 
-                HoverHandler {
-                    id: mediaTimeHover
-                }
-
                 // redesign: click the current time to type a time and jump there; Enter confirms,
                 // Escape or leaving the field cancels (Figma "Current Time" state=click, F-02)
                 property bool editing: false
+
+                readonly property bool _editable: textPosition === ControlBar.TimeTextPosition.Inline && Player.seekable
+
+                // clickable: the Figma hover fill, the pointing hand of the clickable controls and
+                // a tooltip like the bar buttons
+                HoverHandler {
+                    id: mediaTimeHover
+
+                    cursorShape: (mediaTime._editable && !mediaTime.editing) ? Qt.PointingHandCursor : undefined
+                }
+
+                T.ToolTip.visible: mediaTime._editable && !mediaTime.editing && mediaTimeHover.hovered
+                T.ToolTip.delay: VLCStyle.delayToolTipAppear
+                T.ToolTip.text: qsTr("Click to go to a time")
 
                 function _commitEdit(text) {
                     const parts = text.trim().split(":").map((p) => parseInt(p, 10))
@@ -222,7 +236,7 @@ T.Pane {
                 }
 
                 TapHandler {
-                    enabled: textPosition === ControlBar.TimeTextPosition.Inline && Player.seekable
+                    enabled: mediaTime._editable
                     onTapped: {
                         mediaTime.editing = true
                         timeEditor.text = mediaTime.text
@@ -240,7 +254,8 @@ T.Pane {
                     horizontalAlignment: Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                     font: mediaTime.font
-                    color: VLCStyle.palette.rdFg2
+                    // Figma "Current Time" state=click keeps the FG/A2 text
+                    color: VLCStyle.palette.rdFgA2
                     selectionColor: VLCStyle.palette.rdAccentDim
                     selectedTextColor: VLCStyle.palette.rdSelectionText
                     selectByMouse: true
@@ -259,6 +274,13 @@ T.Pane {
                             mediaTime._commitEdit(text)
                         mediaTime.editing = false
                         root.requestLockUnlockAutoHide(false)
+                    }
+
+                    // Escape cancels the edit before the player's Escape shortcut closes an open
+                    // panel (a shortcut runs first unless the focused item takes the key)
+                    Keys.onShortcutOverride: (event) => {
+                        if (event.key === Qt.Key_Escape)
+                            event.accepted = true
                     }
 
                     Keys.onReturnPressed: _finish(true)
@@ -329,8 +351,11 @@ T.Pane {
                     }
                 }
 
+                // clickable (length / remaining time): the pointing hand
                 HoverHandler {
                     id: mediaRemainingTimeHover
+
+                    cursorShape: Qt.PointingHandCursor
                 }
 
                 Widgets.ToolTipExt {
@@ -379,6 +404,8 @@ T.Pane {
                 Keys.onPressed: (event) => {
                     Navigation.defaultKeyAction(event)
                 }
+
+                onRightClicked: root.contextMenuRequested()
             },
             Loader {
                 id: bookmarksLoader

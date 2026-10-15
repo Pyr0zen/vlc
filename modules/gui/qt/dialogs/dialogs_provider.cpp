@@ -102,6 +102,13 @@
 #define ALL_DIALOG(X) BASE_DIALOG(X)
 #endif
 
+/* redesign: a native file picker opens (modal, no QEvent::Show on a VLC dialog) */
+static void notifyDialogOpening()
+{
+    if( DialogsProvider *provider = Singleton<DialogsProvider>::getInstance<false>() )
+        emit provider->dialogOpening();
+}
+
 DialogsProvider::DialogsProvider( qt_intf_t *_p_intf )
     : QObject( NULL ), p_intf( _p_intf ), m_parser( nullptr, &input_item_parser_id_Release )
 
@@ -122,6 +129,7 @@ QString DialogsProvider::getSaveFileName( QWidget *parent,
                                           QString *selectedFilter )
 {
     const QStringList schemes = QStringList(QStringLiteral("file"));
+    notifyDialogOpening();
     return QFileDialog::getSaveFileUrl( parent, caption, dir, filter, selectedFilter, QFileDialog::Options(), schemes).toLocalFile();
 }
 
@@ -277,8 +285,11 @@ bool DialogsProvider::eventFilter(QObject *watched, QEvent *event) {
     }
 
     switch (event->type()) {
-    case QEvent::Hide:
     case QEvent::Show:
+        if (!event->spontaneous())
+            emit dialogOpening();
+        [[fallthrough]];
+    case QEvent::Hide:
     case QEvent::Close:
     case QEvent::Destroy:
     {
@@ -662,6 +673,7 @@ void DialogsProvider::openFileGenericDialog( intf_dialog_args_t *p_arg )
     }
     else /* non-save mode */
     {
+        notifyDialogOpening();
         QList<QUrl> urls = QFileDialog::getOpenFileUrls( NULL, qfu( p_arg->psz_title ),
                                        p_intf->p_mi->getDialogFilePath(), extensions );
         p_arg->i_results = urls.count();
@@ -869,6 +881,7 @@ QStringList DialogsProvider::showSimpleOpen( const QString& help,
     fileTypes.replace( ";*", " *");
     fileTypes.chop(2); //remove trailing ";;"
 
+    notifyDialogOpening();
     QList<QUrl> urls = QFileDialog::getOpenFileUrls( NULL,
         help.isEmpty() ? qfut(I_OP_SEL_FILES ) : help,
         path.isEmpty() ? p_intf->p_mi->getDialogFilePath() : path,
@@ -904,6 +917,7 @@ void DialogsProvider::simpleOpenDialog(bool start)
 void DialogsProvider::openUrlDialog()
 {
     OpenUrlDialog oud( p_intf );
+    emit dialogOpening();
     if( oud.exec() != QDialog::Accepted )
         return;
 
@@ -947,6 +961,7 @@ static void openDirectory( qt_intf_t *p_intf, bool go )
 QString DialogsProvider::getDirectoryDialog( qt_intf_t *p_intf )
 {
     const QStringList schemes = QStringList(QStringLiteral("file"));
+    notifyDialogOpening();
     QUrl dirurl = QFileDialog::getExistingDirectoryUrl( NULL,
             qfut( I_OP_DIR_WINTITLE ), p_intf->p_mi->getDialogFilePath(),
             QFileDialog::ShowDirsOnly, schemes );
@@ -1073,6 +1088,8 @@ void DialogsProvider::streamingDialog( QWindow *parent,
                                        QStringList options )
 {
     QStringList outputMRLs;
+
+    emit dialogOpening();
 
     /* Stream */
     // Does streaming multiple files make sense?  I suppose so, just stream one

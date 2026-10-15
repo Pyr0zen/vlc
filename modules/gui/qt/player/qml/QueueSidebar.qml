@@ -72,6 +72,46 @@ RdSidePanel {
                     queueView.positionViewAtIndex(MainPlaylistController.currentIndex, ItemView.Center)
             }
 
+            // keyboard (RdSidePanel.focusContent): the selected row, else the playing one
+            function focusContent(reason) {
+                if (queueModel.count === 0)
+                    return false
+                queueView.focusRow(queuePage.selectedIndex >= 0 ? queuePage.selectedIndex
+                                                                : Math.max(0, MainPlaylistController.currentIndex))
+                return true
+            }
+
+            // a control outside the queue shows the keyboard focus (in the player only such a
+            // control gets the keys, MainCtx.preferHotkeys): its Delete is its own (a library list
+            // of the compact library removes from its playlist)
+            readonly property bool _keyboardElsewhere: {
+                const focused = queuePage.Window.activeFocusItem
+                return !!focused && focused.visualFocus === true && !root.containsItem(focused)
+            }
+
+            // Delete removes the row with the keyboard focus, else the selected row (a click
+            // selects it), as the remove button does; a text field with the focus keeps its Delete
+            Shortcut {
+                sequences: [StandardKey.Delete]
+                context: Qt.WindowShortcut
+                enabled: queuePage.shown && (queueView.activeFocus
+                                             || (queuePage.selectedIndex >= 0 && !queuePage._keyboardElsewhere))
+
+                onActivated: {
+                    const window = queuePage.Window.window
+                    const focused = window ? window.activeFocusItem : null
+                    const keyboard = queueView.activeFocus && !!focused && focused.visualFocus === true
+                    const index = keyboard ? queueView.currentIndex : queuePage.selectedIndex
+                    if (index < 0 || index >= queueModel.count)
+                        return
+                    queueModel.removeItems([index])
+                    queuePage.selectedIndex = -1
+                    // the keyboard goes on with the row that took its place
+                    if (keyboard && queueModel.count > 0)
+                        queueView.focusRow(Math.min(index, queueModel.count - 1))
+                }
+            }
+
             onShownChanged: {
                 if (shown)
                     positionAtCurrent()
@@ -94,6 +134,8 @@ RdSidePanel {
                 id: dragItem
 
                 view: queueView
+                // the ghost is the row content only (IB-15)
+                rdRowGhost: true
 
                 onRequestData: (indexes, resolve, reject) => {
                     resolve(indexes.map((index) => {
@@ -243,7 +285,13 @@ RdSidePanel {
 
                     ListView.delayRemove: dragHandler.active
 
-                    Navigation.upAction: function() { queueView.focusRow(index - 1) }
+                    // Up from the first row goes to the tabs
+                    Navigation.upAction: function() {
+                        if (index > 0)
+                            queueView.focusRow(index - 1)
+                        else
+                            root.focusTabs(Qt.BacktabFocusReason)
+                    }
                     Navigation.downAction: function() { queueView.focusRow(index + 1) }
                     // Enter acts on the focused row, also when it got focus by Tab
                     onActiveFocusChanged: if (activeFocus) ListView.view.currentIndex = index
@@ -346,6 +394,14 @@ RdSidePanel {
         key: "chapters"
 
         sourceComponent: Item {
+            // keyboard (RdSidePanel.focusContent): the current chapter
+            function focusContent(reason) {
+                if (chapterView.count === 0)
+                    return false
+                chapterView.focusRow(Math.max(0, chapterView.currentIndex))
+                return true
+            }
+
             Widgets.RdListView {
                 id: chapterView
 
@@ -368,7 +424,13 @@ RdSidePanel {
                     detail: model.time ? model.time.formatHMS() : ""
                     current: !!model.checked
 
-                    Navigation.upAction: function() { chapterView.focusRow(index - 1) }
+                    // Up from the first row goes to the tabs
+                    Navigation.upAction: function() {
+                        if (index > 0)
+                            chapterView.focusRow(index - 1)
+                        else
+                            root.focusTabs(Qt.BacktabFocusReason)
+                    }
                     Navigation.downAction: function() { chapterView.focusRow(index + 1) }
                     // Enter acts on the focused row, also when it got focus by Tab
                     onActiveFocusChanged: if (activeFocus) ListView.view.currentIndex = index

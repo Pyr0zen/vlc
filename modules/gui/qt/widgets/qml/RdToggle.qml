@@ -16,7 +16,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
-// Redesign toggle (Figma component "Toggle", 68x32): square knob plus ON / OFF label.
+// Redesign toggle (Figma component "Toggle", 68x32): square knob plus ON / OFF label. Figma flips
+// it instantly on click (prototype "Change to", no transition) and has no hover variant: hovered,
+// the knob and the label go one step brighter, as the other redesign controls do (tabs FG/A4 to
+// FG/A3, labels FG/A3 to FG/A2, Primary button Accent/Main to Accent/Bright).
 import QtQuick
 import QtQuick.Templates as T
 
@@ -42,6 +45,11 @@ T.AbstractButton {
     Keys.onPressed: (event) => Navigation.defaultKeyAction(event)
 
     readonly property SystemPalette rdPalette: VLCStyle.palette
+
+    // the pointing hand over the clickable controls
+    HoverHandler {
+        cursorShape: Qt.PointingHandCursor
+    }
 
     background: Rectangle {
         radius: VLCStyle.rd_radius_normal
@@ -71,7 +79,8 @@ T.AbstractButton {
             radius: VLCStyle.dp(3)
             anchors.verticalCenter: parent.verticalCenter
             x: control.checked ? parent.width - width - VLCStyle.dp(3) : VLCStyle.dp(3)
-            color: control.checked ? control.rdPalette.rdAccentDim : control.rdPalette.rdFgA4
+            color: control.checked ? (control.hovered ? control.rdPalette.rdAccentMain : control.rdPalette.rdAccentDim)
+                                   : (control.hovered ? control.rdPalette.rdFgA3 : control.rdPalette.rdFgA4)
         }
 
         Text {
@@ -80,7 +89,8 @@ T.AbstractButton {
             text: control.checked ? qsTr("ON") : qsTr("OFF")
             font.family: VLCStyle.rd_fontFamily
             font.pixelSize: VLCStyle.rd_fontSize_toggle
-            color: control.checked ? control.rdPalette.rdAccentMain : control.rdPalette.rdFgA3
+            color: control.checked ? (control.hovered ? control.rdPalette.rdAccentBright : control.rdPalette.rdAccentMain)
+                                   : (control.hovered ? control.rdPalette.rdFgA2 : control.rdPalette.rdFgA3)
         }
     }
 }

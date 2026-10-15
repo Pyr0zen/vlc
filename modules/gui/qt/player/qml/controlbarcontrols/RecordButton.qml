@@ -31,7 +31,7 @@ Widgets.IconToolButton {
 
     color: "#FFFF0000" //red means recording
     text: VLCIcons.record
-    description: qsTr("record")
+    description: qsTr("Record")
 
     AccessibleCompat.id: "recordButton"
 

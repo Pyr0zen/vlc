@@ -27,7 +27,11 @@ pragma Singleton
 
 import QtQml
 
+import VLC.Dialogs
+
 QtObject {
+    id: root
+
     property string current: ""
     property bool uiHidden: false
 
@@ -46,6 +50,16 @@ QtObject {
 
     function close() {
         current = ""
+    }
+
+    // a dialog opening (a shortcut such as Ctrl+P, a menu entry, a panel button) closes the panel
+    // first, so it never stays open behind the dialog; menus and popups listen to the same signal
+    property Connections _dialogs: Connections {
+        target: DialogsProvider
+
+        function onDialogOpening() {
+            root.current = ""
+        }
     }
 
     // Modal redesign popups (menus, dialogs) that are open. While the player is shown VLC sends

@@ -27,6 +27,11 @@ import VLC.Style
 T.ItemDelegate {
     id: control
 
+    // the pointing hand over the clickable controls
+    HoverHandler {
+        cursorShape: Qt.PointingHandCursor
+    }
+
     property string rdIcon: ""              // Figma icon name (Widgets.RdIcon), two-tone menu icons included
     property string shortcut: ""
     property bool hasSubmenu: false

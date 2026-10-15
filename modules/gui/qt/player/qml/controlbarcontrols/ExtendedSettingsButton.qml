@@ -32,7 +32,9 @@ Widgets.IconToolButton {
     rdIcon: "playback-settings"
     rdIconChecked: "playback-settings_state-active"
 
-    description: qsTr("Extended settings")
+    // redesign: named after its Figma icon ("playback settings") in the player, where it opens the
+    // settings sidebar; elsewhere it still opens VLC's extended settings
+    description: MainCtx.playerView ? qsTr("Playback Settings") : qsTr("Extended settings")
 
     AccessibleCompat.id: "extendedSettingsButton"
 

@@ -38,6 +38,11 @@ SettingsRow {
     T.AbstractButton {
         id: toggleButton
 
+        // the pointing hand over the clickable controls
+        HoverHandler {
+            cursorShape: Qt.PointingHandCursor
+        }
+
         implicitWidth: countText.implicitWidth + chevron.width + VLCStyle.dp(10) + leftPadding + rightPadding
         implicitHeight: VLCStyle.dp(32)
         leftPadding: VLCStyle.dp(8)

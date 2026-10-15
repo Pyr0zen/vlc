@@ -34,7 +34,8 @@ Widgets.IconToolButton {
     text: VLCIcons.visualization
     rdIcon: "audio"
     rdIconChecked: "audio_state-active"
-    description: qsTr("Audio tracks and output")
+    // redesign: it opens the tracks popup on its Audio tab
+    description: qsTr("Audio")
 
     checked: !paintOnly && RdPanels.current === "audio"
 

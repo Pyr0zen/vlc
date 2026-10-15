@@ -335,6 +335,11 @@ T.Popup {
                 T.AbstractButton {
                     id: folderField
 
+                    // the pointing hand over the clickable controls
+                    HoverHandler {
+                        cursorShape: Qt.PointingHandCursor
+                    }
+
                     y: root.dp(33)
                     width: root.dp(471)
                     height: root.dp(36)
@@ -394,6 +399,11 @@ T.Popup {
 
     component ThemeTile: T.AbstractButton {
         id: tile
+
+        // the pointing hand over the clickable controls
+        HoverHandler {
+            cursorShape: Qt.PointingHandCursor
+        }
 
         // 0: light picture, 1: dark picture, 2: split (system)
         property int picture: 0
@@ -518,6 +528,11 @@ T.Popup {
 
     component Swatch: T.AbstractButton {
         id: swatch
+
+        // the pointing hand over the clickable controls
+        HoverHandler {
+            cursorShape: Qt.PointingHandCursor
+        }
 
         property color swatchColor
 

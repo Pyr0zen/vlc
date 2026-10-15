@@ -258,6 +258,11 @@ FocusScope{
             T.AbstractButton {
                 id: folderChip
 
+                // the pointing hand over the clickable controls
+                HoverHandler {
+                    cursorShape: Qt.PointingHandCursor
+                }
+
                 visible: root.showLibraryButtons && root.folderName !== ""
                 anchors.verticalCenter: parent.verticalCenter
 
