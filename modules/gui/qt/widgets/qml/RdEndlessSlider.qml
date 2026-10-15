@@ -28,8 +28,8 @@
 //   it slides back to the normal view.
 // - Arrow keys step by `step` past the range; a value set from outside (typed, VLC) scrolls the
 //   window to show it.
-// The window always starts on a step (rangeFrom + n steps), so dragging snaps to the same values
-// as in the normal view.
+// The window always starts on a step (rangeFrom + n steps), so ticks, labels and arrow-key steps
+// land on the same values as in the normal view (a drag is not snapped, as in RdSlider).
 //
 //     RdEndlessSlider {
 //         rangeFrom: -10; rangeTo: 10; limitFrom: -600; limitTo: 600; step: 0.05
