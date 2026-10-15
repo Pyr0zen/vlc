@@ -5267,6 +5267,7 @@ AS_CASE(["${with_brand}"],
     BRAND_INSTALL_DIR='VideoLAN\VLC'
     BRAND_PRODUCT_ID="{ea92ef52-afe4-4212-bacb-dfe9fca94cd6}"
     BRAND_NSIS_BITMAP_TRUE=""
+    BRAND_PROGID="VLC"
   ],
   [public], [
     dnl the approved logo files the public profile builds with
@@ -5304,6 +5305,9 @@ AS_CASE(["${with_brand}"],
     BRAND_REGKEY='Software\Cone'
     BRAND_INSTALL_DIR='Cone'
     BRAND_PRODUCT_ID="{f00e45bf-087b-49ef-90e7-4cd5e2e4bd72}"
+    dnl prefix of the installer's ProgIDs, verbs, autoplay handlers and default programs entry:
+    dnl Cone's own, so installing or removing it never touches an installed VLC's
+    BRAND_PROGID="Cone"
     dnl the installer's welcome / finish bitmap shows VLC's cone: NSIS's default one instead
     BRAND_NSIS_BITMAP_TRUE=";"
     dnl VLC's update checker downloads VLC releases from videolan.org: never in Cone
@@ -5327,6 +5331,7 @@ AC_SUBST([BRAND_REGKEY])
 AC_SUBST([BRAND_INSTALL_DIR])
 AC_SUBST([BRAND_PRODUCT_ID])
 AC_SUBST([BRAND_NSIS_BITMAP_TRUE])
+AC_SUBST([BRAND_PROGID])
 
 AS_IF([test -z "$VLC_COMPILE_BY"],[
    VLC_COMPILE_BY=`whoami|sed -e 's/\\\/\\\\\\\/g'`

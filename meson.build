@@ -60,6 +60,7 @@ brand_profiles = {
         'install_dir': 'VideoLAN\\VLC',
         'product_id': '{ea92ef52-afe4-4212-bacb-dfe9fca94cd6}',
         'nsis_bitmap_true': '',
+        'progid': 'VLC',
     },
     'public': {
         'product_name': 'Cone',
@@ -76,6 +77,8 @@ brand_profiles = {
         'product_id': '{f00e45bf-087b-49ef-90e7-4cd5e2e4bd72}',
         # the installer's welcome / finish bitmap shows VLC's cone: NSIS's default one instead
         'nsis_bitmap_true': ';',
+        # prefix of the installer's ProgIDs, verbs, autoplay handlers and default programs entry
+        'progid': 'Cone',
     },
 }
 brand = brand_profiles[get_option('brand')]
