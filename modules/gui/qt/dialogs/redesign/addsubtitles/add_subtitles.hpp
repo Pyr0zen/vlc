@@ -150,7 +150,7 @@ public:
     // To This File: checks or unchecks a row
     Q_INVOKABLE void toggle(int row);
     // To This Folder / Playlist: the subtitles a row can be matched to, best first:
-    // [{ candidate, name, matched }]
+    // [{ candidate, name, matched, current }], "No subtitles" (candidate -1) last
     Q_INVOKABLE QVariantList choices(int row) const;
     // matches a row by hand (-1: no subtitle)
     Q_INVOKABLE void choose(int row, int candidate);

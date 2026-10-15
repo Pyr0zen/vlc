@@ -1304,6 +1304,14 @@ libqml_module_dialogs_a_QML = \
 	dialogs/redesign/KeyboardShortcutsDialog.qml \
 	dialogs/redesign/Onboarding.qml \
 	dialogs/redesign/OnboardingPreview.qml \
+	dialogs/redesign/addsubtitles/AddSubtitlesChoicePopup.qml \
+	dialogs/redesign/addsubtitles/AddSubtitlesDialog.qml \
+	dialogs/redesign/addsubtitles/AddSubtitlesDropdown.qml \
+	dialogs/redesign/addsubtitles/AddSubtitlesField.qml \
+	dialogs/redesign/addsubtitles/AddSubtitlesFileRow.qml \
+	dialogs/redesign/addsubtitles/AddSubtitlesHost.qml \
+	dialogs/redesign/addsubtitles/AddSubtitlesMatchRow.qml \
+	dialogs/redesign/addsubtitles/SettingsOpenSubtitlesSection.qml \
 	dialogs/toolbar/qml/EditorDNDDelegate.qml \
 	dialogs/toolbar/qml/EditorDNDView.qml\
 	dialogs/toolbar/qml/EditorDummyButton.qml \

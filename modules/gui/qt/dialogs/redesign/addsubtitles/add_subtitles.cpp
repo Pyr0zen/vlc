@@ -1003,13 +1003,16 @@ QVariantList AddSubtitles::choices(int row) const
     std::stable_sort(order.begin(), order.end(), [](const QPair<int, int>& a, const QPair<int, int>& b) {
         return a.first > b.first;
     });
+    const int current = m_matches.at(row).candidate;
     for (const QPair<int, int>& entry : order)
         list.append(QVariantMap { { QStringLiteral("candidate"), entry.second },
                                   { QStringLiteral("name"), candidates.at(entry.second).name },
-                                  { QStringLiteral("matched"), entry.first >= 0 } });
+                                  { QStringLiteral("matched"), entry.first >= 0 },
+                                  { QStringLiteral("current"), entry.second == current } });
     list.append(QVariantMap { { QStringLiteral("candidate"), -1 },
                               { QStringLiteral("name"), qtr("No subtitles") },
-                              { QStringLiteral("matched"), false } });
+                              { QStringLiteral("matched"), true },
+                              { QStringLiteral("current"), current < 0 } });
     return list;
 }
 
