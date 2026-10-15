@@ -49,6 +49,9 @@ Item {
     property bool topBar: false
     property real iconWidth: VLCStyle.rd_iconButtonWidth
     property real topBarSpacing: VLCStyle.dp(10)
+    // above and below a top bar icon's outline (Figma: the 28x28 Icon in the left zone, 36x24
+    // cells between the window buttons)
+    property real topBarIconPadding: VLCStyle.dp(2)
 
     readonly property int count: repeater.count
     readonly property real controlsWidth: row.width

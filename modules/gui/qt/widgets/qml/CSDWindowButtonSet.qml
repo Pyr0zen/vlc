@@ -173,6 +173,15 @@ Row {
         width: windowButtonGroup.middleItem ? windowButtonGroup.middleItem.width : 0
         height: windowButtonGroup.height
 
+        // the close button moves with the slot's width: the window's hit test learns where
+        onWidthChanged: {
+            for (let i = 0; i < closeRepeater.count; ++i) {
+                const button = closeRepeater.itemAt(i)
+                if (button)
+                    Qt.callLater(button.updateRect)
+            }
+        }
+
         Binding {
             target: windowButtonGroup.middleItem
             when: !!windowButtonGroup.middleItem

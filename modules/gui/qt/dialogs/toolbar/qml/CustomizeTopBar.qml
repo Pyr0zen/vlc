@@ -127,6 +127,7 @@ Rectangle {
             topBar: true
             iconWidth: VLCStyle.dp(36)
             topBarSpacing: 0
+            topBarIconPadding: 0
             alignment: Qt.AlignRight
             editor: root.editor
             model: root.topBarModel ? root.topBarModel.right : null

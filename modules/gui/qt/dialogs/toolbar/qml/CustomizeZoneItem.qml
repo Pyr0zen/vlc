@@ -95,7 +95,7 @@ Item {
                 return 0
             }
             if (control.zone.topBar)
-                return VLCStyle.dp(2)
+                return control.zone.topBarIconPadding
             switch (control.controlId) {
             case ControlListModel.PREVIOUS_BUTTON:
             case ControlListModel.NEXT_BUTTON:

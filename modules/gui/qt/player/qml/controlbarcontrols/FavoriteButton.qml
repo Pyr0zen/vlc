@@ -41,13 +41,25 @@ Widgets.IconToolButton {
 
     onClicked: RdNowPlaying.setFavorite(!RdNowPlaying.favorite)
 
-    // the library is asked about the media only while a heart is shown
-    Component.onCompleted: {
-        if (!paintOnly)
+    // the library is asked about the media only while it is shown for real (not as the paint
+    // only copy in Customize Player, which becomes paint only after it is made)
+    property bool _watching: false
+
+    function _updateWatching() {
+        const wanted = !paintOnly
+        if (wanted === _watching)
+            return
+        _watching = wanted
+        if (wanted)
             RdNowPlaying.watch()
+        else
+            RdNowPlaying.unwatch()
     }
+
+    onPaintOnlyChanged: _updateWatching()
+    Component.onCompleted: _updateWatching()
     Component.onDestruction: {
-        if (!paintOnly)
+        if (_watching)
             RdNowPlaying?.unwatch()
     }
 
