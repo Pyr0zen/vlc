@@ -87,7 +87,7 @@ const QSet<QString>& curatedOptions()
         // Audio
         "audio", "mmdevice-audio-device", "waveout-audio-device",
         "mix-mode", "qt-max-volume", "volume-save", "mmdevice-volume", "waveout-volume",
-        "volume-step", "norm-max-level", "audio-replay-gain-mode", "audio-replay-gain-preamp",
+        "volume-step", "norm-max-level", "qt-night-mode-restore", "audio-replay-gain-mode", "audio-replay-gain-preamp",
         "equalizer-2pass", "pitch-shift", "audio-language", "audio-desync", "audio-visual",
         "mmdevice-passthrough", "force-dolby-surround", "soxr-resampler-quality", "role",
         // Subtitles

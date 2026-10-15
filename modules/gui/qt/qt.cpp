@@ -321,6 +321,10 @@ static void ShowDialog   ( intf_thread_t *, int, int, intf_dialog_args_t * );
     "network in the background, so the Render list shows them at once. When off, " \
     "VLC only looks while that list is open." )
 
+#define NIGHT_MODE_RESTORE_TEXT N_( "Compressor settings to restore after night mode" )
+#define NIGHT_MODE_RESTORE_LONGTEXT N_( "The compressor's state and settings before " \
+    "Settings > Audio > Night mode turned it on, put back when night mode is turned off." )
+
 static const int initial_prefs_view_list[] = { 0, 1, 2 };
 static const char *const initial_prefs_view_list_texts[] =
     { N_("Simple"), N_("Advanced"), N_("Expert") };
@@ -513,6 +517,10 @@ vlc_module_begin ()
     add_bool( "qt-use-scroll-handler", true, SCROLL_HANDLER_TEXT, SCROLL_HANDLER_LONGTEXT )
 
     add_bool( "qt-verbose", false, VERBOSE_TEXT, VERBOSE_LONGTEXT )
+
+    /* redesign: Settings > Audio > Loudness "Night mode" (S2-06), set by the page */
+    add_string( "qt-night-mode-restore", "", NIGHT_MODE_RESTORE_TEXT, NIGHT_MODE_RESTORE_LONGTEXT )
+        change_private()
 
     /* redesign: Settings > Recording > Casting (S2-10) */
     add_bool( "qt-cast-discovery", true, CAST_DISCOVERY_TEXT, CAST_DISCOVERY_LONGTEXT )
