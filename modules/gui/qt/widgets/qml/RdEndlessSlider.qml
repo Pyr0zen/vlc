@@ -137,7 +137,9 @@ RdSlider {
 
     function _show(v) {
         const start = _windowFor(v)
-        if (_ready && visible && endless && !pressed && start === rangeFrom
+        // already sliding there (VLC confirming the released value): the slide is never restarted
+        const sliding = snapBack.running && start === snapBack.to
+        if (!sliding && _ready && visible && endless && !pressed && start === rangeFrom
                 && Math.abs(start - _windowFrom) > _eps
                 && v >= _windowFrom - _eps && v <= _windowFrom + _span + _eps) {
             // back to the normal view from a window that shows the value: the scale slides home
