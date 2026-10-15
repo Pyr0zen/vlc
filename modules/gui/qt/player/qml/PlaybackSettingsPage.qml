@@ -38,6 +38,11 @@ RdSidePanelPage {
         return qsTr("%1x").arg(Math.round(rate * 100) / 100)
     }
 
+    // the speeds VLC plays at (include/vlc_input.h: INPUT_RATE_MIN 1/32, INPUT_RATE_MAX 31.25):
+    // the slider shows 0.25 to 2 and scrolls on to them (Decision 46)
+    readonly property real _rateMin: 0.03125
+    readonly property real _rateMax: 31.25
+
     // the sleep timer's time left ("12:34"), from the timer's deadline and `now`
     function timeLeftText(deadline, now) {
         const seconds = Math.max(0, Math.ceil((deadline - now) / 1000))
@@ -120,10 +125,10 @@ RdSidePanelPage {
             }
         }
 
-        // the video's speed slider: 0.25 to 2 in 0.25 steps with a label under each step;
-        // the value box also takes VLC's other speeds (up to 4x). Figma "Frame 105": a 44 px row
-        // with a frameless 140x32 box, 10 px, then the slider wrapper (4 px padding, labels 34
-        // under the thumb top)
+        // the video's speed slider: 0.25 to 2 in 0.25 steps with a label under each step; held
+        // past an end it scrolls on through VLC's other speeds at 1x per second, and the value
+        // box takes any of them. Figma "Frame 105": a 44 px row with a frameless 140x32 box,
+        // 10 px, then the slider wrapper (4 px padding, labels 34 under the thumb top)
         Widgets.RdParamSlider {
             text: qsTr("Speed")
             valueBox: true
@@ -135,15 +140,21 @@ RdSidePanelPage {
             valueText: root.rateText(Player.rate)
             from: 0.25
             to: 2
+            limitFrom: root._rateMin
+            limitTo: root._rateMax
             stepSize: 0.25
-            labels: ["0.25", "0.5", "0.75", "1", "1.25", "1.5", "1.75", "2"]
+            scrollSpeed: 1
+            // the zero edge label points to normal speed
+            zeroValue: 1
+            labelStep: 0.25
+            labelText: (v) => String(Math.round(v * 100) / 100)
             value: Player.rate
             enabled: Player.ratechangable
             onMoved: (v) => Player.rate = v
             onEdited: (text) => {
                 const r = parseFloat(String(text).replace(",", ".").replace(/[^0-9.]/g, ""))
                 if (!isNaN(r))
-                    Player.rate = Math.max(0.25, Math.min(4, r))
+                    Player.rate = Math.max(root._rateMin, Math.min(root._rateMax, r))
             }
         }
     }

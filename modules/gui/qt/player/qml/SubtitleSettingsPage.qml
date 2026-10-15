@@ -46,6 +46,11 @@ RdSidePanelPage {
     // a binding reading RdEffects.values[key] follows only that value
     readonly property real _durationFactor: RdEffects.values.subtitleDurationFactor
 
+    // the delay VLC's own Synchronization panel accepts (dialogs/extended/extended_panels.cpp,
+    // SyncWidget: -600 to 600 s); the player itself takes any delay. The slider shows -10 to 10 s
+    // and scrolls on to it (Decision 46)
+    readonly property real _delayLimit: 600
+
     // the delay is cheap to change: it follows a drag ten times a second
     readonly property RdSliderCommit _delay: RdSliderCommit {
         pressed: delaySlider.pressed
@@ -96,6 +101,12 @@ RdSidePanelPage {
         return parseFloat(String(text).replace(",", ".").replace(/[^0-9.+-]/g, ""))
     }
 
+    // a delay on the slider's scale: "-10 s", "0 s", "+10 s", "-13.5 s"
+    function secondsText(v) {
+        const s = Math.round(v * 10) / 10
+        return qsTr("%1 s").arg((s > 0 ? "+" : "") + s)
+    }
+
     Widgets.RdSettingsSection {
         title: qsTr("Defaults")
         showDivider: false
@@ -142,16 +153,20 @@ RdSidePanelPage {
             valueText: qsTr("%1 s").arg(root._delay.shown.toFixed(3))
             from: -10
             to: 10
+            limitFrom: -root._delayLimit
+            limitTo: root._delayLimit
             stepSize: 0.05
+            scrollSpeed: 5
             bipolar: true
             showTicks: false
-            labels: [qsTr("-10 s"), qsTr("0 s"), qsTr("+10 s")]
+            labelStep: 10
+            labelText: (v) => root.secondsText(v)
             value: root._delay.shown
             onMoved: (v) => root._delay.push(v)
             onEdited: (text) => {
                 const s = root.parseNumber(text)
                 if (!isNaN(s))
-                    Player.subtitleDelayMS = Math.round(s * 1000)
+                    Player.subtitleDelayMS = Math.round(Math.max(-root._delayLimit, Math.min(root._delayLimit, s)) * 1000)
             }
         }
 
@@ -274,7 +289,8 @@ RdSidePanelPage {
         }
 
         // VLC sizes subtitles relative to the video (sub-text-scale, 100 % = VLC's automatic
-        // size); a size in pixels would need a core change (VIDEO_INDEX Decisions (Claude))
+        // size); a size in pixels would need a core change (VIDEO_INDEX Decisions (Claude)).
+        // VLC accepts 10 to 500 %: the slider scrolls on past 25 / 300 % (Decision 46)
         Widgets.RdParamSlider {
             text: qsTr("Font Size")
             // Figma "Frame 96" (804:1341): padding 10,0,10,0
@@ -283,6 +299,8 @@ RdSidePanelPage {
             valueText: value === 100 ? qsTr("Auto") : qsTr("%1 %").arg(value)
             from: 25
             to: 300
+            limitFrom: 10
+            limitTo: 500
             stepSize: 25
             value: RdEffects.values.subtitleTextScale
             onMoved: (v) => RdEffects.setSubtitleTextScale(v)
