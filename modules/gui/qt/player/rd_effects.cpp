@@ -629,6 +629,16 @@ void RdEffects::setOption(const QString& name, const QVariant& value)
     setCached(key, configTyped(name8.constData(), value));
     schedule(key, [this, name8, value]() {
         putConfig(name8.constData(), value);
+
+        // the player copies the preferred languages from the configuration only when it is
+        // created: it takes them from here for the next file
+        const bool audio = name8 == "audio-language";
+        if (audio || name8 == "sub-language")
+        {
+            vlc_player_locker lock{ m_intf->p_player };
+            vlc_player_SelectCategoryLanguage(m_intf->p_player, audio ? AUDIO_ES : SPU_ES,
+                                              qtu(value.toString()));
+        }
     });
 }
 
