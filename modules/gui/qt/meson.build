@@ -701,6 +701,7 @@ qml_modules += {
         'dialogs/toolbar/qml/CustomizeZone.qml',
         'dialogs/toolbar/qml/CustomizeZoneItem.qml',
         'dialogs/toolbar/qml/CustomizeNamePrompt.qml',
+        'dialogs/toolbar/qml/RdProfileNotice.qml',
         'dialogs/redesign/settings/SettingsAdvancedBar.qml',
         'dialogs/redesign/settings/SettingsCategoryButton.qml',
         'dialogs/redesign/settings/SettingsDialog.qml',
