@@ -241,3 +241,7 @@ Merged `origin/redesign-settings` (PR #2) on the library integration, then `rede
 ## 2026-10-15 hands-on (build 38609407210, light theme)
 - UX bug: with the main "..." menu open, Ctrl+P opened the Settings dialog on top while the menu stayed open behind it. Opening any dialog (shortcut or menu) must close open menus and popups first. Check on the next build (the UX pass changed menu dismissal), fix if still there.
 - Light theme: placeholders and disabled text use Figma's Light FG/A4 #3B3B3B and read almost like typed text (Open Network Stream fields): decision image Q5 for Sticky.
+
+## 2026-10-15 Step 2 Settings rows without a VLC option (worktree, not built yet)
+Rows S2-02..S2-10 and S2-03 of VIDEO_INDEX "Settings rows without a VLC option behind them", Qt only (S2-01 and S2-11 are core changes, separate build). Each row is placed where its Figma "Settings - *" frame has it (figma_file.json), every new option declared in qt.cpp with its texts and saved like the other settings (RdEffects), and listed in SettingsCatalog's curated rows.
+- S2-02 Remember window size and position (b274dd22515): "qt-remember-window" (default on), Interface > Window between "Resize window to fit video" and "Keep window above other windows". InterfaceWindowHandler skips the restore (default 600x420, centered on the primary screen) and drops the saved "geometry" instead of writing it when off. The separate video window (Play video inside main window off) is the core's window module in VLC 4 and keeps no geometry, so nothing to follow there.
