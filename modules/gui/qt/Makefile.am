@@ -151,6 +151,8 @@ libqt_plugin_la_SOURCES = \
 	dialogs/preferences/preferences_widgets.hpp \
 	dialogs/preferences/simple_preferences.cpp \
 	dialogs/preferences/simple_preferences.hpp \
+	dialogs/redesign/addsubtitles/subtitle_matcher.cpp \
+	dialogs/redesign/addsubtitles/subtitle_matcher.hpp \
 	dialogs/redesign/hotkeys_model.cpp \
 	dialogs/redesign/hotkeys_model.hpp \
 	dialogs/redesign/onboarding_helper.cpp \
