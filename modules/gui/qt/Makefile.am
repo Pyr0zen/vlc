@@ -151,6 +151,18 @@ libqt_plugin_la_SOURCES = \
 	dialogs/preferences/preferences_widgets.hpp \
 	dialogs/preferences/simple_preferences.cpp \
 	dialogs/preferences/simple_preferences.hpp \
+	dialogs/redesign/addsubtitles/subtitle_matcher.cpp \
+	dialogs/redesign/addsubtitles/subtitle_matcher.hpp \
+	dialogs/redesign/addsubtitles/subtitle_web.cpp \
+	dialogs/redesign/addsubtitles/subtitle_web.hpp \
+	dialogs/redesign/addsubtitles/opensubtitles.cpp \
+	dialogs/redesign/addsubtitles/opensubtitles.hpp \
+	dialogs/redesign/addsubtitles/subtitle_store.cpp \
+	dialogs/redesign/addsubtitles/subtitle_store.hpp \
+	dialogs/redesign/addsubtitles/add_subtitles.cpp \
+	dialogs/redesign/addsubtitles/add_subtitles.hpp \
+	dialogs/redesign/addsubtitles/add_subtitles_model.cpp \
+	dialogs/redesign/addsubtitles/add_subtitles_model.hpp \
 	dialogs/redesign/hotkeys_model.cpp \
 	dialogs/redesign/hotkeys_model.hpp \
 	dialogs/redesign/onboarding_helper.cpp \
@@ -459,6 +471,8 @@ nodist_libqt_plugin_la_SOURCES = \
 	dialogs/preferences/preferences.moc.cpp \
 	dialogs/preferences/preferences_widgets.moc.cpp \
 	dialogs/preferences/simple_preferences.moc.cpp \
+	dialogs/redesign/addsubtitles/add_subtitles.moc.cpp \
+	dialogs/redesign/addsubtitles/add_subtitles_model.moc.cpp \
 	dialogs/redesign/hotkeys_model.moc.cpp \
 	dialogs/redesign/onboarding_helper.moc.cpp \
 	dialogs/redesign/settings/settings_catalog.moc.cpp \
@@ -1293,6 +1307,14 @@ libqml_module_dialogs_a_QML = \
 	dialogs/redesign/KeyboardShortcutsDialog.qml \
 	dialogs/redesign/Onboarding.qml \
 	dialogs/redesign/OnboardingPreview.qml \
+	dialogs/redesign/addsubtitles/AddSubtitlesChoicePopup.qml \
+	dialogs/redesign/addsubtitles/AddSubtitlesDialog.qml \
+	dialogs/redesign/addsubtitles/AddSubtitlesDropdown.qml \
+	dialogs/redesign/addsubtitles/AddSubtitlesField.qml \
+	dialogs/redesign/addsubtitles/AddSubtitlesFileRow.qml \
+	dialogs/redesign/addsubtitles/AddSubtitlesHost.qml \
+	dialogs/redesign/addsubtitles/AddSubtitlesMatchRow.qml \
+	dialogs/redesign/addsubtitles/SettingsOpenSubtitlesSection.qml \
 	dialogs/toolbar/qml/EditorDNDDelegate.qml \
 	dialogs/toolbar/qml/EditorDNDView.qml\
 	dialogs/toolbar/qml/EditorDummyButton.qml \
