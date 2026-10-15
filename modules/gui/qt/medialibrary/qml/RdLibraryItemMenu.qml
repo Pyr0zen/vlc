@@ -120,7 +120,9 @@ Item {
     function _folderEntries(folder, category) {
         const entries = [
             { text: qsTr("Add File"), icon: "add", action: () => RdLibraryActions.addFiles(null) },
-            { text: qsTr("Add Folder"), icon: "new-folder_two-tone-yes", action: () => RdLibraryActions.addFolder(category) },
+            // the picker opens in the folder the menu belongs to
+            { text: qsTr("Add Folder"), icon: "new-folder_two-tone-yes",
+              action: () => RdLibraryActions.addFolder(category, folder ? folder.mrl : "") },
             // the Add Subtitles dialog (W6.5) edits the tracks of a whole folder; until then these
             // add a track to the file that is playing
             { text: qsTr("Edit Subtitle Tracks"), icon: "subtitles_two-tone-yes", enabled: Player.isStarted,

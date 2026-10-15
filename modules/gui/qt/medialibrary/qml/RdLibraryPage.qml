@@ -186,15 +186,30 @@ FocusScope {
         return playingMrl !== "" && !!mrl && RdLibraryNav.mrlKey(mrl) === playingMrl
     }
 
+    readonly property bool _folderHasAddRow: {
+        if (location.page !== "folder")
+            return false
+        if (category === "music")
+            return true
+        if (subfolderModel && subfolderModel.count > 0)
+            return true
+        // empty, not just without search results
+        return searchText === "" && !!dataModel && !dataModel.loading && dataModel.count === 0
+               && !!subfolderModel && !subfolderModel.loading
+    }
+
     // rows above the items: "+ Add" rows (isAction) and the fixed entries of Music and Network
     readonly property var fixedRows: {
         switch (location.page) {
         case "folder":
-            // Figma: a folder of media has no Add row, a level of folders has it
-            if (!(page.subfolderModel && page.subfolderModel.count > 0))
+            // Figma sidebar and video 10:59 / 12:00: a Videos folder of media only (S01) has no
+            // Add row; a level of folders (Shows, The Wand), a Music folder (My Songs) and an
+            // empty folder have it. A Videos folder decides once its rows are loaded, so the
+            // row does not show and then vanish
+            if (!page._folderHasAddRow)
                 return []
             return [{ kind: "action", isAction: true, title: qsTr("Add"), icon: "add",
-                      run: () => RdLibraryActions.addFolder(page.category) }]
+                      run: () => RdLibraryActions.addFolder(page.category, page.location.mrl) }]
         case "videos":
         case "songs":
         case "albums":

@@ -31,6 +31,7 @@
 #include <QJSEngine>
 #include <QProcess>
 #include <QSettings>
+#include <QStandardPaths>
 #include <QTextStream>
 
 #include <algorithm>
@@ -194,9 +195,23 @@ void RdLibraryStore::setCompactViewMode(const QString& mode)
     emit viewModeChanged();
 }
 
-QUrl RdLibraryStore::pickFolder(const QString& title) const
+QUrl RdLibraryStore::pickFolder(const QString& title, const QUrl& start, const QString& category) const
 {
-    return QFileDialog::getExistingDirectoryUrl(nullptr, title, QUrl::fromLocalFile(QDir::homePath()));
+    // no file system access here: the native dialog falls back by itself when the folder is gone
+    QUrl dir;
+    if (start.isLocalFile())
+        dir = start;
+    else if (!category.isEmpty())
+    {
+        const QString standard = QStandardPaths::writableLocation(category == QLatin1String("music")
+                                                                  ? QStandardPaths::MusicLocation
+                                                                  : QStandardPaths::MoviesLocation);
+        if (!standard.isEmpty())
+            dir = QUrl::fromLocalFile(standard);
+    }
+    if (dir.isEmpty())
+        dir = QUrl::fromLocalFile(QDir::homePath());
+    return QFileDialog::getExistingDirectoryUrl(nullptr, title, dir);
 }
 
 QList<QUrl> RdLibraryStore::pickFiles(const QString& title, bool images) const

@@ -78,8 +78,11 @@ public:
     QString compactViewMode() const { return m_compactViewMode; }
     void setCompactViewMode(const QString& mode);
 
-    // file pickers (native dialogs); empty when cancelled
-    Q_INVOKABLE QUrl pickFolder(const QString& title) const;
+    // file pickers (native dialogs); empty when cancelled. The folder picker opens in `start`
+    // (a local folder URL), else in the user's Videos or Music folder for `category`, else in
+    // the user's home folder
+    Q_INVOKABLE QUrl pickFolder(const QString& title, const QUrl& start = {},
+                                const QString& category = {}) const;
     Q_INVOKABLE QList<QUrl> pickFiles(const QString& title, bool images) const;
 
     // library folders of a category ("video" or "music")

@@ -189,7 +189,7 @@ Rectangle {
     property string _folderToPin: ""
 
     function _pinFolder() {
-        const url = RdLibraryStore.pickFolder(qsTr("Pin a Folder"))
+        const url = RdLibraryStore.pickFolder(qsTr("Pin a Folder"), "", "video")
         if (url.toString() === "")
             return
         _folderToPin = url.toString()
