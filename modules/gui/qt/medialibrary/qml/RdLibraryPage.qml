@@ -688,8 +688,11 @@ FocusScope {
             }
 
             Text {
+                // a folder's subfolders load next to its media: wait for both, so a folder of
+                // folders does not flash the text
                 visible: !!page.dataModel && page.dataModel.count === 0 && !page.dataModel.loading
-                         && !(page.subfolderModel && page.subfolderModel.count > 0) && page.searchText === ""
+                         && !(page.subfolderModel && (page.subfolderModel.count > 0 || page.subfolderModel.loading))
+                         && page.searchText === ""
                 width: parent.width
                 wrapMode: Text.WordWrap
                 text: {
