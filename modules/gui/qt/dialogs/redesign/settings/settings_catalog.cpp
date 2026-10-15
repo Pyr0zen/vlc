@@ -477,26 +477,6 @@ QVariantList SettingsCatalog::groups(const QString& category, const QString& fil
     return result;
 }
 
-int SettingsCatalog::matchCount(const QString& category, const QString& filter) const
-{
-    const QStringList words = filterWords(filter);
-    if (!m_ready || words.isEmpty())
-        return 0;
-    int count = 0;
-    for (const Group& group : m_catalog.groups)
-    {
-        if (group.category != category)
-            continue;
-        for (const QString& name : group.options)
-        {
-            const auto it = m_catalog.options.constFind(name);
-            if (it != m_catalog.options.constEnd() && matches(*it, group, words))
-                ++count;
-        }
-    }
-    return count;
-}
-
 QVariantList SettingsCatalog::plugins(const QString& filter) const
 {
     QVariantList result;

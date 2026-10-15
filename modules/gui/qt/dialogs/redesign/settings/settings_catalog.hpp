@@ -75,8 +75,6 @@ public:
     // the options of a category the pages do not show by name, grouped by plugin:
     // [{ id, title, options: [name], keywords }]; with `filter`, only the options it matches
     Q_INVOKABLE QVariantList groups(const QString& category, const QString& filter = {}) const;
-    // the number of options of a category `filter` matches (search counts)
-    Q_INVOKABLE int matchCount(const QString& category, const QString& filter) const;
 
     // every plugin of VLC: [{ name, title, capability, score }], sorted by title
     Q_INVOKABLE QVariantList plugins(const QString& filter = {}) const;
