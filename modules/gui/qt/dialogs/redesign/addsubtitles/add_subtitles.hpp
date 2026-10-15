@@ -198,9 +198,9 @@ private:
     using Work = std::function<void(vlc_object_t*)>;
     using Done = std::function<void()>;
     // runs `work` on a worker thread, then `done` on this thread; a `tracked` job belongs to the
-    // dialog (busy state, dropped when a newer request replaced it), a `network` one is stopped
-    // after a while
-    void run(Work work, Done done, bool network, bool tracked = true);
+    // dialog (busy state, dropped when a newer request replaced it); a job making `requests` web
+    // requests is stopped when they take longer than 30 s each
+    void run(Work work, Done done, int requests, bool tracked = true);
     void cancelJobs();
 
     void setMessage(const QString& message);

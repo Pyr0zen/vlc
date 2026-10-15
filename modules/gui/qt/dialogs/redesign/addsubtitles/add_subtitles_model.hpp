@@ -64,7 +64,7 @@ public:
     QVariant data(const QModelIndex& index, int role) const override;
     QHash<int, QByteArray> roleNames() const override;
 
-    int count() const { return m_rows.size(); }
+    int count() const { return int(m_rows.size()); }
     const QVector<Row>& rows() const { return m_rows; }
     const Row& at(int row) const { return m_rows.at(row); }
 

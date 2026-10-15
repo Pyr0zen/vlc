@@ -51,8 +51,8 @@ namespace {
 
 // subtitle files are small; a link to anything larger is not one
 constexpr qint64 maxSubtitleSize = 10 * 1024 * 1024;
-// a request that has not finished by then is stopped
-constexpr int networkTimeout = 30000;
+// a web request that has not finished by then is stopped
+constexpr int requestTimeout = 30000;
 // results fetched for a whole folder (OpenSubtitles pages of 50)
 constexpr int folderSearchPages = 3;
 
@@ -314,7 +314,7 @@ AddSubtitles::AddSubtitles(qt_intf_t* intf, QObject* parent)
             m_store.setData(*data);
             m_storeLoaded = true;
             onPlayingStateChanged();
-        }, false, false);
+        }, 0, false);
 }
 
 AddSubtitles::~AddSubtitles()
@@ -326,7 +326,7 @@ AddSubtitles::~AddSubtitles()
     m_storePool.waitForDone();
 }
 
-void AddSubtitles::run(Work work, Done done, bool network, bool tracked)
+void AddSubtitles::run(Work work, Done done, int requests, bool tracked)
 {
     auto job = std::make_shared<Job>();
     if (!job->interrupt)
@@ -341,10 +341,10 @@ void AddSubtitles::run(Work work, Done done, bool network, bool tracked)
     QPointer<AddSubtitles> self(this);
     vlc_object_t* obj = VLC_OBJECT(m_intf);
 
-    if (network)
+    if (requests > 0)
     {
         std::weak_ptr<Job> weak = job;
-        QTimer::singleShot(networkTimeout, this, [weak]() {
+        QTimer::singleShot(requests * requestTimeout, this, [weak]() {
             if (const std::shared_ptr<Job> running = weak.lock())
                 vlc_interrupt_kill(running->interrupt);
         });
@@ -623,13 +623,13 @@ void AddSubtitles::loadComputerFolder(const QString& path, const QStringList& pr
             for (const ScannedFile& file : *files)
             {
                 if (preselect.contains(file.path))
-                    selected.insert(m_computer.size());
+                    selected.insert(int(m_computer.size()));
                 m_computer.append({ file.display, file.path, 0, SubtitleMatcher::parse(file.matchName) });
             }
             if (!selected.isEmpty())
                 m_selected.insert(SourceComputer, selected);
             rebuild();
-        }, false);
+        }, 0);
 }
 
 void AddSubtitles::loadVideos()
@@ -655,7 +655,7 @@ void AddSubtitles::loadVideos()
                     m_folderVideos.append({ name, mrlOf(path), SubtitleMatcher::parse(name) });
                 }
                 rebuild();
-            }, false);
+            }, 0);
     }
 }
 
@@ -744,7 +744,7 @@ void AddSubtitles::search()
                 m_online.append({ result.fileName, QString(), result.fileId, parseResult(result) });
             m_sourceError = *error;
             rebuild();
-        }, true);
+        }, pages);
 }
 
 void AddSubtitles::addLink(const QString& link)
@@ -769,7 +769,7 @@ void AddSubtitles::addLink(const QString& link)
             m_sourceError = qtr("This file does not exist.");
         else
         {
-            m_selected[SourceLink].insert(m_links.size());
+            m_selected[SourceLink].insert(int(m_links.size()));
             m_links.append({ info.fileName(), info.absoluteFilePath(), 0, SubtitleMatcher::parse(info.fileName()) });
         }
         rebuild();
@@ -824,12 +824,12 @@ void AddSubtitles::addLink(const QString& link)
             if (!path->isEmpty())
             {
                 const QString name = QFileInfo(*path).fileName().section(QChar('-'), 1);
-                m_selected[SourceLink].insert(m_links.size());
+                m_selected[SourceLink].insert(int(m_links.size()));
                 m_links.append({ name, *path, 0, SubtitleMatcher::parse(name) });
             }
             rebuild();
             emit canSaveChanged();
-        }, true);
+        }, 1);
 }
 
 const QVector<AddSubtitles::Candidate>& AddSubtitles::pool() const
@@ -932,7 +932,7 @@ void AddSubtitles::rebuild()
                 m_matches.setRows(*rows);
                 updateMessage();
                 emit canSaveChanged();
-            }, false, false);
+            }, 0, false);
     }
 
     updateMessage();
@@ -1197,7 +1197,7 @@ void AddSubtitles::save()
                 return;
             }
             emit saved();
-        }, true);
+        }, 1 + 2 * int(downloads.size()));
 }
 
 void AddSubtitles::writeStore()
@@ -1336,7 +1336,7 @@ void AddSubtitles::applyTo(const QString& mrl)
                 writeStore();
             }
             attach(mrl, *result, true);
-        }, network, false);
+        }, network ? 3 : 0, false);
 }
 
 void AddSubtitles::attach(const QString& mrl, const QStringList& subtitles, bool select)

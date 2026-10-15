@@ -97,7 +97,9 @@ T.Control {
             anchors.leftMargin: VLCStyle.dp(10)
             anchors.right: parent.right
             anchors.rightMargin: VLCStyle.dp(8)
-            anchors.verticalCenter: parent.verticalCenter
+            // the whole height of the field takes clicks (the template has no implicit height)
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
 
             visible: root.editable
             enabled: root.editable

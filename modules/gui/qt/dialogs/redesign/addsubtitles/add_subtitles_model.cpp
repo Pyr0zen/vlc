@@ -24,7 +24,7 @@
 
 int AddSubtitlesModel::rowCount(const QModelIndex& parent) const
 {
-    return parent.isValid() ? 0 : m_rows.size();
+    return parent.isValid() ? 0 : int(m_rows.size());
 }
 
 QVariant AddSubtitlesModel::data(const QModelIndex& index, int role) const
@@ -62,7 +62,7 @@ QHash<int, QByteArray> AddSubtitlesModel::roleNames() const
 
 void AddSubtitlesModel::setRows(const QVector<Row>& rows)
 {
-    const int oldCount = m_rows.size();
+    const qsizetype oldCount = m_rows.size();
     beginResetModel();
     m_rows = rows;
     endResetModel();
