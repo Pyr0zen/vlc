@@ -100,6 +100,8 @@ RdSidePanelPage {
         title: qsTr("Defaults")
         showDivider: false
         note: qsTr("Applies from the next file")
+        // Figma "Frame 92" (845:1597): 10 px under the rows
+        bottomPadding: VLCStyle.dp(10)
 
         Widgets.RdSettingRow {
             text: qsTr("Subtitle Track")
@@ -198,6 +200,8 @@ RdSidePanelPage {
     Widgets.RdSettingsSection {
         title: qsTr("Appearance")
         note: qsTr("Font, colors, outline and background apply from the next file")
+        // Figma "Frame 91" (800:1126): 10 px under the rows
+        bottomPadding: VLCStyle.dp(10)
 
         Widgets.RdSettingRow {
             text: qsTr("Embedded Sub Format")
@@ -273,6 +277,9 @@ RdSidePanelPage {
         // size); a size in pixels would need a core change (VIDEO_INDEX Decisions (Claude))
         Widgets.RdParamSlider {
             text: qsTr("Font Size")
+            // Figma "Frame 96" (804:1341): padding 10,0,10,0
+            Layout.topMargin: VLCStyle.dp(10)
+            Layout.bottomMargin: VLCStyle.dp(10)
             valueText: value === 100 ? qsTr("Auto") : qsTr("%1 %").arg(value)
             from: 25
             to: 300
@@ -286,6 +293,9 @@ RdSidePanelPage {
             readonly property var names: [qsTr("None"), qsTr("Thin"), qsTr("Normal"), qsTr("Thick")]
 
             text: qsTr("Outline Thickness")
+            // Figma "Frame 96" (804:1341): padding 10,0,10,0
+            Layout.topMargin: VLCStyle.dp(10)
+            Layout.bottomMargin: VLCStyle.dp(10)
             valueText: names[Math.round(value)] ?? ""
             from: 0
             to: 3
@@ -296,6 +306,9 @@ RdSidePanelPage {
 
         Widgets.RdParamSlider {
             text: qsTr("Background Opacity")
+            // Figma "Frame 96" (804:1341): padding 10,0,10,0
+            Layout.topMargin: VLCStyle.dp(10)
+            Layout.bottomMargin: VLCStyle.dp(10)
             valueText: qsTr("%1 %").arg(Math.round(value / 255 * 100))
             from: 0
             to: 255
