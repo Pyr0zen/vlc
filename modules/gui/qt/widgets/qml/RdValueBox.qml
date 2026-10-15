@@ -20,6 +20,8 @@
 // 2 px BG/A4 inside stroke (accent while typing), Inter 14
 // FG/A2). Shows a value; when editable, clicking it lets the user type a new one (Enter applies,
 // Escape cancels). An optional color swatch (22x22, radius 2) sits at the right (Text Color).
+// framed: false is the Playback tab's Speed box (Figma "Frame 86" 5187:24542: 140x32, padding
+// 8,18,8,12, no stroke, FG/A3 text); the accent stroke still shows while typing.
 import QtQuick
 import QtQuick.Templates as T
 
@@ -33,6 +35,8 @@ T.Control {
     property bool editable: true
     property color swatch: "transparent"
     property bool showSwatch: false
+    property bool framed: true
+    property int fontSize: VLCStyle.rd_fontSize_label
     // input validation while typing
     property var validator: null
 
@@ -42,9 +46,10 @@ T.Control {
     readonly property bool editing: input.activeFocus
 
     implicitWidth: VLCStyle.dp(140)
-    implicitHeight: VLCStyle.dp(36)
+    implicitHeight: framed ? VLCStyle.dp(36) : VLCStyle.dp(32)
 
-    leftPadding: VLCStyle.dp(12)
+    // the text sits 12 px inside the frame's 2 px stroke (Figma text at 14)
+    leftPadding: framed ? VLCStyle.dp(14) : VLCStyle.dp(12)
     rightPadding: showSwatch ? VLCStyle.dp(5) : VLCStyle.dp(18)
 
     hoverEnabled: true
@@ -52,7 +57,7 @@ T.Control {
     background: Rectangle {
         radius: VLCStyle.rd_radius_normal
         color: control.rdPalette.rdBgB2
-        border.width: VLCStyle.dp(2)
+        border.width: (control.framed || control.editing) ? VLCStyle.dp(2) : 0
         border.color: control.editing ? control.rdPalette.rdAccentMain : control.rdPalette.rdBgA4
     }
 
@@ -72,8 +77,8 @@ T.Control {
             selectByMouse: true
             validator: control.validator
             font.family: VLCStyle.rd_fontFamily
-            font.pixelSize: VLCStyle.rd_fontSize_label
-            color: control.rdPalette.rdFgA2
+            font.pixelSize: control.fontSize
+            color: control.framed ? control.rdPalette.rdFgA2 : control.rdPalette.rdFgA3
             selectionColor: control.rdPalette.rdAccentMain
             selectedTextColor: control.rdPalette.rdFgB1
             cursorDelegate: Rectangle {

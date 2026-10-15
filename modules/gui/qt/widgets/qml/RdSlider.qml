@@ -36,12 +36,15 @@ T.Slider {
     property bool showTicks: stepSize > 0 && (to - from) / stepSize <= 40
     // labels under the track, spread from the left end to the right end (Figma "Frame 205")
     property var labels: []
+    // top of the label row: 10 px under the 16 px track (Figma "wrapper" 1905:7365: labels at
+    // 30); the Speed slider's wrapper puts them 10 px under its 24 px zone (5187:24558: 34)
+    property real labelsY: VLCStyle.dp(30)
 
     readonly property SystemPalette rdPalette: VLCStyle.palette
 
-    // Figma "wrapper": 24 px slider zone, then 10 px and a 15 px label row
+    // Figma "wrapper": 24 px slider zone, or the label row and a 4 px bottom padding
     implicitWidth: VLCStyle.dp(360)
-    implicitHeight: labelRow.visible ? VLCStyle.dp(49) : VLCStyle.dp(24)
+    implicitHeight: labelRow.visible ? labelsY + labelRow.height + VLCStyle.dp(4) : VLCStyle.dp(24)
 
     focusPolicy: Qt.StrongFocus
 
@@ -101,7 +104,7 @@ T.Slider {
             id: labelRow
 
             visible: control.labels.length > 0
-            y: VLCStyle.dp(34)
+            y: control.labelsY
             width: control.availableWidth
             height: VLCStyle.dp(15)
 

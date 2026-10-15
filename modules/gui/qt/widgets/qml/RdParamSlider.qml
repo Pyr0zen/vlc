@@ -31,6 +31,12 @@ ColumnLayout {
     property alias text: label.text
     property string valueText: ""
     property bool valueBox: false
+    property alias valueFramed: box.framed
+    property alias valueFontSize: box.fontSize
+    // name row: 37 px, 56 with a value box (Figma "Frame 60" 767:2197: padding 10 around the 36 px
+    // box); the space between that row and the slider is the layout's spacing
+    property real rowHeight: valueBox ? VLCStyle.dp(56) : VLCStyle.dp(37)
+    property alias labelsY: slider.labelsY
 
     property alias from: slider.from
     property alias to: slider.to
@@ -53,7 +59,7 @@ ColumnLayout {
 
     Item {
         Layout.fillWidth: true
-        Layout.preferredHeight: root.valueBox ? VLCStyle.dp(48) : VLCStyle.dp(37)
+        Layout.preferredHeight: root.rowHeight
 
         Text {
             id: label
