@@ -73,6 +73,24 @@ ListViewExt {
         color: VLCStyle.palette.rdAccentMain
     }
 
+    // a drop on the empty list (a file onto the empty queue): where the first row will land, the
+    // dashed outline of the redesign's drop zones (Customize Player) in the accent with the add
+    // icon, instead of VLC's large accent box
+    emptyDropIndicator: Item {
+        height: VLCStyle.rd_rowHeight
+
+        RdDashedFrame {
+            anchors.fill: parent
+            color: VLCStyle.palette.rdAccentMain
+        }
+
+        RdIcon {
+            anchors.centerIn: parent
+            name: "add"
+            color: VLCStyle.palette.rdAccentMain
+        }
+    }
+
     function focusRow(index) {
         if (index < 0 || index >= count)
             return

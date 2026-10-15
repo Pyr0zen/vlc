@@ -389,6 +389,9 @@ QtObject {
     readonly property int rd_menuPadding: MainCtx.dp(4, scale)          // Figma menus: padding 4
     readonly property int rd_menuFadeDuration: 120                       // menu fade-in, video 5:08 at 60 fps
     readonly property int rd_rowHeight: MainCtx.dp(32, scale)
+    // drag ghost of a list row (IB-15, video 11:45): the row content only; its FG/1 title measures
+    // about #A9A9A9 over the black video, so about 75 % opaque
+    readonly property real rd_dragGhostOpacity: 0.75
     // Settings dialog (Figma "Settings - global" 1048x865: header 50, category column 216)
     readonly property int rd_settingsDialogWidth: MainCtx.dp(1048, scale)
     readonly property int rd_settingsDialogHeight: MainCtx.dp(865, scale)

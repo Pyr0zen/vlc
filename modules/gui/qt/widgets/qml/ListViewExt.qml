@@ -40,6 +40,10 @@ ListView {
     property var isDropAcceptableFunc
     property var acceptDropFunc
 
+    // redesign: optional indicator drawn at the top of the empty list while a drop is accepted
+    // there, instead of the default accent box (RdListView)
+    property Component emptyDropIndicator: null
+
     property Component defaultScrollBar: Component {
         ScrollBarExt { }
     }
@@ -264,7 +268,8 @@ ListView {
 
                 color: "transparent"
 
-                visible: (root.count === 0 && (dropArea.containsDrag || dropArea.dropOperationOngoing))
+                visible: !root.emptyDropIndicator
+                         && (root.count === 0 && (dropArea.containsDrag || dropArea.dropOperationOngoing))
 
                 opacity: 0.8
 
@@ -277,6 +282,13 @@ ListView {
 
                     color: theme.accent
                 }
+            }
+
+            Loader {
+                width: parent.width
+                active: !!root.emptyDropIndicator
+                        && (root.count === 0 && (dropArea.containsDrag || dropArea.dropOperationOngoing))
+                sourceComponent: root.emptyDropIndicator
             }
 
             DropArea {

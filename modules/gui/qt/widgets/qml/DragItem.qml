@@ -73,8 +73,13 @@ Item {
     // string => role
     property string coverRole: "cover"
 
-    property real padding: VLCStyle.margin_xsmall
-    property real margins: VLCStyle.margin_large
+    // redesign (IB-15, video 11:44-11:47): the ghost of a dragged list row is the row content only:
+    // its small thumbnail (when the item has artwork) and its title in FG/1, semi-transparent,
+    // without the card, its border and its shadow (as the library rows' ghost)
+    property bool rdRowGhost: false
+
+    property real padding: rdRowGhost ? 0 : VLCStyle.margin_xsmall
+    property real margins: rdRowGhost ? 0 : VLCStyle.margin_large
 
     readonly property ColorContext colorContext: ColorContext {
         id: theme
@@ -142,16 +147,18 @@ Item {
 
     Drag.dragType: Drag.None
 
-    Drag.hotSpot.x: - VLCStyle.dragDelta + margins
+    // redesign: the row ghost sits where the row content was, right of the grabbed handle
+    Drag.hotSpot.x: rdRowGhost ? VLCStyle.dp(16, VLCStyle.scale) : - VLCStyle.dragDelta + margins
 
-    Drag.hotSpot.y: - VLCStyle.dragDelta + margins
+    Drag.hotSpot.y: rdRowGhost ? height / 2 : - VLCStyle.dragDelta + margins
 
-    width: padding * 2
-           + coversXPos(_displayedCoversCount - 1) + coverSize + VLCStyle.margin_small
-           + subtitleLabel.width
-           + margins /* one margins comes from `coversXPos()` */
+    width: rdRowGhost ? rdGhost.implicitWidth
+                      : padding * 2
+                        + coversXPos(_displayedCoversCount - 1) + coverSize + VLCStyle.margin_small
+                        + subtitleLabel.width
+                        + margins /* one margins comes from `coversXPos()` */
 
-    height: coverSize + padding * 2 + margins * 2
+    height: rdRowGhost ? VLCStyle.rd_rowHeight : coverSize + padding * 2 + margins * 2
 
     enabled: false
 
@@ -451,6 +458,8 @@ Item {
         anchors.fill: parent
         anchors.margins: dragItem.margins
 
+        visible: !dragItem.rdRowGhost
+
         color: fsmLoadingFailed.active ? theme.bg.negative : theme.bg.primary
         border.color: theme.border
         border.width: VLCStyle.dp(1, VLCStyle.scale)
@@ -476,7 +485,8 @@ Item {
     Repeater {
         id: coverRepeater
 
-        readonly property var _model: dragItem._covers
+        // the row ghost draws its own thumbnail (rdGhost)
+        readonly property var _model: dragItem.rdRowGhost ? [] : dragItem._covers
 
         property int notReadyCount
 
@@ -581,7 +591,7 @@ Item {
         width: dragItem.coverSize
         height: dragItem.coverSize
         radius: dragItem.coverSize
-        visible: dragItem._indexesSize > dragItem._maxCovers
+        visible: !dragItem.rdRowGhost && dragItem._indexesSize > dragItem._maxCovers
         color: theme.bg.secondary
         border.width: VLCStyle.dp(1, VLCStyle.scale)
         border.color: theme.border
@@ -611,7 +621,7 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         x: dragItem.coversXPos(_displayedCoversCount - 1) + dragItem.coverSize + VLCStyle.margin_small
 
-        visible: text && text !== ""
+        visible: !dragItem.rdRowGhost && !!text && text !== ""
         text: {
             const data = dragItem._data[0]
             const title = data?.title
@@ -636,4 +646,46 @@ Item {
         color: theme.fg.secondary
     }
 
+    // redesign: the row ghost (rdRowGhost); grabbed with the rest of the item when the drag starts
+    Row {
+        id: rdGhost
+
+        readonly property var _first: dragItem._data.length > 0 ? dragItem._data[0] : null
+        readonly property string _cover: _first ? (_first[dragItem.coverRole] ?? "").toString() : ""
+        // only a real picture: no placeholder cover in the ghost
+        readonly property bool _hasCover: dragItem.rdRowGhost && _cover !== "" && _cover !== dragItem.defaultCover
+
+        visible: dragItem.rdRowGhost
+        height: VLCStyle.rd_rowHeight
+        spacing: VLCStyle.dp(10, VLCStyle.scale)
+        opacity: VLCStyle.rd_dragGhostOpacity
+
+        Image {
+            anchors.verticalCenter: parent.verticalCenter
+            width: VLCStyle.icon_dragItem
+            height: VLCStyle.icon_dragItem
+            visible: rdGhost._hasCover
+            source: rdGhost._hasCover ? rdGhost._cover : ""
+            sourceSize: Qt.size(width * MainCtx.effectiveDevicePixelRatio(Window.window),
+                                height * MainCtx.effectiveDevicePixelRatio(Window.window))
+            fillMode: Image.PreserveAspectCrop
+            // loaded before the ghost is grabbed
+            asynchronous: false
+        }
+
+        Text {
+            anchors.verticalCenter: parent.verticalCenter
+            width: Math.min(implicitWidth, VLCStyle.rd_sidePanelWidth)
+            elide: Text.ElideRight
+            text: {
+                if (dragItem._indexesSize > 1)
+                    return qsTr("%1 selected").arg(dragItem._indexesSize)
+                const first = rdGhost._first
+                return first?.title || first?.name || dragItem.defaultText
+            }
+            font.family: VLCStyle.rd_fontFamily
+            font.pixelSize: VLCStyle.rd_fontSize_label
+            color: VLCStyle.palette.rdFg1
+        }
+    }
 }

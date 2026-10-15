@@ -125,6 +125,8 @@ RdSidePanel {
                 id: dragItem
 
                 view: queueView
+                // the ghost is the row content only (IB-15)
+                rdRowGhost: true
 
                 onRequestData: (indexes, resolve, reject) => {
                     resolve(indexes.map((index) => {
