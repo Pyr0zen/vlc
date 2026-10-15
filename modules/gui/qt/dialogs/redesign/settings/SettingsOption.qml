@@ -281,6 +281,9 @@ SettingsRow {
         id: textControl
 
         Widgets.RdTextField {
+            // typed text not written to VLC yet (the dialog keeps it from an outside click)
+            readonly property bool dirty: activeFocus && text !== String(root.value ?? "")
+
             implicitWidth: root.controlWidth
             implicitHeight: root.controlHeight
             // Figma "Frame 265": the value in FG/A2
@@ -306,6 +309,8 @@ SettingsRow {
 
             Widgets.RdTextField {
                 id: pathField
+
+                readonly property bool dirty: activeFocus && text !== String(root.value ?? "")
 
                 width: root.controlWidth - browseButton.width - parent.spacing
                 height: root.controlHeight

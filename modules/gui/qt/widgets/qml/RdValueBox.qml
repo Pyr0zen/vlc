@@ -46,6 +46,8 @@ T.Control {
 
     readonly property SystemPalette rdPalette: VLCStyle.palette
     readonly property bool editing: input.activeFocus
+    // a typed value not applied yet (Enter applies it, leaving the box drops it)
+    readonly property bool dirty: editing && input.text !== control.text
 
     implicitWidth: VLCStyle.dp(140)
     implicitHeight: VLCStyle.dp(36)

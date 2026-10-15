@@ -311,21 +311,16 @@ Item {
         dim: true
         focus: true
         // a click outside closes the dialog (every setting applies at once), except while a
-        // value is being typed in a page: a number box applies on Enter, so a stray click would
-        // lose it (Escape and X still close; same rule as Open Network Stream)
+        // page holds a typed value not applied yet (a field's `dirty`: a number box applies on
+        // Enter, so a stray click would lose it); search fields hold no setting (Escape and X
+        // still close; same rule as Open Network Stream)
         closePolicy: _typingValue ? T.Popup.CloseOnEscape
                                   : (T.Popup.CloseOnEscape | T.Popup.CloseOnPressOutside)
 
         readonly property bool _typingValue: {
             const window = root.Window.window
-            const item = window ? window.activeFocusItem : null
-            if (!item || item.cursorPosition === undefined)
-                return false
-            // the search field holds no setting
-            for (let p = item; p; p = p.parent) {
-                if (p === searchField)
-                    return false
-                if (p === pagesArea)
+            for (let p = window ? window.activeFocusItem : null; p && p !== pagesArea; p = p.parent) {
+                if (p.dirty === true)
                     return true
             }
             return false
