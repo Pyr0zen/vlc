@@ -36,8 +36,10 @@ Row {
     property bool showFullscreenButton: false
 
     // redesign (W8.1b): an item shown between maximize and close, where Figma's top bar has its
-    // fullscreen button: the right zone of the editable top bar (TopBar.qml)
+    // fullscreen button: the right zone of the editable top bar (TopBar.qml). The slot takes its
+    // width; its owner binds it into `middleSlotItem`, and back into its own place when this set goes
     property Item middleItem: null
+    readonly property Item middleSlotItem: middleSlot
 
     readonly property bool useWinIcons: ((MainCtx.osName === MainCtx.Windows)&&(MainCtx.osVersion >= 10))
 
@@ -180,13 +182,6 @@ Row {
                 if (button)
                     Qt.callLater(button.updateRect)
             }
-        }
-
-        Binding {
-            target: windowButtonGroup.middleItem
-            when: !!windowButtonGroup.middleItem
-            property: "parent"
-            value: middleSlot
         }
     }
 

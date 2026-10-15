@@ -168,7 +168,7 @@ FocusScope{
 
                 AccessibleCompat.id: "topBarMenuButton"
 
-                focus: true
+                focus: !root._editable
                 checked: contextMenu.visible
 
                 visible: !root._editable
@@ -201,6 +201,8 @@ FocusScope{
         RdTopBarZone {
             id: leftZone
 
+            // the keyboard enters the top bar here when "..." is a control of the layout
+            focus: root._editable
             visible: root._editable
             anchors.left: leftGroup.right
             anchors.verticalCenter: parent.verticalCenter
@@ -308,13 +310,15 @@ FocusScope{
                 id: rightZone
 
                 readonly property bool _inButtons: root.showCSD && !!csdDecorations.item
-                                                   && csdDecorations.item.middleItem !== undefined
+                                                   && !!csdDecorations.item.middleSlotItem
 
-                // (CSDWindowButtonSet puts it into its middle slot while it is its middleItem)
+                // in the window buttons' middle slot while they exist (the binding takes it back
+                // when the set is unloaded: fullscreen, native decorations)
+                parent: _inButtons ? csdDecorations.item.middleSlotItem : rightGroup
                 visible: root._editable
                 width: implicitWidth
                 height: rightGroup.height
-                anchors.right: _inButtons ? undefined : (root.showCSD ? csdDecorations.left : rightGroup.right)
+                anchors.right: _inButtons ? undefined : (root.showCSD ? csdDecorations.left : parent.right)
                 anchors.rightMargin: (_inButtons || root.showCSD) ? 0 : VLCStyle.dp(6, VLCStyle.scale)
 
                 // Figma: 36 wide cells as the window buttons, no gap
