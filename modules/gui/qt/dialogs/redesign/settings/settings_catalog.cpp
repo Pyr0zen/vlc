@@ -349,6 +349,7 @@ SettingsCatalog::SettingsCatalog(qt_intf_t* intf, QObject* parent)
     // VLC raises its priority in vlc_threads_setup() (src/win32/thread.c), before it reads its
     // configuration file, so only "--high-priority" on the command line had an effect: the saved
     // option applies here, when the interface starts (created once, from MainUI)
+    m_startPriority = GetPriorityClass(GetCurrentProcess());
     if (var_InheritBool(p_intf, "high-priority"))
         setHighPriority(true);
 #endif
@@ -685,10 +686,16 @@ QString SettingsCatalog::language() const
 void SettingsCatalog::setHighPriority(bool high) const
 {
 #ifdef _WIN32
-    // as vlc_threads_setup(): above normal, else high; normal again when turned off
+    // as vlc_threads_setup(): above normal, else high; when turned off, the class VLC started
+    // with (normal if it started raised, by --high-priority)
     const HANDLE process = GetCurrentProcess();
     if (!high)
-        SetPriorityClass(process, NORMAL_PRIORITY_CLASS);
+    {
+        const bool raised = m_startPriority == ABOVE_NORMAL_PRIORITY_CLASS
+                            || m_startPriority == HIGH_PRIORITY_CLASS;
+        SetPriorityClass(process, (m_startPriority == 0 || raised) ? NORMAL_PRIORITY_CLASS
+                                                                   : m_startPriority);
+    }
     else if (SetPriorityClass(process, ABOVE_NORMAL_PRIORITY_CLASS)
              || SetPriorityClass(process, HIGH_PRIORITY_CLASS))
         msg_Dbg(p_intf, "raised process priority");

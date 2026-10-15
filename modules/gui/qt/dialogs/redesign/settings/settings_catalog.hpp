@@ -151,6 +151,9 @@ private:
     QThreadPool m_pool;
     bool m_loading = false;
     bool m_ready = false;
+    // Windows: the process priority class VLC started with, put back when the option is
+    // turned off (0: not known)
+    unsigned long m_startPriority = 0;
     Catalog m_catalog;
 };
 
