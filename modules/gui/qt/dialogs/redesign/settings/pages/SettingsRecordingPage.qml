@@ -63,6 +63,13 @@ SettingsPage {
     SettingsSection {
         title: qsTr("Casting")
 
+        // S2-10 (video 18:23), Decision 36: on, VLC looks for cast devices in the background;
+        // off, only while the Render picker is open. MainCtx applies it after the write
+        SettingsOption {
+            option: "qt-cast-discovery"
+            text: qsTr("Discover cast devices")
+        }
+
         SettingsOption {
             option: "sout-chromecast-conversion-quality"
             text: qsTr("Cast quality")

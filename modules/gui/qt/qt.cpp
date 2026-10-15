@@ -316,6 +316,11 @@ static void ShowDialog   ( intf_thread_t *, int, int, intf_dialog_args_t * );
     "Lowest and Low leave more to other programs. \"Give VLC high priority\" " \
     "keeps it at High or above." )
 
+#define CAST_DISCOVERY_TEXT N_( "Discover cast devices" )
+#define CAST_DISCOVERY_LONGTEXT N_( "Look for Chromecast and other cast devices on the " \
+    "network in the background, so the Render list shows them at once. When off, " \
+    "VLC only looks while that list is open." )
+
 static const int initial_prefs_view_list[] = { 0, 1, 2 };
 static const char *const initial_prefs_view_list_texts[] =
     { N_("Simple"), N_("Advanced"), N_("Expert") };
@@ -508,6 +513,9 @@ vlc_module_begin ()
     add_bool( "qt-use-scroll-handler", true, SCROLL_HANDLER_TEXT, SCROLL_HANDLER_LONGTEXT )
 
     add_bool( "qt-verbose", false, VERBOSE_TEXT, VERBOSE_LONGTEXT )
+
+    /* redesign: Settings > Recording > Casting (S2-10) */
+    add_bool( "qt-cast-discovery", true, CAST_DISCOVERY_TEXT, CAST_DISCOVERY_LONGTEXT )
 
     /* redesign: Settings > Performance > Smooth Playback (S2-07) */
     add_integer( "qt-process-priority", 0, PROCESS_PRIORITY_TEXT, PROCESS_PRIORITY_LONGTEXT )

@@ -499,6 +499,10 @@ protected:
     int m_videoDoubleClick = 0;
     bool m_singleClickPauseBlocked = false;
     void applyVideoDoubleClick();
+    // redesign (S2-10): "qt-cast-discovery", applied once the window has shown
+    bool m_castDiscovery = true;
+    bool m_windowShown = false;
+    void applyCastDiscovery();
     // redesign: options MainCtx writes itself (accent, fullscreen sensitivity) reach the
     // configuration file shortly after a change, not only when VLC quits
     QTimer* m_configSaveTimer = nullptr;

@@ -478,6 +478,19 @@ void MainCtx::loadPrefs(const bool callSignals)
 
     loadFromVLCOption(m_videoDoubleClick, "qt-video-double-click", nullptr);
     applyVideoDoubleClick();
+
+    loadFromVLCOption(m_castDiscovery, "qt-cast-discovery", nullptr);
+    applyCastDiscovery();
+}
+
+void MainCtx::applyCastDiscovery()
+{
+    // S2-10 / Decision 36: on, cast devices are looked for in the background so the Render
+    // picker lists them at once; off, only while the picker is open. Started after the window
+    // has shown (startup first); the services start on a worker thread
+    if (!m_windowShown || !p_intf->p_mainPlayerController)
+        return;
+    THEMIM->getRendererManager()->setBackgroundDiscovery(m_castDiscovery);
 }
 
 void MainCtx::applyVideoDoubleClick()
@@ -630,6 +643,13 @@ void MainCtx::updateIntfScaleFactor()
 void MainCtx::onWindowVisibilityChanged(QWindow::Visibility visibility)
 {
     m_windowVisibility = visibility;
+
+    if (!m_windowShown && visibility != QWindow::Hidden && visibility != QWindow::Minimized)
+    {
+        m_windowShown = true;
+        // after the first frames
+        QMetaObject::invokeMethod(this, &MainCtx::applyCastDiscovery, Qt::QueuedConnection);
+    }
 }
 
 void MainCtx::setHasAcrylicSurface(const bool v)

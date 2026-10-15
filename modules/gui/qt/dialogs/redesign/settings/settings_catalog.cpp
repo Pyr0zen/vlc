@@ -109,7 +109,8 @@ const QSet<QString>& curatedOptions()
         "hw-dec", "dec-dev", "postproc-q", "avcodec-skiploopfilter", "avcodec-threads", "drop-late-frames",
         "high-priority", "qt-process-priority", "codec", "clock-synchro", "clock-jitter", "cr-average",
         // Recording
-        "input-record-path", "input-record-native", "sout-chromecast-conversion-quality",
+        "input-record-path", "input-record-native", "qt-cast-discovery",
+        "sout-chromecast-conversion-quality",
         "sout-display", "sout-audio", "sout-video", "sout-spu", "sout-x264-preset", "sout-x264-tune",
         "sout-keep", "sout-all", "sout-x264-profile", "sout-x264-level",
         // Extensions
