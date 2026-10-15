@@ -25,7 +25,8 @@ on:
         default: vlc
 
 concurrency:
-  group: build-windows-${{ github.ref }}
+  # one queue per branch and brand profile: a vlc and a public build of the same branch run side by side
+  group: build-windows-${{ github.ref }}-${{ inputs.brand || 'vlc' }}
   cancel-in-progress: true
 
 env:
