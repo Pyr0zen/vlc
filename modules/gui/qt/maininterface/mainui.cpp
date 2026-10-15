@@ -38,6 +38,8 @@
 #include "player/rd_seek_thumbnailer.hpp"
 #include "player/rd_waveform.hpp"
 #include "player/rd_waveform_item.hpp"
+#include "player/rd_now_playing.hpp"
+#include "dialogs/toolbar/rd_profiles.hpp"
 #include "player/rd_media_info.hpp"
 
 #include "dialogs/toolbar/controlbar_profile_model.hpp"
@@ -361,6 +363,12 @@ void MainUI::registerQMLTypes()
         qmlRegisterSingletonInstance<RdWaveform>(uri, versionMajor, versionMinor, "RdWaveform",
                                                  new RdWaveform(m_intf, m_intf->p_mainPlayerController, this));
         qmlRegisterType<RdWaveformItem>(uri, versionMajor, versionMinor, "RdWaveformItem");
+        // redesign (W8.1b / W8.2): what the Customize Player items show about the playing
+        // media, and the profiles (top bar layout, settings)
+        qmlRegisterSingletonInstance<RdNowPlaying>(uri, versionMajor, versionMinor, "RdNowPlaying",
+                                                   new RdNowPlaying(m_mainCtx, m_intf->p_mainPlayerController, this));
+        qmlRegisterSingletonInstance<RdProfiles>(uri, versionMajor, versionMinor, "RdProfiles",
+                                                 new RdProfiles(m_intf, m_mainCtx, this));
         // redesign: the Show Statistics and Show Metadata panels of the player (W4.3b)
         qmlRegisterType<RdInputStats>(uri, versionMajor, versionMinor, "RdInputStats");
         qmlRegisterType<RdMediaMeta>(uri, versionMajor, versionMinor, "RdMediaMeta");

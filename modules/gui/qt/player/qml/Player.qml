@@ -1376,11 +1376,9 @@ FocusScope {
                  : rootPlayer.width
 
         focus: true
-        // the media's title, or VLC's display name (the file name) when it has no title tag
-        title: Player.title !== "" ? Player.title : Player.name
+        // (the title, library toggle and folder chip are controls of the top bar layout: W8.1b)
 
         pinControls: MainCtx.pinVideoControls
-        libraryOpen: rootPlayer._libraryShown
 
         showCSD: MainCtx.clientSideDecoration && (MainCtx.intfMainWindow.visibility !== Window.FullScreen)
         showToolbar: MainCtx.hasToolbarMenu && (MainCtx.intfMainWindow.visibility !== Window.FullScreen)
@@ -1425,8 +1423,14 @@ FocusScope {
             MainCtx.playerView = false
         }
 
-        onLibraryToggleRequested: rootPlayer.toggleLibrary(false)
-        onFolderRequested: rootPlayer.toggleLibrary(true)
+        // the library toggle and the folder chip, in either bar (W8.1b)
+        Connections {
+            target: RdPanels
+
+            function onLibraryRequested(reveal) {
+                rootPlayer.toggleLibrary(reveal)
+            }
+        }
 
         // redesign: no acrylic background behind the top bar, it paints its own background
         // (BG/A3 in Dark, BG/A3 Transparent in Light, see TopBar.qml)
