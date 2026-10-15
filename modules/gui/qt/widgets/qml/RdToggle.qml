@@ -32,6 +32,8 @@ T.AbstractButton {
     implicitHeight: VLCStyle.dp(32)
 
     focusPolicy: Qt.StrongFocus
+    // disabled: Figma's 30 % rows ("Settings - library")
+    opacity: enabled ? 1 : VLCStyle.rd_disabledRowOpacity
 
     Accessible.role: Accessible.CheckBox
     Accessible.checked: control.checked

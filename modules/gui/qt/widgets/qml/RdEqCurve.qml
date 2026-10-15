@@ -33,11 +33,13 @@ Item {
     implicitWidth: VLCStyle.dp(24)
     implicitHeight: VLCStyle.dp(12)
 
+    // Figma "Vector 45" (EQ icon 2372:8560): 22 px at x 1, 2 px stroke FG/A2
     Rectangle {
         anchors.verticalCenter: parent.verticalCenter
-        width: parent.width
-        height: VLCStyle.dp(1)
-        color: VLCStyle.palette.rdFgA3
+        x: VLCStyle.dp(1)
+        width: parent.width - VLCStyle.dp(2)
+        height: VLCStyle.dp(2)
+        color: VLCStyle.palette.rdFgA2
     }
 
     Repeater {

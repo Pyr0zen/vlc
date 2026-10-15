@@ -67,8 +67,13 @@ T.ComboBox {
         color: control.rdPalette.rdFgA2
     }
 
+    // disabled (no choices, dependent setting): Figma's 30 % rows ("Settings - library")
+    opacity: enabled ? 1 : VLCStyle.rd_disabledRowOpacity
+
+    // the chevron sits 16 px from the edge (Figma "option" 2372:8360: padding 14 inside the 2 px
+    // frame)
     indicator: RdIcon {
-        x: control.width - width - VLCStyle.dp(14)
+        x: control.width - width - VLCStyle.dp(16)
         y: (control.height - height) / 2
         name: control.openUpward ? "chevron_direction-up" : "chevron_direction-down"
         color: control.rdPalette.rdFgA2
@@ -80,6 +85,7 @@ T.ComboBox {
 
         width: ListView.view ? ListView.view.width : implicitWidth
         height: VLCStyle.dp(44)
+        radius: VLCStyle.rd_radius_small
         text: model[control.textRole] !== undefined ? model[control.textRole]
                                                     : (model.modelData !== undefined ? model.modelData : model.display)
         selected: control.currentIndex === index
@@ -116,7 +122,12 @@ T.ComboBox {
             radius: VLCStyle.rd_radius_normal
             color: control.rdPalette.rdBgA4
 
-            RdShadow { }
+            // Figma "Options" 2372:8307: drop shadow #000000 35 %, y 4, blur 13.8
+            RdShadow {
+                color: control.rdPalette.rdListShadow
+                yOffset: VLCStyle.dp(4)
+                blurRadius: VLCStyle.dp(13.8)
+            }
         }
     }
 }

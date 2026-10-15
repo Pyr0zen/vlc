@@ -178,6 +178,7 @@ RdSidePanelPage {
 
                 width: ListView.view ? ListView.view.width : implicitWidth
                 height: VLCStyle.dp(44)
+                radius: VLCStyle.rd_radius_small
                 text: modelData
                 selected: eqPresets.currentIndex === index
                 highlighted: eqPresets.highlightedIndex === index

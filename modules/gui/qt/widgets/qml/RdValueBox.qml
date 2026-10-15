@@ -53,6 +53,8 @@ T.Control {
     rightPadding: showSwatch ? VLCStyle.dp(5) : VLCStyle.dp(18)
 
     hoverEnabled: true
+    // disabled: Figma's 30 % rows ("Settings - library")
+    opacity: enabled ? 1 : VLCStyle.rd_disabledRowOpacity
 
     background: Rectangle {
         radius: VLCStyle.rd_radius_normal

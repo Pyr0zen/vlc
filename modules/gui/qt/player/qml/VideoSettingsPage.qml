@@ -203,7 +203,7 @@ RdSidePanelPage {
                         id: chevron
 
                         anchors.right: parent.right
-                        anchors.rightMargin: VLCStyle.dp(14)
+                        anchors.rightMargin: VLCStyle.dp(16)
                         anchors.verticalCenter: parent.verticalCenter
                         name: "chevron_direction-down"
                         color: VLCStyle.palette.rdFgA2

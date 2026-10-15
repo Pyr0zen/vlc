@@ -49,6 +49,8 @@ T.Slider {
     implicitHeight: labelRow.visible ? labelsY + labelRow.height + VLCStyle.dp(4) : VLCStyle.dp(24)
 
     focusPolicy: Qt.StrongFocus
+    // disabled: Figma's 30 % rows ("Settings - library")
+    opacity: enabled ? 1 : VLCStyle.rd_disabledRowOpacity
 
     Keys.priority: Keys.AfterItem
     Keys.onPressed: (event) => Navigation.defaultKeyAction(event)

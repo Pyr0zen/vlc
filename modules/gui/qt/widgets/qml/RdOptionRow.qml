@@ -38,6 +38,8 @@ T.ItemDelegate {
     property bool reserveIconSpace: false   // keep the icon column when the row has no icon (menus)
     property bool active: false             // highlighted without hover, e.g. its submenu is open
     property color iconColor: control.rdPalette.rdFgA2
+    // menu rows 6; dropdown list options 4 (Figma "option" 2372:8369)
+    property real radius: VLCStyle.rd_radius_normal
 
     readonly property SystemPalette rdPalette: VLCStyle.palette
 
@@ -56,7 +58,7 @@ T.ItemDelegate {
     Keys.onPressed: (event) => Navigation.defaultKeyAction(event)
 
     background: Rectangle {
-        radius: VLCStyle.rd_radius_normal
+        radius: control.radius
         color: (control.hovered || control.visualFocus || control.selected || control.active)
                ? control.rdPalette.rdBgA2 : "transparent"
     }
