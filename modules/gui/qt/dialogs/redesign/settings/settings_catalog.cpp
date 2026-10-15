@@ -23,11 +23,15 @@
 #include "settings_catalog.hpp"
 
 #include <QCollator>
+#include <QCoreApplication>
+#include <QDateTime>
 #include <QDesktopServices>
 #include <QDir>
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QPointer>
+#include <QProcess>
+#include <QTemporaryFile>
 
 #include <algorithm>
 #include <cfloat>
@@ -39,7 +43,12 @@
 
 #ifdef _WIN32
 #include <windows.h>
+#include <shellapi.h>
+#include <string>
 #include "util/registry.hpp"
+#elif defined(__unix__) || defined(__APPLE__)
+#include <cerrno>
+#include <sys/resource.h>
 #endif
 
 #include "maininterface/mainctx.hpp"
@@ -58,17 +67,17 @@ const QSet<QString>& curatedOptions()
         "qt-error-dialogs", "logmode", "stats", "syslog", "syslog-debug", "syslog-ident",
         "syslog-facility", "qt-verbose", "qt-accent-color",
         // Interface
-        "intf", "skins2-last", "embedded-video", "qt-video-autoresize", "video-on-top", "qt-titlebar",
+        "intf", "skins2-last", "embedded-video", "qt-video-autoresize", "qt-remember-window", "video-on-top", "qt-titlebar",
         "qt-name-in-title", "qt-fullscreen-screennumber", "qt-minimal-view", "qt-pin-controls",
         "mouse-hide-timeout", "qt-fs-controller", "qt-system-tray", "qt-start-minimized",
-        "qt-notification", "playlist-tree", "qt-opacity", "qt-pause-minimized", "qt-auto-raise",
+        "qt-notification", "qt-notification-duration", "playlist-tree", "qt-opacity", "qt-pause-minimized", "qt-auto-raise",
         "qt-bgcone", "qt-embedded-open", "qt-icon-change", "qt-fs-opacity", "qt-fs-sensitivity",
         // Privacy
-        "save-recentplay", "restore-playback-pos", "metadata-network-access", "lastfm-username",
+        "save-recentplay", "restore-playback-pos", "qt-history-filter", "metadata-network-access", "lastfm-username",
         "lastfm-password", "scrobbler-url", "qt-privacy-ask",
         // Controls
         "extrashort-jump-size", "short-jump-size", "medium-jump-size", "long-jump-size",
-        "mouse-pause-policy", "hotkeys-y-wheel-mode", "hotkeys-x-wheel-mode", "http-port",
+        "mouse-pause-policy", "qt-video-double-click", "hotkeys-y-wheel-mode", "hotkeys-x-wheel-mode", "http-port",
         "http-password", "qt-disable-volume-keys", "mouse-events", "keyboard-events",
         // Playback
         "playlist-autostart", "rate", "playlist-cork", "preferred-resolution", "menu-language",
@@ -84,7 +93,7 @@ const QSet<QString>& curatedOptions()
         // Audio
         "audio", "mmdevice-audio-device", "waveout-audio-device",
         "mix-mode", "qt-max-volume", "volume-save", "mmdevice-volume", "waveout-volume",
-        "volume-step", "norm-max-level", "audio-replay-gain-mode", "audio-replay-gain-preamp",
+        "volume-step", "norm-max-level", "qt-night-mode-restore", "audio-replay-gain-mode", "audio-replay-gain-preamp",
         "equalizer-2pass", "pitch-shift", "audio-language", "audio-desync", "audio-visual",
         "mmdevice-passthrough", "force-dolby-surround", "soxr-resampler-quality", "role",
         // Subtitles
@@ -104,11 +113,12 @@ const QSet<QString>& curatedOptions()
         "http-proxy-pwd", "gnutls-system-trust", "gnutls-priorities", "ipv4-timeout", "mtu",
         // Performance
         "hw-dec", "dec-dev", "postproc-q", "avcodec-skiploopfilter", "avcodec-threads", "drop-late-frames",
-        "high-priority", "codec", "clock-synchro", "clock-jitter", "cr-average",
+        "high-priority", "qt-process-priority", "codec", "clock-synchro", "clock-jitter", "cr-average",
         // Recording
-        "input-record-path", "input-record-native", "sout-chromecast-conversion-quality",
+        "input-record-path", "input-record-native", "qt-cast-discovery",
+        "sout-chromecast-conversion-quality",
         "sout-display", "sout-audio", "sout-video", "sout-spu", "sout-x264-preset", "sout-x264-tune",
-        "sout-keep", "sout-all", "sout-x264-profile", "sout-x264-level",
+        "sout-keep", "sout-all", "sout-x264-profile", "sout-x264-level", "sout-transcode-venc",
         // Extensions
         "qt-autoload-extensions",
     };
@@ -337,6 +347,20 @@ QStringList filterWords(const QString& filter)
     return filter.toLower().split(QLatin1Char(' '), Qt::SkipEmptyParts);
 }
 
+#ifndef _WIN32
+// the nice value VLC started with (0 when unknown)
+int startNice()
+{
+#if defined(__unix__) || defined(__APPLE__)
+    errno = 0;
+    const int value = getpriority(PRIO_PROCESS, 0);
+    return errno == 0 ? value : 0;
+#else
+    return 0;
+#endif
+}
+#endif
+
 } // namespace
 
 SettingsCatalog::SettingsCatalog(qt_intf_t* intf, QObject* parent)
@@ -344,20 +368,27 @@ SettingsCatalog::SettingsCatalog(qt_intf_t* intf, QObject* parent)
     , p_intf(intf)
 {
     m_pool.setMaxThreadCount(1);
+    m_rescanPool.setMaxThreadCount(1);
 
-#ifdef _WIN32
     // VLC raises its priority in vlc_threads_setup() (src/win32/thread.c), before it reads its
     // configuration file, so only "--high-priority" on the command line had an effect: the saved
-    // option applies here, when the interface starts (created once, from MainUI)
+    // options apply here, when the interface starts (created once, from MainUI)
+#ifdef _WIN32
     m_startPriority = GetPriorityClass(GetCurrentProcess());
-    if (var_InheritBool(p_intf, "high-priority"))
-        setHighPriority(true);
+    const bool high = var_InheritBool(p_intf, "high-priority");
+#else
+    m_startNice = startNice();
+    const bool high = false;
 #endif
+    const int level = var_InheritInteger(p_intf, "qt-process-priority");
+    if (high || level != 0)
+        setPriority(high, level);
 }
 
 SettingsCatalog::~SettingsCatalog()
 {
     m_pool.waitForDone();
+    m_rescanPool.waitForDone();
 }
 
 void SettingsCatalog::load()
@@ -590,8 +621,8 @@ void SettingsCatalog::resetAll()
         mainCtx->reloadPrefs();
 #ifdef _WIN32
     setLanguage(QStringLiteral("auto"));
-    setHighPriority(false);
 #endif
+    setPriority(false, 0);
     emit resetDone();
 }
 
@@ -663,27 +694,155 @@ QString SettingsCatalog::language() const
 #endif
 }
 
-void SettingsCatalog::setHighPriority(bool high) const
+bool SettingsCatalog::setPriority(bool high, int level) const
 {
+    // Decision 35: Lowest / Low / Normal / High / Highest; "high-priority" raises it as
+    // vlc_threads_setup() does (above normal), so to at least High
+    level = std::clamp(level, -2, 2);
+    if (high)
+        level = std::max(level, 1);
 #ifdef _WIN32
-    // as vlc_threads_setup(): above normal, else high; when turned off, the class VLC started
-    // with (normal if it started raised, by --high-priority)
-    const HANDLE process = GetCurrentProcess();
-    if (!high)
-    {
-        const bool raised = m_startPriority == ABOVE_NORMAL_PRIORITY_CLASS
-                            || m_startPriority == HIGH_PRIORITY_CLASS;
-        SetPriorityClass(process, (m_startPriority == 0 || raised) ? NORMAL_PRIORITY_CLASS
-                                                                   : m_startPriority);
-    }
-    else if (SetPriorityClass(process, ABOVE_NORMAL_PRIORITY_CLASS)
-             || SetPriorityClass(process, HIGH_PRIORITY_CLASS))
-        msg_Dbg(p_intf, "raised process priority");
-    else
-        msg_Dbg(p_intf, "could not raise process priority");
+    static const DWORD classes[] = { IDLE_PRIORITY_CLASS, BELOW_NORMAL_PRIORITY_CLASS,
+                                     NORMAL_PRIORITY_CLASS, ABOVE_NORMAL_PRIORITY_CLASS,
+                                     HIGH_PRIORITY_CLASS };
+    DWORD wanted = classes[level + 2];
+    // Normal: the class VLC started with (normal if it started raised, by --high-priority)
+    const bool raised = m_startPriority == ABOVE_NORMAL_PRIORITY_CLASS
+                        || m_startPriority == HIGH_PRIORITY_CLASS;
+    if (level == 0 && m_startPriority != 0 && !raised)
+        wanted = m_startPriority;
+    if (SetPriorityClass(GetCurrentProcess(), wanted))
+        return true;
+    msg_Warn(p_intf, "could not change the process priority");
+    return false;
+#elif defined(__unix__) || defined(__APPLE__)
+    // nice values; Normal is the one VLC started with. Raising the priority (or lowering the
+    // nice value again) needs privileges the system may refuse
+    static const int nices[] = { 19, 10, 0, -5, -10 };
+    const int wanted = level == 0 ? m_startNice : nices[level + 2];
+    if (setpriority(PRIO_PROCESS, 0, wanted) == 0)
+        return true;
+    msg_Warn(p_intf, "could not change the process priority: %s", vlc_strerror_c(errno));
+    return false;
 #else
-    Q_UNUSED(high);
+    return false;
 #endif
+}
+
+void SettingsCatalog::rescanPlugins()
+{
+    if (m_rescanning)
+        return;
+
+    // VLC's plugin folder and its cache generator (bin/cachegen.c, installed next to vlc.exe on
+    // Windows): it writes plugins.dat as "--reset-plugins-cache" does
+    char* dir = config_GetSysPath(VLC_PKG_LIB_DIR, "plugins");
+#ifdef _WIN32
+    char* tool = config_GetSysPath(VLC_PKG_LIBEXEC_DIR, "vlc-cache-gen.exe");
+#else
+    char* tool = config_GetSysPath(VLC_PKG_LIBEXEC_DIR, "vlc-cache-gen");
+#endif
+    const QString plugins = dir ? qfu(dir) : QString();
+    const QString program = tool ? qfu(tool) : QString();
+    free(dir);
+    free(tool);
+    if (plugins.isEmpty() || !QFileInfo::exists(program))
+    {
+        msg_Warn(p_intf, "cannot rescan the plugins: vlc-cache-gen not found");
+        emit rescanFinished(false);
+        return;
+    }
+
+    const QString cacheFile = QDir(plugins).filePath(QStringLiteral("plugins.dat"));
+    // vlc-cache-gen exits with 0 even when it could not write: the file tells (with some slack
+    // for the file system's time resolution)
+    const QDateTime started = QDateTime::currentDateTime().addSecs(-2);
+
+    bool writable = false;
+    {
+        QTemporaryFile probe(QDir(plugins).filePath(QStringLiteral("rescan-XXXXXX.tmp")));
+        writable = probe.open();
+    }
+
+    // the elevated run's process (Windows)
+    void* elevated = nullptr;
+    if (!writable)
+    {
+#ifdef _WIN32
+        // VLC's folder needs administrator rights (Program Files): Windows asks the user. Here,
+        // on the UI thread (COM is set up for the shell); the wait runs on the worker
+        const std::wstring file = QDir::toNativeSeparators(program).toStdWString();
+        const std::wstring parameters = (QLatin1Char('"') + QDir::toNativeSeparators(plugins)
+                                         + QLatin1Char('"')).toStdWString();
+        SHELLEXECUTEINFOW info {};
+        info.cbSize = sizeof(info);
+        info.fMask = SEE_MASK_NOCLOSEPROCESS;
+        info.lpVerb = L"runas";
+        info.lpFile = file.c_str();
+        info.lpParameters = parameters.c_str();
+        info.nShow = SW_HIDE;
+        if (!ShellExecuteExW(&info) || !info.hProcess)
+        {
+            msg_Dbg(p_intf, "plugin rescan refused or cancelled");
+            emit rescanFinished(false);
+            return;
+        }
+        elevated = info.hProcess;
+#else
+        msg_Warn(p_intf, "cannot rescan the plugins: %s is not writable", qtu(plugins));
+        emit rescanFinished(false);
+        return;
+#endif
+    }
+
+    m_rescanning = true;
+    emit rescanningChanged();
+
+    QPointer<SettingsCatalog> self(this);
+    m_rescanPool.start([self, program, plugins, cacheFile, started, elevated]() {
+        bool ran = false;
+#ifndef _WIN32
+        Q_UNUSED(elevated);
+#else
+        if (elevated)
+        {
+            WaitForSingleObject(static_cast<HANDLE>(elevated), INFINITE);
+            CloseHandle(static_cast<HANDLE>(elevated));
+            ran = true;
+        }
+        else
+#endif
+        {
+            QProcess cachegen;
+#ifdef _WIN32
+            // a console program: no console window
+            cachegen.setCreateProcessArgumentsModifier([](QProcess::CreateProcessArguments* args) {
+                args->flags |= CREATE_NO_WINDOW;
+            });
+#endif
+            cachegen.start(program, { QDir::toNativeSeparators(plugins) });
+            ran = cachegen.waitForFinished(-1) && cachegen.exitStatus() == QProcess::NormalExit
+                  && cachegen.exitCode() == 0;
+        }
+        const QFileInfo cache(cacheFile);
+        const bool ok = ran && cache.exists() && cache.lastModified() >= started;
+        QMetaObject::invokeMethod(self, [self, ok]() {
+            if (!self)
+                return;
+            self->m_rescanning = false;
+            emit self->rescanningChanged();
+            emit self->rescanFinished(ok);
+        }, Qt::QueuedConnection);
+    });
+}
+
+bool SettingsCatalog::startNewInstance() const
+{
+    // with "Only allow one VLC window", the new VLC would hand over to this one and leave
+    QStringList arguments;
+    if (config_FindConfig("one-instance"))
+        arguments << QStringLiteral("--no-one-instance");
+    return QProcess::startDetached(QCoreApplication::applicationFilePath(), arguments);
 }
 
 void SettingsCatalog::setLanguage(const QString& iso)

@@ -58,8 +58,19 @@ public:
 
     bool supportsThreadedSurfaceUpdates() const { return m_threadedSurfaceUpdates; };
 
+    // redesign (S2-05): what a left double click on the video does ("qt-video-double-click")
+    enum class DoubleClickAction
+    {
+        Fullscreen = 0, // VLC's own toggle (src/video_output/video_window.c)
+        PlayPause = 1,  // playPauseRequested()
+        Nothing = 2
+    };
+    void setDoubleClickAction(DoubleClickAction action) { m_doubleClickAction = action; }
+
 signals:
     void ctxChanged(MainCtx*);
+    // a left double click with DoubleClickAction::PlayPause
+    void playPauseRequested();
     bool videoEnabledChanged(bool);
     bool hasVideoEmbedChanged(bool);
     void surfacePropertiesChanged(const std::optional<QSizeF>& size,
@@ -82,6 +93,7 @@ protected:
     vlc_window_t* m_voutWindow = nullptr;
     bool m_videoEmbed = false;
     bool m_threadedSurfaceUpdates = false;
+    DoubleClickAction m_doubleClickAction = DoubleClickAction::Fullscreen;
 };
 
 

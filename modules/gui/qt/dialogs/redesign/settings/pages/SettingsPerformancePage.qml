@@ -33,6 +33,14 @@ SettingsPage {
         return RdEffects.values[RdEffects.optionKey(name)]
     }
 
+    // the system refused the last priority change (raising it needs privileges outside Windows)
+    property bool _priorityRefused: false
+
+    function _applyPriority() {
+        _priorityRefused = !SettingsCatalog.setPriority(highPriorityRow.value === true,
+                                                        Number(processPriorityRow.value ?? 0))
+    }
+
     // VLC tries the listed decoders first, then all the others ("codec" is not strict)
     readonly property var _decoderChoices: {
         const list = [{ value: "any", text: qsTr("Automatic") }]
@@ -156,12 +164,104 @@ SettingsPage {
         // Windows: VLC's process priority, raised at once and when VLC starts (the core reads
         // the option before the configuration file, so SettingsCatalog applies the saved value)
         SettingsOption {
+            id: highPriorityRow
+
             option: "high-priority"
             text: qsTr("Give VLC high priority")
 
             onValueChanged: {
                 if (typeof value === "boolean")
-                    SettingsCatalog.setHighPriority(value)
+                    root._applyPriority()
+            }
+        }
+
+        // S2-07 (video 18:20), Decision 35: in words; applied at once and when VLC starts
+        // (SettingsCatalog). Figma's row is a 38 high text input
+        SettingsOption {
+            id: processPriorityRow
+
+            option: "qt-process-priority"
+            minimumLineHeight: VLCStyle.dp(38)
+            text: qsTr("Process priority")
+            choices: [
+                { value: -2, text: qsTr("Lowest") },
+                { value: -1, text: qsTr("Low") },
+                { value: 0, text: qsTr("Normal") },
+                { value: 1, text: qsTr("High") },
+                { value: 2, text: qsTr("Highest") }
+            ]
+
+            onValueChanged: {
+                if (value !== undefined)
+                    root._applyPriority()
+            }
+
+            belowShown: root._priorityRefused
+            below: Text {
+                width: processPriorityRow.width
+                wrapMode: Text.WordWrap
+                text: qsTr("The system did not let VLC change its priority.")
+                font.family: VLCStyle.rd_fontFamily
+                font.pixelSize: VLCStyle.rd_fontSize_label
+                color: VLCStyle.palette.rdFgA3
+            }
+        }
+
+        // S2-08 (video 18:20): Figma "Rescan" button 320x32. VLC's plugin cache is rebuilt in
+        // the background; a running VLC keeps its plugins, so the result offers a restart
+        SettingsRow {
+            id: rescanRow
+
+            // "": not run yet, "done", "failed"
+            property string result: ""
+
+            text: qsTr("Rescan plugins")
+            description: qsTr("Looks through VLC's plugin folder again and rebuilds the list of plugins, so plugins you added or removed are found. VLC uses the new list the next time it starts. In the Program Files folder, Windows asks for administrator rights.")
+            keywords: "plugins cache rescan reset-plugins-cache vlc-cache-gen"
+            belowShown: result !== ""
+
+            Connections {
+                target: SettingsCatalog
+
+                function onRescanFinished(ok) {
+                    rescanRow.result = ok ? "done" : "failed"
+                }
+            }
+
+            Widgets.RdButton {
+                style: Widgets.RdButton.Style.Plain
+                implicitWidth: VLCStyle.dp(320)
+                text: SettingsCatalog.rescanning ? qsTr("Rescanning...") : qsTr("Rescan")
+                enabled: !SettingsCatalog.rescanning
+                onClicked: {
+                    rescanRow.result = ""
+                    SettingsCatalog.rescanPlugins()
+                }
+            }
+
+            below: Row {
+                spacing: VLCStyle.dp(10)
+
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: rescanRow.result === "done"
+                          ? qsTr("Done. VLC uses the new list of plugins the next time it starts.")
+                          : qsTr("VLC could not rebuild its list of plugins.")
+                    font.family: VLCStyle.rd_fontFamily
+                    font.pixelSize: VLCStyle.rd_fontSize_label
+                    color: VLCStyle.palette.rdFgA3
+                }
+
+                Widgets.RdButton {
+                    anchors.verticalCenter: parent.verticalCenter
+                    visible: rescanRow.result === "done"
+                    style: Widgets.RdButton.Style.Link
+                    text: qsTr("Restart now")
+                    onClicked: {
+                        if (SettingsCatalog.startNewInstance())
+                            DialogsProvider.quit()
+                    }
+                }
             }
         }
     }
@@ -169,6 +269,26 @@ SettingsPage {
     advanced: [
         SettingsSection {
             title: qsTr("Developer")
+
+            // S2-09 (video 18:20): the transcoder's video encoder ("sout-transcode-venc"), used
+            // when VLC converts, streams with transcoding or records with re-encoding. VLC's
+            // "none" and "any" both let it pick by score: Automatic; the encoders by VLC's names
+            SettingsOption {
+                id: encoderRow
+
+                option: "sout-transcode-venc"
+                text: qsTr("Encoder")
+                description: qsTr("The video encoder VLC uses when it converts video: Convert / Save, streaming with conversion and recordings that cannot be saved as they are. Automatic lets VLC pick the best one for the format.")
+                choices: {
+                    const automatic = encoderRow.value === "any" ? "any" : "none"
+                    const list = [{ value: automatic, text: qsTr("Automatic") }]
+                    for (const c of RdEffects.optionChoices("sout-transcode-venc")) {
+                        if (c.value !== "any" && c.value !== "none" && c.value !== "")
+                            list.push(c)
+                    }
+                    return list
+                }
+            }
 
             SettingsOption {
                 option: "codec"

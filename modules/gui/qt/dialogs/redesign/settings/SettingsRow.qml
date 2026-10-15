@@ -49,6 +49,8 @@ ColumnLayout {
     property real rowPadding: VLCStyle.dp(5)
     default property alias control: controlSlot.data
     property alias below: belowSlot.data
+    // false hides the `below` items and their spacing (a note shown only in some states)
+    property bool belowShown: true
 
     readonly property bool isSettingsRow: true
     readonly property bool matches: !_page || !_page.filtering
@@ -247,7 +249,7 @@ ColumnLayout {
         id: belowSlot
 
         enabled: root.available
-        visible: children.length > 0
+        visible: children.length > 0 && root.belowShown
         Layout.fillWidth: true
     }
 }

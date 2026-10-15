@@ -163,6 +163,11 @@ static void ShowDialog   ( intf_thread_t *, int, int, intf_dialog_args_t * );
             " - The video will fit to the interface size\n " \
             "By default, interface resize to the native video size." )
 
+#define REMEMBER_WINDOW_TEXT N_( "Remember window size and position" )
+#define REMEMBER_WINDOW_LONGTEXT N_( "Reopen the main window at the size, position, " \
+            "screen and maximized state it had when VLC was closed. When off, it opens " \
+            "at the default size, centered on the main screen." )
+
 #define TITLE_TEXT N_( "Show playing item name in window title" )
 #define TITLE_LONGTEXT N_( "Show the name of the song or video in the " \
                            "controller window title." )
@@ -171,6 +176,15 @@ static void ShowDialog   ( intf_thread_t *, int, int, intf_dialog_args_t * );
 #define NOTIFICATION_LONGTEXT N_( \
     "Show a notification popup with the artist and track name when " \
     "the current play queue item changes, when VLC is minimized or hidden." )
+
+#define NOTIFICATION_DURATION_TEXT N_( "Popup duration" )
+#define NOTIFICATION_DURATION_LONGTEXT N_( \
+    "How long the track change popup stays on the screen, in milliseconds." )
+
+#define SYSTEM_NOTIFICATION_TEXT N_( "Use the system's notification for the track change popup" )
+#define SYSTEM_NOTIFICATION_LONGTEXT N_( \
+    "Show the track change popup as a notification of the system instead of VLC's own. " \
+    "Windows may keep it for its own time instead of the popup duration." )
 
 #define OPACITY_TEXT N_( "Windows opacity between 0.1 and 1" )
 #define OPACITY_LONGTEXT N_( "Sets the windows opacity between 0.1 and 1 " \
@@ -304,6 +318,32 @@ static void ShowDialog   ( intf_thread_t *, int, int, intf_dialog_args_t * );
 #define ACCENT_COLOR_TEXT N_( "Accent color" )
 #define ACCENT_COLOR_LONGTEXT N_( "Adjusts the accent color, special values are 'default' and 'system' (requires Qt 6.6) ." )
 
+#define VIDEO_DOUBLE_CLICK_TEXT N_( "Double click on the video" )
+#define VIDEO_DOUBLE_CLICK_LONGTEXT N_( "What a double click on the video does. " \
+    "With Play / Pause, a single click on the video does not pause, so it never " \
+    "waits for a second click (from the next file)." )
+
+#define PROCESS_PRIORITY_TEXT N_( "Process priority" )
+#define PROCESS_PRIORITY_LONGTEXT N_( "How much processor time the system gives VLC " \
+    "next to other programs. High and Highest help playback on a busy computer, " \
+    "Lowest and Low leave more to other programs. \"Give VLC high priority\" " \
+    "keeps it at High or above." )
+
+#define CAST_DISCOVERY_TEXT N_( "Discover cast devices" )
+#define CAST_DISCOVERY_LONGTEXT N_( "Look for Chromecast and other cast devices on the " \
+    "network in the background, so the Render list shows them at once. When off, " \
+    "VLC only looks while that list is open." )
+
+#define NIGHT_MODE_RESTORE_TEXT N_( "Compressor settings to restore after night mode" )
+#define NIGHT_MODE_RESTORE_LONGTEXT N_( "The compressor's state and settings before " \
+    "Settings > Audio > Night mode turned it on, put back when night mode is turned off." )
+
+#define HISTORY_FILTER_TEXT N_( "Never remember items matching" )
+#define HISTORY_FILTER_LONGTEXT N_( "Files and streams that match one of these patterns, " \
+    "separated by ';', are kept out of the history (Recent, Continue Watching) and their " \
+    "position is not kept. A pattern with * or ? matches a whole path, file name or " \
+    "title (*.part; C:/Private/*), other words match any part of them (Family)." )
+
 static const int initial_prefs_view_list[] = { 0, 1, 2 };
 static const char *const initial_prefs_view_list_texts[] =
     { N_("Simple"), N_("Advanced"), N_("Expert") };
@@ -320,6 +360,16 @@ static const int i_raise_list[] =
 
 static const char *const psz_raise_list_text[] =
     { N_( "Never" ), N_( "Video" ), N_( "Audio" ), _( "Audio/Video" ) };
+
+/* redesign (S2-05): VideoSurfaceProvider::DoubleClickAction */
+static const int i_video_double_click_list[] = { 0, 1, 2 };
+static const char *const psz_video_double_click_text[] =
+    { N_( "Toggle fullscreen" ), N_( "Play / Pause" ), N_( "Nothing" ) };
+
+/* redesign (S2-07, Decision 35): SettingsCatalog::setPriority */
+static const int i_process_priority_list[] = { -2, -1, 0, 1, 2 };
+static const char *const psz_process_priority_text[] =
+    { N_( "Lowest" ), N_( "Low" ), N_( "Normal" ), N_( "High" ), N_( "Highest" ) };
 
 static const char *const compositor_vlc[] = {
     "auto",
@@ -371,6 +421,11 @@ vlc_module_begin ()
                  NOTIFICATION_TEXT,
                  NOTIFICATION_LONGTEXT )
             change_integer_list( i_notification_list, psz_notification_list_text )
+    /* redesign: Settings > Interface > Notifications and System Tray (S2-03) */
+    add_integer_with_range( "qt-notification-duration", 4000, 1000, 10000,
+                            NOTIFICATION_DURATION_TEXT, NOTIFICATION_DURATION_LONGTEXT )
+    add_bool( "qt-system-notification", false, SYSTEM_NOTIFICATION_TEXT,
+              SYSTEM_NOTIFICATION_LONGTEXT )
 
     add_bool( "qt-start-minimized", false, MINIMIZED_TEXT,
               MINIMIZED_LONGTEXT)
@@ -390,6 +445,9 @@ vlc_module_begin ()
 
     add_bool( "qt-video-autoresize", true, KEEPSIZE_TEXT,
               KEEPSIZE_LONGTEXT )
+    /* redesign: Settings > Interface > Window (S2-02) */
+    add_bool( "qt-remember-window", true, REMEMBER_WINDOW_TEXT,
+              REMEMBER_WINDOW_LONGTEXT )
     add_bool( "qt-name-in-title", true, TITLE_TEXT,
               TITLE_LONGTEXT )
     add_bool( "qt-fs-controller", true, QT_FULLSCREEN_TEXT,
@@ -400,6 +458,8 @@ vlc_module_begin ()
 
     add_obsolete_bool( "qt-recentplay" )
     add_obsolete_string( "qt-recentplay-filter" )
+    /* redesign: Settings > Privacy > History (S2-04) */
+    add_string( "qt-history-filter", "", HISTORY_FILTER_TEXT, HISTORY_FILTER_LONGTEXT )
     add_obsolete_integer( "qt-continue" )
 
 #ifdef UPDATE_CHECK
@@ -435,6 +495,11 @@ vlc_module_begin ()
                nullptr )
 
     add_bool( "qt-pin-controls", false, QT_PIN_CONTROLS_TEXT, QT_PIN_CONTROLS_LONGTEXT )
+
+    /* redesign: Settings > Controls > Mouse (S2-05) */
+    add_integer( "qt-video-double-click", 0, VIDEO_DOUBLE_CLICK_TEXT,
+                 VIDEO_DOUBLE_CLICK_LONGTEXT )
+            change_integer_list( i_video_double_click_list, psz_video_double_click_text )
 
 
     add_obsolete_bool( "qt-advanced-pref" ) /* since 4.0.0 */
@@ -478,6 +543,18 @@ vlc_module_begin ()
     add_bool( "qt-use-scroll-handler", true, SCROLL_HANDLER_TEXT, SCROLL_HANDLER_LONGTEXT )
 
     add_bool( "qt-verbose", false, VERBOSE_TEXT, VERBOSE_LONGTEXT )
+
+    /* redesign: Settings > Audio > Loudness "Night mode" (S2-06), set by the page */
+    add_string( "qt-night-mode-restore", "", NIGHT_MODE_RESTORE_TEXT, NIGHT_MODE_RESTORE_LONGTEXT )
+        change_private()
+
+    /* redesign: Settings > Recording > Casting (S2-10) */
+    add_bool( "qt-cast-discovery", true, CAST_DISCOVERY_TEXT, CAST_DISCOVERY_LONGTEXT )
+
+    /* redesign: Settings > Performance > Smooth Playback (S2-07) */
+    add_integer( "qt-process-priority", 0, PROCESS_PRIORITY_TEXT, PROCESS_PRIORITY_LONGTEXT )
+        change_integer_range( -2, 2 )
+        change_integer_list( i_process_priority_list, psz_process_priority_text )
 
     add_bool( "qt-close-to-system-tray", false, HIDE_WINDOW_ON_CLOSE_TEXT, HIDE_WINDOW_ON_CLOSE_LONGTEXT )
 

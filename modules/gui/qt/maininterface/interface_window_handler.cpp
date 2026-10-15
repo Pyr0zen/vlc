@@ -69,6 +69,10 @@ InterfaceWindowHandler::InterfaceWindowHandler(qt_intf_t *_p_intf, MainCtx* main
     m_window->setIcon( QApplication::windowIcon() );
     m_window->setOpacity( var_InheritFloat( p_intf, "qt-opacity" ) );
 
+    // redesign (S2-02): "Remember window size and position" off opens the window at the
+    // default size, centered on the primary screen
+    if (!var_InheritBool( p_intf, "qt-remember-window" ))
+        getSettings()->remove( "geometry" );
     QVLCTools::restoreWindowPosition( getSettings(), m_window, QSize(600, 420) );
 
     // this needs to be called asynchronously
@@ -175,8 +179,12 @@ InterfaceWindowHandler::InterfaceWindowHandler(qt_intf_t *_p_intf, MainCtx* main
 InterfaceWindowHandler::~InterfaceWindowHandler()
 {
     m_window->removeEventFilter(this);
-    /* Save this size */
-    QVLCTools::saveWindowPosition(getSettings(), m_window);
+    /* Save this size (redesign, S2-02: unless the Settings turned it off; read here because
+     * the option can change while VLC runs) */
+    if (var_InheritBool( p_intf, "qt-remember-window" ))
+        QVLCTools::saveWindowPosition(getSettings(), m_window);
+    else
+        getSettings()->remove( "geometry" );
     assert(qApp);
     if (!qApp->property("isDying").toBool())
     {

@@ -99,9 +99,12 @@ SettingsRow {
     // RdEffects has written the change, so they apply at once (as after VLC's preferences).
     // Not "qt-minimal-view": it is the compact mode VLC starts in, and reading it again would
     // switch the running window's compact mode
-    readonly property bool _readByInterface: ["mouse-hide-timeout", "qt-bgcone", "qt-fs-opacity", "qt-max-volume",
+    readonly property bool _readByInterface: ["mouse-hide-timeout", "mouse-pause-policy",
+                                              "qt-bgcone", "qt-cast-discovery",
+                                              "qt-fs-opacity", "qt-max-volume",
                                               "qt-menubar", "qt-pin-controls", "qt-safe-area",
-                                              "qt-smooth-scrolling", "qt-titlebar", "video-on-top"].indexOf(option) >= 0
+                                              "qt-smooth-scrolling", "qt-titlebar", "qt-video-double-click",
+                                              "video-on-top"].indexOf(option) >= 0
     property bool _reloadPending: false
     // a slider being dragged: the interface reads the value once it is released
     property bool _dragging: false

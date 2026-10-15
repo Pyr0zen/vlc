@@ -112,6 +112,9 @@ RendererMenu::RendererMenu( QMenu* parent, qt_intf_t* intf, PlayerController* pl
     m_statusAction = qwa;
 
     connect( this, &RendererMenu::aboutToShow, m_renderManager, &RendererManager::StartScan );
+    // redesign (Decision 36): without "Discover cast devices", search only while the picker is
+    // open (the background discovery ignores StopScan)
+    connect( this, &RendererMenu::aboutToHide, m_renderManager, &RendererManager::StopScan );
     connect( m_renderManager, &RendererManager::statusChanged, this, &RendererMenu::updateStatus );
     connect( m_renderManager, &RendererManager::scanRemainChanged, this, &RendererMenu::updateStatus );
     updateStatus();

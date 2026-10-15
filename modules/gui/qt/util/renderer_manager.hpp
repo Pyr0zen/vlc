@@ -56,6 +56,11 @@ public:
 
     void disableRenderer();
 
+    // redesign (S2-10, "Discover cast devices"): on, the discovery keeps running in the
+    // background (no countdown, StartScan / StopScan do nothing); off, it only runs while a
+    // picker scans (Decision 36)
+    void setBackgroundDiscovery(bool enabled);
+
 public slots:
     void StartScan();
     void StopScan();

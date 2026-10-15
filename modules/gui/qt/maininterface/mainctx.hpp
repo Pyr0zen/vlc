@@ -31,6 +31,8 @@
 #include <QQuickItem>
 #include <QTimer>
 #include <QColor>
+#include <QRect>
+#include <QUrl>
 
 Q_MOC_INCLUDE( "dialogs/toolbar/controlbar_profile_model.hpp" )
 Q_MOC_INCLUDE( "util/csdbuttonmodel.hpp" )
@@ -494,6 +496,14 @@ protected:
 
     int m_maxVolume = 125;
     int m_fsSensitivity = 40;
+    // redesign (S2-05): "qt-video-double-click"; with Play / Pause, the core's single click
+    // pause is turned off through the libvlc object's "mouse-pause-policy" variable
+    int m_videoDoubleClick = 0;
+    void applyVideoDoubleClick();
+    // redesign (S2-10): "qt-cast-discovery", applied once the window has shown
+    bool m_castDiscovery = true;
+    bool m_windowShown = false;
+    void applyCastDiscovery();
     // redesign: options MainCtx writes itself (accent, fullscreen sensitivity) reach the
     // configuration file shortly after a change, not only when VLC quits
     QTimer* m_configSaveTimer = nullptr;
@@ -582,6 +592,9 @@ signals:
     void askBoss();
     void askRaise();
     void kc_pressed(); /* easter eggs */
+    // redesign (S2-03): the track-change popup near the system tray (VLCSystray), drawn by
+    // TrayPopup.qml in `area` (the primary screen's free area) for `duration` ms
+    void trackPopupRequested(const QString& name, const QUrl& artwork, const QRect& area, int duration);
 
     void playerPlaylistWidthChanged(double);
     void interfaceAlwaysOnTopChanged(bool);

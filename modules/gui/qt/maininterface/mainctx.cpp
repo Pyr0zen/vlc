@@ -473,6 +473,51 @@ void MainCtx::loadPrefs(const bool callSignals)
     loadFromVLCOption(m_safeArea, "qt-safe-area", &MainCtx::safeAreaChanged);
 
     loadFromVLCOption(m_mouseHideTimeout, "mouse-hide-timeout", &MainCtx::mouseHideTimeoutChanged);
+
+    loadFromVLCOption(m_videoDoubleClick, "qt-video-double-click", nullptr);
+    applyVideoDoubleClick();
+
+    loadFromVLCOption(m_castDiscovery, "qt-cast-discovery", nullptr);
+    applyCastDiscovery();
+}
+
+void MainCtx::applyCastDiscovery()
+{
+    // S2-10 / Decision 36: on, cast devices are looked for in the background so the Render
+    // picker lists them at once; off, only while the picker is open. Started after the window
+    // has shown (startup first); the services start on a worker thread
+    if (!m_windowShown || !p_intf->p_mainPlayerController)
+        return;
+    THEMIM->getRendererManager()->setBackgroundDiscovery(m_castDiscovery);
+}
+
+void MainCtx::applyVideoDoubleClick()
+{
+    using Action = VideoSurfaceProvider::DoubleClickAction;
+    const Action action = (m_videoDoubleClick == static_cast<int>(Action::PlayPause)
+                           || m_videoDoubleClick == static_cast<int>(Action::Nothing))
+                          ? static_cast<Action>(m_videoDoubleClick) : Action::Fullscreen;
+
+    // Decision 37: a double click that plays / pauses turns the single click pause off, so a
+    // single click never waits to see whether a second one follows. The core creates
+    // "mouse-pause-policy" on the libvlc object from the configuration when VLC starts
+    // (src/libvlc.c) and reads that variable when a file opens, so it is set here from the
+    // saved "Single click on the video" choice (a Settings change then applies from the next
+    // file, not only after a restart), or to "disabled"; the saved choice is never changed
+    libvlc_int_t* libvlc = vlc_object_instance(p_intf);
+    if (action == Action::PlayPause)
+    {
+        var_SetString(libvlc, "mouse-pause-policy", "disabled");
+    }
+    else
+    {
+        char* policy = config_GetPsz("mouse-pause-policy");
+        var_SetString(libvlc, "mouse-pause-policy", policy ? policy : "");
+        free(policy);
+    }
+
+    if (m_videoSurfaceProvider)
+        m_videoSurfaceProvider->setDoubleClickAction(action);
 }
 
 void MainCtx::loadFromSettingsImpl(const bool callSignals)
@@ -594,6 +639,13 @@ void MainCtx::updateIntfScaleFactor()
 void MainCtx::onWindowVisibilityChanged(QWindow::Visibility visibility)
 {
     m_windowVisibility = visibility;
+
+    if (!m_windowShown && visibility != QWindow::Hidden && visibility != QWindow::Minimized)
+    {
+        m_windowShown = true;
+        // after the first frames
+        QMetaObject::invokeMethod(this, &MainCtx::applyCastDiscovery, Qt::QueuedConnection);
+    }
 }
 
 void MainCtx::setHasAcrylicSurface(const bool v)
@@ -830,12 +882,22 @@ bool MainCtx::hasEmbededVideo() const
 void MainCtx::setVideoSurfaceProvider(VideoSurfaceProvider* videoSurfaceProvider)
 {
     if (m_videoSurfaceProvider)
+    {
         disconnect(m_videoSurfaceProvider, &VideoSurfaceProvider::hasVideoEmbedChanged, this, &MainCtx::hasEmbededVideoChanged);
+        disconnect(m_videoSurfaceProvider, &VideoSurfaceProvider::playPauseRequested, this, nullptr);
+    }
     m_videoSurfaceProvider = videoSurfaceProvider;
     if (m_videoSurfaceProvider)
+    {
         connect(m_videoSurfaceProvider, &VideoSurfaceProvider::hasVideoEmbedChanged,
                 this, &MainCtx::hasEmbededVideoChanged,
                 Qt::QueuedConnection);
+        // redesign (S2-05): "Double click on the video" set to Play / Pause
+        connect(m_videoSurfaceProvider, &VideoSurfaceProvider::playPauseRequested, this, [this]() {
+            THEMPL->togglePlayPause();
+        });
+        applyVideoDoubleClick();
+    }
     emit hasEmbededVideoChanged(m_videoSurfaceProvider && m_videoSurfaceProvider->hasVideoEmbed());
 }
 

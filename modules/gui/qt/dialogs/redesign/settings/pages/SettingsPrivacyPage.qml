@@ -54,6 +54,20 @@ SettingsPage {
             }
         }
 
+        // S2-04 (video 17:52): Figma text input 320x36. The media library forgets matches after
+        // every history change; a new list is applied to the whole history at once
+        SettingsOption {
+            option: "qt-history-filter"
+            text: qsTr("Never remember items matching")
+            kind: "text"
+
+            onValueChanged: {
+                const patterns = String(value ?? "")
+                if (patterns.trim() !== "" && MainCtx.mediaLibraryAvailable)
+                    MainCtx.mediaLibrary.filterHistory(patterns, true)
+            }
+        }
+
         SettingsRow {
             text: qsTr("Clear history now")
             description: qsTr("Forgets every file and stream played so far: the Recent list of the library and the positions to continue from.")

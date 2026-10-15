@@ -66,6 +66,64 @@ SettingsPage {
                                          : _preferredSpatialMode
     readonly property bool _spatial: _filterOn("spatializer") || _filterOn("headphone_channel_mixer")
 
+    // S2-06 Night mode: VLC's compressor with a fixed preset (Sticky tunes it by listening,
+    // Decision 38). It reads ON only while the compressor runs with exactly these values, so
+    // editing the Compressor (here or in the sidebar) turns it off
+    readonly property var _nightPreset: ({
+        "compressor-rms-peak": 0.2,
+        "compressor-attack": 5,
+        "compressor-release": 200,
+        "compressor-threshold": -24,
+        "compressor-ratio": 6,
+        "compressor-knee": 4,
+        "compressor-makeup-gain": 9
+    })
+    readonly property bool _nightMode: {
+        if (!_filterOn("compressor"))
+            return false
+        for (const name in _nightPreset) {
+            const target = _nightPreset[name]
+            const v = Number(RdEffects.values[RdEffects.audioKey(name)])
+            // VLC keeps floats in single precision
+            if (!(Math.abs(v - target) <= 0.001 * Math.max(1, Math.abs(target))))
+                return false
+        }
+        return true
+    }
+
+    // on: keeps the compressor's state and values ("qt-night-mode-restore") and applies the
+    // preset; off: puts them back (VLC's defaults and off when nothing was kept)
+    function _setNightMode(on) {
+        if (on) {
+            const saved = { on: _filterOn("compressor"), values: {} }
+            for (const name in _nightPreset)
+                saved.values[name] = Number(RdEffects.values[RdEffects.audioKey(name)])
+            RdEffects.setOption("qt-night-mode-restore", JSON.stringify(saved))
+            for (const name in _nightPreset)
+                RdEffects.setAudioValue(name, _nightPreset[name])
+            if (!_filterOn("compressor"))
+                RdEffects.setAudioFilterEnabled("compressor", true)
+            return
+        }
+        let saved = null
+        try {
+            saved = JSON.parse(String(_option("qt-night-mode-restore") ?? ""))
+        } catch (e) {
+            saved = null
+        }
+        for (const name in _nightPreset) {
+            let v = saved && saved.values ? Number(saved.values[name]) : NaN
+            if (isNaN(v))
+                v = Number(RdEffects.optionRange(name).default)
+            if (!isNaN(v))
+                RdEffects.setAudioValue(name, v)
+        }
+        const wasOn = !!saved && saved.on === true
+        if (_filterOn("compressor") !== wasOn)
+            RdEffects.setAudioFilterEnabled("compressor", wasOn)
+        RdEffects.setOption("qt-night-mode-restore", "")
+    }
+
     function _setSpatial(enabled, mode) {
         for (const m of _spatialModes) {
             const on = enabled && m === mode
@@ -195,6 +253,20 @@ SettingsPage {
             text: qsTr("Target level")
             decimals: 1
             available: root._filterOn("normvol")
+        }
+
+        // S2-06 (video 18:05): Figma toggle row 32 high, between Target level and Replay gain
+        SettingsRow {
+            text: qsTr("Night mode")
+            description: qsTr("Makes loud scenes quieter and quiet dialogue louder, for listening late at night. It runs the compressor with its own settings; turning it off puts the compressor back as it was.")
+            keywords: "night compressor dynamic range loud quiet dialogue"
+            shown: SettingsCatalog.moduleExists("compressor")
+
+            Widgets.RdToggle {
+                checked: root._nightMode
+                Accessible.name: qsTr("Night mode")
+                onToggled: root._setNightMode(checked)
+            }
         }
 
         SettingsOption {

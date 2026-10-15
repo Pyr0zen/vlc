@@ -25,6 +25,10 @@
 #include <QTimer>
 #include <QVector>
 #include <QHash>
+#include <QMutex>
+#include <QThreadPool>
+
+#include <vector>
 
 #include <vlc_common.h>
 #include <vlc_renderer_discovery.h>
@@ -32,6 +36,8 @@
 #include <vlc_cxx_helpers.hpp>
 
 static void player_renderer_changed(vlc_player_t *, vlc_renderer_item_t *new_item, void *data);
+static void renderer_event_item_added( vlc_renderer_discovery_t* p_rd, vlc_renderer_item_t *p_item );
+static void renderer_event_item_removed( vlc_renderer_discovery_t *p_rd, vlc_renderer_item_t *p_item );
 
 using RendererItemPtr = ::vlc::vlc_shared_data_ptr<vlc_renderer_item_t, &vlc_renderer_item_hold, &vlc_renderer_item_release>;
 using vlc_player_locker = vlc_locker<vlc_player_t, vlc_player_Lock, vlc_player_Unlock>;
@@ -65,6 +71,7 @@ public:
     {
         assert(m_player);
         QObject::connect( &m_stop_scan_timer, &QTimer::timeout, q_ptr, [this](){ timerCountdown(); });
+        m_startPool.setMaxThreadCount(1);
 
         static struct vlc_player_cbs cbs = {};
         cbs.on_renderer_changed = &player_renderer_changed;
@@ -95,6 +102,98 @@ public:
         {
             q->StopScan();
         }
+    }
+
+    // the renderer discovery services (Chromecast, UPnP...), started on the calling thread
+    std::vector<vlc_renderer_discovery_t*> createDiscoveries(bool* failed)
+    {
+        std::vector<vlc_renderer_discovery_t*> rds;
+
+        /* SD subnodes */
+        char **ppsz_longnames;
+        char **ppsz_names;
+        if( vlc_rd_get_names( p_intf, &ppsz_names, &ppsz_longnames ) != VLC_SUCCESS )
+        {
+            *failed = true;
+            return rds;
+        }
+        *failed = false;
+
+        struct vlc_renderer_discovery_owner owner =
+        {
+            this,
+            renderer_event_item_added,
+            renderer_event_item_removed,
+        };
+
+        char **ppsz_name = ppsz_names, **ppsz_longname = ppsz_longnames;
+        for( ; *ppsz_name; ppsz_name++, ppsz_longname++ )
+        {
+            msg_Dbg( p_intf, "starting renderer discovery service %s", *ppsz_longname );
+            vlc_renderer_discovery_t* p_rd = vlc_rd_new( VLC_OBJECT(p_intf), *ppsz_name, &owner );
+            if( p_rd != NULL )
+                rds.push_back( p_rd );
+            free( *ppsz_name );
+            free( *ppsz_longname );
+        }
+        free( ppsz_names );
+        free( ppsz_longnames );
+        return rds;
+    }
+
+    // redesign (S2-10): background discovery starts its services on a worker thread (UPnP's
+    // start can take a while), then hands them to the UI thread
+    void startDiscoveryAsync()
+    {
+        m_starting = true;
+        const unsigned generation = m_generation;
+        m_startPool.start([this, generation]() {
+            bool failed = false;
+            std::vector<vlc_renderer_discovery_t*> rds = createDiscoveries(&failed);
+            if (failed)
+                msg_Dbg(p_intf, "no renderer discovery service");
+            {
+                QMutexLocker lock(&m_startLock);
+                m_startedRds = std::move(rds);
+                m_startedGeneration = generation;
+            }
+            // dropped if the manager is gone: its destructor releases m_startedRds
+            QMetaObject::invokeMethod(q_ptr, [this]() { adoptStartedDiscoveries(); },
+                                      Qt::QueuedConnection);
+        });
+    }
+
+    void adoptStartedDiscoveries()
+    {
+        std::vector<vlc_renderer_discovery_t*> rds;
+        unsigned generation;
+        {
+            QMutexLocker lock(&m_startLock);
+            rds.swap(m_startedRds);
+            generation = m_startedGeneration;
+        }
+        m_starting = false;
+        if (generation != m_generation || !m_background)
+        {
+            // turned off while starting (and maybe on again)
+            for (vlc_renderer_discovery_t* p_rd : rds)
+                vlc_rd_release(p_rd);
+            if (m_background && m_rds.empty())
+                startDiscoveryAsync();
+            return;
+        }
+        m_rds.insert(m_rds.end(), rds.begin(), rds.end());
+    }
+
+    // the manager is going away: wait for a start on the worker and release what it made
+    void finishDiscoveryStart()
+    {
+        m_background = false;
+        m_startPool.waitForDone();
+        QMutexLocker lock(&m_startLock);
+        for (vlc_renderer_discovery_t* p_rd : m_startedRds)
+            vlc_rd_release(p_rd);
+        m_startedRds.clear();
     }
 
     void setStatus(RendererManager::RendererStatus status)
@@ -220,6 +319,18 @@ public:
     QTimer m_stop_scan_timer;
     //remaining time in seconds
     unsigned m_scan_remain = 0;
+
+    // redesign (S2-10): "Discover cast devices" keeps discovery running, without the countdown
+    bool m_background = false;
+    // a start of the background discovery runs on m_startPool
+    bool m_starting = false;
+    // changes when the background discovery stops: a start begun before is released
+    unsigned m_generation = 0;
+    QThreadPool m_startPool;
+    QMutex m_startLock;
+    // guarded by m_startLock: services started on the worker, not yet adopted
+    std::vector<vlc_renderer_discovery_t*> m_startedRds;
+    unsigned m_startedGeneration = 0;
 
     RendererManager* q_ptr;
     Q_DECLARE_PUBLIC(RendererManager);
@@ -369,6 +480,8 @@ RendererManager::RendererManager( qt_intf_t *p_intf_, vlc_player_t* player )
 
 RendererManager::~RendererManager()
 {
+    Q_D(RendererManager);
+    d->finishDiscoveryStart();
     StopScan();
 }
 
@@ -390,40 +503,48 @@ bool RendererManager::useRenderer() const
     return d->m_selectedItem.get() != nullptr;
 }
 
+void RendererManager::setBackgroundDiscovery(bool enabled)
+{
+    Q_D(RendererManager);
+    if (d->m_background == enabled)
+        return;
+    d->m_background = enabled;
+    if (enabled)
+    {
+        // a scan of the open picker goes on, without its countdown
+        if (d->m_stop_scan_timer.isActive())
+        {
+            d->m_stop_scan_timer.stop();
+            d->m_scan_remain = 0;
+            d->setStatus( RendererManager::RendererStatus::IDLE );
+            emit scanRemainChanged();
+        }
+        if (d->m_rds.empty() && !d->m_starting)
+            d->startDiscoveryAsync();
+    }
+    else
+    {
+        // a start still running on the worker is released when it ends
+        ++d->m_generation;
+        StopScan();
+    }
+}
+
 void RendererManager::StartScan()
 {
     Q_D(RendererManager);
-    if( d->m_stop_scan_timer.isActive() )
+    // redesign (S2-10): the background discovery is already looking
+    if( d->m_background || d->m_stop_scan_timer.isActive() )
         return;
 
-    /* SD subnodes */
-    char **ppsz_longnames;
-    char **ppsz_names;
-    if( vlc_rd_get_names( d->p_intf, &ppsz_names, &ppsz_longnames ) != VLC_SUCCESS )
+    bool failed = false;
+    std::vector<vlc_renderer_discovery_t*> rds = d->createDiscoveries( &failed );
+    if( failed )
     {
         d->setStatus( RendererManager::RendererStatus::FAILED );
         return;
     }
-
-    struct vlc_renderer_discovery_owner owner =
-    {
-        d,
-        renderer_event_item_added,
-        renderer_event_item_removed,
-    };
-
-    char **ppsz_name = ppsz_names, **ppsz_longname = ppsz_longnames;
-    for( ; *ppsz_name; ppsz_name++, ppsz_longname++ )
-    {
-        msg_Dbg( d->p_intf, "starting renderer discovery service %s", *ppsz_longname );
-        vlc_renderer_discovery_t* p_rd = vlc_rd_new( VLC_OBJECT(d->p_intf), *ppsz_name, &owner );
-        if( p_rd != NULL )
-            d->m_rds.push_back( p_rd );
-        free( *ppsz_name );
-        free( *ppsz_longname );
-    }
-    free( ppsz_names );
-    free( ppsz_longnames );
+    d->m_rds.insert( d->m_rds.end(), rds.begin(), rds.end() );
 
     d->m_scan_remain = 20;
     d->m_stop_scan_timer.setInterval( 1000 );
@@ -435,6 +556,9 @@ void RendererManager::StartScan()
 void RendererManager::StopScan()
 {
     Q_D(RendererManager);
+    // redesign (S2-10): the background discovery keeps running (setBackgroundDiscovery)
+    if( d->m_background )
+        return;
     d->m_stop_scan_timer.stop();
 
     for ( vlc_renderer_discovery_t* p_rd : d->m_rds )

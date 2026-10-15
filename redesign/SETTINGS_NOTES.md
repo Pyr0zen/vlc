@@ -110,6 +110,8 @@ Rows of the dialog shell (P7-18, IB-42, P8-02, P8-39, P8-40) and the Keyboard Sh
 
 ## 6. Not done / limits
 
+Update 2026-10-15 (Step 2, VIDEO_INDEX S2-02..S2-10, see BUILD_NOTES "Step 2 Settings rows"): Remember window size and position, Popup duration (with VLC's own tray popup), Never remember items matching, Double click on the video, Night mode, Process priority, Rescan plugins, Encoder and Discover cast devices are built now (Qt only). Still missing: Additional command line options (S2-01) and Ignore styling in ASS and SSA subtitles (S2-11), both core changes for a separate build, plus the rows below that are not settings rows of section S2.
+
 Rows of the design without a VLC option behind them (left out rather than shown without effect):
 - General > Advanced "Additional command line options": VLC keeps no such setting.
 - Interface "Remember window size and position" (VLC 4 always remembers), "Popup duration" (no option), "Fullscreen controls sensitivity" (VLC 4's interface no longer reads "qt-fs-sensitivity"; the option is kept out of the lists too).
@@ -339,4 +341,4 @@ Rects (PNG pixels x,y,w,h): each visible section (header + rows) and one instanc
    control: search + buttons ('Search') 1268,636,810,64
    control: toggle ('Load add-ons on startup') 1942,736,136,64
 
-Expected differences (Decisions (Claude) 2026-10-15): rows without a VLC option are missing (S2-01..S2-11); every row has an info icon (Figma omits it on some rows, P7-16); Size values reads Precise (not Pixels); Default audio / subtitle track are dropdowns in words (Figma: a "1" field); "Give VLC high priority" (Figma: real-time); the Last.fm password and web remote password rows exist; Extensions keeps "Extensions" / "Load extensions on startup" (video wording); rows Figma does not show are under Advanced Options > All Other Options.
+Expected differences (Decisions (Claude) 2026-10-15): rows without a VLC option are missing (S2-01 and S2-11; S2-02..S2-10 are built since, Process priority as a dropdown in words, Decision 35); every row has an info icon (Figma omits it on some rows, P7-16); Size values reads Precise (not Pixels); Default audio / subtitle track are dropdowns in words (Figma: a "1" field); "Give VLC high priority" (Figma: real-time); the Last.fm password and web remote password rows exist; Extensions keeps "Extensions" / "Load extensions on startup" (video wording); rows Figma does not show are under Advanced Options > All Other Options.

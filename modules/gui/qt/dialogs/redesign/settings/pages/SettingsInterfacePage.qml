@@ -75,6 +75,12 @@ SettingsPage {
             ]
         }
 
+        // S2-02 (video 17:50): read when the window opens, written when it closes
+        SettingsOption {
+            option: "qt-remember-window"
+            text: qsTr("Remember window size and position")
+        }
+
         SettingsOption {
             option: "video-on-top"
             text: qsTr("Keep window above other windows")
@@ -163,8 +169,27 @@ SettingsPage {
         }
 
         SettingsOption {
+            id: notificationRow
+
             option: "qt-notification"
             text: qsTr("Show a popup when the track changes")
+        }
+
+        // S2-03 (Figma "Settings - interface" 3062:11148): the "Hide after" slider wrapper (47
+        // high, track 4 down, labels 8 under it), 0.5 s steps; VLC keeps 1 s at least. Dimmed
+        // while the popup is off (Never)
+        SettingsOption {
+            option: "qt-notification-duration"
+            text: qsTr("Popup duration")
+            kind: "slider"
+            available: notificationRow.value !== 0
+            sliderTrackTop: VLCStyle.dp(4)
+            sliderLabelSpacing: VLCStyle.dp(8)
+            valueScale: 1000
+            from: 0
+            to: 10
+            step: 0.5
+            labels: [qsTr("0 s"), qsTr("5 s"), qsTr("10 s")]
         }
     }
 
