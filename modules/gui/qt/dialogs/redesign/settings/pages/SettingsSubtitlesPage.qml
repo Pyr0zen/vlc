@@ -117,7 +117,7 @@ SettingsPage {
             description: qsTr("Relative sizes are in words, from Smaller to Larger. Precise sets the exact size, in percent of VLC's normal size.")
             keywords: "sub-text-scale font size relative precise"
 
-            SettingsSegmented {
+            Widgets.RdSegmented {
                 implicitWidth: VLCStyle.dp(320)
                 implicitHeight: VLCStyle.dp(36)
                 model: [qsTr("Relative"), qsTr("Precise")]

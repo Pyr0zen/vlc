@@ -1310,7 +1310,6 @@ libqml_module_dialogs_a_QML = \
 	dialogs/redesign/settings/SettingsRow.qml \
 	dialogs/redesign/settings/SettingsSearchField.qml \
 	dialogs/redesign/settings/SettingsSection.qml \
-	dialogs/redesign/settings/SettingsSegmented.qml \
 	dialogs/redesign/settings/SettingsInterfaceToggle.qml \
 	dialogs/redesign/settings/SettingsAccentPicker.qml \
 	dialogs/redesign/settings/SettingsEqualizer.qml \

@@ -74,7 +74,7 @@ SettingsPage {
             text: qsTr("Theme")
             keywords: "dark light night day color scheme"
 
-            SettingsSegmented {
+            Widgets.RdSegmented {
                 readonly property var schemes: [ColorSchemeModel.Night, ColorSchemeModel.Day, ColorSchemeModel.System]
                 readonly property var rows: [2, 1, 0]
 
