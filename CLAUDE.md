@@ -6,7 +6,7 @@
 - The design is a mockup only. No code for it exists. Everything gets built by us on top of upstream VLC.
 - The playback engine, codecs and core stay as they are wherever possible. Most of her ideas are UI work on top of features VLC already has. Where a feature truly needs core changes, explain why and get Sticky's approval first.
 - Base: VLC master (VLC 4 development branch), which has the QML interface in `modules/gui/qt`. Do NOT use the 3.0.x branch, its UI is QtWidgets and cannot be restyled the same way.
-- This repo: Sticky's GitHub fork https://github.com/Pyr0zen/vlc of the official mirror https://github.com/videolan/vlc (official upstream: https://code.videolan.org/videolan/vlc).
+- This repo: Sticky's GitHub fork https://github.com/Pyr0zen/vlc-redesign-juxtopposed of the official mirror https://github.com/videolan/vlc (official upstream: https://code.videolan.org/videolan/vlc).
 - Owner: Sticky (GitHub: Pyr0zen). Windows 10 PC, PowerShell, a local Windows user.
 
 ## How we work

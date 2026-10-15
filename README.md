@@ -1,3 +1,5 @@
+**Juxtopposed's VLC Redesign, fully working on real VLC 4.** Not a skin: a new player, sidebars, library and settings, on the same VLC engine.
+
 > **About this fork:** this is an unofficial redesign of VLC's interface based on
 > ["VLC Redesign" by Juxtopposed](https://www.figma.com/community/file/1691465999134370980/vlc-redesign)
 > ([video](https://youtu.be/ERFeOgqk324)); the Figma design is used under
