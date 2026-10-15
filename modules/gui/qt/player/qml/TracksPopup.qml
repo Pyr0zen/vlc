@@ -55,10 +55,32 @@ Item {
 
     visible: RdPanels.tracksOpen
 
+    // keyboard (opened from the control bar with the keyboard): the active tab takes the focus;
+    // Left / Right switch tabs, Down goes into the tab's content, where Up / Down move like Tab
+    function focusContent(reason) {
+        for (let i = 0; i < tabRepeater.count; ++i) {
+            const tab = tabRepeater.itemAt(i)
+            if (tab && tab.active) {
+                tab.forceActiveFocus(reason)
+                return true
+            }
+        }
+        return panel.focusFirst(reason)
+    }
+
+    function _selectTab(index) {
+        const tab = tabRepeater.itemAt(index)
+        if (!tab)
+            return
+        RdPanels.open(tab.modelData.key)
+        tab.forceActiveFocus(Qt.TabFocusReason)
+    }
+
     Widgets.RdPanel {
         id: panel
 
         anchors.fill: parent
+        arrowNavigation: true
 
         // opaque over the native video (Figma's 95 % assumes a background blur)
         color: Qt.alpha(root.rdPalette.rdBgB1Transparent, 1.0)
@@ -103,6 +125,7 @@ Item {
                         id: tabButton
 
                         required property var modelData
+                        required property int index
                         readonly property bool active: root.tab === modelData.key
 
                         width: (tabs.width - (tabRepeater.count - 1) * tabs.spacing) / Math.max(1, tabRepeater.count)
@@ -115,6 +138,19 @@ Item {
                         Accessible.checked: active
 
                         onClicked: RdPanels.open(modelData.key)
+
+                        Navigation.leftAction: () => root._selectTab(tabButton.index - 1)
+                        Navigation.rightAction: () => root._selectTab(tabButton.index + 1)
+                        Navigation.upAction: () => { }
+                        Navigation.downAction: () => {
+                            const last = tabRepeater.itemAt(tabRepeater.count - 1)
+                            const next = last ? last.nextItemInFocusChain(true) : null
+                            if (next && panel.containsItem(next))
+                                next.forceActiveFocus(Qt.TabFocusReason)
+                        }
+
+                        Keys.priority: Keys.AfterItem
+                        Keys.onPressed: (event) => Navigation.defaultKeyAction(event)
 
                         contentItem: Item {
                             Row {

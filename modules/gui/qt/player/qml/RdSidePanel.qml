@@ -53,6 +53,60 @@ Widgets.RdPanel {
 
     readonly property SystemPalette rdPalette: VLCStyle.palette
 
+    // keyboard: the tabs take Left / Right (switch tab) and Down (into the page); the page's
+    // controls Up / Down (a list moves its rows, the rest moves like Tab, RdPanel.arrowNavigation)
+    function focusTabs(reason) {
+        for (let i = 0; i < tabRepeater.count; ++i) {
+            const tab = tabRepeater.itemAt(i)
+            if (tab && tab.active) {
+                tab.forceActiveFocus(reason)
+                return
+            }
+        }
+    }
+
+    // focuses the current page: its own focusContent(reason) when it has one (the queue focuses
+    // the playing row), else its first control; the current tab when the page has none
+    function focusContent(reason) {
+        const pages = pageHost.children
+        for (let i = 0; i < pages.length; ++i) {
+            const page = pages[i]
+            if (!page.current || !page.item)
+                continue
+            if (typeof page.item.focusContent === "function") {
+                if (page.item.focusContent(reason))
+                    return
+            } else {
+                const lastTab = tabRepeater.itemAt(tabRepeater.count - 1)
+                const next = lastTab ? lastTab.nextItemInFocusChain(true) : null
+                if (next && root._inPages(next)) {
+                    next.forceActiveFocus(reason)
+                    return
+                }
+            }
+            break
+        }
+        root.focusTabs(reason)
+    }
+
+    function _inPages(item) {
+        for (let p = item; p; p = p.parent) {
+            if (p === pageHost)
+                return true
+        }
+        return false
+    }
+
+    // selects the tab at `index` and focuses it (Left / Right on the tabs)
+    function _selectTab(index) {
+        const tab = tabRepeater.itemAt(index)
+        if (!tab)
+            return
+        root.tabClicked(tab.modelData.key)
+        tab.forceActiveFocus(Qt.TabFocusReason)
+    }
+
+    arrowNavigation: true
     clip: true
     color: rdPalette.rdBgB1
 
@@ -80,12 +134,15 @@ Widgets.RdPanel {
             spacing: VLCStyle.dp(1)
 
             Repeater {
+                id: tabRepeater
+
                 model: root.tabs
 
                 delegate: T.AbstractButton {
                     id: tab
 
                     required property var modelData
+                    required property int index
                     readonly property bool active: root.currentKey === modelData.key
 
                     width: VLCStyle.dp(modelData.width ?? 100)
@@ -98,6 +155,11 @@ Widgets.RdPanel {
                     Accessible.checked: active
 
                     onClicked: root.tabClicked(modelData.key)
+
+                    Navigation.leftAction: () => root._selectTab(tab.index - 1)
+                    Navigation.rightAction: () => root._selectTab(tab.index + 1)
+                    Navigation.downAction: () => root.focusContent(Qt.TabFocusReason)
+                    Navigation.upAction: () => { }
 
                     Keys.priority: Keys.AfterItem
                     Keys.onPressed: (event) => Navigation.defaultKeyAction(event)

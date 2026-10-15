@@ -1906,11 +1906,48 @@ FocusScope {
         rootPlayer.lockUnlockAutoHide(open)
     }
 
+    // keyboard: a panel opened from a control bar button with the keyboard (Tab, then Space or
+    // Enter) takes the focus, so the arrows act in it at once; Escape closes it and gives the
+    // focus back to that button
+    property Item _panelOpener: null
+
+    function _isInside(item, ancestor) {
+        for (let p = item; p; p = p.parent) {
+            if (p === ancestor)
+                return true
+        }
+        return false
+    }
+
+    function _openPanelItem() {
+        const loader = RdPanels.tracksOpen ? tracksPopupLoader
+                     : RdPanels.settingsOpen ? settingsPanelLoader
+                     : RdPanels.queueOpen ? queuePanelLoader : null
+        return loader ? loader.item : null
+    }
+
+    function _focusOpenPanel() {
+        const panel = rootPlayer._openPanelItem()
+        if (panel && typeof panel.focusContent === "function")
+            panel.focusContent(Qt.TabFocusReason)
+    }
+
     Connections {
         target: RdPanels
 
         function onCurrentChanged() {
             rootPlayer._updatePanelLock()
+
+            if (RdPanels.current === "") {
+                rootPlayer._panelOpener = null
+                return
+            }
+            const window = rootPlayer.Window.window
+            const focused = window ? window.activeFocusItem : null
+            if (focused && focused.visualFocus === true && rootPlayer._isInside(focused, controlBar)) {
+                rootPlayer._panelOpener = focused
+                Qt.callLater(rootPlayer._focusOpenPanel)
+            }
         }
     }
 
@@ -1935,10 +1972,18 @@ FocusScope {
         sequences: [StandardKey.Cancel]
         enabled: RdPanels.current !== "" || RdPanels.uiHidden
         onActivated: {
-            if (RdPanels.current !== "")
+            if (RdPanels.current !== "") {
+                const opener = rootPlayer._panelOpener
+                const window = rootPlayer.Window.window
+                const panel = rootPlayer._openPanelItem()
+                const focusInPanel = !!opener && !!window && !!panel
+                                     && rootPlayer._isInside(window.activeFocusItem, panel)
                 RdPanels.close()
-            else
+                if (focusInPanel && opener.visible && opener.enabled)
+                    opener.forceActiveFocus(Qt.TabFocusReason)
+            } else {
                 RdPanels.uiHidden = false
+            }
         }
     }
 

@@ -25,7 +25,46 @@ import VLC.MainInterface
 import VLC.Style
 
 Rectangle {
+    id: root
+
     property bool withShadow: false
+
+    // keyboard (the player panels): Up / Down that no control inside the panel used move the
+    // focus to the previous / next control of the panel, like Shift+Tab / Tab, without leaving it
+    property bool arrowNavigation: false
+
+    // true when `item` is the panel or inside it
+    function containsItem(item) {
+        for (let p = item; p; p = p.parent) {
+            if (p === root)
+                return true
+        }
+        return false
+    }
+
+    // focuses the first control of the panel in the Tab order; false when it has none
+    function focusFirst(reason) {
+        const next = root.nextItemInFocusChain(true)
+        if (!next || !root.containsItem(next))
+            return false
+        next.forceActiveFocus(reason)
+        return true
+    }
+
+    function _moveFocus(forward, event) {
+        const window = root.Window.window
+        const current = window ? window.activeFocusItem : null
+        if (!current || !root.containsItem(current))
+            return
+        event.accepted = true
+        const next = current.nextItemInFocusChain(forward)
+        if (next && next !== current && root.containsItem(next))
+            next.forceActiveFocus(forward ? Qt.TabFocusReason : Qt.BacktabFocusReason)
+    }
+
+    Keys.enabled: root.arrowNavigation
+    Keys.onUpPressed: (event) => root._moveFocus(false, event)
+    Keys.onDownPressed: (event) => root._moveFocus(true, event)
 
     radius: VLCStyle.rd_radius_panel
     color: VLCStyle.palette.rdBgB1Transparent
