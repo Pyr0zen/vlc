@@ -18,6 +18,7 @@
 import QtQuick
 import QtQuick.Templates as T
 import QtQuick.Layouts
+import QtQuick.Window
 
 import VLC.Player
 import VLC.Widgets as Widgets
@@ -75,7 +76,69 @@ T.ProgressBar {
         onTriggered: control._isSeekPointsShown = false
     }
 
-    Widgets.PointingToolTipAttached.visible: (hoverHandler.hovered || control.visualFocus || dragHandler.active)
+    // redesign: preview card (P2-04 / IA-14, video 3:24-3:31, Figma "thumbnail"; Decision 6:
+    // anywhere along the bar). Hovering or dragging the thick bar shows a frame of the position
+    // under the pointer with its time; it replaces the time tooltip, which stays for keyboard
+    // focus and for media without frames (streams, audio, the option off; RdSeekThumbnailer)
+    readonly property bool _previewOption: RdEffects.values[RdEffects.optionKey("qt-seek-thumbnails")] !== false
+    readonly property bool _previewAvailable: control.thick && control._previewOption && control.enabled
+                                              && control.visible && RdSeekThumbnailer.supported
+                                              && Player.seekable && Player.videoTracks.count > 0
+    // the pointer is scrubbing: over the bar, or dragging it (also past its ends)
+    readonly property bool scrubbing: hoverHandler.hovered || dragHandler.active
+    readonly property bool dragging: dragHandler.active
+    readonly property bool _previewShown: control._previewAvailable && control.scrubbing
+    readonly property real _scrubX: Helpers.clamp(dragHandler.active ? dragHandler.centroid.position.x
+                                                                     : hoverHandler.point.position.x,
+                                                  0, control.width)
+    // the position under the pointer (0..1); the current time label shows it while dragging
+    readonly property real scrubPosition: control.width > 0 ? control._scrubX / control.width : 0
+
+    function _updatePreview() {
+        if (control._previewShown)
+            RdSeekThumbnailer.request(control.scrubPosition)
+        else
+            RdSeekThumbnailer.stop()
+    }
+
+    on_PreviewShownChanged: control._updatePreview()
+    onScrubPositionChanged: {
+        if (control._previewShown)
+            RdSeekThumbnailer.request(control.scrubPosition)
+    }
+
+    // frames are made at the card's size in device pixels
+    readonly property real _devicePixelRatio: Screen.devicePixelRatio
+
+    Binding {
+        target: RdSeekThumbnailer
+        property: "frameSize"
+        when: control.thick
+        value: Qt.size(Math.round(VLCStyle.rd_seekPreviewPictureWidth * control._devicePixelRatio),
+                       Math.round(VLCStyle.rd_seekPreviewPictureHeight * control._devicePixelRatio))
+    }
+
+    // above every bar and panel of the window, centered on the pointer, its bottom edge
+    // rd_seekPreviewGap above the bar, kept inside the window
+    RdSeekPreview {
+        id: seekPreview
+
+        parent: T.Overlay.overlay
+        visible: control._previewShown && !!parent
+
+        readonly property point _anchor: (visible && parent) ? control.mapToItem(parent, control._scrubX, 0)
+                                                             : Qt.point(0, 0)
+
+        x: Helpers.clamp(_anchor.x - width / 2, VLCStyle.rd_seekPreviewEdgeMargin,
+                         (parent ? parent.width : 0) - width - VLCStyle.rd_seekPreviewEdgeMargin)
+        y: Math.max(VLCStyle.rd_seekPreviewEdgeMargin, _anchor.y - VLCStyle.rd_seekPreviewGap - height)
+
+        source: RdSeekThumbnailer.source
+        timeText: visible ? Player.length.scale(control.scrubPosition).formatHHMMSS() : ""
+    }
+
+    Widgets.PointingToolTipAttached.visible: !control._previewShown
+                                             && (hoverHandler.hovered || control.visualFocus || dragHandler.active)
 
     Widgets.PointingToolTipAttached.text: {
         if (!Widgets.PointingToolTipAttached.instance?.visible)

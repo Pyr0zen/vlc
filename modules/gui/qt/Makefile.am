@@ -1507,6 +1507,7 @@ libqml_module_player_a_QML = \
 	player/qml/AudioSettingsPage.qml \
 	player/qml/SubtitleSettingsPage.qml \
 	player/qml/RdSliderCommit.qml \
+	player/qml/RdSeekPreview.qml \
 	player/qml/TracksPage.qml \
 	player/qml/TracksPageAudio.qml \
 	player/qml/TracksPageSpeed.qml \
