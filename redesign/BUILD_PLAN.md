@@ -194,11 +194,11 @@ CI note: parallel lanes only speed up writing code. Every merge to `redesign` tr
 
 ## 5. Test loop (every work package)
 
-1. **Before coding:** list the package's VIDEO_INDEX rows; for each, read the transcript lines and pull dense frames (`ffmpeg -ss <t> -t <d> -i redesign/reference/vlc_redesign.mp4 -vf fps=6 redesign/reference/frames_work/wp/<WP>/f_%03d.jpg`); open the matching Figma PNGs and the FIGMA_FLOWS.md rows/specs.
+1. **Before coding:** list the package's VIDEO_INDEX rows; for each, check what she says at those timestamps and pull dense frames from the local copy of the video (`ffmpeg -ss <t> -t <d> -i <local video> -vf fps=6 <local frames folder>/<WP>/f_%03d.jpg`; the video, its transcript and all frames are local only, never committed); open the matching Figma PNGs and the FIGMA_FLOWS.md rows/specs.
 2. **Code** in `modules/gui/qt` (core only where the plan says so), register new files in both `meson.build` and `Makefile.am`.
 3. **Push** to `redesign`; `gh run watch` until done. On failure: `gh run view --log-failed`, fix the cause, log it in `redesign/BUILD_NOTES.md`, push again. No blind retries.
 4. **Download** the artifact with `gh run download` into `builds/<run-id>/` (outside the repo, git-ignored by location).
-5. **Run on this PC** with a real video (`redesign/reference/vlc_redesign.mp4` or a short test clip): `vlc.exe --no-qt-privacy-ask <file>`. Use a separate config dir so tests don't touch Sticky's real VLC settings: set `APPDATA` to `builds/<run-id>/appdata` before starting.
+5. **Run on this PC** with a real test video (<TEST_VIDEO> or another short test clip, never the designer's video): `vlc.exe --no-qt-privacy-ask <file>`. Use a separate config dir so tests don't touch Sticky's real VLC settings: set `APPDATA` to `builds/<run-id>/appdata` before starting.
 6. **Screenshot every state** the rows describe (default, hover, open panel, each tab, menus, dialogs): PowerShell `System.Drawing` `CopyFromScreen` of the VLC window, with mouse moves and clicks scripted via `user32` `SetCursorPos` / `mouse_event` and keys via `SendKeys`. Save to `redesign/reference/frames_work/test/<WP>/` (local only).
 7. **Compare** each screenshot side by side with the video frame at the matching timestamp and the Figma PNG (crop both to the same region, check layout, sizes, colors from styles.txt, labels, order). List every difference; fix or record it under "Decisions (Claude)" with the reason.
 8. **Regression check** of normal VLC functions: open file, play/pause, seek, volume, fullscreen, subtitles on/off, audio track switch, playlist next/previous, preferences save and reload, quit without crash.
@@ -310,7 +310,7 @@ Each row inherits the files, reused VLC functions and dependencies of its work p
 | IB-11 | 11:37-11:59 | top bar | Sidebar-toggle icon states | W3.1 | S | UI | no |
 | P2-06 | 3:35-3:39 | top bar | Restyled single-row top bar | W3.1 | S | UI | no |
 | P2-09 | 3:55-4:03 | top bar | Fullscreen and Picture-in-Picture icons in the top bar | W3.1 | M | NEW (PiP) / UI (fullscreen) | no |
-| P2-10 | 4:01-4:07 | top bar | "Up or down" choice for fullscreen/PiP | W3.1 | S | UI? | no |
+| P2-10 | 4:01-4:07 | top bar | Top or bottom choice for fullscreen/PiP | W3.1 | S | UI? | no |
 | P5-20 | 11:24-11:31 | top bar | Show / folder name in top bar opens the library | W3.1 | M | NEW? | no |
 | P5-22 | 11:37-11:40 | top bar | Sidebar (panel) icon next to folder name | W3.1 | S | UI | no |
 | P5-30 | 11:41-11:59 | top bar | Top bar state with library open | W3.1 | S | UI | no |
@@ -326,7 +326,7 @@ Each row inherits the files, reused VLC functions and dependencies of its work p
 | P1-15 | 2:15-2:22 | control bar | Fullscreen and settings move to the right | W3.2 | S | UI | no |
 | P2-03 | 3:16-3:24 | control bar | Thin single-row control bar layout | W3.2 | S | UI | no |
 | P2-12 | 4:07-4:08 | control bar | Play/pause button states | W3.2 | S | UI | no |
-| P3-13 | 6:32-6:40 | control bar | Gear-with-play icon ("Pandora's box") = old Adjustments | W3.2 | S | UI | no |
+| P3-13 | 6:32-6:40 | control bar | Gear-with-play icon (catch-all settings button) = old Adjustments | W3.2 | S | UI | no |
 | P4-03 | 7:52-8:03 | control bar | Gear (settings) button icon, active state | W3.2 | S | UI | no |
 | P4-38 | 9:18-9:20 | control bar | Play/pause button states (context) | W3.2 | S | UI | no |
 | IA-13 | 3:16-3:30 | control bar | Thick seek bar construction | W3.3 | S | UI | no |
@@ -424,7 +424,7 @@ Each row inherits the files, reused VLC functions and dependencies of its work p
 | IB-27 | 12:56-13:07 | menus | Main menu typography, spacing, states | W4.9 | S | UI | no |
 | IB-28 | 13:07-13:08 | menus | Menu re-order transition | W4.9 | S | UI | no |
 | P2-20 | 5:05-5:14 | top bar | Single menu icon replaces the menu bar | W4.9 | S | UI | no |
-| P2-21 | 5:08-5:16 | menus | "..." main menu contents (video version, "for now") | W4.9 | S | UI (Customize Player screen and Plugins & Extensions submenu are NEW?) | no |
+| P2-21 | 5:08-5:16 | menus | "..." main menu contents (video version, provisional) | W4.9 | S | UI (Customize Player screen and Plugins & Extensions submenu are NEW?) | no |
 | P6-11 | 13:07-13:09 | menus | Cleaned-up menu (final order) | W4.9 | S | UI | no |
 | P7-09 | 15:28-15:33 | menus | Main "..." menu, Settings item | W4.9 | S | UI | no |
 | P8-49 | 19:29-19:36 | menus | Main menu icon details | W4.9 | S | UI | no |
