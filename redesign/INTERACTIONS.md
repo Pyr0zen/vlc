@@ -46,6 +46,7 @@ The user can switch Dark / Light / System and pick one of 9 accent colors at any
 The same option can be changed in several places: the right sidebar tabs, the Settings dialog pages, menus, hotkeys, per-show presets and profiles.
 - All of them read and write the same VLC option / player property and update live when it changes elsewhere (e.g. subtitle delay from the sidebar slider, from G/H hotkeys, from a preset).
 - Presets (Decision 18) apply to every tab at once; the sidebar must show the active preset's values right after it is applied.
+- Endless sliders (Decision 46, RdEndlessSlider): a value set from elsewhere (preset, hotkey, profile, typed) that lies past the slider's normal range scrolls its scale to show it; once it is back in the normal range the normal view returns. Never clamp such a value to the slider's normal range in a setter.
 - Options that only apply on the next file or vout must say so (Decision 29 notice) instead of silently doing nothing.
 - The Settings dialog pages (W6.1/W6.2) read and write options through RdEffects like the sidebar, so a value changed in one shows in the other right away; a page binds to `RdEffects.revision`, never caches a value.
 - VLC's complete preferences ("All VLC Settings") write the same options; the redesigned dialog closes before they open, and reopening it re-reads every value.
