@@ -488,32 +488,34 @@ FocusScope {
 
     // one row of the page's model as a library item (see RdLibraryActions)
     function toItem(model, index) {
+        // held by value: a page, a crumb or a menu keeps it after the model reloads (a scan)
+        const id = RdLibraryNav.detachedId(model.id)
         // a folder page: its subfolders first, then its media
         if (folderContentLoader.item) {
             if (model.rdFirst)
-                return { kind: "folder", index: model.rdSourceRow, id: model.id, title: model.title ?? "",
+                return { kind: "folder", index: model.rdSourceRow, id: id, title: model.title ?? "",
                          mrl: model.mrl ?? "", isRoot: false }
             index = model.rdSourceRow
         }
         switch (modelKind) {
         case "subfolder":
-            return { kind: "folder", index: index, id: model.id, title: model.title ?? "", mrl: model.mrl ?? "",
+            return { kind: "folder", index: index, id: id, title: model.title ?? "", mrl: model.mrl ?? "",
                      isRoot: location.page !== "folder" }
         case "album":
-            return { kind: "album", index: index, id: model.id, title: model.title ?? "",
+            return { kind: "album", index: index, id: id, title: model.title ?? "",
                      subtitle: model.main_artist ?? "", thumbnail: model.cover ?? "" }
         case "artist":
-            return { kind: "artist", index: index, id: model.id, title: model.name ?? "", thumbnail: model.cover ?? "" }
+            return { kind: "artist", index: index, id: id, title: model.name ?? "", thumbnail: model.cover ?? "" }
         case "genre":
-            return { kind: "genre", index: index, id: model.id, title: model.name ?? "" }
+            return { kind: "genre", index: index, id: id, title: model.name ?? "" }
         case "playlistList":
-            return { kind: "playlist", index: index, id: model.id, title: model.name ?? "",
+            return { kind: "playlist", index: index, id: id, title: model.name ?? "",
                      thumbnail: model.thumbnail ?? "" }
         case "url":
-            return { kind: "stream", index: index, id: model.id, title: model.url ?? "", mrl: model.url ?? "",
+            return { kind: "stream", index: index, id: id, title: model.url ?? "", mrl: model.url ?? "",
                      progress: -1, watched: false, isVideo: true }
         case "collection":
-            return { kind: model.kind, index: index, id: model.id, title: model.title, subtitle: model.subtitle,
+            return { kind: model.kind, index: index, id: id, title: model.title, subtitle: model.subtitle,
                      mrl: model.mrl, thumbnail: model.thumbnail, progress: model.progress, watched: model.watched,
                      isVideo: model.isVideo, isFavorite: model.isFavorite }
         case "network":
@@ -535,7 +537,7 @@ FocusScope {
             return {
                 kind: "media",
                 index: index,
-                id: model.id,
+                id: id,
                 // videos show their file name, as in the design ("The_Wand_S01E05.mp4")
                 title: (isVideo && model.fileName) ? model.fileName : (model.title ?? ""),
                 subtitle: model.main_artist ?? "",

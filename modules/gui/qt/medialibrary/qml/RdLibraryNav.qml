@@ -117,6 +117,22 @@ QtObject {
         }
     }
 
+    // a media library id held by value. In Qt 6 an id read from a model row (model.id) is a
+    // reference to that row: when the model reloads (a scan) or its delegate is reused, it reads
+    // another row's id or an invalid one, and a folder page made with it listed the whole
+    // category (P5-16, F-14, P6-01)
+    function detachedId(id) {
+        if (!id || typeof id.isValid !== "function" || !id.isValid())
+            return id
+        return MediaLib.deserializeMlItemIdFromString(id.toString())
+    }
+
+    function _detach(loc) {
+        if (loc.id !== undefined)
+            loc.id = detachedId(loc.id)
+        return loc
+    }
+
     function _go(loc) {
         if (sameLocation(loc, location))
             return
@@ -133,6 +149,7 @@ QtObject {
     // a location below `parent` (the current location by default)
     function openChild(child, parent) {
         const from = parent ?? location
+        _detach(child)
         child.crumbs = from.crumbs.concat([child])
         _go(child)
     }
@@ -143,6 +160,7 @@ QtObject {
             return
         const crumbs = []
         for (let i = 0; i < locations.length; ++i) {
+            _detach(locations[i])
             locations[i].crumbs = crumbs.concat([locations[i]])
             crumbs.push(locations[i])
         }
