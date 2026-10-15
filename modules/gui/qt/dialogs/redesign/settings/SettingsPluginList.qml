@@ -16,8 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 // redesign: VLC's plugins under the Extensions page's Advanced Options (video 18:28-18:47,
-// P8-19 / P8-20: "plugins are VLC's internal functions, you're not really supposed to edit them
-// here", so they move out of the add-ons list). The old dialog's table: Name, Capability, Score,
+// P8-19 / P8-20: plugins are VLC's internal functions, not meant to be edited by users
+// there, so they move out of the add-ons list). The old dialog's table: Name, Capability, Score,
 // with a search field. Rows are created as they scroll into the list's own 360 px view.
 import QtQuick
 import QtQuick.Layouts
