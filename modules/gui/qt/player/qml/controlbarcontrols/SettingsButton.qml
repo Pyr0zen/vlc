@@ -20,6 +20,7 @@
 // as the main menu's Settings (Ctrl + P)
 import QtQuick
 
+import VLC.MainInterface
 import VLC.Dialogs
 import VLC.Widgets as Widgets
 import VLC.Style
@@ -30,7 +31,7 @@ Widgets.IconToolButton {
 
     text: VLCIcons.settings
     rdIcon: "settings"
-    description: qsTr("VLC Settings")
+    description: qsTr("%1 Settings").arg(Brand.shortName)
 
     onClicked: DialogsProvider.prefsDialog()
 

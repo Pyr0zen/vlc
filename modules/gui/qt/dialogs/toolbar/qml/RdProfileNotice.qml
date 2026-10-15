@@ -108,7 +108,7 @@ T.Popup {
             Layout.preferredWidth: implicitWidth
 
             text: root._restart
-                  ? qsTr("Some settings of “%1” apply after VLC restarts.").arg(root._profile)
+                  ? qsTr("Some settings of “%1” apply after %2 restarts.").arg(root._profile).arg(Brand.shortName)
                   : qsTr("Some settings of “%1” apply from the next file.").arg(root._profile)
             elide: Text.ElideRight
             color: VLCStyle.palette.rdFg2

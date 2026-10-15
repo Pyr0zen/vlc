@@ -81,7 +81,7 @@ QtObject {
         { id: ControlListModel.RD_HDR_BUTTON, file: "HdrButton.qml", label: VLCIcons.tv, text: qsTr("HDR") },
         { id: ControlListModel.RD_ZOOM_BUTTON, file: "ZoomButton.qml", label: VLCIcons.aspect_ratio, text: qsTr("Zoom") },
         { id: ControlListModel.RD_RIGHT_SIDEBAR_BUTTON, file: "RightSidebarButton.qml", label: VLCIcons.panel_left, text: qsTr("Right Sidebar") },
-        { id: ControlListModel.RD_SETTINGS_BUTTON, file: "SettingsButton.qml", label: VLCIcons.settings, text: qsTr("VLC Settings") },
+        { id: ControlListModel.RD_SETTINGS_BUTTON, file: "SettingsButton.qml", label: VLCIcons.settings, text: qsTr("%1 Settings").arg(Brand.shortName) },
         { id: ControlListModel.RD_HOME_BUTTON, file: "HomeButton.qml", label: VLCIcons.home, text: qsTr("Go Home") },
         { id: ControlListModel.RD_THUMBNAIL, file: "ThumbnailWidget.qml", label: VLCIcons.album_cover, text: qsTr("Thumbnail") },
         { id: ControlListModel.RD_FILE_NAME, file: "FileNameWidget.qml", label: VLCIcons.info, text: qsTr("File Name") },

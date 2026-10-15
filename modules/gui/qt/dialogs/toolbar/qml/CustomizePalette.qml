@@ -138,7 +138,7 @@ GridView {
         case ControlListModel.SKIP_BACK_BUTTON: return qsTr("Backward\n15s")
         case ControlListModel.RD_SKIP_FW_10_BUTTON: return qsTr("Forward\n10s")
         case ControlListModel.RD_SKIP_BACK_10_BUTTON: return qsTr("Backward\n10s")
-        case ControlListModel.QUIT_BUTTON: return qsTr("Quit VLC")
+        case ControlListModel.QUIT_BUTTON: return qsTr("Quit %1").arg(Brand.shortName)
         case ControlListModel.LOOP_BUTTON: return qsTr("Repeat")
         case ControlListModel.RANDOM_BUTTON: return qsTr("Shuffle")
         case ControlListModel.INFO_BUTTON: return qsTr("Properties")
