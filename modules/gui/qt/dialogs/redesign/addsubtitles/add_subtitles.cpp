@@ -498,14 +498,18 @@ void AddSubtitles::setTarget(int target)
     m_target = target;
     emit targetChanged();
 
-    // the search follows the target ("The Wand S01E01" for a file, "The Wand S01" for a season)
+    // the search follows the target ("The Wand S01E01" for a file, "The Wand S01" for a season),
+    // unless the user wrote their own; a file asks OpenSubtitles for its episode, a folder or a
+    // playlist for the whole season, so the results change too
     if (defaultText)
     {
         m_searchText = defaultSearchText();
         emit searchTextChanged();
-        if (m_source == SourceOpenSubtitles)
-            search();
     }
+    if (m_source == SourceOpenSubtitles)
+        search();
+    else
+        m_searched = false;
 
     loadVideos();
     rebuild();
