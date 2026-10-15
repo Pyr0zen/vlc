@@ -76,6 +76,11 @@ Decided by Sticky on 2026-10-12. General rule for anything not listed: her final
 36. (2026-10-14) Discover cast devices OFF (row 359): search only while the cast picker is open, never in the background.
 37. (2026-10-14) Double click on the video set to Play/Pause (row 354): single-click play/pause turns off in that case, so single clicks never need a delay. Default stays double click = fullscreen.
 38. (2026-10-14) Night mode (row 355): Sticky does the listening test once it is built (tell him when).
+39. (2026-10-15, Q1) Settings sidebar exactly like Figma: no footer on the Playback tab, and the selected tab's icon is highlighted in orange (the two-tone "selected" icon variant, as in Figma and the video), not just the normal icon; research the tab states frame by frame and replicate them.
+40. (2026-10-15, Q2) "Open Advanced Settings" is a plain text link with the gear, no button fill, like Figma and the video.
+41. (2026-10-15, Q3) Every dialog dims the window behind it the same way the video does (strong dim over the whole window, bars included), the same for all dialogs.
+42. (2026-10-15, Q4) Keycap font: DM Mono as in Figma, bundled with VLC (SIL Open Font License); if a licence ever prevented it, the closest free match.
+43. (2026-10-15) Component motion: when building buttons, tabs and other controls, study the Figma prototype and the video frames to see how they animate (hover, press, selection, tab switch) and replicate that motion, not just the static look.
 
 ## Decisions (Claude)
 Extra decisions made during the build, one line each (date, row IDs, decision, reason).
