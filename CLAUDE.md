@@ -6,7 +6,7 @@
 - The design is a mockup only. No code for it exists. Everything gets built by us on top of upstream VLC.
 - The playback engine, codecs and core stay as they are wherever possible. Most of her ideas are UI work on top of features VLC already has. Where a feature truly needs core changes, explain why and get Sticky's approval first.
 - Base: VLC master (VLC 4 development branch), which has the QML interface in `modules/gui/qt`. Do NOT use the 3.0.x branch, its UI is QtWidgets and cannot be restyled the same way.
-- This repo: Sticky's GitHub fork https://github.com/Pyr0zen/vlc of the official mirror https://github.com/videolan/vlc (official upstream: https://code.videolan.org/videolan/vlc).
+- This repo: Sticky's GitHub fork https://github.com/Pyr0zen/vlc-redesign-juxtopposed of the official mirror https://github.com/videolan/vlc (official upstream: https://code.videolan.org/videolan/vlc).
 - Owner: Sticky (GitHub: Pyr0zen). Windows 10 PC, PowerShell, a local Windows user.
 
 ## How we work
@@ -16,10 +16,8 @@
 - Use the GitHub CLI (`gh`, already logged in) to watch runs and read failed logs: `gh run watch`, `gh run view --log-failed`.
 - Sticky downloads the build artifact from the Actions tab and tests it on Windows.
 
-## Design reference (local, in `redesign/reference/`)
-- `vlc_redesign.mp4` the designer's full video. LOCAL ONLY, excluded from git, never commit it.
-- `vlc_redesign.en.srt` its transcript, with her reasoning for every change.
-- `frames/` scene-change frames already extracted.
+## Design reference (in `redesign/reference/`)
+- The designer's video (https://youtu.be/ERFeOgqk324), its transcript and every frame extracted from it are LOCAL ONLY (gitignored, never committed: her copyrighted content). Their file names are in CLAUDE.local.md: `vlc_redesign.mp4`, `vlc_redesign.en.srt` (her reasoning for every change), `frames/` (scene-change frames), `frames_library/`, `frames_settings/`, `frames_work/`.
 - `figma/figma_file.json` full Figma file from the API (committed 2026-10-13 at Sticky's request so other sessions have the exact specs; the Figma file is a public Community file); `redesign/FIGMA_FLOWS.md` summarizes its prototype interactions and exact specs.
 - `redesign/BUILD_PLAN.md` architecture map, work packages (Step 1 UI only, then Step 2 new features), Phase 1 workflow, test loop, risks.
 - `redesign/RESIDUAL_AUDIT.md` every element of VLC's current interface marked KEEP / MOVE / NOT IN VIDEO. Remove nothing until Sticky decides.
@@ -45,14 +43,14 @@ For every element, every time:
 ## Branches and git
 - Work only on the branch `redesign`. Never push to `master`. Never open pull requests to upstream videolan repos.
 - Never commit build outputs, the mp4, or frames_work/.
-- figma/, frames/, the srt and styles.txt may be committed (small files, useful for contributors).
+- figma/ and styles.txt may be committed (her Figma file is CC BY 4.0, credited in CREDITS.md). Never commit the video, the transcript, video frames or quotes from her narration.
 
 ## Parallel work (Sticky, 2026-10-13)
 - Agent pacing (Sticky, 2026-10-14, updated): 10 parallel agents burned 24 % of the 5-hour session limit in minutes; with agents starting their own sub-agents 19 tasks ran at once and the limit hit 50 %. Hitting it pauses everything for hours. Rules: (1) only the main session starts agents; no agent may start sub-agents of its own: agents do all their work themselves, sequentially (reviews included), and every agent prompt says so; (2) never more than 4 agents alive at once in total across the whole session, sub-agents counted; queue the rest and start the next only when a slot frees; (3) running agents finish their current step, never stop them for this; (4) queue priority: library and settings integrations first, then UX and playback-stall fixes, then the rest; (5) Opus for all agents; (6) tight prompts: the exact files and VIDEO_INDEX rows, not the whole project; (7) keep the queue in redesign/STATUS.md.
 - **Phase 5 belongs to the web session:** a second Claude Code session on the web builds Phase 5 (library shell, music, playlists, network streams, home, recent, pins, mini player, drag to queue: W5.1-W5.9, Step 1 and Step 2 parts), fully wired to VLC's real data, on branch `redesign-library`. The local session does not touch Phase 5 files (modules/gui/qt/medialibrary/qml, network/qml, maininterface/qml/MainDisplay.qml, LocalTopbar.qml, MainViewLoader.qml, NoMedialibHome.qml, playlist/qml/PlaylistDetachedWindow.qml, player/qml/MiniPlayer.qml / PIPPlayer.qml). Shared files (Player.qml, palette, MainCtx, meson.build, Makefile.am, widgets) are edited by both only where needed and merged carefully.
 - **Settings pages belong to a web session too (Sticky, 2026-10-14):** the web session builds the Settings dialog category pages (W6.2 and the related rows, everything except the Add Subtitles dialog W6.5) on branch `redesign-settings`, branched from `redesign`, using `reference/frames_settings/` (506 frames at 2 fps, see its README). The local session does not touch `modules/gui/qt/dialogs/redesign/settings/pages/*`. When Sticky says it pushed: review, merge, build and test it like the library.
 - **Merging redesign-library:** when Sticky says it pushed: independent review of the whole branch diff, `redesign/tools/qmlcheck.py`, merge into `redesign`, one build, full test round on this PC against the video like everything else.
-- **Web session notes:** it has the transcript (`reference/vlc_redesign.en.srt`), the 97 key frames (`reference/frames/`), the Phase 5 segments at 2 frames per second (`reference/frames_library/`, see its README), the Figma PNGs and `figma/figma_file.json`, VIDEO_INDEX.md and FIGMA_FLOWS.md; it does not have the mp4 or `frames_work/`. CI builds only `redesign`, so it verifies with qmlcheck; the on-PC test happens after the merge.
+- **Web session notes:** web sessions only have the committed material (the Figma PNGs and `figma/figma_file.json`, VIDEO_INDEX.md and FIGMA_FLOWS.md); the video, transcript and frames are local to the PC session only. CI builds only `redesign`, so it verifies with qmlcheck; the on-PC test happens after the merge.
 - **Local session:** while a build is tested, subagents code the next independent work packages in separate git worktrees (one package or tightly coupled pair per agent, never two agents on the same files), each following every rule in this file; then independent review, qmlcheck, merge into `redesign` as the next batch. The 5-packages-per-build rule and the full test loop stay.
 
 ## Current phase
@@ -66,7 +64,7 @@ READY TO BUILD. Next session: read CLAUDE.md, VIDEO_INDEX.md, FIGMA_FLOWS.md and
 - Step 6 running in agents (worktrees): W8.1a Customize Player restyle, W8.3 onboarding. W8.4 light theme (Decision 33: FG/1 #111111, FG/2 #222222). W6.2 belongs to the redesign-settings web session (review, merge, build, test when Sticky says it pushed).
 - Settings branch (Sticky, 2026-10-14): when the web session's final commit on redesign-settings lands and redesign/SETTINGS_NOTES.md says it is done (all 13 pages), read the notes, then review, merge, build and test it like the library, with the full test loop and the performance rule.
   - Settings branch status: finished (web session stopped, PR #2 ready); independent review running. Merge right after the library. Known from the rows research: its "Fullscreen controls sensitivity" row writes qt-fs-sensitivity which nothing reads (wire it to Player.qml _barHoverZone, row 361), and "Give VLC high priority" does nothing when saved (high-priority is read before vlcrc loads; row 356 can apply it at startup).
-- Decisions waiting for Sticky: Hide UI 300 ms vs the 150-200 ms cap; pixel subtitle size / live style (core); DM Mono font.
+- Decisions waiting for Sticky: pixel subtitle size / live style (core); DM Mono font.
 - After verification: rest of Step 1 (BUILD_PLAN.md section 0) in build rounds of 5 work packages, then Step 2.
 - Test media: <TEST_MEDIA_DIR>\<TEST_VIDEO> (landscape) and <TEST_VIDEO_PORTRAIT> (portrait). Never test with the designer's video. Screenshots of them stay local (they show Sticky's screen).
 - Update this section after every item: last completed row/WP with commit hash, next WP, latest green run.
@@ -80,6 +78,12 @@ READY TO BUILD. Next session: read CLAUDE.md, VIDEO_INDEX.md, FIGMA_FLOWS.md and
 - **Build rounds (Sticky, 2026-10-13):** bundle 5 work packages per build: code them, run the independent review on all of them, then push once and do one full test round covering all of them. Do not push after every small fix. Only exception: any change to VLC's core (anything outside modules/gui/qt) goes in its own build, never mixed with other changes. If a build breaks at runtime, look for the cause in the riskiest change of the batch first (shared files such as Player.qml, the palette, MainCtx). Doc-only pushes stay as they are (they do not trigger a build).
 - **Clean stop:** when Sticky writes "stopping for today": finish the edit in progress, commit everything, push so a build runs while he is away, update and push STATUS.md with exactly where you are and what is next, then stop. When he writes "Read CLAUDE.md and continue": first test the build that ran while he was away, then continue.
 - **Status file (permanent):** keep `redesign/STATUS.md` updated and push it after every finished work package, every phase, and whenever you stop or get blocked. It holds, at the top, the date and time, the current work package and the last 10 commits (hash + message), then the latest PROGRESS REPORT. Overwrite it each time.
+
+## Privacy and copyright (Sticky, 2026-10-15, permanent)
+- The repo is public. Never commit anything personal or from Sticky's PC: no real names, Windows user name, PC paths, e-mail addresses (commits use the noreply identity), personal files or their names, his music, his test videos or screenshots of his screen. Committed files use neutral placeholders (<TEST_MEDIA_DIR>, <WORK_DIR>, <TEST_VIDEO>, ...); the real values live only in the gitignored CLAUDE.local.md and *.local.* settings files.
+- Never commit the designer's video content (frames, transcript, the video, quotes from it); her Figma file (CC BY 4.0) may be committed, with credit (CREDITS.md).
+- Committed files refer to the owner only as Sticky (studio tag; GitHub Pyr0zen), never by real name; the private word list catches the real name.
+- Before every commit and push run `python redesign/tools/privacycheck.py` (generic checks plus the private word list in the gitignored redesign/tools/privacy.local.txt); it must print `privacycheck: 0 problem(s)`. Public screenshots show only the VLC window with generated or public test media.
 
 ## Decision questions to Sticky (Sticky, 2026-10-15, permanent)
 - Every question about how something looks or behaves comes with a side-by-side image, so Sticky decides by looking, not by reading. One image per question: "Now" = a real screenshot of our build (test VLC), "Figma" = the Figma frame cropped to the same element at the same scale, and "Video mm:ss" = the matching video frame when the video shows it; when there are several options (e.g. two colors), each option is its own labelled panel. Put the question number and short title on the image. Save as `<TEST_MEDIA_DIR>/decisions/Q<n>-<short-name>.png` (the only folder written inside Sticky's folder) and open them or list the paths in the message. Applies to every open visual question, including ones still waiting.

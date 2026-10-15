@@ -8,7 +8,7 @@ Log of every CI problem and fix (newest last). Workflow: `.github/workflows/buil
 
 ## 2026-10-13 W1.1 first green build
 - Run 38315049322 (commit 241edd8f49): green in 27 min total, build step 23 min (prebuilt contribs found for a5538c557d27, tools built from scratch). Artifact vlc-redesign-win64 = vlc-4.0.0-dev folder, 225 MB unpacked.
-- Tested on Sticky's PC (isolated APPDATA): vlc.exe opens, plays redesign/reference/vlc_redesign.mp4, auto-loads the .srt, closes cleanly. Phase 1 done.
+- Tested on Sticky's PC (isolated APPDATA): vlc.exe opens, plays a local video with an external .srt next to it (auto-loaded), closes cleanly. Phase 1 done.
 - Windows Defender Firewall asks on first start of a new vlc.exe path (network access). Left for Sticky to answer; not needed for local playback.
 
 ## 2026-10-13 W1.1 cached tools permission error
@@ -241,6 +241,9 @@ Merged `origin/redesign-settings` (PR #2) on the library integration, then `rede
 ## 2026-10-15 hands-on (build 38609407210, light theme)
 - UX bug: with the main "..." menu open, Ctrl+P opened the Settings dialog on top while the menu stayed open behind it. Opening any dialog (shortcut or menu) must close open menus and popups first. Check on the next build (the UX pass changed menu dismissal), fix if still there.
 - Light theme: placeholders and disabled text use Figma's Light FG/A4 #3B3B3B and read almost like typed text (Open Network Stream fields): decision image Q5 for Sticky.
+
+## 2026-10-15 seek to the start
+- Bug (upstream code, found while comparing with another redesign project): dragging or clicking the seek bar at its left edge, or typing 0:00 in the time editor, seeks to position 0, but the time label kept the previous time and the handle could jump back. The core reports a position seek with ts = position * length, which is 0 = VLC_TICK_INVALID at the start, and PlayerController's on_player_timer_seek dropped both position 0 and ts 0. Fixed in player_controller.cpp: a seek to the start is applied as position 0 / time VLC_TICK_0. To test on the next build: drag past the left edge, click at x = 0, type 0:00, playing and paused: the label reads 00:00:00 at once and the handle stays left.
 
 ## 2026-10-15 W3.3b seek bar preview thumbnail (P2-04, IA-14; worktree, not built yet)
 - Reference: video 3:24-3:31 (old VLC has no preview; her new bar shows the card above the playhead with "00:02:10", the current time label shows the same time), transcript 3:26-3:32 ("doesn't show a thumbnail as you seek through the video. It could be a nice feature to add"), Figma "thumbnail" (2151:9673: 272x189, vertical auto layout gap 10 pad 10, r14, Dark/BG/A3 Transparent with bg blur 50; picture "Frame 244" 252x142 r4; time Inter 400 15 Dark/FG/A2 17 high), prototype: hovering the playhead opens it as an overlay at -132,-209, instant. Settings: Figma "Settings - playback" Seeking has "Show thumbnail while scrubbing" ON after "Seek precisely" (3072:13275).
