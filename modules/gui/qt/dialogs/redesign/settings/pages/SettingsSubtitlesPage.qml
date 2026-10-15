@@ -100,6 +100,9 @@ SettingsPage {
         }
     }
 
+    // the OpenSubtitles account of the Add Subtitles dialog (W6.5)
+    SettingsOpenSubtitlesSection { }
+
     SettingsSection {
         title: qsTr("Appearance")
 
