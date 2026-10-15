@@ -18,7 +18,7 @@ on:
     inputs:
       brand:
         # brand layer (modules/gui/qt/util/brand.hpp): vlc = VLC's name and cone (Sticky's test
-        # builds), public = "Cone" and its logo. Pushes build "vlc".
+        # builds), public = "Cone" and its logo. Pushes build "public" (Decision 50).
         description: 'Brand profile'
         type: choice
         options: [vlc, public]
@@ -32,7 +32,7 @@ concurrency:
 env:
   # Keep in sync with VLC_WIN64_IMAGE in extras/ci/gitlab-ci.yml
   VLC_IMAGE: registry.videolan.org/vlc-debian-win64-posix:20260611225331
-  # brand profile: the workflow_dispatch input, "vlc" for pushes
+  # brand profile: the workflow_dispatch input, "public" for pushes (Decision 50)
   VLC_BRAND: ${{ inputs.brand || 'public' }}
 
 jobs:
