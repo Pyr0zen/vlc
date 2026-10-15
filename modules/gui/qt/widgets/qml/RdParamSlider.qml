@@ -37,6 +37,9 @@ ColumnLayout {
     // box); the space between that row and the slider is the layout's spacing
     property real rowHeight: valueBox ? VLCStyle.dp(56) : VLCStyle.dp(37)
     property alias labelsY: slider.labelsY
+    // label (and plain value) inset from the row edges: 4 in section rows (Figma "Frame 60" padding
+    // left 4), 0 in the rows of an expander card (536:1865, 6114:13620)
+    property real textInset: VLCStyle.dp(4)
 
     property alias from: slider.from
     property alias to: slider.to
@@ -66,7 +69,7 @@ ColumnLayout {
             id: label
 
             anchors.left: parent.left
-            anchors.leftMargin: VLCStyle.dp(4)
+            anchors.leftMargin: root.textInset
             anchors.right: valueArea.left
             anchors.rightMargin: VLCStyle.dp(10)
             anchors.verticalCenter: parent.verticalCenter
@@ -81,7 +84,7 @@ ColumnLayout {
 
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
-            width: root.valueBox ? box.implicitWidth : plainValue.implicitWidth + VLCStyle.dp(4)
+            width: root.valueBox ? box.implicitWidth : plainValue.implicitWidth + root.textInset
             height: root.valueBox ? box.implicitHeight : plainValue.implicitHeight
 
             Text {

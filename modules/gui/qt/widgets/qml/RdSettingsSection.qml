@@ -32,16 +32,28 @@ ColumnLayout {
     property bool showDivider: true
     // small note under the header (e.g. "Applies from the next file")
     property string note: ""
+    // the row group: 5 px between rows and 20 px under them in most Figma groups ("Frame 80");
+    // the Filters groups use 10 between rows ("Frame 70"), the Defaults rows 10 under them
+    // ("Frame 92")
+    property real rowSpacing: VLCStyle.dp(5)
+    property real bottomPadding: VLCStyle.dp(20)
     default property alias content: group.data
 
     Layout.fillWidth: true
     spacing: 0
 
-    Rectangle {
+    // Figma draws the divider as a 0 px tall line between the frames: it takes no space, the
+    // header's 20 px top padding starts at the same y
+    Item {
         visible: root.showDivider
         Layout.fillWidth: true
-        Layout.preferredHeight: VLCStyle.dp(1)
-        color: VLCStyle.palette.rdDividerDim
+        Layout.preferredHeight: 0
+
+        Rectangle {
+            width: parent.width
+            height: VLCStyle.dp(1)
+            color: VLCStyle.palette.rdDividerDim
+        }
     }
 
     RdSectionHeader {
@@ -71,7 +83,7 @@ ColumnLayout {
         Layout.leftMargin: VLCStyle.dp(20)
         Layout.rightMargin: VLCStyle.dp(20)
         Layout.topMargin: VLCStyle.dp(10)
-        Layout.bottomMargin: VLCStyle.dp(20)
-        spacing: VLCStyle.dp(5)
+        Layout.bottomMargin: root.bottomPadding
+        spacing: root.rowSpacing
     }
 }
