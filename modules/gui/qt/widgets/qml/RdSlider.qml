@@ -21,7 +21,11 @@
 // - plain: fill from the left
 // - bipolar: fill from the zero point to the thumb (subtitle / audio delay)
 // - stepped: tick marks at each step (speed, font size, outline thickness)
-// Optional labels are drawn under the track, spread evenly from left to right.
+// Optional labels are drawn under the track, spread evenly from left to right, or (labelStep)
+// one every labelStep from labelAnchor, under their own value.
+// RdEndlessSlider moves from..to past the normal range (Decision 46): with scaleScrolls the ticks
+// and labels stay on their values and scroll with the scale, and an accent edge label points to
+// the zero value while it is out of view.
 import QtQuick
 import QtQuick.Templates as T
 
@@ -49,6 +53,18 @@ T.Slider {
     // sidebar's Speed slider, whose wrapper is wrapped again: labels 34 under the thumb top)
     property real trackTop: VLCStyle.dp(4)
     property real labelSpacing: VLCStyle.dp(10)
+    // labels under their own values, one every labelStep from labelAnchor (replaces `labels`),
+    // written by labelText(value)
+    property real labelStep: 0
+    property real labelAnchor: zeroValue
+    property var labelText: (v) => String(v)
+    // the ticks and labels belong to values (zeroValue / labelAnchor + n steps), not to fixed
+    // places on the track: they scroll when from..to moves (RdEndlessSlider)
+    property bool scaleScrolls: false
+    // no label for a value the slider cannot reach (an endless slider's window may start before
+    // VLC's lowest value)
+    property real labelMin: -Infinity
+    property real labelMax: Infinity
 
     readonly property SystemPalette rdPalette: VLCStyle.palette
 
@@ -79,6 +95,20 @@ T.Slider {
         return (to === from) ? 0 : (v - from) / (to - from)
     }
 
+    // the first multiple of `spacing` from `anchor` at or after `v`
+    function _firstStep(v, anchor, spacing) {
+        return anchor + Math.ceil((v - anchor) / spacing - 1e-6) * spacing
+    }
+
+    readonly property real _tickSpacing: tickIntervals > 0 ? (to - from) / tickIntervals : 0
+    readonly property real _firstTick: _tickSpacing > 0 ? _firstStep(from, zeroValue, _tickSpacing) : 0
+    readonly property real _valueEpsilon: (to - from) * 1e-6
+
+    // where the zero value lies while the scale has scrolled it out of view: -1 left, 1 right
+    readonly property int _zeroSide: !scaleScrolls ? 0
+                                                   : zeroValue < from - _valueEpsilon ? -1
+                                                   : zeroValue > to + _valueEpsilon ? 1 : 0
+
     background: Item {
         // Figma "range": 16 px, radius 6, BG/B2, 2 px padding around a 12 px fill (radius 4)
         Rectangle {
@@ -94,7 +124,9 @@ T.Slider {
                 id: fill
 
                 readonly property real span: track.width - 2 * control._inset
-                readonly property real zeroX: control.bipolar ? control._pos(control.zeroValue) * span : 0
+                // the zero value out of view: the fill starts at that end
+                readonly property real zeroX: control.bipolar
+                                              ? Math.max(0, Math.min(span, control._pos(control.zeroValue) * span)) : 0
                 readonly property real thumbX: control.visualPosition * span
 
                 x: control._inset + Math.min(zeroX, thumbX)
@@ -108,7 +140,7 @@ T.Slider {
             // Figma "degrees" (5187:24548, 848:1693): the marks between the ends (the first and
             // last are hidden), centred on the steps of the fill span
             Repeater {
-                model: control.showTicks ? Math.max(0, control.tickIntervals - 1) : 0
+                model: (control.showTicks && !control.scaleScrolls) ? Math.max(0, control.tickIntervals - 1) : 0
 
                 delegate: Rectangle {
                     required property int index
@@ -123,18 +155,41 @@ T.Slider {
                     color: (x >= fill.x && x < fill.x + fill.width) ? control._tickOnFill : control._tickOnTrack
                 }
             }
+
+            // scrolling scale: the same marks on the multiples of the tick spacing from zeroValue;
+            // a fixed count (one more than fits), each hidden while its value is at an end or out
+            // of view, so scrolling never creates or destroys marks
+            Repeater {
+                model: (control.showTicks && control.scaleScrolls && control._tickSpacing > 0)
+                       ? control.tickIntervals + 1 : 0
+
+                delegate: Rectangle {
+                    required property int index
+
+                    readonly property real tickValue: control._firstTick + index * control._tickSpacing
+
+                    visible: tickValue > control.from + control._valueEpsilon
+                             && tickValue < control.to - control._valueEpsilon
+                    x: control._inset + control._pos(tickValue) * fill.span - width / 2
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: VLCStyle.dp(2)
+                    height: VLCStyle.dp(8)
+                    radius: width / 2
+                    color: (x >= fill.x && x < fill.x + fill.width) ? control._tickOnFill : control._tickOnTrack
+                }
+            }
         }
 
         Item {
             id: labelRow
 
-            visible: control.labels.length > 0
+            visible: control.labels.length > 0 || control.labelStep > 0
             y: control.trackTop + VLCStyle.dp(16) + control.labelSpacing
             width: control.availableWidth
             height: VLCStyle.dp(15)
 
             Repeater {
-                model: control.labels
+                model: control.labelStep > 0 ? [] : control.labels
 
                 delegate: Text {
                     required property int index
@@ -150,6 +205,62 @@ T.Slider {
                     font.pixelSize: VLCStyle.rd_fontSize_toggle
                     color: control.rdPalette.rdFgA3
                 }
+            }
+
+            // labels under their values, kept inside the row like the list's end labels; one whose
+            // value leaves the view fades out over `fade` px, and one under the zero edge label
+            // gives way to it. A fixed count: each label shows the n-th value from the first one
+            // in view, so its text only changes when it wraps around
+            Repeater {
+                id: stepLabels
+
+                readonly property real fade: VLCStyle.dp(16)
+                readonly property real fadeValue: control.availableWidth > 0
+                                                  ? fade * (control.to - control.from) / control.availableWidth : 0
+                readonly property real first: control.labelStep > 0
+                                              ? control._firstStep(control.from - fadeValue, control.labelAnchor, control.labelStep)
+                                              : 0
+
+                model: control.labelStep > 0
+                       ? Math.floor((control.to - control.from + 2 * fadeValue) / control.labelStep) + 2 : 0
+
+                delegate: Text {
+                    required property int index
+
+                    readonly property real labelValue: stepLabels.first + index * control.labelStep
+                    readonly property real center: control._pos(labelValue) * labelRow.width
+                    readonly property real outside: Math.max(0, -center, center - labelRow.width)
+                    readonly property bool underZeroLabel: control._zeroSide < 0
+                                                           ? x < zeroLabel.x + zeroLabel.width + VLCStyle.dp(8)
+                                                           : control._zeroSide > 0 && x + width > zeroLabel.x - VLCStyle.dp(8)
+
+                    x: Math.max(0, Math.min(labelRow.width - width, center - width / 2))
+                    visible: opacity > 0
+                    opacity: (underZeroLabel || labelValue < control.labelMin - control._valueEpsilon
+                              || labelValue > control.labelMax + control._valueEpsilon)
+                             ? 0 : Math.max(0, 1 - outside / stepLabels.fade)
+                    text: control.labelText(labelValue)
+                    font.family: VLCStyle.rd_fontFamily
+                    font.pixelSize: VLCStyle.rd_fontSize_toggle
+                    color: control.rdPalette.rdFgA3
+                }
+            }
+
+            // the zero value scrolled out of view: an accent label at that end with an arrow toward
+            // it and its distance from that end
+            Text {
+                id: zeroLabel
+
+                visible: control._zeroSide !== 0 && control.labelStep > 0
+                x: control._zeroSide < 0 ? 0 : labelRow.width - width
+                text: control._zeroSide < 0
+                      ? qsTr("\u2039 %1  %2").arg(control.labelText(control.zeroValue))
+                                             .arg(control.labelText(control.zeroValue - control.from))
+                      : qsTr("%1  %2 \u203A").arg(control.labelText(control.zeroValue - control.to))
+                                             .arg(control.labelText(control.zeroValue))
+                font.family: VLCStyle.rd_fontFamily
+                font.pixelSize: VLCStyle.rd_fontSize_toggle
+                color: control.rdPalette.rdAccentMain
             }
         }
     }

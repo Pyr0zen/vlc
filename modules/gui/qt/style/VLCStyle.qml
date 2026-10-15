@@ -403,6 +403,9 @@ QtObject {
     // drag ghost of a list row (IB-15, video 11:45): the row content only; its FG/1 title measures
     // about #A9A9A9 over the black video, so about 75 % opaque
     readonly property real rd_dragGhostOpacity: 0.75
+    // endless sliders (Decision 46): held past an end, the scale scrolls at a fixed speed of this
+    // share of the slider's normal range per second (delays: 20 s range, 5 s per second)
+    readonly property real rd_sliderScrollRate: 0.25
     // Settings dialog (Figma "Settings - global" 1048x865: header 50, category column 216)
     readonly property int rd_settingsDialogWidth: MainCtx.dp(1048, scale)
     readonly property int rd_settingsDialogHeight: MainCtx.dp(865, scale)

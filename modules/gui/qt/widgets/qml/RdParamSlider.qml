@@ -19,6 +19,7 @@
 // Redesign setting with a slider (Figma "Frame 96", video 8:46-8:52): the name on the left and
 // the value on the right of a 37 px row, the slider under it at full width. The value is plain
 // text (filter parameters, sizes) or an editable value box (equalizer bands, valueBox: true).
+// limitFrom / limitTo past from..to make the slider endless (RdEndlessSlider, Decision 46).
 import QtQuick
 import QtQuick.Layouts
 
@@ -42,16 +43,23 @@ ColumnLayout {
     // left 4), 0 in the rows of an expander card (536:1865, 6114:13620)
     property real textInset: VLCStyle.dp(4)
 
-    property alias from: slider.from
-    property alias to: slider.to
-    property alias stepSize: slider.stepSize
-    property alias value: slider.value
+    property alias from: slider.rangeFrom
+    property alias to: slider.rangeTo
+    property alias stepSize: slider.step
+    // the value VLC has (the slider shows it, also past from..to)
+    property alias value: slider.current
+    property alias limitFrom: slider.limitFrom
+    property alias limitTo: slider.limitTo
+    property alias scrollSpeed: slider.scrollSpeed
     property alias bipolar: slider.bipolar
     property alias zeroValue: slider.zeroValue
     property alias showTicks: slider.showTicks
     property alias tickIntervals: slider.tickIntervals
     property alias dimmed: slider.dimmed
     property alias labels: slider.labels
+    property alias labelStep: slider.labelStep
+    property alias labelAnchor: slider.labelAnchor
+    property alias labelText: slider.labelText
     readonly property alias pressed: slider.pressed
 
     // the user moved the slider / typed a value in the box
@@ -112,11 +120,11 @@ ColumnLayout {
         }
     }
 
-    RdSlider {
+    RdEndlessSlider {
         id: slider
 
         Layout.fillWidth: true
         Accessible.name: label.text
-        onMoved: root.moved(value)
+        onValueMoved: (v) => root.moved(v)
     }
 }

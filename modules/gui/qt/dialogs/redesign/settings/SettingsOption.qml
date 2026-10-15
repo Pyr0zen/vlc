@@ -24,7 +24,8 @@
 //   toggle    Toggle (ON / OFF); `checkedValue` / `uncheckedValue` for options that are not booleans
 //   dropdown  values in words (`choices`, else the ones VLC declares) - never a number code
 //   number    a value box; `valueScale` and `unit` show it in the user's unit (ms as "3 s")
-//   slider    a slider under the label's line (`from`, `to`, `step`, `labels`)
+//   slider    a slider under the label's line (`from`, `to`, `step`, `labels` or `labelStep`);
+//             `limitFrom` / `limitTo` past from..to make it endless (Decision 46)
 //   text, password, file, savefile, directory (field + Browse), color (hex + swatch)
 import QtQuick
 
@@ -54,8 +55,20 @@ SettingsRow {
     property real to: info.max !== undefined ? info.max / valueScale : 100
     property real step: decimals > 0 ? Math.pow(10, -decimals) : 1
     property var labels: []
+    // slider: one label every labelStep from labelAnchor, written by labelText (endless sliders:
+    // the labels scroll with the scale)
+    property real labelStep: 0
+    property real labelAnchor: zeroValue
+    property var labelText: (v) => String(v)
+    // slider: the values VLC accepts past from..to (shown unit); the scale scrolls on to them at
+    // scrollSpeed per second while the pointer is held past an end
+    property real limitFrom: from
+    property real limitTo: to
+    property real scrollSpeed: (to - from) * VLCStyle.rd_sliderScrollRate
     // slider filled from 0 (delays)
     property bool bipolar: false
+    // slider: the value the fill starts from (bipolar) and the edge label points to
+    property real zeroValue: 0
     // Figma "Settings - *": every control 320 wide; text inputs 36 high, a few 32 (row 42)
     property real controlWidth: VLCStyle.dp(320)
     property real controlHeight: VLCStyle.dp(36)
@@ -236,17 +249,24 @@ SettingsRow {
     Component {
         id: sliderControl
 
-        Widgets.RdSlider {
+        Widgets.RdEndlessSlider {
             implicitWidth: root.controlWidth
-            from: root.from
-            to: root.to
-            stepSize: root.step
+            rangeFrom: root.from
+            rangeTo: root.to
+            limitFrom: root.limitFrom
+            limitTo: root.limitTo
+            step: root.step
+            scrollSpeed: root.scrollSpeed
             labels: root.labels
+            labelStep: root.labelStep
+            labelAnchor: root.labelAnchor
+            labelText: root.labelText
             tickStep: root.tickStep
             trackTop: root.sliderTrackTop
             labelSpacing: root.sliderLabelSpacing
             bipolar: root.bipolar
-            value: Number(root.value ?? 0) / root.valueScale
+            zeroValue: root.zeroValue
+            current: Number(root.value ?? 0) / root.valueScale
             Accessible.name: root.text
             onPressedChanged: {
                 root._dragging = pressed
@@ -255,7 +275,7 @@ SettingsRow {
                 if (!pressed && root._readByInterface)
                     root.applyNumber(value)
             }
-            onMoved: root.applyNumber(value)
+            onValueMoved: (v) => root.applyNumber(v)
         }
     }
 
