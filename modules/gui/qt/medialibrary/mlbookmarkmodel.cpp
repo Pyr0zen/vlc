@@ -323,7 +323,7 @@ void MLBookmarkModel::add()
 
         ctx.added = true;
         ctx.name = title.isEmpty() ? qtr("Bookmark at %1").arg(VLCDuration::fromMS( time ).formatHMS())
-                                   : QStringLiteral("%1 %2").arg(title).arg(number + 1);
+                                   : QStringLiteral("%1 %2").arg(title, QString::number(number + 1));
 
         vlc_ml_media_update_bookmark(ml, mediaId, time, qtu(ctx.name), nullptr);
     },
