@@ -311,8 +311,22 @@ AddSubtitles::AddSubtitles(qt_intf_t* intf, QObject* parent)
     auto data = std::make_shared<QJsonObject>();
     run([data](vlc_object_t*) { *data = SubtitleStore::read(); },
         [this, data]() {
-            m_store.setData(*data);
+            // a save made before the file was read wins over the file's entries, and the file
+            // is written only now, so it never loses what it held
+            const QJsonObject saved = m_store.data();
+            QJsonObject merged = *data;
+            for (auto group = saved.constBegin(); group != saved.constEnd(); ++group)
+            {
+                QJsonObject entries = merged.value(group.key()).toObject();
+                const QJsonObject added = group.value().toObject();
+                for (auto it = added.constBegin(); it != added.constEnd(); ++it)
+                    entries.insert(it.key(), it.value());
+                merged.insert(group.key(), entries);
+            }
+            m_store.setData(merged);
             m_storeLoaded = true;
+            if (!saved.isEmpty())
+                writeStore();
             onPlayingStateChanged();
         }, 0, false);
 }
@@ -1206,6 +1220,9 @@ void AddSubtitles::save()
 
 void AddSubtitles::writeStore()
 {
+    // before the file is read, writing it would drop its entries: the read writes it after
+    if (!m_storeLoaded)
+        return;
     const QJsonObject data = m_store.data();
     m_storePool.start([data]() { SubtitleStore::write(data); });
 }
