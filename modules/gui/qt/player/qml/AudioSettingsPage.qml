@@ -167,7 +167,10 @@ RdSidePanelPage {
             id: eqPresets
 
             Layout.fillWidth: true
-            model: [qsTr("None")].concat(RdEffects.equalizerPresetNames())
+            // Figma "EQ presets" (2372:8487) wording ("Full base" typos fixed, Decision 17)
+            displayNames: ({ [qsTr("Full bass and treble")]: qsTr("Full bass & treble"),
+                             [qsTr("Large Hall")]: qsTr("Large hall") })
+            model: [qsTr("None")].concat(RdEffects.equalizerPresetNames().map((name) => eqPresets.displayName(name)))
             currentIndex: root._eqPreset + 1
             Accessible.name: qsTr("Equalizer")
             onActivated: (index) => RdEffects.setEqualizerPreset(index - 1)

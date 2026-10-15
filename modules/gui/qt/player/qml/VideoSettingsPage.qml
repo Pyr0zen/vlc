@@ -130,6 +130,9 @@ RdSidePanelPage {
                 id: hdr
 
                 option: "d3d11-hdr-mode"
+                // Figma "HDR Options" (2372:8733) names VLC's "never" mode "Off" (VLC's text has
+                // a typo: "Never out HDR")
+                displayNames: ({ [qsTr("Never out HDR")]: qsTr("Off") })
                 Accessible.name: qsTr("HDR")
             }
         }
@@ -139,6 +142,8 @@ RdSidePanelPage {
 
             OptionDropdown {
                 option: "preferred-resolution"
+                // Figma video settings (498:2965): "Best Available"
+                displayNames: ({ [qsTr("Best available")]: qsTr("Best Available") })
                 Accessible.name: qsTr("Resolution")
             }
         }
