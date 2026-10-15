@@ -22,6 +22,7 @@ import QtQuick
 import QtQuick.Templates as T
 
 import VLC.MainInterface
+import VLC.Dialogs
 import VLC.Style
 
 T.Popup {
@@ -38,6 +39,16 @@ T.Popup {
 
     padding: VLCStyle.dp(10)
     closePolicy: T.Popup.CloseOnEscape | T.Popup.CloseOnPressOutside
+
+    // a dialog opening (Ctrl+P, Ctrl+N, ...) closes the popover first
+    readonly property Connections _dialogConnections: Connections {
+        target: DialogsProvider
+
+        function onDialogOpening() {
+            if (control.opened)
+                control.close()
+        }
+    }
 
     contentItem: Text {
         id: label

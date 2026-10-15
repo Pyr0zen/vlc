@@ -29,6 +29,7 @@ import QtQuick.Window
 import QtQuick.Templates as T
 
 import VLC.MainInterface
+import VLC.Dialogs
 import VLC.Player
 import VLC.Style
 import VLC.Widgets as Widgets
@@ -272,6 +273,15 @@ T.Popup {
         function onStateChanged() {
             if (Qt.application.state !== Qt.ApplicationActive)
                 root.close()
+        }
+    }
+
+    // a dialog opening (Ctrl+P, Ctrl+N, ...) closes the menu first: it never stays behind it
+    Connections {
+        target: DialogsProvider
+
+        function onDialogOpening() {
+            root.close()
         }
     }
 

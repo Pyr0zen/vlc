@@ -241,3 +241,6 @@ Merged `origin/redesign-settings` (PR #2) on the library integration, then `rede
 ## 2026-10-15 hands-on (build 38609407210, light theme)
 - UX bug: with the main "..." menu open, Ctrl+P opened the Settings dialog on top while the menu stayed open behind it. Opening any dialog (shortcut or menu) must close open menus and popups first. Check on the next build (the UX pass changed menu dismissal), fix if still there.
 - Light theme: placeholders and disabled text use Figma's Light FG/A4 #3B3B3B and read almost like typed text (Open Network Stream fields): decision image Q5 for Sticky.
+
+## 2026-10-15 remaining UX items (worktree, not built yet)
+- Fixed: opening a dialog left menus, popups and player panels open behind it (main "..." menu behind Settings after Ctrl+P, hands-on above). One signal, DialogsProvider.dialogOpening(), sent by MainInterface.qml before every QML dialog (Settings, Open Network Stream, Keyboard Shortcuts, Customize Player, onboarding), by RdLibraryDialog, by DialogsProvider for VLC's own dialogs (QEvent::Show in its event filter) and before every native file picker / OpenUrl / streaming dialog; RdPanels closes the panel, RdCascadeMenu (main, right-click), RdMenuPanel (library menus), RdDropdown lists, RdTooltip popovers and RdFolderInfoPopup close.

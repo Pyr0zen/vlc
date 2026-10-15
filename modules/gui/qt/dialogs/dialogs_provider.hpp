@@ -333,6 +333,10 @@ signals:
     void rdPopupMenuChanged();
     // show or hide the player's right-click menu (right click on the video, Menu key)
     void rdPopupMenuRequested(bool show);
+    // redesign: a dialog is opening (one of VLC's dialogs, a file picker, or a QML dialog of the
+    // main interface): the redesign menus, popups and player panels close, so none stays open
+    // behind it
+    void dialogOpening();
 };
 
 class DialogEvent : public QEvent

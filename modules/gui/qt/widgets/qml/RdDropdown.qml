@@ -24,6 +24,7 @@ import QtQuick
 import QtQuick.Templates as T
 
 import VLC.MainInterface
+import VLC.Dialogs
 import VLC.Style
 
 T.ComboBox {
@@ -96,6 +97,15 @@ T.ComboBox {
                                                     : (model.modelData !== undefined ? model.modelData : model.display)
         selected: control.currentIndex === index
         highlighted: control.highlightedIndex === index
+    }
+
+    // a dialog opening (Ctrl+P, Ctrl+N, ...) closes the list first
+    Connections {
+        target: DialogsProvider
+
+        function onDialogOpening() {
+            control.popup.close()
+        }
     }
 
     popup: T.Popup {

@@ -25,6 +25,7 @@ import QtQuick
 import QtQuick.Templates as T
 
 import VLC.MainInterface
+import VLC.Dialogs
 import VLC.Player
 import VLC.Style
 import VLC.Widgets as Widgets
@@ -40,6 +41,9 @@ T.Popup {
     property Item _opener: null
 
     onAboutToShow: {
+        // the menus, popups and player panels close first (the menu that opened this dialog
+        // gives the focus back to its button, which gets it again when the dialog closes)
+        DialogsProvider.dialogOpening()
         if (!dialog._holdsModal) {
             RdPanels.acquireModal()
             dialog._holdsModal = true
