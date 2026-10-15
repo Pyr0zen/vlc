@@ -244,3 +244,48 @@ Merged `origin/redesign-settings` (PR #2) on the library integration, then `rede
 
 ## 2026-10-15 seek to the start
 - Bug (upstream code, found while comparing with another redesign project): dragging or clicking the seek bar at its left edge, or typing 0:00 in the time editor, seeks to position 0, but the time label kept the previous time and the handle could jump back. The core reports a position seek with ts = position * length, which is 0 = VLC_TICK_INVALID at the start, and PlayerController's on_player_timer_seek dropped both position 0 and ts 0. Fixed in player_controller.cpp: a seek to the start is applied as position 0 / time VLC_TICK_0. To test on the next build: drag past the left edge, click at x = 0, type 0:00, playing and paused: the label reads 00:00:00 at once and the handle stays left.
+
+## 2026-10-15 verification round (build 38727073546)
+Hands-on round on the PC (portable test build, window 1920 x 1080 design px at 125 %, Dark theme): library, music, playlists, network, recent, pins, mini player and its queue, Settings dialog pages, player sidebars, Customize Player, onboarding. Every screen was cropped next to the Figma PNG at the same scale (compact library and drag ghost also next to the video frame) and the UX checklist was walked. Screenshots and side-by-sides stay in the session scratchpad (folder verify_38727073546; they show the screen). 63 rows marked `verified (38727073546)` in VIDEO_INDEX.md. Skipped: the UX bugs already fixed on the UX branch and the seek-to-start fix.
+
+Bugs found (row, what differs from Figma / the video, severity, screenshot):
+- P5-16 HIGH: VLC closed with an access violation inside the Windows file dialog (comdlg32) right after the Add Folder picker, opened from the "+ Add" row inside a library folder, was cancelled with Escape; Windows wrote a crash dump. A second try did not crash. (L18_crumb_back.png = state just before)
+- P5-16 / F-14 / P6-01 HIGH: folder listings came out flattened: right after the scan, Videos > Test Show listed a nested "Test Show" folder plus all 12 episodes of both seasons (13 items) instead of Season 1 / Season 2; the compact library opened from the folder chip of the real-music test folder showed "... > <that folder>" but listed the Songs root (both folders plus 3000 clips, "3007 items") instead of the 5 songs of that folder. Test Show was correct again after a restart. (L18_crumb_back.png, C01_compact_music.png, sbs_C_compact_music.png)
+- P6-04 / IB-23 HIGH: the music player view is the stock audio view: light gray background (about #EBEBEB) in the Dark theme, a 290 px card with the stock note icon and a row of four stock buttons under the title; Figma "Player - Music": dark background, 376 px cover centred on the window, title only. (sbs_M_musicview.png)
+- P6-16 / IB-30 HIGH: New Playlist dialog: the body has no background (the player shows through, only the header is opaque), section titles use the dim placeholder color instead of FG/1, and the dialog runs under the control bar so Cancel and Save are hidden. (sbs_P_newplaylist.png)
+- P7-05 HIGH: bookmarks cannot be created: the "+" in the Bookmarks tab and Ctrl + B (panel open and closed) leave "0 Bookmarks" on a library episode. (Q08_bm_plus.png, Q10_bm_check.png)
+- P5-17 / P5-26 MED: one column too few at 1920: grid view 4 columns, Figma 5 at the same tile size and pitch; list view 3 columns, Figma 4; an empty band stays on the right. (sbs_L_grid.png, sbs_L_list.png)
+- P5-17 / IB-06 MED: thumbnails generated while a folder view is open do not appear until the view is left and opened again. (L09_season1_grid.png, L18_crumb_back.png)
+- P5-24 MED: dropping a library item into the open queue adds it but closes the queue panel. (Q02_drag_ghost.png, Q03_after_drop.png, Q04_queue_after.png)
+- Library rows MED: right click on a library row or tile does nothing (no menu); the "..." button works. (L16_rightclick_row.png)
+- P2-17 MED: tracks popup Audio tab has about 22 px extra space between "None" and "Track 1" (Subtitles tab rows are evenly spaced). (sbs_T_tracks.png)
+- P8-11 MED: Settings > Audio > Output device is an empty text field; Figma: dropdown showing "System default". (sbs_D_audio.png)
+- P8-14 MED: Settings > Library > "Use the media library" shows OFF while the library is in use (it reads the saved media-library value). (sbs_D_library.png)
+- P7-14 MED: Settings search "volume" filters the category list to Controls and Audio, but the right pane stays on "Global Settings" and is empty. (sbs_D_search.png)
+- P5-27 MED: mini player bottom row: the queue button follows the artist label instead of sitting at the right edge; long folder / artist labels are not elided. (sbs_L_mini.png)
+- P5-23 / P6-04 MED: with music playing, the compact library resizes the music view (cover re-centred in the remaining area); Figma "Player - Music-1" keeps the cover centred on the window under the panel. (sbs_C_compact_music.png)
+- P7-06 MED: Chapters tab: three wheel notches scroll the list by about 2 px; the first chapter shows "--:--" instead of 00:00:00; times are mm:ss, Figma hh:mm:ss. (sbs_Q_chapters_moana.png, Q12_chapters_wheel.png)
+- P4-17 / IA-38 MED: settings sidebar Audio tab: Stereo Mode dropdown is blank and the accent "Test" button is missing. (sbs_S_side_as.png)
+- P8-47 MED: Customize Player: a control dropped onto the bar has no dashed frame like the others; no insertion marker while dragging; a drop between the next button and the time label is ignored without feedback. (c_K_drag.png, c_K_drag2.png)
+- IB-07 LOW: full library sidebar: the current category icon is orange on one screenshot and filled gray on another of the same page. (L09_season1_grid.png, sbs_L_sidebar_state.png)
+- P5-11 LOW: library toolbar right group sits about 6 px further right than Figma; the sort button is missing on Home (full and compact), Network (search too) and Playlists. (sbs_L_toolbar.png, sbs_C_home.png, sbs_C_network.png, sbs_C_playlists.png)
+- UX LOW: hover tooltips ("More", "Sort", "View", "Subtitles", "Pause", "Audio tracks and output") stay on screen over the menu or popup their button opened. (L02_homemenu.png, L10_sortmenu.png, L11_viewmenu.png, sbs_T_tracks.png)
+- IA-45 LOW: compact breadcrumb keeps one segment after "..." ("... > Season 1"); Figma keeps two ("... > The Wand > S01"). (V02_chip_open.png, sbs_C_compact_zoom.png)
+- F-13 LOW: in the list view the row "..." button sits about 395 px from the row start, right next to the next column's thumbnail (Figma row 337 px with the button inside). (L14_filemenu.png)
+- F-12 / IB-31 LOW: file "..." menu has no "Go to Source" (Figma: between Show in File Explorer and Add Subtitle Tracks); the Info glyph is all gray (Figma accent "i"); the Add Audio Tracks glyph has more bars than Figma. (sbs_L_filemenu.png)
+- Queue LOW: header reads "2 items - 0m" for items under a minute; header icons on a ~42 px pitch (Figma ~39), starting about 13 px further left. (sbs_Q_queue_zoom.png)
+- P3-04 LOW: with 16 subtitle tracks the tracks popup grows up to the top bar with no 20 px gap; Figma popup is 524 px tall and scrolls. (sbs_T_tracks.png)
+- Music LOW: an album without a tag is listed with an empty label. (L26_albums.png)
+- P5-28 LOW: once, a drag started on the mini player title row (top-left corner) did not move it; drags from the video area always worked. (M05_mini_back.png)
+- P5-27 LOW: for an audio file without cover the mini player shows an empty gray video area. (sbs_L_mini.png)
+- P8-10 LOW: Settings > Video picture sliders have no tick marks (Figma: Saturation and Gamma have them); Deinterlacing Method reads "Auto", Figma "Automatic". (sbs_D_video.png)
+- P8-29 / P8-30 / P8-31 LOW: the onboarding card sits 5 px lower than Figma (Next button and theme tiles measured +5 px). (sbs_O_screen1.png, sbs_O_screen2.png, sbs_O_screen3.png)
+- P8-24 LOW: Customize Player box sits about 16 px higher than Figma (taller with the profile row and player tabs). (sbs_K_customize.png)
+- IB-32 LOW: a pinned folder in the sidebar is not highlighted while its page is open. (N02_pinned.png)
+- Top bar LOW: at 800 px design width the folder chip label runs straight into the centred title with no gap or elision. (W01_small_compact.png)
+- Library LOW: during the scan some grid tiles show the "Unknown Artist" line and others do not. (L05_afteraddmusic.png)
+- Settings sidebar Playback LOW: Audio Visualizer reads "Disable", Figma "Disabled". (sbs_S_side_pv.png)
+
+Works as in Figma / the video: library sidebar, Home (full and compact), breadcrumb and back / forward, sort and view menus, library "..." menu, row hover, compact library over video with the video frame, Recent, Network and Playlists lists, pins, mini player with its queue (opens upward, flips below at the top corners, snaps to corners), drag ghost (row content only), control bar of the music view, queue / bookmarks / chapters tab look, tracks popup tabs, all 13 Settings pages (remaining differences are the known S2 rows and decisions), Advanced Options, info popovers, drop-down lists, live accent and theme changes, Escape and outside-click closing, Customize Player palette and drags, onboarding screens with live accent.
+
+Not tested in this round: motion and timing (no 60 fps capture: IA-44, IB-05, IB-21, F-16, F-17, F-22), IPTV links (P6-14), playlist menu and add to playlist (F-11, P6-17; the New Playlist dialog hides Save), artist view details (P6-03), song covers (IB-22, the test music has no embedded art), Latest Streams (F-15), empty Home (P8-38, P8-53), inline equalizer and Interface advanced rows (P8-44, S2-12), Show Preferences / Open Advanced Settings links (F-07, F-08), Windows scaling other than 125 %.
