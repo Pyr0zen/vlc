@@ -131,6 +131,7 @@ moc_headers = files(
     'player/delay_estimator.hpp',
     'player/rd_effects.hpp',
     'player/rd_seek_thumbnailer.hpp',
+    'player/rd_media_info.hpp',
     'player/player_controller.hpp',
     'player/player_controlbar_model.hpp',
     'player/control_list_model.hpp',
@@ -450,6 +451,8 @@ qt_plugin_sources = files(
     'player/rd_effects.hpp',
     'player/rd_seek_thumbnailer.cpp',
     'player/rd_seek_thumbnailer.hpp',
+    'player/rd_media_info.cpp',
+    'player/rd_media_info.hpp',
     'player/input_models.hpp',
     'player/player_controller.cpp',
     'player/player_controller.hpp',
@@ -876,10 +879,12 @@ qml_modules += {
        'player/qml/RdPlayerMenu.qml',
        'player/qml/RdMiniQueue.qml',
        'player/qml/RdMiniPlayer.qml',
+       'player/qml/RdInfoPanel.qml',
    ),
    'singletons' : files(
        'player/qml/PlayerControlbarControls.qml',
        'player/qml/RdPanels.qml',
+       'player/qml/RdSleepTimer.qml',
    )
 }
 

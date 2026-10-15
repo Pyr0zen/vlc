@@ -626,12 +626,14 @@ bool QmlMenuPositioner::eventFilter(QObject * object, QEvent * event)
     // Bookmarks
     if (m_ctx->hasMediaLibrary())
     {
-	m_menu->addAction(qtr("&Manage"), THEDP, &DialogsProvider::bookmarksDialog )->setShortcut(QKeySequence("Ctrl+B"));
-        m_menu->addSeparator();
-
         MLBookmarkModel * bookmarks = new MLBookmarkModel(m_menu.get());
         bookmarks->setPlayer(m_player->getPlayer());
         bookmarks->setMl(m_ctx->getMediaLibrary());
+
+        // redesign: Ctrl+B creates a bookmark at once (Decision 22); the editor keeps "Manage"
+        m_menu->addAction(qtr("Create"), bookmarks, &MLBookmarkModel::add)->setShortcut(QKeySequence("Ctrl+B"));
+        m_menu->addAction(qtr("&Manage"), THEDP, &DialogsProvider::bookmarksDialog);
+        m_menu->addSeparator();
 
         helper = new ListMenuHelper(m_menu.get(), bookmarks, nullptr, m_menu.get());
 

@@ -25,6 +25,8 @@
 
 #include <vlc_cxx_helpers.hpp>
 
+#include <algorithm>
+
 #include "medialib.hpp"
 #include "mlhelper.hpp"
 
@@ -242,36 +244,117 @@ void MLBookmarkModel::sort( int column, Qt::SortOrder order )
 
 void MLBookmarkModel::add()
 {
+    if (m_player == nullptr || m_mediaLib == nullptr)
+        return;
+
     vlc_tick_t currentTime;
+    QString mediaUri;
     {
         vlc_player_locker lock{ m_player };
         currentTime = vlc_player_GetTime( m_player );
+        input_item_t* currentMedia = vlc_player_GetCurrentMedia( m_player );
+        if (currentMedia)
+            mediaUri = qfu( currentMedia->psz_uri );
     }
 
-    if (m_currentMediaId == 0)
+    if (currentTime == VLC_TICK_INVALID || mediaUri.isEmpty())
         return;
 
-    m_mediaLib->runOnMLThread(this,
+    uint64_t revision;
+    {
+        vlc::threads::mutex_locker lock{ m_mutex };
+        revision = m_revision;
+    }
+
+    struct Ctx {
+        uint64_t mediaId = 0;
+        bool added = false;
+        QString name;
+    };
+    m_mediaLib->runOnMLThread<Ctx>(this,
     //ML thread
-    [mediaId = m_currentMediaId, currentTime, count = rowCount()](vlc_medialibrary_t* ml)
+    [mediaUri, currentTime](vlc_medialibrary_t* ml, Ctx& ctx)
     {
         int64_t time = MS_FROM_VLC_TICK(currentTime);
 
+        // redesign: the media playing now (not the one the model last looked up, which may
+        // still be the previous media). A file played for the first time is not in the media
+        // library yet (the player adds it when it stops): add it now, as the player would, so
+        // it can hold bookmarks.
+        ml_unique_ptr<vlc_ml_media_t> media { vlc_ml_get_media_by_mrl( ml, qtu( mediaUri ) ) };
+        if (!media)
+            media.reset( vlc_ml_new_external_media( ml, qtu( mediaUri ) ) );
+        if (!media)
+            return;
+        const uint64_t mediaId = media->i_id;
+        ctx.mediaId = mediaId;
+
+        // redesign: Ctrl+B and the Bookmarks tab "+" add the bookmark at once, named after the
+        // media title with a running number (video 15:08-15:16, P7-04 / P7-05): the next
+        // number after the highest one in use. A second bookmark at the same time is not
+        // added (its name would replace the first one's).
+        const QString title = media->psz_title ? qfu(media->psz_title).trimmed() : QString();
+        const QString prefix = title + QLatin1Char(' ');
+        int number = 0;
+
+        vlc_ml_query_params_t params = vlc_ml_query_params_create();
+        ml_unique_ptr<vlc_ml_bookmark_list_t> bookmarks { vlc_ml_list_media_bookmarks( ml, &params, mediaId ) };
+        if (bookmarks)
+        {
+            for (size_t i = 0; i < bookmarks->i_nb_items; ++i)
+            {
+                const vlc_ml_bookmark_t& bookmark = bookmarks->p_items[i];
+                if (bookmark.i_time == time)
+                    return;
+                const QString name = qfu(bookmark.psz_name);
+                if (!title.isEmpty() && name.startsWith(prefix))
+                {
+                    bool ok = false;
+                    const int n = name.mid(prefix.size()).toInt(&ok);
+                    if (ok)
+                        number = std::max(number, n);
+                }
+            }
+        }
+
+        // the media library reports an error even when the bookmark was added: the list
+        // above already ruled out the only expected failure (a bookmark at this time)
         vlc_ml_media_add_bookmark(ml, mediaId, time);
 
-        ml_unique_ptr<vlc_ml_media_t> media { vlc_ml_get_media(ml, mediaId) };
+        ctx.added = true;
+        ctx.name = title.isEmpty() ? qtr("Bookmark at %1").arg(VLCDuration::fromMS( time ).formatHMS())
+                                   : QStringLiteral("%1 %2").arg(title, QString::number(number + 1));
 
-        if (media)
-        {
-            QString name = qtr("Bookmark at %1").arg(VLCDuration::fromMS( time ).formatHMS());
-
-            vlc_ml_media_update_bookmark(ml, mediaId, time, qtu(name), nullptr);
-        }
+        vlc_ml_media_update_bookmark(ml, mediaId, time, qtu(ctx.name), nullptr);
     },
     //UI thread
-    [this](){
+    [this, revision](quint64, Ctx& ctx){
+        // the media was just added to the media library: this model can list its bookmarks
+        // now, unless another media started meanwhile
+        bool sameMedia;
+        {
+            vlc::threads::mutex_locker lock{ m_mutex };
+            sameMedia = (m_revision == revision);
+        }
+        if (sameMedia && m_currentMediaId == 0 && ctx.mediaId != 0)
+            m_currentMediaId = ctx.mediaId;
+
         refresh( MLBOOKMARKMODEL_REFRESH );
+
+        // the bookmark is created without a dialog: say so on the video
+        if (ctx.added && m_player)
+        {
+            vlc_player_locker lock{ m_player };
+            vlc_player_osd_Message( m_player, "%s", qtu( qtr( "Bookmark added: %1" ).arg( ctx.name ) ) );
+        }
     });
+}
+
+void MLBookmarkModel::removeBookmark( int row )
+{
+    if ( row < 0 || row >= rowCount() )
+        return;
+    remove( { index( row, 0 ) } );
 }
 
 void MLBookmarkModel::remove( const QModelIndexList &indexes )
@@ -570,6 +653,24 @@ void MLBookmarkModel::onVlcMlEvent(const MLEvent &event){
     switch (event.i_type)
     {
         case VLC_ML_EVENT_BOOKMARKS_ADDED:
+            // redesign: another model (Ctrl+B) may have added the current media to the media
+            // library to bookmark it: look it up again
+            if (m_currentMediaId == 0)
+            {
+                QString mediaUri;
+                uint64_t revision;
+                {
+                    vlc::threads::mutex_locker lock{ m_mutex };
+                    revision = m_revision;
+                    if (m_currentItem)
+                        mediaUri = qfu( m_currentItem->psz_uri );
+                }
+                if (!mediaUri.isEmpty())
+                    updateMediaId(revision, mediaUri);
+                break;
+            }
+            refresh(MLBOOKMARKMODEL_REFRESH);
+        break;
         case VLC_ML_EVENT_BOOKMARKS_DELETED:
         case VLC_ML_EVENT_BOOKMARKS_UPDATED:
             refresh(MLBOOKMARKMODEL_REFRESH);

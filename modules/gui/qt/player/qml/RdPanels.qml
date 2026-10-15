@@ -83,6 +83,13 @@ QtObject {
     // the player finds it open again after a visit to the full library (11:58).
     property bool libraryOpen: false
 
+    // the info overlays over the video, switched by the settings sidebar's Playback tab
+    // toggles "Show Metadata" and "Show Statistics" (W4.3b; Decisions 13 and 24). They are not
+    // panels: they stay open next to any panel until switched off (toggle or their X), are kept
+    // while VLC runs, and hide with the rest of the UI (Hide UI).
+    property bool metadataShown: false
+    property bool statisticsShown: false
+
     // hiding the UI closes every panel; showing it again brings the bars back, not the panels
     function toggleUi() {
         if (!uiHidden) {
