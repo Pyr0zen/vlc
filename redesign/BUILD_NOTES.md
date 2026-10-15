@@ -8,7 +8,7 @@ Log of every CI problem and fix (newest last). Workflow: `.github/workflows/buil
 
 ## 2026-10-13 W1.1 first green build
 - Run 38315049322 (commit 241edd8f49): green in 27 min total, build step 23 min (prebuilt contribs found for a5538c557d27, tools built from scratch). Artifact vlc-redesign-win64 = vlc-4.0.0-dev folder, 225 MB unpacked.
-- Tested on Sticky's PC (isolated APPDATA): vlc.exe opens, plays redesign/reference/vlc_redesign.mp4, auto-loads the .srt, closes cleanly. Phase 1 done.
+- Tested on Sticky's PC (isolated APPDATA): vlc.exe opens, plays a local video with an external .srt next to it (auto-loaded), closes cleanly. Phase 1 done.
 - Windows Defender Firewall asks on first start of a new vlc.exe path (network access). Left for Sticky to answer; not needed for local playback.
 
 ## 2026-10-13 W1.1 cached tools permission error
