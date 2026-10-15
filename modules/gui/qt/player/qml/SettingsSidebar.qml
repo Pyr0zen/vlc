@@ -30,10 +30,15 @@ import VLC.Widgets as Widgets
 RdSidePanel {
     id: root
 
+    // Figma 5187:24312 / 2127:7749: the Playback tab shows the "state=selected" two-tone icon in
+    // both states (main strokes FG/A2 when active); Video and Audio underlines are 70 wide
+    // (498:2969, 536:1094)
     tabs: [
-        { key: "playback", label: qsTr("Playback"), icon: "playback", width: 107.5, underline: 91.5 },
-        { key: "videoSettings", label: qsTr("Video"), icon: "video", width: 85, underline: 61 },
-        { key: "audioSettings", label: qsTr("Audio"), icon: "audio", width: 85, underline: 61 },
+        { key: "playback", label: qsTr("Playback"), icon: "playback", width: 107.5, underline: 91.5,
+          activeIcon: "playback_state-selected_two-tone-yes", inactiveIcon: "playback_state-selected_two-tone-yes",
+          activeColor: VLCStyle.palette.rdFgA2 },
+        { key: "videoSettings", label: qsTr("Video"), icon: "video", width: 85, underline: 70 },
+        { key: "audioSettings", label: qsTr("Audio"), icon: "audio", width: 85, underline: 70 },
         { key: "subtitleSettings", label: qsTr("Subtitles"), icon: "subtitles", width: 107.5, underline: 91.5 }
     ]
     currentKey: RdPanels.settingsOpen ? RdPanels.current : "playback"

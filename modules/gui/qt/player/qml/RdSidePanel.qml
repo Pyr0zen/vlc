@@ -37,8 +37,11 @@ import VLC.Widgets as Widgets
 Widgets.RdPanel {
     id: root
 
-    // [{ key, label, icon, width, underline }]; icon is a Figma icon name, the active tab uses
-    // "<icon>_two-tone-yes"; underline is the Figma underline width (default: icon and label)
+    // [{ key, label, icon, width, underline, activeIcon, inactiveIcon, activeColor }]; icon is a
+    // Figma icon name: the active tab uses activeIcon (default "<icon>_two-tone-yes"), an inactive
+    // one inactiveIcon (default icon); underline is the Figma underline width (default: icon and
+    // label). Figma colours: the active icon in activeColor (default FG/A3) with its two-tone part
+    // in Accent/DIm, inactive icons all FG/A4.
     property var tabs: []
     property string currentKey: ""
     default property alias pages: pageHost.data
@@ -106,10 +109,15 @@ Widgets.RdPanel {
                             spacing: VLCStyle.dp(8)
 
                             Widgets.RdIcon {
+                                readonly property color inactiveColor: tab.hovered ? root.rdPalette.rdFgA3
+                                                                                   : root.rdPalette.rdFgA4
+
                                 anchors.verticalCenter: parent.verticalCenter
-                                name: tab.active ? tab.modelData.icon + "_two-tone-yes" : tab.modelData.icon
+                                name: tab.active ? (tab.modelData.activeIcon ?? tab.modelData.icon + "_two-tone-yes")
+                                                 : (tab.modelData.inactiveIcon ?? tab.modelData.icon)
                                 size: VLCStyle.dp(20)
-                                color: tab.active || tab.hovered ? root.rdPalette.rdFgA2 : root.rdPalette.rdFgA3
+                                color: tab.active ? (tab.modelData.activeColor ?? root.rdPalette.rdFgA3) : inactiveColor
+                                color2: tab.active ? root.rdPalette.rdAccentDim : inactiveColor
                             }
 
                             Text {
