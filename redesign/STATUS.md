@@ -1,6 +1,6 @@
 # STATUS
 
-- Updated: 2026-10-15 00:16 Central Europe Daylight Time
+- Updated: 2026-10-15 00:28 Central Europe Daylight Time
 - Current work: UX pass on everything built (Sticky's reports), library + settings integrations, W8.1a, W8.3 done; build 38644265811 (light theme + control bar fix) running
 
 ## Last 10 commits
@@ -18,13 +18,15 @@ a3d60c6554 redesign: rule: UX logic checklist for every package (Sticky)
 ```
 
 ## Agents (rule: at most 4 alive in total, sub-agents counted; agents never start sub-agents)
-Alive: library integration, settings integration, UX interaction fixes, visual audit (finishing its sub-agents).
-Merged since the last status (pushed, build 38646392092): W8.3 onboarding, W8.1a Customize Player (both reviewed by the main session on the shared files; their own in-agent reviews done), playback-stall Qt fixes (subtitle speed on release, delay at most 10/s, pitch/blur/audio delay on release, no chain rebuild when unchanged). Merge fix 9291b80fdd (MainInterface loaders).
+Alive: settings integration (on top of the library; also N1 Settings outside click), visual-audit fixes for the sidebar pages and widgets.
+Merged and pushed, build 38647749799: library (743ce6f5ed), UX pass (51ebef4ce8: outside-click dismissal, Escape order, opaque tracks popup and bar, right-click on the bar), W8.3 onboarding, W8.1a Customize Player, playback-stall Qt fixes, control bar geometry, W8.4 light theme.
 Queue, in order:
-1. Core build (Decision 27, its own build): cherry-pick 3553e146bc "input: flush only the subtitle slave when its rate changes" from wip/a839e9d9ddb97595a after build 38646392092 is tested.
-2. Library merge (after its fixes), then settings merge; UX pass on each.
-3. Fixes from the visual audit list (scratchpad visual_audit.md), grouped by area.
-4. Step 2: the 12 Settings rows (VIDEO_INDEX 350-361, Decisions 34-38).
+1. Hands-on test of build 38647749799 when Sticky is away (UX checklist in the scratchpad ux_interaction_findings.md, library checklist, onboarding with --qt-privacy-ask, Customize Player drags, stall tests, light/dark), then perf round 3 back to back with stock.
+2. Core build (Decision 27): cherry-pick 3553e146bc from wip/a839e9d9ddb97595a (subtitle rate change flushes only the subtitle slave).
+3. Settings merge, then a UX pass on the Settings dialog pages and on the library.
+4. Leftover UX items N2-N5 (time field Escape and hint, Escape on bar control leaves the player (stock, Sticky to decide), resume toast vs tracks popup under 1000 px, arrows into a keyboard-opened sidebar, Delete removes a queue row); RdToggle hover; cursors; tooltip names.
+5. Step 2: the 12 Settings rows (VIDEO_INDEX 350-361, Decisions 34-38).
+Waiting for Sticky: A2 (resolved per Figma: bar opaque), B15 Advanced Settings button fill, B16 footer on the Playback tab, E2 dialog dim strength, E6 DM Mono, light FG/A4.
 Backups: every agent branch is pushed to origin wip/<agent id> (no CI on those branches).
 
 ## Latest report
