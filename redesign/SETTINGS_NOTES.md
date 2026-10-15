@@ -105,7 +105,7 @@ Rows of the dialog shell (P7-18, IB-42, P8-02, P8-39, P8-40) and the Keyboard Sh
 4. `widgets/qml/RdSegmented.qml` is mouse-only. The settings pages wrap it in `SettingsSegmented` (Tab, Left / Right); the kit widget itself could take that over for its other users.
    The interface rows (maximum volume, hide timeout...) call `MainCtx.reloadPrefs()` like VLC's preferences; it also re-applies values the session changed without saving them (e.g. compact mode toggled by a hotkey).
 5. `network/addonsmodel.cpp` / `util/listcache.hxx`: a row state update can be lost when two add-on events come back to back (section 8).
-6. Done by W3.3b (b57d35a33f8 e5fbbacaf05 9dbf5d358e1 60f1d59180e): option qt-seek-thumbnails (on) and the "Show thumbnail while scrubbing" row in Playback > Seeking.
+6. Done by W3.3b (497730a4ce1 ecc261e4664 9a50a146c1f a80ff78a4a0): option qt-seek-thumbnails (on) and the "Show thumbnail while scrubbing" row in Playback > Seeking.
 7. VIDEO_INDEX.md: set the rows of section 3 to "in progress" (built, unverified) at the merge; add the decisions of section 4.
 
 ## 6. Not done / limits
