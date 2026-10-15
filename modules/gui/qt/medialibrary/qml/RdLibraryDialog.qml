@@ -93,14 +93,9 @@ T.Popup {
     padding: 0
     closePolicy: T.Popup.CloseOnEscape
 
-    // dimmed window behind the dialog, as behind Open Network Stream (video 13:09)
-    T.Overlay.modal: Item {
-        Rectangle {
-            anchors.fill: parent
-            anchors.margins: MainCtx.windowExtendedMargin
-            color: VLCStyle.palette.rdBgB2Transparent
-        }
-    }
+    // no dim behind the dialog (Decision 41: the video and Figma show none); the transparent
+    // overlay still takes the clicks outside the dialog
+    T.Overlay.modal: Item { }
 
     background: Rectangle {
         radius: VLCStyle.rd_radius_large

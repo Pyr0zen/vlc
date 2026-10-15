@@ -326,11 +326,9 @@ Item {
             return false
         }
 
-        // the player behind stays visible, slightly darker (video 17:39: about 11 to 18 % darker)
-        T.Overlay.modal: Rectangle {
-            color: VLCStyle.palette.rdShadow
-            opacity: 0.3
-        }
+        // no dim behind the dialog (Decision 41: the video and Figma show none); the transparent
+        // overlay still takes the clicks outside the dialog
+        T.Overlay.modal: Item { }
 
         // while open, keys go to the dialog instead of VLC's hotkeys (RdPanels.modalCount)
         property bool _holdsModal: false

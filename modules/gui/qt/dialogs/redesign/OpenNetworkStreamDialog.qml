@@ -17,7 +17,7 @@
  *****************************************************************************/
 
 // redesign (W6.4, video 13:07-13:20, Figma "Open network stream" 6216:13614):
-// modal dialog over the dimmed window. "Network URL" takes one link per line;
+// modal dialog over the window (no dim, Decision 41). "Network URL" takes one link per line;
 // "Playlist Name (optional)" saves links to playlists (m3u, pls ...) as stream lists
 // under the library's Network and shows them there (RdStreamListSaver, P6-14), and the
 // other links as a media library playlist, instead of playing them (shown only when the
@@ -171,14 +171,9 @@ T.Popup {
     // Motion (Decision 32): dialogs open and close instantly, like the Figma prototype and the
     // Settings dialog (the video's fade at 13:09.2 is an editing dissolve)
 
-    // dimmed window behind the dialog (video 13:09)
-    T.Overlay.modal: Item {
-        Rectangle {
-            anchors.fill: parent
-            anchors.margins: MainCtx.windowExtendedMargin
-            color: VLCStyle.palette.rdBgB2Transparent
-        }
-    }
+    // no dim behind the dialog (Decision 41: the video and Figma show none); the transparent
+    // overlay still takes the clicks outside the dialog
+    T.Overlay.modal: Item { }
 
     // Figma: Dark/BG/A3 Transparent, radius 14, effect "bg blur + shadow"
     background: Rectangle {

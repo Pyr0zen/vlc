@@ -17,7 +17,7 @@
  *****************************************************************************/
 
 // redesign: the Keyboard Shortcuts dialog (video 15:57-16:03, Figma "Keyboard Shortcuts"
-// 1048x800, node 2437:14832): VLC's hotkeys in their own modal dialog over the dimmed window.
+// 1048x800, node 2437:14832): VLC's hotkeys in their own modal dialog over the window (no dim, Decision 41).
 // Header (BG/B2): title, close, search field and the "All Fields" search scope. Body: column
 // titles Action / Hotkey / Global Hotkey, then the actions grouped under section titles, each
 // with its hotkey and global hotkey field. Footer: Cancel, Save (dimmed until something changed).
@@ -200,10 +200,10 @@ T.Popup {
         descriptionTip.close()
     }
 
-    T.Overlay.modal: Rectangle {
-        color: root.rdPalette.rdBgB2Transparent
-
-        // keeps the arrow cursor over the dimmed window (the video hides its cursor)
+    // no dim behind the dialog (Decision 41: the video and Figma show none); the transparent
+    // overlay still takes the clicks outside the dialog
+    T.Overlay.modal: Item {
+        // keeps the arrow cursor over the window behind (the video hides its cursor)
         MouseArea {
             anchors.fill: parent
             acceptedButtons: Qt.NoButton

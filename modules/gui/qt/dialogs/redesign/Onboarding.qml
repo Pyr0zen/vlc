@@ -17,7 +17,7 @@
  *****************************************************************************/
 
 // redesign (W8.3, video 19:47-19:54, Figma "Onboarding" 1899:3055, 1902:3670, 1902:6770): the
-// first-run onboarding that replaces VLC's first-run wizard, a 1090 x 759 card over the dimmed
+// first-run onboarding that replaces VLC's first-run wizard, a 1090 x 759 card (no dim, Decision 41) over the
 // window with three screens:
 //   1. welcome and the media folder for the media library (only with the media library)
 //   2. theme (Light / Dark / System) and accent color, applied live (Decision 9) over a picture
@@ -154,13 +154,9 @@ T.Popup {
 
     // Motion (Decision 32 and the Figma prototype): no animation, every change is instant
 
-    T.Overlay.modal: Item {
-        Rectangle {
-            anchors.fill: parent
-            anchors.margins: MainCtx.windowExtendedMargin
-            color: VLCStyle.palette.rdBgB2Transparent
-        }
-    }
+    // no dim behind the dialog (Decision 41: the video and Figma show none); the transparent
+    // overlay still takes the clicks outside the dialog
+    T.Overlay.modal: Item { }
 
     background: null
 
