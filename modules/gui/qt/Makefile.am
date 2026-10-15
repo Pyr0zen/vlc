@@ -329,6 +329,8 @@ libqt_plugin_la_SOURCES = \
 	player/rd_now_playing.hpp \
 	dialogs/toolbar/rd_profiles.cpp \
 	dialogs/toolbar/rd_profiles.hpp \
+	dialogs/toolbar/rd_profile_settings.cpp \
+	dialogs/toolbar/rd_profile_settings.hpp \
 	player/rd_media_info.cpp \
 	player/rd_media_info.hpp \
 	player/player_controller.cpp player/player_controller.hpp player/player_controller_p.hpp \

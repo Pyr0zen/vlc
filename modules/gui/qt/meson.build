@@ -471,6 +471,8 @@ qt_plugin_sources = files(
     'player/rd_now_playing.hpp',
     'dialogs/toolbar/rd_profiles.cpp',
     'dialogs/toolbar/rd_profiles.hpp',
+    'dialogs/toolbar/rd_profile_settings.cpp',
+    'dialogs/toolbar/rd_profile_settings.hpp',
     'player/rd_media_info.cpp',
     'player/rd_media_info.hpp',
     'player/input_models.hpp',
