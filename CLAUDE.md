@@ -54,6 +54,7 @@ For every element, every time:
 - **Local session:** while a build is tested, subagents code the next independent work packages in separate git worktrees (one package or tightly coupled pair per agent, never two agents on the same files), each following every rule in this file; then independent review, qmlcheck, merge into `redesign` as the next batch. The 5-packages-per-build rule and the full test loop stay.
 
 ## Current phase
+- 2026-10-15 night: merged batch pushed to redesign (seek thumbnails, Settings rows, UX leftovers, W5.2 folders, W4.3b / W4.8b Playback extras and Ctrl+B, W6.5 Add Subtitles, landing page); one build running. Next: test it on the PC, then endless sliders (wip/endless-sliders), then the verification round bug fixes. Details and order in redesign/STATUS.md.
 READY TO BUILD. Next session: read CLAUDE.md, VIDEO_INDEX.md, FIGMA_FLOWS.md and BUILD_PLAN.md, then run the build from Phase 1 through all phases continuously, following the test loop, without stopping unless truly blocked.
 
 - Sunday plan (2026-10-14), done so far: (1) no open bug issues; (2) build 38441433330 tested, Figma side-by-sides match for menu, Settings, Keyboard Shortcuts, Open Network Stream; fixes a2d7d5ef7c (opaque popups, Controls imports, Customize Player loads again: verified on build 38595146574); (3) performance round 1 in redesign/PERF.md: open file ~+300 ms vs stock (stop-everything, expected fix: lazy panels), 4K fullscreen and the motion method need a clean re-run (harness fix by an agent, offline).

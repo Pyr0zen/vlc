@@ -1,12 +1,24 @@
 # STATUS
 
-- Updated: 2026-10-15 evening. Stopped at the session limit (Sticky). Resume with "continue": start at "Resume here".
+- Updated: 2026-10-15 night. Build of the merged batch running (see Builds).
 
-## Resume here
-1. Merge into redesign from wip/integ-batch5 (already holds: seek thumbnails, Settings rows, UX branch, W5.2 folders, all reviewed; checks green), then wip/w43b-playback once its independent review (running at the stop) is pushed clean, then redesign-addsubs (web session pushed it; do its section 5 hookups). qmlcheck + buildlists + privacycheck, push once = one build.
-2. Fix branches started before the stop, NOT reviewed, not for that build: wip/fix-library, wip/fix-music, wip/fix-panels (bugs of the verification round, BUILD_NOTES "2026-10-15 verification round"). Review each, merge next round.
-3. Landing page pushed (README top, docs/images, Figma gallery). Build screenshots + hero from the build replace the Figma hero after the next verified build. Social preview: docs/images/social-preview.png (Sticky uploads it in Settings > Social preview).
-4. Seek-to-start fix is in green build 38751114133 (downloaded to builds/38751114133): test the left-edge drag on the PC.
+## In the build now (redesign, one push)
+- W3.3b seek preview thumbnails (review fixes M1/M2 + LOWs)
+- Step 2 Settings rows S2-02..S2-10 + own tray popup (HIGH double-click fix); night mode ready for Sticky's listening test (Decision 38)
+- UX leftovers: right-click on the seek bar opens the menu, focus returns to panel buttons, queue Delete only with focus
+- W5.2 folder-based Videos / Music categories (Add row, picker start folder, insertion order, system folders per category)
+- W4.3b Playback tab: Sleep Timer, Show Metadata, Show Statistics; W4.8b Ctrl+B and Bookmarks +/- (works on a first-played file)
+- W6.5 Add Subtitles dialog (web session) with hookups: tracks popup +/pencil, library file / playlist / folder menus, Settings > Subtitles OpenSubtitles section
+- Seek-to-start fix (already green in 38751114133), landing page README
+- First CI compile for all their C++ (never compiled before): watch the run, fix compile errors first.
+
+## Next, in order
+1. When the build is green: hands-on test on the PC (test lists in BUILD_NOTES per package and ADDSUBS_NOTES section 9), left-edge seek drag, screenshots vs Figma; build screenshots for the README gallery and hero.
+2. Endless sliders (Decision (Sticky), approved mockup): coded by an agent on wip/endless-sliders; then independent review, merge, next build.
+3. Verification round bugs of 38727073546 (BUILD_NOTES "2026-10-15 verification round"): 5 HIGH (Add Folder picker crash, flattened folder listings, stock music player view, New Playlist dialog, bookmarks: fixed by W4.8b), 13 MED, 17 LOW. Partial unreviewed work on wip/fix-library and wip/fix-panels (agents cut off by the session limit); restart the three fix packages (library, music player + mini player, panels / settings / Customize) from the new redesign.
+4. Open from reviews: right-click on the play button / volume widget opens no menu; external subtitle tracks listed apart (P3-10, track model); OpenSubtitles needs Sticky's API key for a real test; Add Subtitles target list could open by itself as in the video (question for Sticky).
+5. Core build (Decision 27): subtitle rate change flushes only the subtitle slave, own build. Then the rest of Step 2 (BUILD_PLAN section 0): per-show presets, subtitle timeline, waveform seek bar, OSD shortcut, profiles, new Customize controls, release.
+6. PERF round 4: redesign motion captures with Sticky away.
 
 ## Last 10 commits
 ```
