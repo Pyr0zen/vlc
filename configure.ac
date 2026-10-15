@@ -5306,6 +5306,10 @@ AS_CASE(["${with_brand}"],
     BRAND_PRODUCT_ID="{f00e45bf-087b-49ef-90e7-4cd5e2e4bd72}"
     dnl the installer's welcome / finish bitmap shows VLC's cone: NSIS's default one instead
     BRAND_NSIS_BITMAP_TRUE=";"
+    dnl VLC's update checker downloads VLC releases from videolan.org: never in Cone
+    AS_IF([test "${enable_update_check}" = "yes"], [
+      AC_MSG_ERROR([--with-brand=public has no update checker: drop --enable-update-check])
+    ])
     AC_DEFINE([VLC_BRAND_PUBLIC], [1], [Define to build the public brand (Cone) instead of VLC's name and cone])
   ],
   [AC_MSG_ERROR([--with-brand must be vlc or public (got ${with_brand})])])

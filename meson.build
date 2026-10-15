@@ -101,6 +101,10 @@ if get_option('brand') == 'public'
                   + ' must fill the logo with #FF8800, the accent slot of the SVG colorizer')
         endif
     endforeach
+    # VLC's update checker downloads VLC releases from videolan.org: never in Cone
+    if get_option('update-check').allowed()
+        error('-Dbrand=public has no update checker: drop -Dupdate-check')
+    endif
     cdata.set('VLC_BRAND_PUBLIC', 1)
 endif
 
