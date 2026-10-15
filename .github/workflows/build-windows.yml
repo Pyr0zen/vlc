@@ -22,18 +22,18 @@ on:
         description: 'Brand profile'
         type: choice
         options: [vlc, public]
-        default: vlc
+        default: public
 
 concurrency:
   # one queue per branch and brand profile: a vlc and a public build of the same branch run side by side
-  group: build-windows-${{ github.ref }}-${{ inputs.brand || 'vlc' }}
+  group: build-windows-${{ github.ref }}-${{ inputs.brand || 'public' }}
   cancel-in-progress: true
 
 env:
   # Keep in sync with VLC_WIN64_IMAGE in extras/ci/gitlab-ci.yml
   VLC_IMAGE: registry.videolan.org/vlc-debian-win64-posix:20260611225331
   # brand profile: the workflow_dispatch input, "vlc" for pushes
-  VLC_BRAND: ${{ inputs.brand || 'vlc' }}
+  VLC_BRAND: ${{ inputs.brand || 'public' }}
 
 jobs:
   win64:
