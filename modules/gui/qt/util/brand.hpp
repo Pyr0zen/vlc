@@ -61,6 +61,8 @@
                                 "Built by Sticky.</p><p>Cone is not affiliated with VideoLAN or Juxtopposed."
 /* VLC's seasonal cones (Christmas, April fools) are VLC logos: none in Cone */
 # define BRAND_SEASONAL_LOGOS   0
+/* About dialog version line: the version only, without VLC's release codename */
+# define BRAND_VERSION_TEXT     VERSION
 
 /* logo for the redesign's icon path (widgets/qml/RdIcon.qml loads qrc:///rd/<name>.svg): one
  * path filled with #FF8800, the colorizer's accent slot (util/color_svg_image_provider.cpp
@@ -87,6 +89,7 @@
                                 "various streaming protocols."
 # define BRAND_ABOUT_TEXT       "<p>VLC media player is a free and open source media player, encoder, and streamer made by the volunteers of the <a href=\"https://www.videolan.org/\"><span style=\" text-decoration: underline; color:#0057ae;\">VideoLAN</span></a> community.</p><p>VLC uses its internal codecs, works on essentially every popular platform, and can read almost all files, CDs, DVDs, network streams, capture cards and other media formats!</p><p><a href=\"https://www.videolan.org/contribute/\"><span style=\" text-decoration: underline; color:#0057ae;\">Help and join us!</span></a>"
 # define BRAND_SEASONAL_LOGOS   1
+# define BRAND_VERSION_TEXT     VERSION_MESSAGE
 
 /* the Figma "vlc" icon (pixmaps/redesign/vlc.svg) at every size, and VLC's cone */
 # define BRAND_LOGO_ICON_SMALL  "vlc"

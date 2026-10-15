@@ -92,7 +92,7 @@ AboutDialog::AboutDialog( qt_intf_t *_p_intf)
     setWindowRole( "vlc-about" );
     setWindowModality( Qt::WindowModal );
 
-    ui.version->setText(qfu( " " VERSION_MESSAGE ) );
+    ui.version->setText(qfu( " " BRAND_VERSION_TEXT ) );
     ui.title->setText("<html><head/><body><p><span style=\" font-size:26pt; color:#353535;\"> " + qtr( BRAND_NAME ) + " </span></p></body></html>");
 
     ui.MainBlabla->setText("<html><head/><body>" +
@@ -155,7 +155,7 @@ bool AboutDialog::eventFilter(QObject *obj, QEvent *event)
             }
             else
             {
-                ui.version->setText(qfu( " " VERSION_MESSAGE ) );
+                ui.version->setText(qfu( " " BRAND_VERSION_TEXT ) );
                 b_advanced = false;
             }
             return true;
