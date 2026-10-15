@@ -53,8 +53,14 @@ Widgets.RdListView {
         ml: MediaLib
     }
 
-    // a bookmark was added or removed, or the media changed: the old row numbers no longer hold
-    onCountChanged: selectedIndex = -1
+    // a bookmark was added or removed, or the media changed: the old row numbers no longer hold.
+    // The model resets on each of these, also when the new list has as many rows (another
+    // media with the same number of bookmarks)
+    Connections {
+        target: bookmarkModel
+
+        function onModelReset() { root.selectedIndex = -1 }
+    }
 
     function _jumpTo(index) {
         selectedIndex = index
