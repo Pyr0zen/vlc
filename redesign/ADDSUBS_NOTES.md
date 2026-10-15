@@ -129,6 +129,8 @@ Please add these to VIDEO_INDEX.md "Decisions (Claude)".
 
 ## 5. What the PC session must change in shared files
 
+Integration (2026-10-15, branch wip/integ-addsubs): items 1-5 are done, item 6 stays open; see BUILD_NOTES.md "W6.5 Add Subtitles merged into the batch".
+
 1. **`modules/gui/qt/maininterface/mainui.cpp`** registers the singleton. It must exist at startup, because it also adds saved subtitles on playback.
    - Include, next to the settings_catalog one (line 42):
      ```cpp
