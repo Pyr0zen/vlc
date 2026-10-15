@@ -213,7 +213,6 @@ Extra decisions made during the build, one line each (date, row IDs, decision, r
 - 2026-10-15 W6.2 integration: Figma's per-row geometry is copied where it differs between rows (text input rows 48 high, the start volume row padded 10, 32 high inputs where Figma draws them); the Settings sliders use Figma's two "wrapper" variants (57 and 47 high).
 - 2026-10-15 W6.2 integration: the optical drive row is a dropdown of the computer's drives (Figma); its empty value reads "Automatic" (Figma shows "-"); Default audio / subtitle track stay dropdowns in words (P7-17) where Figma draws a "1" field.
 - 2026-10-15 W6.2 integration (UX): the Settings dialog closes on a click outside except while a value is being typed in a page (same rule as the other dialogs).
-
 - 2026-10-15 S2-05 / Decision 37: "Double click on the video" choices Toggle fullscreen / Play / Pause / Nothing; with Play / Pause the single click pause is off through a runtime "mouse-pause-policy" variable (the saved single-click choice is kept, its row dimmed), effective from the next file because the core reads the policy when a file opens.
 
 ## Core changes (status)
