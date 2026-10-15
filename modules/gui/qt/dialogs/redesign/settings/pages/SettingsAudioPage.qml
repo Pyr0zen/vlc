@@ -101,6 +101,8 @@ SettingsPage {
             option: "qt-max-volume"
             text: qsTr("Maximum volume")
             kind: "slider"
+            // Figma's range (100 / 200 / 300 % evenly spaced); VLC also allows 60 to 99 %, which
+            // only the command line or All Other Options set: such a value shows at the left end
             from: 100
             to: 300
             step: 25
