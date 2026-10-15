@@ -29,9 +29,12 @@ param(
 $ErrorActionPreference = 'Stop'
 # -File passes "a,b" as one string
 $Only = @($Only | ForEach-Object { $_ -split ',' } | Where-Object { $_ })
-$Media ='<TEST_MEDIA_DIR>\<TEST_VIDEO>'
-$Media4k = '<WORK_DIR>\perfmedia\4k60_80mbps.mp4'
-$Queue = '<WORK_DIR>\perfmedia\queue500.m3u'
+# media paths of this PC: set $Media, $Media4k and $Queue in vlcperf.local.ps1 next to this
+# script (gitignored, never committed)
+$Media = $null; $Media4k = $null; $Queue = $null
+$LocalSettings = Join-Path (Split-Path -Parent $MyInvocation.MyCommand.Path) 'vlcperf.local.ps1'
+if (Test-Path $LocalSettings) { . $LocalSettings }
+if (-not $Media -or -not $Media4k -or -not $Queue) { throw "set `$Media, `$Media4k and `$Queue in $LocalSettings" }
 $Here = Split-Path -Parent $MyInvocation.MyCommand.Path
 $OutDir = Split-Path -Parent $Out
 New-Item -ItemType Directory -Force $OutDir | Out-Null

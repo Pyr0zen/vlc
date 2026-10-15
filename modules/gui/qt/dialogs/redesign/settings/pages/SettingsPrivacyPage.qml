@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 // redesign: Settings > Privacy ("Privacy Settings", video 17:52-17:55, Figma "Settings - privacy");
-// rows: P8-07. "What VLC needs to remember about history or network." No Advanced Options
+// rows: P8-07. What VLC remembers about history and the network. No Advanced Options
 // (the video and Figma show none).
 import QtQuick
 

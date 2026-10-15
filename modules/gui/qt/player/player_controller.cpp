@@ -1145,9 +1145,19 @@ static void on_player_timer_seek(const struct vlc_player_timer_point *point,
             PlayerController* q = that->q_func();
 
             that->m_player_time = point_copy;
-            if (that->m_player_time.position > 0)
+            // A position seek to the very start arrives with position 0 and ts 0 (the core
+            // computes ts as position * length, and 0 is VLC_TICK_INVALID): it is a valid
+            // target, otherwise a drag to the left edge leaves the previous time on screen.
+            const bool seekToStart = that->m_player_time.ts == VLC_TICK_INVALID
+                                  && that->m_player_time.position == 0
+                                  && that->m_player_time.length != VLC_TICK_INVALID;
+            if (seekToStart)
+                that->m_player_time.ts = VLC_TICK_0;
+            if (that->m_player_time.position > 0 || seekToStart)
                 that->m_position = that->m_player_time.position;
-            if (that->m_player_time.ts != VLC_TICK_INVALID)
+            if (seekToStart)
+                that->m_time = VLC_TICK_0;
+            else if (that->m_player_time.ts != VLC_TICK_INVALID)
                 that->m_time = that->m_player_time.ts - VLC_TICK_0;
 
             q->updatePosition();

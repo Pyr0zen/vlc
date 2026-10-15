@@ -22,7 +22,7 @@
 // "Find more extensions" (the button then reads "Show installed"). "Add" installs the selected
 // add-on of the catalog; with none selected it reads an add-on package (.vlp) from the computer,
 // as the old dialog did with a dropped package (also accepted here), whose add-ons can then be
-// installed. VLC's plugins (internal functions, "not really supposed to edit them here") move
+// installed. VLC's plugins (internal functions, not meant to be edited by users) move
 // under Advanced Options. Wording: the video's (Decision 11; Figma says "Add-ons").
 import QtQuick
 import QtQuick.Layouts
