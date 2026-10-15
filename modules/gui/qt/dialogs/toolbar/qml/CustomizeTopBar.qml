@@ -56,7 +56,8 @@ Rectangle {
         cursorShape: root.editor && root.editor.dragActive ? Qt.DragMoveCursor : Qt.ArrowCursor
     }
 
-    // cone (Figma "Frame 8": 38x28 cell 6 from the edge, then 7)
+    // the brand logo, as the live top bar (Figma "Frame 8": 38x28 cell 6 from the edge, then
+    // 7; util/brand.hpp: VLC's cone or the public build's logo)
     Item {
         id: cone
 
@@ -66,7 +67,7 @@ Rectangle {
 
         Widgets.RdIcon {
             anchors.centerIn: parent
-            name: "vlc"
+            name: Brand.logoIcon
             accentColor: VLCStyle.palette.rdAccentLogo
         }
     }
