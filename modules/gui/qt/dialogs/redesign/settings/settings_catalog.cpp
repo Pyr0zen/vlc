@@ -112,7 +112,7 @@ const QSet<QString>& curatedOptions()
         "input-record-path", "input-record-native", "qt-cast-discovery",
         "sout-chromecast-conversion-quality",
         "sout-display", "sout-audio", "sout-video", "sout-spu", "sout-x264-preset", "sout-x264-tune",
-        "sout-keep", "sout-all", "sout-x264-profile", "sout-x264-level",
+        "sout-keep", "sout-all", "sout-x264-profile", "sout-x264-level", "sout-transcode-venc",
         // Extensions
         "qt-autoload-extensions",
     };

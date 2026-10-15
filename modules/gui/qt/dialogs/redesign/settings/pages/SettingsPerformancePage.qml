@@ -212,6 +212,26 @@ SettingsPage {
         SettingsSection {
             title: qsTr("Developer")
 
+            // S2-09 (video 18:20): the transcoder's video encoder ("sout-transcode-venc"), used
+            // when VLC converts, streams with transcoding or records with re-encoding. VLC's
+            // "none" and "any" both let it pick by score: Automatic; the encoders by VLC's names
+            SettingsOption {
+                id: encoderRow
+
+                option: "sout-transcode-venc"
+                text: qsTr("Encoder")
+                description: qsTr("The video encoder VLC uses when it converts video: Convert / Save, streaming with conversion and recordings that cannot be saved as they are. Automatic lets VLC pick the best one for the format.")
+                choices: {
+                    const automatic = encoderRow.value === "any" ? "any" : "none"
+                    const list = [{ value: automatic, text: qsTr("Automatic") }]
+                    for (const c of RdEffects.optionChoices("sout-transcode-venc")) {
+                        if (c.value !== "any" && c.value !== "none" && c.value !== "")
+                            list.push(c)
+                    }
+                    return list
+                }
+            }
+
             SettingsOption {
                 option: "codec"
                 text: qsTr("Decoder")
