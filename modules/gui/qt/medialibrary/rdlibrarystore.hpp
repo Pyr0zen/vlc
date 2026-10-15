@@ -156,6 +156,10 @@ private:
     static void onMlEvent(void* data, const struct vlc_ml_event_t* event);
     void onFolderEvent();
     void onScanCompleted();
+    // the user's Videos and Music folders, when they are library folders in no category
+    // (added by the onboarding, VLC's first-run wizard or VLC's preferences), join their own
+    // category instead of showing in both
+    void sortStandardFolders();
     QVariantList frequentIds(const QString& kind) const;
     void save(const char* key, const QVariant& value);
     QString coverDirectory() const;

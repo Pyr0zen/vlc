@@ -133,6 +133,8 @@ RdLibraryStore::RdLibraryStore(qt_intf_t* intf, MediaLib* mediaLib, QObject* par
     m_viewMode = settings->value(RD_LIBRARY_KEY("viewMode"), QStringLiteral("grid")).toString();
     m_compactViewMode = settings->value(RD_LIBRARY_KEY("compactViewMode"), QStringLiteral("list")).toString();
     m_hiddenRoots = settings->value(RD_LIBRARY_KEY("hiddenRoots")).toStringList();
+
+    sortStandardFolders();
 }
 
 RdLibraryStore::~RdLibraryStore()
@@ -146,8 +148,10 @@ void RdLibraryStore::onMlEvent(void* data, const vlc_ml_event_t* event)
     auto* self = static_cast<RdLibraryStore*>(data);
     switch (event->i_type)
     {
-    case VLC_ML_EVENT_FOLDER_ADDED:
     case VLC_ML_EVENT_ENTRY_POINT_ADDED:
+        QMetaObject::invokeMethod(self, &RdLibraryStore::sortStandardFolders, Qt::QueuedConnection);
+        [[fallthrough]];
+    case VLC_ML_EVENT_FOLDER_ADDED:
         QMetaObject::invokeMethod(self, &RdLibraryStore::onFolderEvent, Qt::QueuedConnection);
         break;
     case VLC_ML_EVENT_DISCOVERY_COMPLETED:
@@ -316,6 +320,71 @@ void RdLibraryStore::addFolder(const QString& category, const QUrl& url)
             emit foldersChanged();
         }
         emit folderAdded(category, mrl);
+    });
+}
+
+void RdLibraryStore::sortStandardFolders()
+{
+    if (!m_mediaLib)
+        return;
+
+    struct Ctx {
+        QStringList roots;
+    };
+    m_mediaLib->runOnMLThread<Ctx>(this,
+    [](vlc_medialibrary_t* ml, Ctx& ctx) {
+        ml_unique_ptr<vlc_ml_folder_list_t> roots(vlc_ml_list_entry_points(ml, nullptr));
+        if (!roots)
+            return;
+        for (const vlc_ml_folder_t& root : ml_range_iterate<vlc_ml_folder_t>(roots))
+        {
+            if (root.psz_mrl && !root.b_banned)
+                ctx.roots.append(RdLibraryItems::normalizedMrl(qfu(root.psz_mrl)));
+        }
+    },
+    [this](quint64, Ctx& ctx) {
+        const auto userDirKey = [](vlc_userdir_t type) -> QString {
+            char* dir = config_GetUserDir(type);
+            if (!dir)
+                return {};
+            const QString path = qfu(dir);
+            free(dir);
+            if (path.isEmpty())
+                return {};
+            return RdLibraryItems::mrlKey(QUrl::fromLocalFile(QDir::fromNativeSeparators(path))
+                                              .toString(QUrl::FullyEncoded));
+        };
+        const QString homeKey = userDirKey(VLC_HOME_DIR);
+        QString videosKey = userDirKey(VLC_VIDEOS_DIR);
+        QString musicKey = userDirKey(VLC_MUSIC_DIR);
+        // a system without its own Videos or Music folder names the home folder: that one
+        // stays in both categories
+        if (videosKey == homeKey || videosKey == musicKey)
+            videosKey.clear();
+        if (musicKey == homeKey)
+            musicKey.clear();
+
+        bool changed = false;
+        for (const QString& root : std::as_const(ctx.roots))
+        {
+            if (RdLibraryItems::containsMrl(m_videoFolders, root)
+                || RdLibraryItems::containsMrl(m_musicFolders, root)
+                || RdLibraryItems::containsMrl(m_hiddenRoots, root))
+                continue;
+            const QString key = RdLibraryItems::mrlKey(root);
+            if (!videosKey.isEmpty() && key == videosKey)
+                m_videoFolders.append(root);
+            else if (!musicKey.isEmpty() && key == musicKey)
+                m_musicFolders.append(root);
+            else
+                continue;
+            changed = true;
+        }
+        if (!changed)
+            return;
+        save(RD_LIBRARY_KEY("videoFolders"), m_videoFolders);
+        save(RD_LIBRARY_KEY("musicFolders"), m_musicFolders);
+        emit foldersChanged();
     });
 }
 
