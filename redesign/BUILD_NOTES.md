@@ -241,3 +241,6 @@ Merged `origin/redesign-settings` (PR #2) on the library integration, then `rede
 ## 2026-10-15 hands-on (build 38609407210, light theme)
 - UX bug: with the main "..." menu open, Ctrl+P opened the Settings dialog on top while the menu stayed open behind it. Opening any dialog (shortcut or menu) must close open menus and popups first. Check on the next build (the UX pass changed menu dismissal), fix if still there.
 - Light theme: placeholders and disabled text use Figma's Light FG/A4 #3B3B3B and read almost like typed text (Open Network Stream fields): decision image Q5 for Sticky.
+
+## 2026-10-15 seek to the start
+- Bug (upstream code, found while comparing with another redesign project): dragging or clicking the seek bar at its left edge, or typing 0:00 in the time editor, seeks to position 0, but the time label kept the previous time and the handle could jump back. The core reports a position seek with ts = position * length, which is 0 = VLC_TICK_INVALID at the start, and PlayerController's on_player_timer_seek dropped both position 0 and ts 0. Fixed in player_controller.cpp: a seek to the start is applied as position 0 / time VLC_TICK_0. To test on the next build: drag past the left edge, click at x = 0, type 0:00, playing and paused: the label reads 00:00:00 at once and the handle stays left.
