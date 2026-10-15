@@ -50,7 +50,9 @@ T.Control {
 
     // the text sits 12 px inside the frame's 2 px stroke (Figma text at 14)
     leftPadding: framed ? VLCStyle.dp(14) : VLCStyle.dp(12)
-    rightPadding: showSwatch ? VLCStyle.dp(5) : VLCStyle.dp(18)
+    // the swatch sits 5 px inside the frame's 2 px stroke (Figma 4046:12377), 5 px from the edge
+    // of a frameless box (800:1149)
+    rightPadding: showSwatch ? (framed ? VLCStyle.dp(7) : VLCStyle.dp(5)) : VLCStyle.dp(18)
 
     hoverEnabled: true
     // disabled: Figma's 30 % rows ("Settings - library")
@@ -131,8 +133,9 @@ T.Control {
             height: VLCStyle.dp(22)
             radius: VLCStyle.rd_radius_xsmall
             color: control.swatch
-            border.width: VLCStyle.dp(1)
-            border.color: control.rdPalette.rdDividerBright
+            // 1.5 px (dp() would round it to 2)
+            border.width: 1.5 * VLCStyle.scale
+            border.color: control.rdPalette.rdSwatchStroke
         }
     }
 }
