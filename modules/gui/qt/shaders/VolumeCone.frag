@@ -18,11 +18,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
-// redesign: cone-shaped volume slider (video 3:04-3:10, 11:41; Figma "volume" component).
-// A horizontal cone: rounded narrow tip on the left, full height on the right. The part left of
-// `level` (0..1 of the width) shows the green > orange > red gradient, which stays the same in
-// every theme and accent (video 17:44-17:49), under the theme's `tint` (Figma: #000000 20 % in
-// Dark, #FFFFFF 20 % in Light); the rest shows `emptyColor`.
+// redesign: cone-shaped volume slider (video 3:04-3:10, 11:41; Figma "volume" component 244:184).
+// A horizontal cone: a trapezoid 10 px tall on the left and full height on the right, with
+// 3.5 px rounded corners (measured on the 2x export of "Rectangle 6", 89x28). The gradient part
+// is the same shape inset by 1.5 px ("Group 14": 86x25 at 1.5,1.5, radius 2), so a 1.5 px
+// `emptyColor` rim stays around it, and it is masked to the left of `level` (0..1 of the width).
+// The green > orange > red gradient stays the same in every theme and accent (video
+// 17:44-17:49), under the theme's `tint` (Figma: #000000 20 % in Dark, #FFFFFF 20 % in Light).
+// The geometry scales with the height (Figma values at 28 px).
 
 layout(location = 0) in vec2 qt_TexCoord0;
 
@@ -34,10 +37,22 @@ layout(std140, binding = 0) uniform buf {
 
   vec2 size;
   float level;
-  float tipRadius;
   vec4 emptyColor;
   vec4 tint;
 };
+
+// signed distance (in px, negative inside) to an isosceles trapezoid centred on the origin:
+// half-width r1 at y = -he, r2 at y = +he (Inigo Quilez, sdTrapezoid)
+float sdTrapezoid(vec2 p, float r1, float r2, float he)
+{
+    vec2 k1 = vec2(r2, he);
+    vec2 k2 = vec2(r2 - r1, 2.0 * he);
+    p.x = abs(p.x);
+    vec2 ca = vec2(p.x - min(p.x, (p.y < 0.0) ? r1 : r2), abs(p.y) - he);
+    vec2 cb = p - k1 + k2 * clamp(dot(k1 - p, k2) / dot(k2, k2), 0.0, 1.0);
+    float s = (cb.x < 0.0 && ca.y < 0.0) ? -1.0 : 1.0;
+    return s * sqrt(min(dot(ca, ca), dot(cb, cb)));
+}
 
 vec3 gradientAt(float t)
 {
@@ -59,25 +74,29 @@ void main()
 {
     vec2 p = qt_TexCoord0 * size;
     float w = size.x;
-    float cy = size.y * 0.5;
+    float k = size.y / 28.0;
 
-    // signed distance (in px) to the cone outline, negative inside
-    float d;
-    if (p.x < tipRadius) {
-        d = length(p - vec2(tipRadius, cy)) - tipRadius;
-    } else {
-        float slope = (cy - tipRadius) / max(1.0, w - tipRadius);
-        float halfHeight = tipRadius + slope * (p.x - tipRadius);
-        d = (abs(p.y - cy) - halfHeight) / sqrt(1.0 + slope * slope);
-    }
-    d = max(d, p.x - w);
+    float r1 = 5.0 * k;            // half of the 10 px left end
+    float r2 = size.y * 0.5;       // half of the full height on the right
+    float corner = 3.5 * k;
+    float rim = 1.5 * k;
+
+    // the rounded trapezoid is the sharp one shrunk by `corner`, grown back by `corner`
+    float slope = (r2 - r1) / w;
+    float grow = corner * sqrt(1.0 + slope * slope);
+    float he = w * 0.5 - corner;
+    float d = sdTrapezoid(vec2(p.y - r2, p.x - w * 0.5),
+                          r1 + slope * corner - grow,
+                          r2 - slope * corner - grow,
+                          he) - corner;
 
     float coverage = clamp(0.5 - d, 0.0, 1.0);
+    float inner = clamp(0.5 - (d + rim), 0.0, 1.0);
 
     // filled part, antialiased at the level edge
-    float filled = clamp(level * w - p.x + 0.5, 0.0, 1.0);
+    float filled = clamp(level * w - p.x + 0.5, 0.0, 1.0) * inner;
     // the colors are premultiplied: the tint lies over the gradient
-    vec3 fill = gradientAt(clamp(p.x / w, 0.0, 1.0)) * (1.0 - tint.a) + tint.rgb;
+    vec3 fill = gradientAt(clamp((p.x - rim) / (w - 2.0 * rim), 0.0, 1.0)) * (1.0 - tint.a) + tint.rgb;
 
     vec4 color = mix(emptyColor, vec4(fill, 1.0), filled);
 
