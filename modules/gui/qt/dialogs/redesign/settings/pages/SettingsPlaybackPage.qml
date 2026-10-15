@@ -67,15 +67,23 @@ SettingsPage {
             text: qsTr("Start playing as soon as a file opens")
         }
 
+        // 0.25 to 2 as in the video; held past an end it scrolls on through the speeds VLC
+        // plays at (include/vlc_input.h: INPUT_RATE_MIN 1/32 to INPUT_RATE_MAX 31.25), 1x per
+        // second (Decision 47)
         SettingsOption {
             option: "rate"
             text: qsTr("Default playback speed")
             kind: "slider"
             from: 0.25
             to: 2
+            limitFrom: 0.03125
+            limitTo: 31.25
+            scrollSpeed: 1
             step: 0.25
             decimals: 2
-            labels: ["0.25", "0.5", "0.75", "1", "1.25", "1.5", "1.75", "2"]
+            zeroValue: 1
+            labelStep: 0.25
+            labelText: (v) => String(Math.round(v * 100) / 100)
         }
 
         SettingsOption {
