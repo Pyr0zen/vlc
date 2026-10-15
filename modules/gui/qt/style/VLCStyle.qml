@@ -364,6 +364,17 @@ QtObject {
     readonly property int rd_seekHandleWidth: MainCtx.dp(8, scale)
     // narrow window: the seek bar never gets narrower than a time label
     readonly property int rd_seekBarMinimumWidth: MainCtx.dp(76, scale)
+    // seek bar preview card (Figma "thumbnail" 272x189: padding 10, gap 10, picture 252x142 r4,
+    // time box 17 high, card radius rd_radius_large); the prototype opens it at -132,-209 of the
+    // 8x24 playhead, so its bottom edge is 18 px above the seek track
+    readonly property int rd_seekPreviewPadding: MainCtx.dp(10, scale)
+    readonly property int rd_seekPreviewSpacing: MainCtx.dp(10, scale)
+    readonly property int rd_seekPreviewPictureWidth: MainCtx.dp(252, scale)
+    readonly property int rd_seekPreviewPictureHeight: MainCtx.dp(142, scale)
+    readonly property int rd_seekPreviewTimeHeight: MainCtx.dp(17, scale)
+    readonly property int rd_seekPreviewGap: MainCtx.dp(18, scale)
+    // near a window edge the card stops this far from it (the player frame inset)
+    readonly property int rd_seekPreviewEdgeMargin: MainCtx.dp(10, scale)
     readonly property int rd_iconSize: MainCtx.dp(24, scale)
     readonly property int rd_iconButtonWidth: MainCtx.dp(30, scale)
     readonly property int rd_iconButtonHeight: MainCtx.dp(32, scale)

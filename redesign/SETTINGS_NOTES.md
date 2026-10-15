@@ -61,7 +61,7 @@ Status: **built** = coded on this branch, needs the PC test; **partly** = built,
 | P8-06 Interface | partly | (section 6: window size memory, popup duration) |
 | P8-07 Privacy | partly | (section 6: "Never remember items matching") |
 | P8-08 Controls | partly | (section 6: double click) |
-| P8-09 Playback | partly | (section 6: thumbnail while scrubbing) |
+| P8-09 Playback | yes | "Show thumbnail while scrubbing" added by W3.3b (qt-seek-thumbnails) |
 | P8-10 Video | built | |
 | P8-11 Audio, P8-44 inline equalizer, IB-45 slider variants | partly | (section 6: night mode) |
 | P8-12 Subtitles | partly | (section 6: OSD feedback duration, ASS styling) |
@@ -105,7 +105,7 @@ Rows of the dialog shell (P7-18, IB-42, P8-02, P8-39, P8-40) and the Keyboard Sh
 4. `widgets/qml/RdSegmented.qml` is mouse-only. The settings pages wrap it in `SettingsSegmented` (Tab, Left / Right); the kit widget itself could take that over for its other users.
    The interface rows (maximum volume, hide timeout...) call `MainCtx.reloadPrefs()` like VLC's preferences; it also re-applies values the session changed without saving them (e.g. compact mode toggled by a hotkey).
 5. `network/addonsmodel.cpp` / `util/listcache.hxx`: a row state update can be lost when two add-on events come back to back (section 8).
-6. When the seek-bar thumbnails (P2-04) are built, add their option and a "Show thumbnail while scrubbing" SettingsOption row to Playback > Seeking.
+6. Done by W3.3b (497730a4ce1 ecc261e4664 9a50a146c1f a80ff78a4a0): option qt-seek-thumbnails (on) and the "Show thumbnail while scrubbing" row in Playback > Seeking.
 7. VIDEO_INDEX.md: set the rows of section 3 to "in progress" (built, unverified) at the merge; add the decisions of section 4.
 
 ## 6. Not done / limits
@@ -115,7 +115,6 @@ Rows of the design without a VLC option behind them (left out rather than shown 
 - Interface "Remember window size and position" (VLC 4 always remembers), "Popup duration" (no option), "Fullscreen controls sensitivity" (VLC 4's interface no longer reads "qt-fs-sensitivity"; the option is kept out of the lists too).
 - Privacy "Never remember items matching" (VLC 4 removed the filter).
 - Controls "Double click on the video" (always fullscreen in VLC).
-- Playback "Show thumbnail while scrubbing" (the feature is not built yet; section 5).
 - Audio "Night mode" (no VLC option; the compressor row is the closest).
 - Subtitles "Show feedback for (duration)" and P8-13 (the shortcut shown in on-screen messages): need a core change (Decision 27, own build); "Ignore styling in ASS and SSA subtitles" (no option).
 - Performance "Process priority" (only "high-priority" exists), "Rescan plugins" (VLC rescans at every start; its options are not saved), "Encoder" (obsolete in VLC 4).

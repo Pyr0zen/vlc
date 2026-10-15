@@ -6,6 +6,7 @@ Read this before starting any work package and check it again before marking one
 Responsiveness wins over visual effects every time; targets and measurements are in CLAUDE.md (Quality rules) and redesign/PERF.md.
 - Background blur: only on panels, and only if it holds 60 fps; otherwise a solid or semi-transparent fill that looks close to it. (The video is a native surface under the QML scene and cannot be blurred at all; panels over the video use an opaque fill.)
 - Seek thumbnails and waveform scanning: in the background at low priority; they never block playback or the UI.
+- Seek preview card (W3.3b): one thumbnailer request at a time, throttled to one start per 150 ms, cancelled when the pointer leaves; nothing runs before the first hover. The card lives in the window overlay only while shown (above panels and the compact library). A later waveform / subtitle timeline seek bar mode (P6-06, P3-16) keeps the same scrubbing properties of SliderBar (scrubbing, dragging, scrubPosition) so the card works on every mode.
 - Long lists always load rows lazily (ListView / GridView with delegates created on demand), never all at once (no Repeater over a model that can grow: queue, bookmarks, chapters, library).
 - No polling and no timers running when nothing on screen needs them.
 - Animations: the Figma durations where they exist, otherwise 150 to 200 ms at most; a click or key starts the visible response within one frame.

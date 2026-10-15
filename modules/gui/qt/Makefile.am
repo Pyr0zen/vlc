@@ -311,6 +311,8 @@ libqt_plugin_la_SOURCES = \
 	player/delay_estimator.hpp \
 	player/rd_effects.cpp \
 	player/rd_effects.hpp \
+	player/rd_seek_thumbnailer.cpp \
+	player/rd_seek_thumbnailer.hpp \
 	player/player_controller.cpp player/player_controller.hpp player/player_controller_p.hpp \
 	player/player_controlbar_model.cpp player/player_controlbar_model.hpp \
 	player/control_list_model.cpp player/control_list_model.hpp \
@@ -522,6 +524,7 @@ nodist_libqt_plugin_la_SOURCES = \
 	style/vlcicons.moc.cpp \
 	player/delay_estimator.moc.cpp \
 	player/rd_effects.moc.cpp \
+	player/rd_seek_thumbnailer.moc.cpp \
 	player/input_models.moc.cpp \
 	player/player_controller.moc.cpp \
 	player/player_controlbar_model.moc.cpp \
@@ -1504,6 +1507,7 @@ libqml_module_player_a_QML = \
 	player/qml/AudioSettingsPage.qml \
 	player/qml/SubtitleSettingsPage.qml \
 	player/qml/RdSliderCommit.qml \
+	player/qml/RdSeekPreview.qml \
 	player/qml/TracksPage.qml \
 	player/qml/TracksPageAudio.qml \
 	player/qml/TracksPageSpeed.qml \

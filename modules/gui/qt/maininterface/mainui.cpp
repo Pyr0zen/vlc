@@ -34,6 +34,7 @@
 #include "player/control_list_filter.hpp"
 #include "player/delay_estimator.hpp"
 #include "player/rd_effects.hpp"
+#include "player/rd_seek_thumbnailer.hpp"
 
 #include "dialogs/toolbar/controlbar_profile_model.hpp"
 #include "dialogs/toolbar/controlbar_profile.hpp"
@@ -172,6 +173,8 @@ bool MainUI::setup(QQmlEngine* engine)
         new EffectsImageProvider(engine);
     engine->addImageProvider(QStringLiteral("svgcolor"), new SVGColorImageImageProvider());
     engine->addImageProvider(QStringLiteral("vlcaccess"), new VLCAccessImageProvider());
+    if (m_seekThumbnailer)
+        engine->addImageProvider(QLatin1String(RdSeekThumbnailer::providerId), m_seekThumbnailer->createImageProvider());
 
     m_component  = new QQmlComponent(engine, QStringLiteral("qrc:/qt/qml/VLC/MainInterface/MainInterface.qml"), QQmlComponent::PreferSynchronous, engine);
     if (m_component->isLoading())
@@ -335,6 +338,10 @@ void MainUI::registerQMLTypes()
         // redesign: effects and options shown in the settings sidebar
         qmlRegisterSingletonInstance<RdEffects>(uri, versionMajor, versionMinor, "RdEffects",
                                                 new RdEffects(m_intf, m_intf->p_mainPlayerController, this));
+        // redesign: seek bar preview frames (P2-04)
+        m_seekThumbnailer = new RdSeekThumbnailer(m_intf, m_intf->p_mainPlayerController, this);
+        qmlRegisterSingletonInstance<RdSeekThumbnailer>(uri, versionMajor, versionMinor, "RdSeekThumbnailer",
+                                                        m_seekThumbnailer);
         qmlRegisterTypesAndRevisions<TimedText>(uri, versionMajor);
         qmlRegisterType<PlayerHighResolutionTimeUpdater>(uri, versionMajor, versionMinor, "HighResolutionTimeUpdater");
         qmlRegisterUncreatableMetaObject(VLCTickForeign::staticMetaObject, uri, versionMajor, versionMinor, "VLCTick", "Not Instantiable" );

@@ -181,8 +181,14 @@ T.Pane {
 
                 text: {
                     const length = Player.length
-                    if (textPosition === ControlBar.TimeTextPosition.Inline)
+                    if (textPosition === ControlBar.TimeTextPosition.Inline) {
+                        // redesign: while the seek bar is dragged, the time under the pointer
+                        // (the preview card's time, video 3:30), not the time the player has
+                        // reached yet
+                        if (trackPositionSlider.dragging)
+                            return length.scale(trackPositionSlider.scrubPosition).formatHHMMSS()
                         return Player.time.formatHHMMSS()
+                    }
                     return Player.time.formatHMS(length.isSubSecond() ? VLCTick.SubSecondFormattedAsMS : 0)
                 }
                 color: mediaTime.editing ? "transparent"
