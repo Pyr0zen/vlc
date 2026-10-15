@@ -19,7 +19,7 @@
 // Redesign setting with a slider (Figma "Frame 96", video 8:46-8:52): the name on the left and
 // the value on the right of a 37 px row, the slider under it at full width. The value is plain
 // text (filter parameters, sizes) or an editable value box (equalizer bands, valueBox: true).
-// limitFrom / limitTo past from..to make the slider endless (RdEndlessSlider, Decision 46).
+// limitFrom / limitTo past from..to make the slider endless (RdEndlessSlider, Decision 47).
 import QtQuick
 import QtQuick.Layouts
 

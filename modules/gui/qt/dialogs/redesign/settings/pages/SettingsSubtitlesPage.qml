@@ -297,7 +297,7 @@ SettingsPage {
 
         // VLC counts tenths of a second and declares no range; the slider scrolls on past
         // -5 / +5 s up to the -600 to 600 s of VLC's own Synchronization panel
-        // (dialogs/extended/extended_panels.cpp, SyncWidget), 5 s per second (Decision 46)
+        // (dialogs/extended/extended_panels.cpp, SyncWidget), 5 s per second (Decision 47)
         SettingsOption {
             option: "sub-delay"
             text: qsTr("Subtitle delay")
@@ -333,7 +333,7 @@ SettingsPage {
         }
 
         // VLC declares no range (milliseconds): the slider scrolls on past 10 s, up to a minute
-        // (Decision 46)
+        // (Decision 47)
         SettingsOption {
             option: "video-title-timeout"
             text: qsTr("Show filename for")

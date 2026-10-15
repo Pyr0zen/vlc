@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
-// redesign: a slider that goes past its normal range up to the values VLC accepts (Decision 46,
+// redesign: a slider that goes past its normal range up to the values VLC accepts (Decision 47,
 // "endless sliders"). rangeFrom..rangeTo is the normal (Figma) range; limitFrom..limitTo VLC's.
 // With the limits equal to the range (the default) it is a plain RdSlider.
 // - Inside the normal range it looks and works like RdSlider (zero anchor in view).

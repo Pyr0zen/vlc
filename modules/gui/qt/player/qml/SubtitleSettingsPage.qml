@@ -48,7 +48,7 @@ RdSidePanelPage {
 
     // the delay VLC's own Synchronization panel accepts (dialogs/extended/extended_panels.cpp,
     // SyncWidget: -600 to 600 s); the player itself takes any delay. The slider shows -10 to 10 s
-    // and scrolls on to it (Decision 46)
+    // and scrolls on to it (Decision 47)
     readonly property real _delayLimit: 600
 
     // the delay is cheap to change: it follows a drag ten times a second
@@ -290,7 +290,7 @@ RdSidePanelPage {
 
         // VLC sizes subtitles relative to the video (sub-text-scale, 100 % = VLC's automatic
         // size); a size in pixels would need a core change (VIDEO_INDEX Decisions (Claude)).
-        // VLC accepts 10 to 500 %: the slider scrolls on past 25 / 300 % (Decision 46)
+        // VLC accepts 10 to 500 %: the slider scrolls on past 25 / 300 % (Decision 47)
         Widgets.RdParamSlider {
             text: qsTr("Font Size")
             // Figma "Frame 96" (804:1341): padding 10,0,10,0

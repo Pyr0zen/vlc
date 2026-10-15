@@ -62,7 +62,7 @@ RdSidePanelPage {
 
     // the delay VLC's own Synchronization panel accepts (dialogs/extended/extended_panels.cpp,
     // SyncWidget: -600 to 600 s); the player itself takes any delay. The slider shows -10 to 10 s
-    // and scrolls on to it (Decision 46)
+    // and scrolls on to it (Decision 47)
     readonly property real _delayLimit: 600
 
     // a delay on the slider's scale: "-10 s", "0 s", "+10 s", "-13.5 s"

@@ -39,7 +39,7 @@ RdSidePanelPage {
     }
 
     // the speeds VLC plays at (include/vlc_input.h: INPUT_RATE_MIN 1/32, INPUT_RATE_MAX 31.25):
-    // the slider shows 0.25 to 2 and scrolls on to them (Decision 46)
+    // the slider shows 0.25 to 2 and scrolls on to them (Decision 47)
     readonly property real _rateMin: 0.03125
     readonly property real _rateMax: 31.25
 

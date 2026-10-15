@@ -69,7 +69,7 @@ SettingsPage {
 
         // 0.25 to 2 as in the video; held past an end it scrolls on through the speeds VLC
         // plays at (include/vlc_input.h: INPUT_RATE_MIN 1/32 to INPUT_RATE_MAX 31.25), 1x per
-        // second (Decision 46)
+        // second (Decision 47)
         SettingsOption {
             option: "rate"
             text: qsTr("Default playback speed")

@@ -23,7 +23,7 @@
 // - stepped: tick marks at each step (speed, font size, outline thickness)
 // Optional labels are drawn under the track, spread evenly from left to right, or (labelStep)
 // one every labelStep from labelAnchor, under their own value.
-// RdEndlessSlider moves from..to past the normal range (Decision 46): with scaleScrolls the ticks
+// RdEndlessSlider moves from..to past the normal range (Decision 47): with scaleScrolls the ticks
 // and labels stay on their values and scroll with the scale, and an accent edge label points to
 // the zero value while it is out of view.
 import QtQuick

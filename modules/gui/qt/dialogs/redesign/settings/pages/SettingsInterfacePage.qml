@@ -133,7 +133,7 @@ SettingsPage {
         }
 
         // VLC declares no range (milliseconds): the slider scrolls on past 10 s, up to a minute
-        // (Decision 46)
+        // (Decision 47)
         SettingsOption {
             option: "mouse-hide-timeout"
             text: qsTr("Hide after")

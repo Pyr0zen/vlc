@@ -25,7 +25,7 @@
 //   dropdown  values in words (`choices`, else the ones VLC declares) - never a number code
 //   number    a value box; `valueScale` and `unit` show it in the user's unit (ms as "3 s")
 //   slider    a slider under the label's line (`from`, `to`, `step`, `labels` or `labelStep`);
-//             `limitFrom` / `limitTo` past from..to make it endless (Decision 46)
+//             `limitFrom` / `limitTo` past from..to make it endless (Decision 47)
 //   text, password, file, savefile, directory (field + Browse), color (hex + swatch)
 import QtQuick
 
