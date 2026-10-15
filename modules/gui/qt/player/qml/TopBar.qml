@@ -152,7 +152,7 @@ FocusScope{
 
                 Widgets.RdIcon {
                     anchors.centerIn: parent
-                    name: "vlc"
+                    name: Brand.logoIcon
                     accentColor: VLCStyle.palette.rdAccentLogo
                 }
             }

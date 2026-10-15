@@ -26,6 +26,7 @@
 #endif
 
 #include "plugins.hpp"
+#include "util/brand.hpp"
 
 #include "widgets/native/searchlineedit.hpp"
 #include "dialogs/extensions/extensions_manager.hpp"
@@ -631,7 +632,7 @@ QVariant ExtensionListModel::ExtensionCopy::data( int role ) const
     case Qt::DisplayRole:
         return title;
     case Qt::DecorationRole:
-        if ( !icon ) return QPixmap( ":/logo/vlc48.png" );
+        if ( !icon ) return brand::extensionFallbackIcon();
         return *icon;
     case SummaryRole:
         return shortdesc;

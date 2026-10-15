@@ -70,7 +70,9 @@ T.Pane {
                 id: cone
 
                 sourceSize: Qt.size(VLCStyle.icon_normal, VLCStyle.icon_normal)
-                source: SVGColorImage.colorize("qrc:///misc/cone.svg").accent(theme.accent).uri()
+                // brand layer: the public logo follows Accent/Logo like the redesign's cone
+                source: Brand.isPublic ? SVGColorImage.colorize(Brand.logoSvg).accent(VLCStyle.palette.rdAccentLogo).uri()
+                                       : SVGColorImage.colorize("qrc:///misc/cone.svg").accent(theme.accent).uri()
             }
 
             Widgets.LabelExt {

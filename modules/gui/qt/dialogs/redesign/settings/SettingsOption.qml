@@ -161,7 +161,7 @@ SettingsRow {
         const text = RdEffects.optionDescription(option)
         if (!restartRequired)
             return text
-        const note = qsTr("VLC uses this setting the next time it starts.")
+        const note = qsTr("%1 uses this setting the next time it starts.").arg(Brand.shortName)
         return text !== "" ? text + "\n\n" + note : note
     }
     keywords: option

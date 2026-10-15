@@ -152,13 +152,13 @@ SettingsPage {
 
         SettingsRow {
             text: qsTr("When playback finishes")
-            description: qsTr("What VLC does when the last item of the list ends: stop, stay paused on the last frame, or quit.")
+            description: qsTr("What %1 does when the last item of the list ends: stop, stay paused on the last frame, or quit.").arg(Brand.shortName)
             keywords: "play-and-exit play-and-pause quit"
 
             Widgets.RdDropdown {
                 implicitWidth: VLCStyle.dp(320)
                 implicitHeight: VLCStyle.dp(36)
-                model: [qsTr("Stop"), qsTr("Pause on the last frame"), qsTr("Quit VLC")]
+                model: [qsTr("Stop"), qsTr("Pause on the last frame"), qsTr("Quit %1").arg(Brand.shortName)]
                 currentIndex: root._exit ? 2 : (root._pause ? 1 : 0)
                 Accessible.name: qsTr("When playback finishes")
                 onActivated: (index) => {

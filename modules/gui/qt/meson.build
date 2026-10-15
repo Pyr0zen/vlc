@@ -149,6 +149,7 @@ moc_headers = files(
     'util/base_model.hpp',
     'util/color_scheme_model.hpp',
     'util/ui_notifier.hpp',
+    'util/brand.hpp',
     'util/color_svg_image_provider.hpp',
     'util/vlcaccess_image_provider.hpp',
     'util/csdbuttonmodel.hpp',
@@ -504,6 +505,8 @@ qt_plugin_sources = files(
     'util/color_scheme_model.hpp',
     'util/ui_notifier.cpp',
     'util/ui_notifier.hpp',
+    'util/brand.cpp',
+    'util/brand.hpp',
     'util/color_svg_image_provider.cpp',
     'util/color_svg_image_provider.hpp',
     'util/vlcaccess_image_provider.cpp',
@@ -632,6 +635,10 @@ endif
 qrc_files = files('assets.qrc')
 if host_system == 'windows'
   qrc_files += files('windows.qrc')
+endif
+# redesign: brand layer, the public profile's logo (util/brand.hpp, -Dbrand)
+if get_option('brand') == 'public'
+  qrc_files += files('brand_public.qrc')
 endif
 
 ui_sources = files(

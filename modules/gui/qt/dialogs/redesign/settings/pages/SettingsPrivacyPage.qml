@@ -95,7 +95,7 @@ SettingsPage {
 
         SettingsOption {
             option: "qt-privacy-ask"
-            text: qsTr("Ask about internet access when VLC starts")
+            text: qsTr("Ask about internet access when %1 starts").arg(Brand.shortName)
         }
 
         SettingsInterfaceToggle {
@@ -103,7 +103,7 @@ SettingsPage {
 
             module: "audioscrobbler"
             text: qsTr("Submit played tracks to last.fm")
-            description: qsTr("Sends the titles of the songs you play to your last.fm profile. VLC uses this setting the next time it starts.")
+            description: qsTr("Sends the titles of the songs you play to your last.fm profile. %1 uses this setting the next time it starts.").arg(Brand.shortName)
             shown: SettingsCatalog.exists("lastfm-username")
         }
 

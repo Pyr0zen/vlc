@@ -20,6 +20,7 @@
 // converts video for streaming (casting uses its own fast settings, from Cast quality).
 import QtQuick
 
+import VLC.MainInterface
 import VLC.Style
 import VLC.Player
 import VLC.Widgets as Widgets
@@ -107,7 +108,7 @@ SettingsPage {
 
         SettingsRow {
             text: qsTr("Encoding preset")
-            description: qsTr("How hard the encoder works when VLC converts video for streaming (casting uses its own fast settings). Slower presets give a smaller stream at the same quality but use more processor time.")
+            description: qsTr("How hard the encoder works when %1 converts video for streaming (casting uses its own fast settings). Slower presets give a smaller stream at the same quality but use more processor time.").arg(Brand.shortName)
             keywords: "sout-x264-preset x264 encoder speed"
             shown: SettingsCatalog.exists("sout-x264-preset")
 

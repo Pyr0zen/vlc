@@ -68,7 +68,7 @@ SettingsPage {
 
         SettingsRow {
             text: qsTr("Reset all shortcuts")
-            description: qsTr("Puts every keyboard shortcut back to VLC's own.")
+            description: qsTr("Puts every keyboard shortcut back to %1's own.").arg(Brand.shortName)
             keywords: "hotkeys keys shortcuts reset defaults"
 
             Widgets.RdButton {
@@ -76,7 +76,7 @@ SettingsPage {
                 implicitWidth: VLCStyle.dp(320)
                 text: qsTr("Reset")
                 onClicked: {
-                    if (!DialogsProvider.questionDialog(qsTr("Put every keyboard shortcut back to VLC's own?"),
+                    if (!DialogsProvider.questionDialog(qsTr("Put every keyboard shortcut back to %1's own?").arg(Brand.shortName),
                                                         qsTr("Reset all shortcuts")))
                         return
                     const model = hotkeysModelComponent.createObject(root)
@@ -190,7 +190,7 @@ SettingsPage {
             shown: SettingsCatalog.exists("http-password")
             module: "http"
             text: qsTr("Web remote control")
-            description: qsTr("Lets a web browser on this computer or your network control VLC. VLC uses this setting the next time it starts.")
+            description: qsTr("Lets a web browser on this computer or your network control %1. %1 uses this setting the next time it starts.").arg(Brand.shortName)
         }
 
         SettingsOption {

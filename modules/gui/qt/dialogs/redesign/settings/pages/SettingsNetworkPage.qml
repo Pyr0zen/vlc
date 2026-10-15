@@ -47,7 +47,7 @@ SettingsPage {
 
         SettingsRow {
             text: qsTr("Buffering")
-            description: qsTr("How much of a file or stream VLC reads ahead before playing it. More buffering plays more smoothly on slow connections; less starts and reacts faster.")
+            description: qsTr("How much of a file or stream %1 reads ahead before playing it. More buffering plays more smoothly on slow connections; less starts and reacts faster.").arg(Brand.shortName)
             keywords: "caching cache buffer latency"
 
             Widgets.RdDropdown {

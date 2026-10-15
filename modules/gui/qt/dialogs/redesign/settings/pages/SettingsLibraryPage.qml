@@ -35,7 +35,7 @@ SettingsPage {
 
         SettingsOption {
             option: "one-instance"
-            text: qsTr("Only allow one VLC window")
+            text: qsTr("Only allow one %1 window").arg(Brand.shortName)
         }
 
         SettingsOption {

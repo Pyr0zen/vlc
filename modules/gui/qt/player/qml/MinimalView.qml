@@ -95,7 +95,10 @@ FocusScope {
         Image {
             id: logo
 
-            source: MainCtx.useXmasCone()
+            // brand layer: the public logo follows Accent/Logo like the redesign's cone
+            source: Brand.isPublic
+                    ? SVGColorImage.colorize(Brand.logoSvg).accent(VLCStyle.palette.rdAccentLogo).uri()
+                    : MainCtx.useXmasCone()
                     ? "qrc:///logo/vlc48-xmas.png"
                     : "qrc:///misc/cone.svg"
 

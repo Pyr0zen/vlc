@@ -62,7 +62,8 @@ Item {
                 x: 13
                 y: 8
                 size: 24
-                name: "vlc"
+                // drawn scaled down with the whole preview: the small-size logo
+                name: Brand.logoIconSmall
                 accentColor: root.rdPalette.rdAccentLogo
             }
 

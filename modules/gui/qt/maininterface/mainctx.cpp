@@ -37,6 +37,7 @@
 
 #include "compositor.hpp"
 #include "util/renderer_manager.hpp"
+#include "util/brand.hpp"
 #include "util/csdbuttonmodel.hpp"
 
 #include "util/vlchotkeyconverter.hpp"
@@ -1261,7 +1262,7 @@ double MainCtx::dp(const double px) const
 
 bool MainCtx::useXmasCone() const
 {
-    return (QDate::currentDate().dayOfYear() >= QT_XMAS_JOKE_DAY)
+    return BRAND_SEASONAL_LOGOS && (QDate::currentDate().dayOfYear() >= QT_XMAS_JOKE_DAY)
             && var_InheritBool( p_intf, "qt-icon-change" );
 }
 

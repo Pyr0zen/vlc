@@ -28,7 +28,7 @@ import VLC.Widgets as Widgets
 ColumnLayout {
     id: root
 
-    property string text: qsTr("The settings of this category are moving here. Until then, they are in All VLC Settings.")
+    property string text: qsTr("The settings of this category are moving here. Until then, they are in All %1 Settings.").arg(Brand.shortName)
 
     property Item _page: null
 
@@ -56,7 +56,7 @@ ColumnLayout {
     }
 
     Widgets.RdButton {
-        text: qsTr("All VLC Settings")
+        text: qsTr("All %1 Settings").arg(Brand.shortName)
         enabled: !!root._page && !!root._page.settingsDialog
         onClicked: root._page.settingsDialog.openLegacyPreferences()
     }

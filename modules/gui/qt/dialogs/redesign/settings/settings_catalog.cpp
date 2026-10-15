@@ -21,6 +21,7 @@
 #endif
 
 #include "settings_catalog.hpp"
+#include "util/brand.hpp"
 
 #include <QCollator>
 #include <QCoreApplication>
@@ -296,7 +297,7 @@ SettingsCatalog::Catalog readCatalog()
                 groupId = QStringLiteral("core/%1").arg(subcat);
                 // already translated
                 const char* subcatName = vlc_config_subcat_GetName(static_cast<vlc_config_subcat>(subcat));
-                groupTitle = subcatName ? qfu(subcatName) : qtr("VLC");
+                groupTitle = subcatName ? qfu(subcatName) : qtr(BRAND_CORE_GROUP);
             }
             else
             {

@@ -167,7 +167,7 @@ SettingsPage {
             id: highPriorityRow
 
             option: "high-priority"
-            text: qsTr("Give VLC high priority")
+            text: qsTr("Give %1 high priority").arg(Brand.shortName)
 
             onValueChanged: {
                 if (typeof value === "boolean")
@@ -200,7 +200,7 @@ SettingsPage {
             below: Text {
                 width: processPriorityRow.width
                 wrapMode: Text.WordWrap
-                text: qsTr("The system did not let VLC change its priority.")
+                text: qsTr("The system did not let %1 change its priority.").arg(Brand.shortName)
                 font.family: VLCStyle.rd_fontFamily
                 font.pixelSize: VLCStyle.rd_fontSize_label
                 color: VLCStyle.palette.rdFgA3
@@ -216,7 +216,7 @@ SettingsPage {
             property string result: ""
 
             text: qsTr("Rescan plugins")
-            description: qsTr("Looks through VLC's plugin folder again and rebuilds the list of plugins, so plugins you added or removed are found. VLC uses the new list the next time it starts. In the Program Files folder, Windows asks for administrator rights.")
+            description: qsTr("Looks through %1's plugin folder again and rebuilds the list of plugins, so plugins you added or removed are found. %1 uses the new list the next time it starts. In the Program Files folder, Windows asks for administrator rights.").arg(Brand.shortName)
             keywords: "plugins cache rescan reset-plugins-cache vlc-cache-gen"
             belowShown: result !== ""
 
@@ -245,8 +245,8 @@ SettingsPage {
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
                     text: rescanRow.result === "done"
-                          ? qsTr("Done. VLC uses the new list of plugins the next time it starts.")
-                          : qsTr("VLC could not rebuild its list of plugins.")
+                          ? qsTr("Done. %1 uses the new list of plugins the next time it starts.").arg(Brand.shortName)
+                          : qsTr("%1 could not rebuild its list of plugins.").arg(Brand.shortName)
                     font.family: VLCStyle.rd_fontFamily
                     font.pixelSize: VLCStyle.rd_fontSize_label
                     color: VLCStyle.palette.rdFgA3
@@ -278,7 +278,7 @@ SettingsPage {
 
                 option: "sout-transcode-venc"
                 text: qsTr("Encoder")
-                description: qsTr("The video encoder VLC uses when it converts video: Convert / Save, streaming with conversion and recordings that cannot be saved as they are. Automatic lets VLC pick the best one for the format.")
+                description: qsTr("The video encoder %1 uses when it converts video: Convert / Save, streaming with conversion and recordings that cannot be saved as they are. Automatic lets %1 pick the best one for the format.").arg(Brand.shortName)
                 choices: {
                     const automatic = encoderRow.value === "any" ? "any" : "none"
                     const list = [{ value: automatic, text: qsTr("Automatic") }]

@@ -38,7 +38,7 @@ SettingsPage {
         // VLC reads the language from the registry when it starts (Windows only)
         SettingsRow {
             text: qsTr("Interface language")
-            description: qsTr("The language of VLC's menus, windows and messages. VLC uses it the next time it starts.")
+            description: qsTr("The language of %1's menus, windows and messages. %1 uses it the next time it starts.").arg(Brand.shortName)
             keywords: "language translation"
             shown: SettingsCatalog.languageSupported
 
@@ -149,7 +149,7 @@ SettingsPage {
                 { value: 0, text: qsTr("Errors") },
                 { value: 1, text: qsTr("Errors and warnings") },
                 { value: 2, text: qsTr("Everything (debug)") },
-                { value: -1, text: qsTr("Same as VLC's messages") }
+                { value: -1, text: qsTr("Same as %1's messages").arg(Brand.shortName) }
             ]
         }
     }
@@ -179,7 +179,7 @@ SettingsPage {
 
             SettingsRow {
                 text: qsTr("Open configurations folder")
-                description: qsTr("Opens the folder where VLC keeps its settings, in the file manager.")
+                description: qsTr("Opens the folder where %1 keeps its settings, in the file manager.").arg(Brand.shortName)
                 keywords: "config vlcrc folder"
 
                 Widgets.RdButton {
@@ -191,7 +191,7 @@ SettingsPage {
 
             SettingsRow {
                 text: qsTr("Reset all settings")
-                description: qsTr("Puts every setting of VLC back to how it was when VLC was installed. Your library, playlists and window layout stay.")
+                description: qsTr("Puts every setting of %1 back to how it was when %1 was installed. Your library, playlists and window layout stay.").arg(Brand.shortName)
                 keywords: "reset preferences defaults"
 
                 // Figma "Settings - global-1": the red "Reset"
@@ -199,7 +199,7 @@ SettingsPage {
                     style: Widgets.RdButton.Style.Destructive
                     text: qsTr("Reset")
                     onClicked: {
-                        if (!DialogsProvider.questionDialog(qsTr("Are you sure you want to reset all of VLC's settings?"),
+                        if (!DialogsProvider.questionDialog(qsTr("Are you sure you want to reset all of %1's settings?").arg(Brand.shortName),
                                                             qsTr("Reset all settings")))
                             return
                         // a change still on its way to VLC must not land after the reset

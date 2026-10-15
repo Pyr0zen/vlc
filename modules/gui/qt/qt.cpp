@@ -97,6 +97,7 @@ extern "C" char **environ;
 #endif
 #include "style/defaultthemeproviders.hpp"
 #include "style/rdfonts.hpp"
+#include "util/brand.hpp"
 #include "dialogs/extensions/extensions_manager.hpp" /* Extensions manager */
 #include "dialogs/help/help.hpp"     /* Launch Update */
 #include "util/dismiss_popup_event_filter.hpp"
@@ -1363,13 +1364,11 @@ static void *Thread( void *obj )
     }
 #endif
 
-    app.setApplicationDisplayName( qtr("VLC media player") );
+    /* the display name ends every window title */
+    app.setApplicationDisplayName( qtr( BRAND_NAME ) );
     app.setApplicationVersion( QString::fromUtf8(VERSION_MESSAGE) );
 
-    if( QDate::currentDate().dayOfYear() >= QT_XMAS_JOKE_DAY && var_InheritBool( p_intf, "qt-icon-change" ) )
-        app.setWindowIcon( QIcon::fromTheme( "vlc-xmas", QIcon( ":/logo/vlc128-xmas.png" ) ) );
-    else
-        app.setWindowIcon( QIcon::fromTheme( "vlc", QIcon( ":/logo/vlc256.png" ) ) );
+    app.setWindowIcon( brand::windowIcon( p_intf ) );
 
     app.setDesktopFileName( PACKAGE );
 
