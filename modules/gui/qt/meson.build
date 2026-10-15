@@ -857,6 +857,7 @@ qml_modules += {
        'player/qml/RdSidePanelPage.qml',
        'player/qml/RdSidePanelPageLoader.qml',
        'player/qml/SettingsSidebar.qml',
+       'player/qml/PresetSelector.qml',
        'player/qml/QueueSidebar.qml',
        'player/qml/PlaybackSettingsPage.qml',
        'player/qml/VideoSettingsPage.qml',
