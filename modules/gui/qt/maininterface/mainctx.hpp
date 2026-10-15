@@ -494,6 +494,10 @@ protected:
 
     int m_maxVolume = 125;
     int m_fsSensitivity = 40;
+    // redesign: options MainCtx writes itself (accent, fullscreen sensitivity) reach the
+    // configuration file shortly after a change, not only when VLC quits
+    QTimer* m_configSaveTimer = nullptr;
+    void scheduleConfigSave();
     QColor m_accentColor;
 
     float m_safeArea = 0.0;

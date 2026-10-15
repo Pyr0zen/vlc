@@ -652,7 +652,25 @@ void MainCtx::setAccentColor(const QColor& color)
     m_accentColor = color;
     const QByteArray value = color.isValid() ? color.name(QColor::HexRgb).toUtf8() : QByteArray("default");
     config_PutPsz("qt-accent-color", value.constData());
+    scheduleConfigSave();
     emit accentColorChanged();
+}
+
+void MainCtx::scheduleConfigSave()
+{
+    // one save half a second after the last change (a drag through the accents writes once),
+    // as the Settings dialog's own writes (RdEffects); the file is written as VLC's preferences
+    // write it
+    if (!m_configSaveTimer)
+    {
+        m_configSaveTimer = new QTimer(this);
+        m_configSaveTimer->setSingleShot(true);
+        m_configSaveTimer->setInterval(500);
+        connect(m_configSaveTimer, &QTimer::timeout, this, [this]() {
+            config_SaveConfigFile(p_intf);
+        });
+    }
+    m_configSaveTimer->start();
 }
 
 void MainCtx::setFsSensitivity(int pixels)
@@ -661,6 +679,7 @@ void MainCtx::setFsSensitivity(int pixels)
         return;
     m_fsSensitivity = pixels;
     config_PutInt("qt-fs-sensitivity", pixels);
+    scheduleConfigSave();
     emit fsSensitivityChanged();
 }
 
