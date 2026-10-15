@@ -81,6 +81,7 @@ Decided by Sticky on 2026-10-12. General rule for anything not listed: her final
 41. (2026-10-15, Q3, corrected the same day) No dim behind any dialog, as in the video and Figma: measured on the video (16:00, 17:40) the bars stay at full brightness while a dialog is open, and the Figma frames have no overlay. Applies to every dialog (Settings, Keyboard Shortcuts, Open Network Stream, the library dialogs, onboarding, Customize Player).
 42. (2026-10-15, Q4) Keycap font: DM Mono as in Figma, bundled with VLC (SIL Open Font License); if a licence ever prevented it, the closest free match.
 43. (2026-10-15) Component motion: when building buttons, tabs and other controls, study the Figma prototype and the video frames to see how they animate (hover, press, selection, tab switch) and replicate that motion, not just the static look.
+44. (2026-10-15, Q5) Light theme FG/A4 (placeholders, disabled text) is #8A8A8A instead of Figma's #3B3B3B, which read almost like typed text.
 
 ## Decisions (Claude)
 Extra decisions made during the build, one line each (date, row IDs, decision, reason).

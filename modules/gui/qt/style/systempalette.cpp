@@ -342,11 +342,13 @@ const RdThemeColors rdDarkColors = {
 // Every value is the Figma "Light" style of the same name, except:
 // - Light/FG/1 and Light/FG/2, which repeat the dark values in the Figma file: #111111 and
 //   #222222 instead (Decision 33, Sticky 2026-10-14)
+// - Light/FG/A4 (placeholders, disabled text): #8A8A8A instead of the file's #3B3B3B, which read
+//   almost like typed text (Decision 44, Sticky 2026-10-15)
 // - BG/B2 Transparent and the hover tint, which the file only has in Dark: B2 at 80 %, like the
 //   other light Transparent styles, and #000000 6 %, the dark #FFFFFF 6 % mirrored
 const RdThemeColors rdLightColors = {
     "#111111", "#222222",
-    "#3C3C3C", "#2E2E2E", "#6B6B6B", "#3B3B3B", "#161616",
+    "#3C3C3C", "#2E2E2E", "#6B6B6B", "#8A8A8A", "#161616",
     "#E8851A", "#FFA13B", "#965916", "#C2711A",
     "#D8BA9A", "#C6AB89",
     "#EDEDED", "#DDDDDD", "#D5D5D5", "#B3B3B3", "#888888",
