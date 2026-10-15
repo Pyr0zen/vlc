@@ -19,6 +19,8 @@
 
 3. Slider wheel fine-tuning (Sticky, 2026-10-15, new): over a sidebar / popup / Settings dialog slider (every slider in the Settings dialog pages too) (the bar itself or its tick-label row, e.g. Subtitle Track Delay with -10 s / 0 s / +10 s), the mouse wheel moves the value left / right in small exact steps (one step per notch, e.g. 0.05 s for delays; endless sliders keep scrolling past their ends, Decision 47). The wheel over any popup, panel or sidebar must never reach the player's wheel-volume handler (no volume change while the pointer is on an overlay); check every panel, the tracks popup, menus and dialogs. Record as a Decision (Sticky) when built; independent review; test on the PC.
 
+4. Fix list from the 2026-10-15 tests (builds 38796545519 and public 38799712884): Ctrl+B shows no on-screen confirmation (the OSD message "Bookmark added: ..." never appears); bookmarks are named after the file name (Test_Show_S01E01 1) instead of the clean media title (Test Show S01E01 1); the Cone onboarding title must use Figma's thin weight (Inter 300, as in the mockup and Figma "Onboarding"); the public About must not show VLC's version codename ("4.0.0-dev Otto Chriek" -> version only); tray and taskbar icons of the public build still to check on the PC (firewall prompt answered by Sticky).
+
 ## Next, in order
 1. When the build is green: hands-on test on the PC (test lists in BUILD_NOTES per package and ADDSUBS_NOTES section 9), left-edge seek drag, screenshots vs Figma; build screenshots for the README gallery and hero.
 2. Endless sliders (Decision (Sticky), approved mockup): coded by an agent on wip/endless-sliders; then independent review, merge, next build.
