@@ -77,7 +77,7 @@ T.ComboBox {
     opacity: enabled ? 1 : VLCStyle.rd_disabledRowOpacity
 
     // the chevron sits 16 px from the edge (Figma "option" 2372:8360: padding 14 inside the 2 px
-    // frame)
+    // frame); 14 in the frameless list (673:1670)
     indicator: RdIcon {
         x: control.width - width - (control.frameless ? VLCStyle.dp(14) : VLCStyle.dp(16))
         y: (control.height - height) / 2

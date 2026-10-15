@@ -60,9 +60,10 @@ RdSidePanelPage {
             text: qsTr("Speed")
             valueBox: true
             valueFramed: false
+            valueTextColor: VLCStyle.palette.rdFgA3
             rowHeight: VLCStyle.dp(44)
             spacing: VLCStyle.dp(14)
-            labelsY: VLCStyle.dp(34)
+            labelSpacing: VLCStyle.dp(14)
             valueText: root.rateText(Player.rate)
             from: 0.25
             to: 2

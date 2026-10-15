@@ -86,6 +86,9 @@ public:
     // reads every cached value again from VLC (after another window, e.g. VLC's preferences,
     // changed the configuration); nothing is written
     Q_INVOKABLE void refresh();
+    // forgets the changes not yet written to VLC (before VLC's options are all reset, so none
+    // of them lands after the reset); refresh() then reads the reset values
+    Q_INVOKABLE void discardPending();
 
     // options of the configuration (most apply to the next file)
     Q_INVOKABLE QVariant option(const QString& name);

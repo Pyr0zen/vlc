@@ -82,7 +82,9 @@ Item {
     property string currentKey: ""
 
     readonly property bool opened: popup.opened
-    readonly property string searchText: searchField.text
+    // the search applies once typing pauses (every page and row is filtered on each change);
+    // clearing it applies at once
+    property string searchText: ""
     readonly property bool filtering: _words.length > 0
     // once searched, all pages stay loaded: clearing and typing again must not destroy and
     // rebuild them on every keystroke
@@ -252,6 +254,26 @@ Item {
 
     onSearchTextChanged: Qt.callLater(_ensureCurrentMatches)
 
+    Timer {
+        id: searchDelay
+
+        interval: VLCStyle.duration_long
+        onTriggered: root.searchText = searchField.text
+    }
+
+    Connections {
+        target: searchField
+
+        function onTextChanged() {
+            if (searchField.text.trim() === "") {
+                searchDelay.stop()
+                root.searchText = searchField.text
+            } else {
+                searchDelay.restart()
+            }
+        }
+    }
+
     Connections {
         target: root.Window.window
         enabled: popup.opened
@@ -288,7 +310,21 @@ Item {
         modal: true
         dim: true
         focus: true
-        closePolicy: T.Popup.CloseOnEscape
+        // a click outside closes the dialog (every setting applies at once), except while a
+        // page holds a typed value not applied yet (a field's `dirty`: a number box applies on
+        // Enter, so a stray click would lose it); search fields hold no setting (Escape and X
+        // still close; same rule as Open Network Stream)
+        closePolicy: _typingValue ? T.Popup.CloseOnEscape
+                                  : (T.Popup.CloseOnEscape | T.Popup.CloseOnPressOutside)
+
+        readonly property bool _typingValue: {
+            const window = root.Window.window
+            for (let p = window ? window.activeFocusItem : null; p && p !== pagesArea; p = p.parent) {
+                if (p.dirty === true)
+                    return true
+            }
+            return false
+        }
 
         // the player behind stays visible, slightly darker (video 17:39: about 11 to 18 % darker)
         T.Overlay.modal: Rectangle {

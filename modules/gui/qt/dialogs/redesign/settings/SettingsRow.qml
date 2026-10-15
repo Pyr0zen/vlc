@@ -43,6 +43,10 @@ ColumnLayout {
     property string keywords: ""
     property bool shown: true
     property bool available: true
+    // Figma row geometry: the line is at least 32 high (most text input rows: 38), padded 5
+    // above and below (10 around the start volume choice)
+    property real minimumLineHeight: VLCStyle.rd_rowHeight
+    property real rowPadding: VLCStyle.dp(5)
     default property alias control: controlSlot.data
     property alias below: belowSlot.data
 
@@ -78,6 +82,14 @@ ColumnLayout {
             root._page.registerRow(root)
     }
 
+    // the page and the section count the shown rows that match
+    onShownChanged: {
+        if (root._section)
+            root._section.recount()
+        if (root._page)
+            root._page.recount()
+    }
+
     Component.onDestruction: {
         if (root._section)
             root._section.unregisterRow(root)
@@ -89,7 +101,7 @@ ColumnLayout {
         id: line
 
         Layout.fillWidth: true
-        Layout.preferredHeight: Math.max(VLCStyle.rd_rowHeight, controlSlot.height) + 2 * VLCStyle.dp(5)
+        Layout.preferredHeight: Math.max(root.minimumLineHeight, controlSlot.height) + 2 * root.rowPadding
 
         Text {
             id: label
@@ -205,6 +217,15 @@ ColumnLayout {
                     text: root.description
                     textAlignment: Text.AlignLeft
                     closePolicy: T.Popup.CloseOnEscape | T.Popup.CloseOnPressOutsideParent
+
+                    // opaque, like the dialog and its other popups: where it passes the dialog's
+                    // edge, Figma's 95 % (meant with a background blur) shows the video through
+                    background: Rectangle {
+                        radius: VLCStyle.rd_radius_normal
+                        color: Qt.alpha(root.rdPalette.rdBgB1, 1.0)
+
+                        Widgets.RdShadow { }
+                    }
                 }
             }
         }

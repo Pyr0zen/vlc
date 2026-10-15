@@ -96,9 +96,12 @@ Rectangle {
                     text: segment.modelData
                     font.family: VLCStyle.rd_fontFamily
                     font.pixelSize: VLCStyle.rd_fontSize_label
-                    // unselected: FG/A3 (Figma "Values" 804:1208), FG/A2 while hovered
+                    // Figma "Values" (804:1208): FG/A3 on the segments not chosen, FG/A2 while
+                    // hovered (dark only in Figma; the light FG/A3 would be 2.5:1 on BG/A4, so
+                    // FG/A2 there)
                     color: segment.selected ? (root.rdPalette.isDark ? root.rdPalette.rdAccentMain : root.rdPalette.rdBgA1)
-                                            : (mouse.containsMouse ? root.rdPalette.rdFgA2 : root.rdPalette.rdFgA3)
+                                            : ((mouse.containsMouse || !root.rdPalette.isDark) ? root.rdPalette.rdFgA2
+                                                                                               : root.rdPalette.rdFgA3)
                 }
 
                 MouseArea {

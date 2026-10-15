@@ -573,6 +573,7 @@ RdSidePanelPage {
                                     visible: !!entry.color
                                     implicitWidth: VLCStyle.dp(116)
                                     framed: false
+                                    textColor: VLCStyle.palette.rdFgA3
                                     text: hex
                                     showSwatch: true
                                     swatch: hex
@@ -651,6 +652,7 @@ RdSidePanelPage {
                                 readonly property string hex: group.colorText(RdEffects.values[RdEffects.videoKey(entry.name)])
                                 implicitWidth: VLCStyle.dp(116)
                                 framed: false
+                                textColor: VLCStyle.palette.rdFgA3
                                 text: hex
                                 showSwatch: true
                                 swatch: hex

@@ -187,6 +187,12 @@ MainCtx::MainCtx(qt_intf_t *_p_intf)
     });
 #endif
 
+    // redesign: the scheme is kept at once, not only when VLC quits: reloadPrefs() (after the
+    // Settings dialog writes an interface option) reads it back and must not undo a live change
+    connect(m_colorScheme, &ColorSchemeModel::currentChanged, this, [this]() {
+        settings->setValue( "MainWindow/color-scheme-index", m_colorScheme->currentIndex() );
+    });
+
     m_sort = new SortCtx(this);
     m_search = new SearchCtx(this);
     m_playqueuePanel = new SidePanelCtx(this);
@@ -450,6 +456,8 @@ void MainCtx::loadPrefs(const bool callSignals)
 
     loadFromVLCOption(m_maxVolume, "qt-max-volume", &MainCtx::maxVolumeChanged);
 
+    loadFromVLCOption(m_fsSensitivity, "qt-fs-sensitivity", &MainCtx::fsSensitivityChanged);
+
     loadFromVLCOption(m_pinVideoControls, "qt-pin-controls", &MainCtx::pinVideoControlsChanged);
 
     loadFromVLCOption(m_pinOpacity, "qt-fs-opacity", &MainCtx::pinOpacityChanged);
@@ -611,6 +619,8 @@ void MainCtx::setIntfUserScaleFactor(double newValue)
     if (qFuzzyCompare(value, m_intfUserScaleFactor))
         return;
     m_intfUserScaleFactor = value;
+    // redesign: kept at once, as the color scheme: reloadPrefs() reads it back
+    settings->setValue( "MainWindow/interface-scale", QString::number( m_intfUserScaleFactor ) );
     updateIntfScaleFactor();
 }
 
@@ -642,7 +652,35 @@ void MainCtx::setAccentColor(const QColor& color)
     m_accentColor = color;
     const QByteArray value = color.isValid() ? color.name(QColor::HexRgb).toUtf8() : QByteArray("default");
     config_PutPsz("qt-accent-color", value.constData());
+    scheduleConfigSave();
     emit accentColorChanged();
+}
+
+void MainCtx::scheduleConfigSave()
+{
+    // one save half a second after the last change (a drag through the accents writes once),
+    // as the Settings dialog's own writes (RdEffects); the file is written as VLC's preferences
+    // write it
+    if (!m_configSaveTimer)
+    {
+        m_configSaveTimer = new QTimer(this);
+        m_configSaveTimer->setSingleShot(true);
+        m_configSaveTimer->setInterval(500);
+        connect(m_configSaveTimer, &QTimer::timeout, this, [this]() {
+            config_SaveConfigFile(p_intf);
+        });
+    }
+    m_configSaveTimer->start();
+}
+
+void MainCtx::setFsSensitivity(int pixels)
+{
+    if (m_fsSensitivity == pixels)
+        return;
+    m_fsSensitivity = pixels;
+    config_PutInt("qt-fs-sensitivity", pixels);
+    scheduleConfigSave();
+    emit fsSensitivityChanged();
 }
 
 void MainCtx::setPinOpacity(float pinOpacity)

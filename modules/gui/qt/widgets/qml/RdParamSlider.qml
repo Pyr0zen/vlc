@@ -33,10 +33,11 @@ ColumnLayout {
     property bool valueBox: false
     property alias valueFramed: box.framed
     property alias valueFontSize: box.fontSize
+    property alias valueTextColor: box.textColor
     // name row: 37 px, 56 with a value box (Figma "Frame 60" 767:2197: padding 10 around the 36 px
     // box); the space between that row and the slider is the layout's spacing
     property real rowHeight: valueBox ? VLCStyle.dp(56) : VLCStyle.dp(37)
-    property alias labelsY: slider.labelsY
+    property alias labelSpacing: slider.labelSpacing
     // label (and plain value) inset from the row edges: 4 in section rows (Figma "Frame 60" padding
     // left 4), 0 in the rows of an expander card (536:1865, 6114:13620)
     property real textInset: VLCStyle.dp(4)

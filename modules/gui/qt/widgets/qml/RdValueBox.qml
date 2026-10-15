@@ -20,8 +20,8 @@
 // 2 px BG/A4 inside stroke (accent while typing), Inter 14
 // FG/A2). Shows a value; when editable, clicking it lets the user type a new one (Enter applies,
 // Escape cancels). An optional color swatch (22x22, radius 2) sits at the right (Text Color).
-// framed: false is the Playback tab's Speed box (Figma "Frame 86" 5187:24542: 140x32, padding
-// 8,18,8,12, no stroke, FG/A3 text); the accent stroke still shows while typing.
+// framed: false is a box without the stroke, 32 px tall (Settings colour fields "Frame 87", the
+// Playback tab's Speed box "Frame 86" 5187:24542); the accent stroke still shows while typing.
 import QtQuick
 import QtQuick.Templates as T
 
@@ -35,7 +35,6 @@ T.Control {
     property bool editable: true
     property color swatch: "transparent"
     property bool showSwatch: false
-    property bool framed: true
     property int fontSize: VLCStyle.rd_fontSize_label
     // a name inside the box, left of the value (Figma Crop "Frame 87" 774:1024: "Top" FG/A3 at
     // 12, the value FG/A2 ending 40 px from the right edge)
@@ -44,11 +43,20 @@ T.Control {
     property string suffix: ""
     // input validation while typing
     property var validator: null
+    // the 2 px BG/A4 frame (Figma "text_input"); the color fields of Settings ("Frame 87") and
+    // the start volume box have none
+    property bool framed: true
+    property real backgroundRadius: VLCStyle.rd_radius_normal
+    // the text color: FG/A2 (FG/A3 in the sidebar's Speed box and Colors card; Figma shows a
+    // value not in use at 40 %)
+    property color textColor: rdPalette.rdFgA2
 
     signal edited(string text)
 
     readonly property SystemPalette rdPalette: VLCStyle.palette
     readonly property bool editing: input.activeFocus
+    // a typed value not applied yet (Enter applies it, leaving the box drops it)
+    readonly property bool dirty: editing && input.text !== control.text
 
     implicitWidth: VLCStyle.dp(140)
     implicitHeight: framed ? VLCStyle.dp(36) : VLCStyle.dp(32)
@@ -65,8 +73,9 @@ T.Control {
     opacity: enabled ? 1 : VLCStyle.rd_disabledRowOpacity
 
     background: Rectangle {
-        radius: VLCStyle.rd_radius_normal
+        radius: control.backgroundRadius
         color: control.rdPalette.rdBgB2
+        // typing shows the accent frame even on an unframed box
         border.width: (control.framed || control.editing) ? VLCStyle.dp(2) : 0
         border.color: control.editing ? control.rdPalette.rdAccentMain : control.rdPalette.rdBgA4
     }
@@ -102,7 +111,7 @@ T.Control {
             validator: control.validator
             font.family: VLCStyle.rd_fontFamily
             font.pixelSize: control.fontSize
-            color: (control.framed || control.prefix !== "") ? control.rdPalette.rdFgA2 : control.rdPalette.rdFgA3
+            color: control.textColor
             selectionColor: control.rdPalette.rdAccentMain
             selectedTextColor: control.rdPalette.rdFgB1
             cursorDelegate: Rectangle {
@@ -165,7 +174,7 @@ T.Control {
             height: VLCStyle.dp(22)
             radius: VLCStyle.rd_radius_xsmall
             color: control.swatch
-            // 1.5 px (dp() would round it to 2)
+            // Figma: #FFFFFF 21 %, 1.5 px (dp() would round it to 2)
             border.width: 1.5 * VLCStyle.scale
             border.color: control.rdPalette.rdSwatchStroke
         }

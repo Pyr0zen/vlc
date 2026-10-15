@@ -128,6 +128,8 @@ class MainCtx : public QObject
     Q_PROPERTY(QWindow* intfMainWindow READ intfMainWindow CONSTANT FINAL)
     Q_PROPERTY(bool useGlobalShortcuts READ getUseGlobalShortcuts WRITE setUseGlobalShortcuts NOTIFY useGlobalShortcutsChanged FINAL)
     Q_PROPERTY(int maxVolume READ maxVolume NOTIFY maxVolumeChanged FINAL)
+    // redesign: how near an edge the mouse shows a bar in fullscreen, in dp ("qt-fs-sensitivity")
+    Q_PROPERTY(int fsSensitivity READ fsSensitivity WRITE setFsSensitivity NOTIFY fsSensitivityChanged FINAL)
     // redesign: accent color (Decision 15), stored in the qt-accent-color option
     Q_PROPERTY(QColor accentColor READ accentColor WRITE setAccentColor NOTIFY accentColorChanged FINAL)
     Q_PROPERTY(float safeArea READ safeArea NOTIFY safeAreaChanged FINAL)
@@ -261,6 +263,7 @@ public:
     inline bool getUseGlobalShortcuts() const { return m_useGlobalShortcuts; }
     void setUseGlobalShortcuts(bool useGlobalShortcuts );
     inline int maxVolume() const { return m_maxVolume; }
+    inline int fsSensitivity() const { return m_fsSensitivity; }
     inline QColor accentColor() const { return m_accentColor; }
 
     inline float safeArea() const { return m_safeArea; }
@@ -490,6 +493,11 @@ protected:
     bool m_preferHotkeys = false;
 
     int m_maxVolume = 125;
+    int m_fsSensitivity = 40;
+    // redesign: options MainCtx writes itself (accent, fullscreen sensitivity) reach the
+    // configuration file shortly after a change, not only when VLC quits
+    QTimer* m_configSaveTimer = nullptr;
+    void scheduleConfigSave();
     QColor m_accentColor;
 
     float m_safeArea = 0.0;
@@ -538,6 +546,7 @@ public slots:
     void setPinVideoControls( bool );
     void setPinOpacity( float );
     void setAccentColor( const QColor& );
+    void setFsSensitivity( int );
 
     void setbgCone(bool);
     void updateIntfScaleFactor();
@@ -611,6 +620,7 @@ signals:
     void useGlobalShortcutsChanged( bool );
 
     void maxVolumeChanged();
+    void fsSensitivityChanged();
     void accentColorChanged();
 
     void safeAreaChanged();

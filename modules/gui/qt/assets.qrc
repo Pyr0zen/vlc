@@ -316,6 +316,8 @@
         <file alias="Inter-SemiBold.ttf">pixmaps/fonts/Inter-SemiBold.ttf</file>
         <file alias="Inter-Bold.ttf">pixmaps/fonts/Inter-Bold.ttf</file>
         <file alias="LICENSE-Inter.txt">pixmaps/fonts/LICENSE-Inter.txt</file>
+        <file alias="DMMono-Regular.ttf">pixmaps/fonts/DMMono-Regular.ttf</file>
+        <file alias="LICENSE-DMMono.txt">pixmaps/fonts/LICENSE-DMMono.txt</file>
     </qresource>
     <qresource prefix="/prefsmenu">
         <file alias="advprefs_audio.svg">pixmaps/prefs/advprefs_audio.svg</file>

@@ -146,14 +146,18 @@ public:
     COLOR_DEFINITION(rdDividerBright, "#373737");
     COLOR_DEFINITION(rdDividerDim, "#222222");
     COLOR_DEFINITION(rdHoverOverlay, QColor(0xFF, 0xFF, 0xFF, 15)); // hover tint over any background
+    // Figma "Settings - global-1" "Reset all settings": red text on a red-tinted button (raw
+    // fills, dark frames only)
+    COLOR_DEFINITION(rdFgDestructive, "#D33718");
+    COLOR_DEFINITION(rdBgDestructive, "#1A1111");
+    // Figma color swatch stroke (Text Color, Shadow Color...): #FFFFFF 21 %, 1.5 px
+    COLOR_DEFINITION(rdSwatchStroke, QColor(0xFF, 0xFF, 0xFF, 54));
     // selected text on the Accent/DIm selection (no Figma style): FG/1 in Dark, BG/A1 in Light
     COLOR_DEFINITION(rdSelectionText, "#EAEAEA");
     COLOR_DEFINITION(rdShadow, QColor(0x00, 0x00, 0x00, 117)); // Figma effect drop shadow #000000 46%
     COLOR_DEFINITION(rdCardShadow, QColor(0x00, 0x00, 0x00, 97)); // Figma onboarding drop shadow #000000 38% (y 4, blur 11.8)
     COLOR_DEFINITION(rdKeyShadow, QColor(0x5C, 0x5C, 0x5C, 64)); // Figma onboarding keycap drop shadow #5C5C5C 25% (y 6, no blur)
-    COLOR_DEFINITION(rdListShadow, QColor(0x00, 0x00, 0x00, 89)); // Figma open dropdown list drop shadow #000000 35% (y 4, blur 13.8)
-    COLOR_DEFINITION(rdSwatchStroke, QColor(0xFF, 0xFF, 0xFF, 54)); // Figma color swatch inside stroke #FFFFFF 21% (1.5 px)
-    // Figma "volume" component fills of each theme's Player frame: the cone's empty part and the
+    COLOR_DEFINITION(rdListShadow, QColor(0x00, 0x00, 0x00, 89)); // Figma open dropdown list drop shadow #000000 35% (y 4, blur 13.8)    // Figma "volume" component fills of each theme's Player frame: the cone's empty part and the
     // tint over its gradient (Dark: BG/B2 and #000000 20 %, Light: BG/A5 and #FFFFFF 20 %)
     COLOR_DEFINITION(rdVolumeEmpty, "#090909");
     COLOR_DEFINITION(rdVolumeTint, QColor(0x00, 0x00, 0x00, 51));

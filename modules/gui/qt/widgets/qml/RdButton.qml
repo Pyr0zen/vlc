@@ -25,6 +25,9 @@
 // - Bar: full-width BG/B2 + FG/A3, regular weight (Show Preferences)
 // - Link: the Bar layout without a fill, FG/A3, FG/A2 on hover (Open Advanced Settings: the
 //   Figma instance 812:1585 clears the fill, the video at 7:58 shows no button)
+// - Plain: Standard on BG/A4, the Settings pages' buttons (Figma "Settings - *" "Frame 141":
+//   Browse, Open, Reset picture, Edit Keyboard Shortcuts)
+// - Destructive: red text on a red-tinted fill (Settings > General "Reset all settings")
 import QtQuick
 import QtQuick.Templates as T
 
@@ -34,7 +37,7 @@ import VLC.Style
 T.Button {
     id: control
 
-    enum Style { Standard, Save, Primary, Bar, Link }
+    enum Style { Standard, Save, Primary, Bar, Plain, Destructive, Link }
 
     property int style: RdButton.Style.Standard
     property string rdIcon: ""            // optional Figma icon (Widgets.RdIcon) shown before the text
@@ -60,7 +63,8 @@ T.Button {
 
     // Figma has no button component with a disabled state; its one disabled button (Save in
     // "Open network stream") is gray at 50 %: Standard buttons are gray already, so both at 50 %
-    opacity: (!enabled && (style === RdButton.Style.Save || style === RdButton.Style.Standard)) ? 0.5 : 1.0
+    opacity: (!enabled && (style === RdButton.Style.Save || style === RdButton.Style.Standard
+                           || style === RdButton.Style.Plain)) ? 0.5 : 1.0
 
     readonly property color _bg: {
         switch (style) {
@@ -68,10 +72,13 @@ T.Button {
         case RdButton.Style.Primary: return hovered ? rdPalette.rdAccentBright : rdPalette.rdAccentMain
         case RdButton.Style.Bar: return hovered ? rdPalette.rdBgA4 : rdPalette.rdBgB2
         case RdButton.Style.Link: return "transparent"
+        case RdButton.Style.Destructive:
+            return hovered ? Qt.lighter(rdPalette.rdBgDestructive, 1.3) : rdPalette.rdBgDestructive
         default:
             if (!rdPalette.isDark)
                 return hovered ? rdPalette.rdFgA1 : rdPalette.rdFgA2
-            return hovered ? rdPalette.rdBgA1 : rdPalette.rdBgA3
+            return hovered ? rdPalette.rdBgA1
+                           : (style === RdButton.Style.Plain ? rdPalette.rdBgA4 : rdPalette.rdBgA3)
         }
     }
     readonly property color _fg: {
@@ -81,6 +88,7 @@ T.Button {
         case RdButton.Style.Bar:
         case RdButton.Style.Link:
             return hovered ? rdPalette.rdFgA2 : rdPalette.rdFgA3
+        case RdButton.Style.Destructive: return rdPalette.rdFgDestructive
         default: return rdPalette.isDark ? rdPalette.rdFgA2 : rdPalette.rdBgA1
         }
     }
@@ -91,7 +99,8 @@ T.Button {
         color: control._bg
         border.width: control.visualFocus ? VLCStyle.dp(1) : 0
         // the light Standard button is dark itself: its focus ring is the accent
-        border.color: (control.rdPalette.isDark || control.style !== RdButton.Style.Standard)
+        border.color: (control.rdPalette.isDark || (control.style !== RdButton.Style.Standard
+                                                     && control.style !== RdButton.Style.Plain))
                       ? control.rdPalette.rdFg2 : control.rdPalette.rdAccentMain
     }
 

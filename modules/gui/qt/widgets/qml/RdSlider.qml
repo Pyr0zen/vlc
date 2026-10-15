@@ -33,23 +33,30 @@ T.Slider {
 
     property bool bipolar: false
     property real zeroValue: 0
-    property bool showTicks: stepSize > 0 && (to - from) / stepSize <= 40
+    // tick marks every tickStep (the step by default; a percentage slider moving by 1 marks
+    // every 10, Figma "Text opacity"); tickIntervals sets the count directly (Background
+    // Opacity: tenths, Adjust Pitch: one mark at 0)
+    property real tickStep: stepSize
+    property bool showTicks: tickStep > 0 && (to - from) / tickStep <= 40
+    property int tickIntervals: tickStep > 0 ? Math.round((to - from) / tickStep) : 0
     // the setting's filter is off: Figma draws the slider in luminosity blend (614:1472), a gray
     // thumb and fill; moving it still works (and turns the filter on)
     property bool dimmed: false
-    // intervals between the ticks (default: one per step)
-    property int tickIntervals: stepSize > 0 ? Math.round((to - from) / stepSize) : 0
     // labels under the track, spread from the left end to the right end (Figma "Frame 205")
     property var labels: []
-    // top of the label row: 10 px under the 16 px track (Figma "wrapper" 1905:7365: labels at
-    // 30); the Speed slider's wrapper puts them 10 px under its 24 px zone (5187:24558: 34)
-    property real labelsY: VLCStyle.dp(30)
+    // Figma "wrapper" auto layout: the track 4 px down (8 in the Settings rows whose slider is
+    // wrapped twice), then the gap to the labels (10; 8 in some Settings rows; 14 under the
+    // sidebar's Speed slider, whose wrapper is wrapped again: labels 34 under the thumb top)
+    property real trackTop: VLCStyle.dp(4)
+    property real labelSpacing: VLCStyle.dp(10)
 
     readonly property SystemPalette rdPalette: VLCStyle.palette
 
-    // Figma "wrapper": 24 px slider zone, or the label row and a 4 px bottom padding
+    // Figma "wrapper": the 16 px track (the 24 px thumb overflows it by 4), the gap, the 15 px
+    // label row, 4 px below (360x49 in the sidebar)
     implicitWidth: VLCStyle.dp(360)
-    implicitHeight: labelRow.visible ? labelsY + labelRow.height + VLCStyle.dp(4) : VLCStyle.dp(24)
+    implicitHeight: labelRow.visible ? labelRow.y + labelRow.height + VLCStyle.dp(4)
+                                     : trackTop + VLCStyle.dp(16) + VLCStyle.dp(4)
 
     focusPolicy: Qt.StrongFocus
     // disabled: Figma's 30 % rows ("Settings - library")
@@ -60,6 +67,14 @@ T.Slider {
 
     readonly property real _inset: VLCStyle.dp(2)
 
+    // Figma draws the marks in BG/Accent Dark with the "screen" blend mode: the color it gives
+    // over each background (QML has no blend modes)
+    function _screen(c, bg) {
+        return Qt.rgba(c.r + bg.r - c.r * bg.r, c.g + bg.g - c.g * bg.g, c.b + bg.b - c.b * bg.b, 1)
+    }
+    readonly property color _tickOnTrack: _screen(rdPalette.rdBgAccentDark, rdPalette.rdBgB2)
+    readonly property color _tickOnFill: _screen(rdPalette.rdBgAccentDark, rdPalette.rdBgAccentBright)
+
     function _pos(v) {
         return (to === from) ? 0 : (v - from) / (to - from)
     }
@@ -69,7 +84,7 @@ T.Slider {
         Rectangle {
             id: track
 
-            y: VLCStyle.dp(4)
+            y: control.trackTop
             width: control.availableWidth
             height: VLCStyle.dp(16)
             radius: VLCStyle.rd_radius_normal
@@ -90,18 +105,22 @@ T.Slider {
                 color: control.dimmed ? control.rdPalette.rdBgA1 : control.rdPalette.rdBgAccentBright
             }
 
-            // Figma "degrees" (5187:24548, 848:1693): 2x6 ticks in BG/Accent Dark on the fill and
-            // the track alike, spread over the fill span; the first and last are hidden
+            // Figma "degrees" (5187:24548, 848:1693): the marks between the ends (the first and
+            // last are hidden), centred on the steps of the fill span
             Repeater {
                 model: control.showTicks ? Math.max(0, control.tickIntervals - 1) : 0
 
                 delegate: Rectangle {
                     required property int index
+
                     x: control._inset + (index + 1) * fill.span / control.tickIntervals - width / 2
                     anchors.verticalCenter: parent.verticalCenter
+                    // Figma "degrees": 6 px lines stroked 2 px with round caps (2 x 8 drawn),
+                    // BG/Accent Dark screened over the track or the fill (dark: #221E19 / #4B3217)
                     width: VLCStyle.dp(2)
-                    height: VLCStyle.dp(6)
-                    color: control.rdPalette.rdBgAccentDark
+                    height: VLCStyle.dp(8)
+                    radius: width / 2
+                    color: (x >= fill.x && x < fill.x + fill.width) ? control._tickOnFill : control._tickOnTrack
                 }
             }
         }
@@ -110,7 +129,7 @@ T.Slider {
             id: labelRow
 
             visible: control.labels.length > 0
-            y: control.labelsY
+            y: control.trackTop + VLCStyle.dp(16) + control.labelSpacing
             width: control.availableWidth
             height: VLCStyle.dp(15)
 
@@ -138,7 +157,7 @@ T.Slider {
     // Figma "thumb": 8x24, radius 4, Accent/DIm (accent while hovered or pressed)
     handle: Rectangle {
         x: control.leftPadding + control._inset + control.visualPosition * (control.availableWidth - 2 * control._inset - width)
-        y: 0
+        y: control.trackTop - VLCStyle.dp(4)
         width: VLCStyle.dp(8)
         height: VLCStyle.dp(24)
         radius: VLCStyle.rd_radius_small
