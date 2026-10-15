@@ -41,6 +41,8 @@ Loader {
         target: AddSubtitles
 
         function onOpenRequested() {
+            // like every dialog: the menus, popups and panels open behind it close first
+            DialogsProvider.dialogOpening()
             root.active = true
             if (root.item)
                 root.item.dialog.openDialog()

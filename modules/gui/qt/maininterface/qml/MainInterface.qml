@@ -353,6 +353,10 @@ Item {
             id: openNetworkStreamDialog
         }
 
+        // redesign (W6.5): the Add Subtitles dialog over every view, created on its first
+        // AddSubtitles.open(...) (tracks popup "+" and pencil, library menus)
+        AddSubtitlesHost { }
+
         Connections {
             target: DialogsProvider
 
