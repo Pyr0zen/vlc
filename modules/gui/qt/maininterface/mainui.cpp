@@ -34,6 +34,7 @@
 #include "player/control_list_filter.hpp"
 #include "player/delay_estimator.hpp"
 #include "player/rd_effects.hpp"
+#include "player/rd_presets.hpp"
 #include "player/rd_seek_thumbnailer.hpp"
 #include "player/rd_media_info.hpp"
 
@@ -342,9 +343,11 @@ void MainUI::registerQMLTypes()
         qmlRegisterUncreatableType<ProgramListModel>(uri, versionMajor, versionMinor, "ProgramListModel", "available programs of a media" );
         assert(m_intf->p_mainPlayerController);
         qmlRegisterSingletonInstance<PlayerController>(uri, versionMajor, versionMinor, "Player", m_intf->p_mainPlayerController);
-        // redesign: effects and options shown in the settings sidebar
-        qmlRegisterSingletonInstance<RdEffects>(uri, versionMajor, versionMinor, "RdEffects",
-                                                new RdEffects(m_intf, m_intf->p_mainPlayerController, this));
+        // redesign: effects and options shown in the settings sidebar, and the per-show presets
+        RdEffects* effects = new RdEffects(m_intf, m_intf->p_mainPlayerController, this);
+        qmlRegisterSingletonInstance<RdEffects>(uri, versionMajor, versionMinor, "RdEffects", effects);
+        qmlRegisterSingletonInstance<RdPresets>(uri, versionMajor, versionMinor, "RdPresets",
+                                                new RdPresets(m_intf, effects, this));
         // redesign: seek bar preview frames (P2-04)
         m_seekThumbnailer = new RdSeekThumbnailer(m_intf, m_intf->p_mainPlayerController, this);
         qmlRegisterSingletonInstance<RdSeekThumbnailer>(uri, versionMajor, versionMinor, "RdSeekThumbnailer",

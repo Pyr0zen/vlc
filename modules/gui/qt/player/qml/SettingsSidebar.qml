@@ -25,6 +25,7 @@ import QtQuick
 import VLC.MainInterface
 import VLC.Style
 import VLC.Dialogs
+import VLC.Player
 import VLC.Widgets as Widgets
 
 RdSidePanel {
@@ -68,19 +69,25 @@ RdSidePanel {
     // Figma "playback" (5187:24308) has no footer; the other tabs keep "Frame 68" (812:1580)
     footerVisible: currentKey !== "playback"
 
-    // Figma "Button" 812:1585: 360x32 with its fill cleared (video 7:58: no button), 20 px gear,
-    // FG/A3 text, FG/A2 on hover (Decision (Sticky) 43)
-    footer: Widgets.RdButton {
-        width: root.width - 2 * VLCStyle.dp(20)
-        style: Widgets.RdButton.Style.Link
-        rdIcon: "settings"
-        text: qsTr("Open Advanced Settings")
-        // opens the Settings dialog on the matching category (Figma prototype, F-08)
-        onClicked: {
-            const category = ({ playback: "playback", videoSettings: "video",
-                                audioSettings: "audio", subtitleSettings: "subtitles" })[root.currentKey]
-            RdPanels.close()
-            DialogsProvider.settingsDialog(category || "")
+    footer: [
+        // Figma "Setting Preset" 2372:8834 (360x42) above the button, gap 10 (W4.7, Decision 18)
+        PresetSelector {
+            width: root.width - 2 * VLCStyle.dp(20)
+        },
+        // Figma "Button" 812:1585: 360x32 with its fill cleared (video 7:58: no button), 20 px gear,
+        // FG/A3 text, FG/A2 on hover (Decision (Sticky) 43)
+        Widgets.RdButton {
+            width: root.width - 2 * VLCStyle.dp(20)
+            style: Widgets.RdButton.Style.Link
+            rdIcon: "settings"
+            text: qsTr("Open Advanced Settings")
+            // opens the Settings dialog on the matching category (Figma prototype, F-08)
+            onClicked: {
+                const category = ({ playback: "playback", videoSettings: "video",
+                                    audioSettings: "audio", subtitleSettings: "subtitles" })[root.currentKey]
+                RdPanels.close()
+                DialogsProvider.settingsDialog(category || "")
+            }
         }
-    }
+    ]
 }
