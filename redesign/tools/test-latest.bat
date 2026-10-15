@@ -2,7 +2,7 @@
 setlocal EnableExtensions
 rem Test VLC Redesign: downloads the newest successful build of the redesign branch from
 rem GitHub Actions and starts it in portable mode (its own settings, never the installed VLC's).
-rem Builds are downloaded to "<TEST_MEDIA_DIR>\builds\<run number>" (a run that
+rem Builds are downloaded to "%BUILDS%\<run number>" (a run that
 rem is already there is not downloaded again) and copied into the fixed folder "builds\current",
 rem where VLC runs from: one fixed vlc.exe path, so Windows Firewall asks only once, and one
 rem portable settings folder (builds\current\portable) that every build keeps using.
@@ -11,7 +11,10 @@ title Test VLC Redesign
 set "REPO=Pyr0zen/vlc"
 set "BRANCH=redesign"
 set "ARTIFACT=vlc-redesign-win64"
-set "BUILDS=<TEST_MEDIA_DIR>\builds"
+rem the builds folder of this PC: set BUILDS in test-latest.local.cmd next to this script
+rem (gitignored, never committed); default: a folder in the user profile
+set "BUILDS=%USERPROFILE%\VLC Redesign\builds"
+if exist "%~dp0test-latest.local.cmd" call "%~dp0test-latest.local.cmd"
 
 where gh >nul 2>nul
 if errorlevel 1 (

@@ -63,3 +63,16 @@ static-lib/
 !buildsystem/
 !build.rs
 !extras/package/apple/build.sh
+
+# redesign: private and copyrighted material stays local (never committed)
+/CLAUDE.local.md
+*.local.md
+*.local.ps1
+*.local.cmd
+/redesign/reference/frames/
+/redesign/reference/frames_library/
+/redesign/reference/frames_settings/
+/redesign/reference/frames_work/
+/redesign/reference/*.srt
+/redesign/reference/*.mp4
+/redesign/tools/privacy.local.txt
