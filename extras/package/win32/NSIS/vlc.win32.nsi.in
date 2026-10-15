@@ -867,7 +867,10 @@ Section "un.$(Name_Section91)" SEC91
   Call un.RemoveEmptyDirs
   RMDir "$INSTDIR"
 
+  ; redesign: brand layer, the public profile never removes VideoLAN's key (an installed VLC's)
+!if "${PRODUCT_EXE}" == "vlc.exe"
   DeleteRegKey HKLM Software\VideoLAN
+!endif
 
   DeleteRegKey HKCR Applications\${PRODUCT_EXE}
   DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\App Paths\${PRODUCT_EXE}"
