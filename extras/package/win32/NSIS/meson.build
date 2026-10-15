@@ -13,6 +13,17 @@ nsi_conf.set('HAVE_ARM64_TRUE',  host_machine.cpu_family() == 'aarch64' or host_
 nsi_conf.set('HAVE_ARM64_FALSE', host_machine.cpu_family() == 'aarch64' or host_machine.cpu() == 'arm64' ? ';' : '')
 nsi_conf.set('PROGRAMFILES', have_win64 ? 'PROGRAMFILES64' : 'PROGRAMFILES')
 nsi_conf.set('HAVE_NLS_TRUE', nsi_conf.get('ENABLE_NLS', 0) == 1 ? '' : ';')
+# redesign: brand layer (root meson.build brand_profiles)
+nsi_conf.set('BRAND_PRODUCT_NAME', brand['product_name'])
+nsi_conf.set('BRAND_COMPANY', brand['company'])
+nsi_conf.set('BRAND_EXE', brand['exe_name'] + '.exe')
+nsi_conf.set('BRAND_ICON_FILE', brand['icon_file'])
+nsi_conf.set('BRAND_WEBSITE', brand['website'])
+nsi_conf.set('BRAND_FINISH_LINK', brand['finish_link'])
+nsi_conf.set('BRAND_REGKEY', brand['regkey'])
+nsi_conf.set('BRAND_INSTALL_DIR', brand['install_dir'])
+nsi_conf.set('BRAND_PRODUCT_ID', brand['product_id'])
+nsi_conf.set('BRAND_NSIS_BITMAP_TRUE', brand['nsis_bitmap_true'])
 
 nsProcess_cargs = ['-D_UNICODE=1', '-DUNICODE=1']
 if not have_win64

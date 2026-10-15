@@ -557,7 +557,7 @@ Item {
                     anchors.bottom: parent.bottom
                     anchors.bottomMargin: VLCStyle.dp(6)
                     width: parent.width - 2 * VLCStyle.dp(6)
-                    text: qsTr("All VLC Settings")
+                    text: qsTr("All %1 Settings").arg(Brand.shortName)
                     iconName: "wrench"
 
                     onClicked: root.openLegacyPreferences()

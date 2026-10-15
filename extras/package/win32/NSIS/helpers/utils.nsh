@@ -31,9 +31,9 @@
 
 Function AppExecAs
   ${If} ${AtLeastWinVista}
-    Exec '"$WINDIR\explorer.exe" "$INSTDIR\vlc.exe"'
+    Exec '"$WINDIR\explorer.exe" "$INSTDIR\${PRODUCT_EXE}"'
   ${Else}
-    Exec '$INSTDIR\vlc.exe'
+    Exec '$INSTDIR\${PRODUCT_EXE}'
   ${Endif}
 FunctionEnd
 
@@ -292,13 +292,13 @@ FunctionEnd
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Function CheckRunningProcesses
-    ${nsProcess::FindProcess} "vlc.exe" $R0
+    ${nsProcess::FindProcess} "${PRODUCT_EXE}" $R0
     StrCmp $R0 0 0 end
     IfSilent +3
     BringToFront
     MessageBox MB_OKCANCEL|MB_ICONQUESTION "$(MessageBox_VLCRunning)" IDCANCEL stop
 
-    ${nsProcess::CloseProcess} "vlc.exe" $R0
+    ${nsProcess::CloseProcess} "${PRODUCT_EXE}" $R0
     IfSilent end
     StrCmp $R0 0 end 0      ; Success
     StrCmp $R0 603 end 0    ; Not running

@@ -358,6 +358,7 @@ libqt_plugin_la_SOURCES = \
 	util/base_model.hpp util/base_model_p.hpp util/base_model.cpp \
 	util/color_scheme_model.cpp util/color_scheme_model.hpp \
 	util/ui_notifier.cpp util/ui_notifier.hpp \
+	util/brand.cpp util/brand.hpp \
 	util/color_svg_image_provider.cpp util/color_svg_image_provider.hpp \
 	util/vlcaccess_image_provider.cpp util/vlcaccess_image_provider.hpp \
 	util/covergenerator.cpp \
@@ -568,6 +569,7 @@ nodist_libqt_plugin_la_SOURCES = \
 	util/base_model.moc.cpp \
 	util/color_scheme_model.moc.cpp \
 	util/ui_notifier.moc.cpp \
+	util/brand.moc.cpp \
 	util/color_svg_image_provider.moc.cpp \
 	util/vlcaccess_image_provider.moc.cpp \
 	util/imageluminanceextractor.moc.cpp \
@@ -1938,6 +1940,29 @@ windows.cpp: windows.qrc
 	$(AM_V_GEN)$(RCC) $(RCC_EXTRA_PARAMS) --name windows -o $@ $<
 
 nodist_libqt_plugin_la_SOURCES += windows.cpp
+endif
+
+# redesign: brand layer, the public profile's logo (util/brand.hpp, configure --with-brand)
+libqt_plugin_la_BRAND_PUBLIC_RES = \
+	pixmaps/brand/public/cone-logo.svg \
+	pixmaps/brand/public/cone-logo-16.svg \
+	pixmaps/brand/public/cone-logo-24.svg \
+	pixmaps/brand/public/cone-16.png \
+	pixmaps/brand/public/cone-24.png \
+	pixmaps/brand/public/cone-32.png \
+	pixmaps/brand/public/cone-48.png \
+	pixmaps/brand/public/cone-64.png \
+	pixmaps/brand/public/cone-128.png \
+	pixmaps/brand/public/cone-256.png
+
+EXTRA_DIST += brand_public.qrc $(libqt_plugin_la_BRAND_PUBLIC_RES)
+
+if BRAND_PUBLIC
+brand_public.cpp: $(libqt_plugin_la_BRAND_PUBLIC_RES)
+brand_public.cpp: brand_public.qrc
+	$(AM_V_GEN)$(RCC) $(RCC_EXTRA_PARAMS) --name brand_public -o $@ $<
+
+nodist_libqt_plugin_la_SOURCES += brand_public.cpp
 endif
 
 EXTRA_DIST += $(lib_qt_plugin_la_QRC) $(libqt_plugin_la_RES) $(libqt_plugin_la_SHADER)

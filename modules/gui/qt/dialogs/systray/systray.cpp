@@ -25,6 +25,7 @@
 #include <algorithm>
 
 #include "maininterface/mainctx.hpp"
+#include "util/brand.hpp"
 #include "menus/menus.hpp"
 #include "playlist/playlist_controller.hpp"
 #include "player/player_controller.hpp"
@@ -41,16 +42,12 @@ VLCSystray::VLCSystray(MainCtx* ctx, QObject* parent)
     assert(ctx);
     assert(m_intf);
 
-    QIcon iconVLC;
-    if( m_ctx->useXmasCone() )
-        iconVLC = QIcon::fromTheme( "vlc-xmas", QIcon( ":/logo/vlc128-xmas.png" ) );
-    else
-        iconVLC = QIcon::fromTheme( "vlc", QIcon( ":/logo/vlc256.png" ) );
+    const QIcon iconVLC = brand::trayIcon( m_ctx->useXmasCone() );
 
     setIcon(iconVLC);
-    setToolTip( qtr( "VLC media player" ));
+    setToolTip( qtr( BRAND_NAME ));
 
-    m_menu = std::make_unique<VLCMenu>( qtr( "VLC media player"), m_intf );
+    m_menu = std::make_unique<VLCMenu>( qtr( BRAND_NAME ), m_intf );
     m_menu->setIcon( iconVLC );
     setContextMenu(m_menu.get());
     update();
@@ -120,7 +117,7 @@ void VLCSystray::updateTooltipName( const QString& name )
 {
     if( name.isEmpty() )
     {
-        setToolTip( qtr( "VLC media player" ) );
+        setToolTip( qtr( BRAND_NAME ) );
     }
     else
     {
@@ -152,7 +149,7 @@ void VLCSystray::updateTooltipName( const QString& name )
             }
 
             const auto showMessageTemplate = [this, &name, duration](const auto &icon) {
-                showMessage( qtr( "VLC media player" ), name, icon, duration );
+                showMessage( qtr( BRAND_NAME ), name, icon, duration );
             };
 
             if (art.isValid())
@@ -196,13 +193,13 @@ void VLCSystray::update()
     if( m_ctx->interfaceVisibility() != QWindow::Hidden )
     {
         m_menu->addAction(
-            QIcon( ":/logo/vlc16.png" ), qtr( "&Hide VLC media player in taskbar" ),
+            brand::trayMenuIcon(), qtr( BRAND_TRAY_HIDE ),
             this, &VLCSystray::hideUpdateMenu);
     }
     else
     {
         m_menu->addAction(
-            QIcon( ":/logo/vlc16.png" ), qtr( "Sho&w VLC media player" ),
+            brand::trayMenuIcon(), qtr( BRAND_TRAY_SHOW ),
             this, &VLCSystray::showUpdateMenu);
     }
     m_menu->addSeparator();

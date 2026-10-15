@@ -179,7 +179,7 @@ FocusScope {
         showLibraryButtons: false
         accessibleName: qsTr("Library top bar")
         title: Player.isStarted ? (Player.title !== "" ? Player.title : Player.name)
-                                : qsTr("VLC Media Player")
+                                : Brand.title
         showCSD: g_mainDisplay._showCSD
     }
 

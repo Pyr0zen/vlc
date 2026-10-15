@@ -70,6 +70,13 @@ option('update-check',
     value : 'disabled',
     description : 'update checking system')
 
+# redesign: brand layer (modules/gui/qt/util/brand.hpp)
+option('brand',
+    type : 'combo',
+    choices : ['vlc', 'public'],
+    value : 'vlc',
+    description : 'Name and logo of the app: vlc (VLC media player) or public (Cone)')
+
 option('rust',
     type : 'feature',
     value : 'disabled',

@@ -50,7 +50,7 @@ SettingsSection {
 
     SettingsRow {
         text: qsTr("Search plugins")
-        description: qsTr("Plugins are the parts VLC is built from: each one reads, decodes, filters or shows one kind of media. VLC picks the plugin with the highest score that can handle the media.")
+        description: qsTr("Plugins are the parts %1 is built from: each one reads, decodes, filters or shows one kind of media. %1 picks the plugin with the highest score that can handle the media.").arg(Brand.shortName)
         keywords: qsTr("plugins modules capability score")
 
         Widgets.RdTextField {

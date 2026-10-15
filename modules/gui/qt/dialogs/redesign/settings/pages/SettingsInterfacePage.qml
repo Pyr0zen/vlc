@@ -43,7 +43,7 @@ SettingsPage {
             option: "intf"
             shown: SettingsCatalog.exists("skins2-last")
             text: qsTr("Use a custom skin")
-            description: qsTr("Replaces this interface with VLC's skinnable one, drawn by a skin file. VLC uses it the next time it starts.")
+            description: qsTr("Replaces this interface with %1's skinnable one, drawn by a skin file. %1 uses it the next time it starts.").arg(Brand.shortName)
             kind: "toggle"
             checkedValue: "skins2"
             uncheckedValue: ""
@@ -228,7 +228,7 @@ SettingsPage {
 
             SettingsOption {
                 option: "qt-auto-raise"
-                text: qsTr("Bring VLC to the front when playback starts")
+                text: qsTr("Bring %1 to the front when playback starts").arg(Brand.shortName)
             }
 
             SettingsOption {

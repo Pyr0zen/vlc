@@ -43,6 +43,67 @@ vlc_build_root = meson.current_build_dir()
 
 cdata = configuration_data()
 
+# redesign: brand layer (modules/gui/qt/util/brand.hpp, redesign/BUILD_NOTES.md)
+# vlc: VLC's name and cone; public: "Cone" and its logo. Mirrors configure.ac --with-brand.
+brand_profiles = {
+    'vlc': {
+        'product_name': 'VLC media player',
+        'company': 'VideoLAN',
+        'internal_name': 'vlc',
+        'exe_name': 'vlc',
+        'icon_src': 'share/icons/vlc.ico',
+        'icon_rc': 'vlc.ico',
+        'icon_file': 'vlc.ico',
+        'website': 'https://www.videolan.org/',
+        'finish_link': 'https://www.videolan.org/vlc/',
+        'regkey': 'Software\\VideoLAN\\VLC',
+        'install_dir': 'VideoLAN\\VLC',
+        'product_id': '{ea92ef52-afe4-4212-bacb-dfe9fca94cd6}',
+        'nsis_bitmap_true': '',
+    },
+    'public': {
+        'product_name': 'Cone',
+        'company': 'Sticky',
+        'internal_name': 'cone',
+        'exe_name': 'Cone',
+        'icon_src': 'extras/package/win32/brand/public/cone.ico',
+        'icon_rc': 'brand/public/cone.ico',
+        'icon_file': 'cone.ico',
+        'website': 'https://github.com/Pyr0zen/vlc-redesign-juxtopposed',
+        'finish_link': 'https://github.com/Pyr0zen/vlc-redesign-juxtopposed',
+        'regkey': 'Software\\Cone',
+        'install_dir': 'Cone',
+        'product_id': '{f00e45bf-087b-49ef-90e7-4cd5e2e4bd72}',
+        # the installer's welcome / finish bitmap shows VLC's cone: NSIS's default one instead
+        'nsis_bitmap_true': ';',
+    },
+}
+brand = brand_profiles[get_option('brand')]
+if get_option('brand') == 'public'
+    brand_fs = import('fs')
+    # the approved logo files the public profile builds with
+    foreach f : ['cone-logo.svg', 'cone-logo-16.svg', 'cone-logo-24.svg',
+                 'cone-16.png', 'cone-24.png', 'cone-32.png', 'cone-48.png',
+                 'cone-64.png', 'cone-128.png', 'cone-256.png']
+        if not brand_fs.is_file('modules/gui/qt/pixmaps/brand/public' / f)
+            error('-Dbrand=public needs the Cone logo file modules/gui/qt/pixmaps/brand/public/' + f
+                  + '; build with -Dbrand=vlc until it is added')
+        endif
+    endforeach
+    if not brand_fs.is_file(brand['icon_src'])
+        error('-Dbrand=public needs the Cone logo file ' + brand['icon_src']
+              + '; build with -Dbrand=vlc until it is added')
+    endif
+    # the in-app logo follows the accent color: the SVG colorizer replaces #FF8800
+    foreach f : ['cone-logo.svg', 'cone-logo-16.svg', 'cone-logo-24.svg']
+        if not brand_fs.read('modules/gui/qt/pixmaps/brand/public' / f).to_lower().contains('#ff8800')
+            error('modules/gui/qt/pixmaps/brand/public/' + f
+                  + ' must fill the logo with #FF8800, the accent slot of the SVG colorizer')
+        endif
+    endforeach
+    cdata.set('VLC_BRAND_PUBLIC', 1)
+endif
+
 cargo_rustc_static_libs = find_program('buildsystem/cargo-rustc-static-libs.py')
 cargo_output = find_program('buildsystem/cargo-output.py')
 
@@ -1191,6 +1252,11 @@ if host_system == 'windows'
     rc_conf.merge_from(cdata)
     rc_conf.set('VERSION', vlc_version)
     rc_conf.set('COPYRIGHT_YEARS', vlc_copyright_years)
+    rc_conf.set('BRAND_PRODUCT_NAME', brand['product_name'])
+    rc_conf.set('BRAND_COMPANY', brand['company'])
+    rc_conf.set('BRAND_INTERNAL_NAME', brand['internal_name'])
+    rc_conf.set('BRAND_EXE', brand['exe_name'] + '.exe')
+    rc_conf.set('BRAND_ICON_RC', brand['icon_rc'])
 endif
 
 # libvlccore

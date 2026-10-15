@@ -184,7 +184,7 @@ SettingsPage {
         if (/\.vlp$/.test(path))
             return true
         _notice = /\.vlp$/i.test(path)
-                ? qsTr("VLC reads add-on packages whose name ends in \".vlp\" in lower case: rename \"%1\".").arg(path)
+                ? qsTr("%1 reads add-on packages whose name ends in \".vlp\" in lower case: rename \"%2\".").arg(Brand.shortName).arg(path)
                 : qsTr("\"%1\" is not a VLC add-on package (.vlp).").arg(path)
         return false
     }
@@ -455,7 +455,7 @@ SettingsPage {
                     if (root._installPending)
                         return
                     if (root._unsupportedType && root._selected.state === ServicesDiscoveryModel.STATE_NOTINSTALLED) {
-                        root._notice = qsTr("VLC cannot install \"%1\": it has no installer for this kind of add-on.")
+                        root._notice = qsTr("%1 cannot install \"%2\": it has no installer for this kind of add-on.").arg(Brand.shortName)
                                            .arg(root._selected.name)
                         return
                     }

@@ -32,7 +32,9 @@ Image {
     sourceSize: Qt.size(VLCStyle.icon_normal, VLCStyle.icon_normal)
 
     mipmap: MainCtx.useXmasCone()
-    source: MainCtx.useXmasCone() ? "qrc:///logo/vlc48-xmas.png" // TODO: new xmas cone for designs?
+    // brand layer: the public logo follows Accent/Logo like the redesign's cone
+    source: Brand.isPublic ? SVGColorImage.colorize(Brand.logoSvg).accent(VLCStyle.palette.rdAccentLogo).uri()
+          : MainCtx.useXmasCone() ? "qrc:///logo/vlc48-xmas.png" // TODO: new xmas cone for designs?
                                   : "qrc:///misc/cone.svg"
 
     focus: false

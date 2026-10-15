@@ -473,6 +473,97 @@ Review of the whole branch diff against redesign (RdEndlessSlider, RdSlider, RdP
 - Checks: qmlcheck `errors: 1 files: 371 crashed: 0` (the known HighResolutionTimeWidget stub), buildlists `0 problem(s)`, privacycheck `0 problem(s)`.
 - Not verified: no compile yet (CI), no runtime QML warnings, no screenshots. The PC tests are WAVEFORM_NOTES sections 8 and 9; the generated test media (3 min MP3 / AAC / FLAC, a 249 MiB 1080p MP4 and MKV, a 4K MKV remux, an AVI without its index, a video without audio) are in <TEST_MEDIA_DIR>/builds/test-media/waveform.
 
+## Brand layer (vlc / public profiles)
+Decision 48 (two profiles) and Decision 49 (Cone logo approved, Q6). Branch work/brand, pushed as wip/brand-layer; not built yet.
+
+**Design.** One build input picks the profile and everything else follows from it:
+- GitHub: Actions > build-windows > Run workflow > "Brand profile" (vlc / public; default public and pushes build public since Decision 50). The workflow passes it as `VLC_BRAND` into the build container and calls `extras/package/win32/build.sh ... -B "$VLC_BRAND"`; the public artifact is named `vlc-redesign-win64-public`.
+- build.sh `-B <profile>` adds `--with-brand=<profile>` (autotools, what CI uses) and `-Dbrand=<profile>` (meson).
+- configure.ac `--with-brand=vlc|public` / meson_options.txt `brand` (combo) + root meson.build `brand_profiles`: the packaging values (table below), `VLC_BRAND_PUBLIC` in config.h (config.h.meson) and the automake conditional `BRAND_PUBLIC`. Profile "public" stops configure / meson with a clear message when a logo file is missing or an in-app SVG lacks the #FF8800 accent slot; profile "vlc" needs none of the files.
+- modules/gui/qt/util/brand.hpp: the one definition of what the interface shows (name texts, logo names, seasonal cones); util/brand.cpp: the icons (`brand::windowIcon`, `trayIcon`, `trayMenuIcon`, `aboutLogo`, `extensionFallbackIcon`) and the QML singleton `Brand` (VLC.MainInterface: isPublic, name, shortName, title, welcomeTitle, welcomeText, logoIconSmall / logoIcon / logoIconLarge, logoSvg). The texts are macros so `qtr()` looks up VLC's exact source strings (and their translations) in the vlc profile.
+- Assets: modules/gui/qt/pixmaps/brand/public/ (cone-logo.svg master, cone-logo-16.svg, cone-logo-24.svg, cone-16/24/32/48/64/128/256.png) through modules/gui/qt/brand_public.qrc (only built with BRAND_PUBLIC: Makefile.am `brand_public.cpp`, meson `qrc_files`), and extras/package/win32/brand/public/ (cone.ico 16-256 for the exe, file icons and installer; cone-tray.ico 16-48). The vlc profile keeps VLC's own files (share/icons, pixmaps/misc/cone.svg, pixmaps/redesign/vlc.svg); no brand/vlc folder is needed.
+- Logo color: the in-app SVGs fill the logo with **#FF8800**, the accent slot of the SVG colorizer (util/color_svg_image_provider.cpp `COLOR_ACCENT_KEY` / `_res_ACCENT`, the same slot pixmaps/redesign/vlc.svg uses). RdIcon (`qrc:///rd/<name>.svg`, `.accent(...)`) and the plain images (`SVGColorImage.colorize(Brand.logoSvg).accent(...)`) replace it with Dark/Accent/Logo (`VLCStyle.palette.rdAccentLogo`, #D37918 at the default accent), so the logo recolors live with the accent exactly like the cone. Any other color in those files stays fixed. The PNG / ICO files are fixed #D37918 (window, taskbar, tray, About, exe, installer: system icons, like VLC's cone).
+- Qt has no ICO reader in VLC's build (only the SVG and JPEG image plugins), so the interface loads the PNGs; they are byte for byte the entries of cone.ico and cone-tray.ico.
+
+**Every spot** (file: what it was; vlc value; public value)
+
+| File | Spot | vlc | public |
+|---|---|---|---|
+| modules/gui/qt/qt.cpp | application display name = window title suffix | "VLC media player" | "Cone" |
+| modules/gui/qt/qt.cpp + util/brand.cpp | window / taskbar icon | theme "vlc" or :/logo/vlc256.png (Christmas: vlc-xmas / vlc128-xmas.png) | cone-16...256.png |
+| dialogs/systray/systray.cpp | tray icon | same as the window icon (Christmas cone when seasonal) | cone-16/24/32/48.png (= cone-tray.ico) |
+| dialogs/systray/systray.cpp | tray tooltip, tray menu title, notification title | "VLC media player" | "Cone" |
+| dialogs/systray/systray.cpp | tray menu Hide / Show entries and their icon | "&Hide VLC media player in taskbar" / "Sho&w VLC media player", :/logo/vlc16.png | "&Hide Cone in taskbar" / "Sho&w Cone", cone PNGs |
+| dialogs/help/help.cpp | About title | "VLC media player" | "Cone" |
+| dialogs/help/help.cpp | About text | VLC's paragraph ("VLC media player is a free and open source media player, encoder, and streamer ... Help and join us!") | "Cone, based on VLC media player by VideoLAN. Design by Juxtopposed (CC BY 4.0). Built by Sticky." + "Cone is not affiliated with VideoLAN or Juxtopposed." (links: videolan.org/vlc, the Figma file, the CC BY 4.0 licence) |
+| dialogs/help/help.cpp (about.ui) | About logo | :/logo/vlc256.png (April 1: vlc128-aprilfools.png) | cone-256.png |
+| dialogs/help/help.cpp | About version line (`BRAND_VERSION_TEXT`) | VERSION_MESSAGE (version and codename) | VERSION (version only, no VLC codename) |
+| dialogs/help/help.cpp | License, Authors, Credits pages | VLC's (GPL text, AUTHORS, THANKS) | unchanged (Public release rules) |
+| menus/rd_menu_model.cpp | "..." menu entries | "About VLC", "Quit VLC" | "About Cone", "Quit Cone" |
+| maininterface/mainctx.cpp | `useXmasCone()` (seasonal cones in the banner, home, minimal view, tray) | as before | always false (VLC's seasonal cones are VLC logos) |
+| player/qml/TopBar.qml | top bar logo (RdIcon, 24 px, Accent/Logo) | "vlc" (pixmaps/redesign/vlc.svg) | "cone-logo-24" |
+| maininterface/qml/MainDisplay.qml | top bar title without media | "VLC Media Player" | "Cone" |
+| dialogs/redesign/Onboarding.qml | welcome logo (141 px, Accent/Logo) | "vlc" | "cone-logo" (master) |
+| dialogs/redesign/Onboarding.qml | welcome title | "Welcome to VLC!" | "Welcome to Cone!" |
+| dialogs/redesign/Onboarding.qml | welcome text | "VLC is a free and open source cross-platform multimedia player and framework that plays most multimedia files as well as DVDs, Audio CDs, VCDs, and various streaming protocols." | "Cone is a free and open source media player based on VLC. It plays most video and audio files as well as DVDs, Audio CDs, VCDs and various streaming protocols." |
+| dialogs/redesign/OnboardingPreview.qml | preview title bar logo (drawn about 7 px) | "vlc" | "cone-logo-16" |
+| maininterface/qml/NoMedialibHome.qml | empty-state (no library) logo | misc/cone.svg (Christmas: vlc48-xmas.png) | cone-logo.svg, Accent/Logo |
+| player/qml/MinimalView.qml | logo behind the minimal view | misc/cone.svg (Christmas png) | cone-logo.svg, Accent/Logo |
+| widgets/qml/BannerCone.qml (LocalTopbar) | banner logo | misc/cone.svg (Christmas png) | cone-logo.svg, Accent/Logo |
+| maininterface/qml/UpdatePane.qml | update pane logo | misc/cone.svg colorized with theme.accent | cone-logo.svg, Accent/Logo |
+| dialogs/plugins/plugins.cpp | extension without an icon | :/logo/vlc48.png | cone-48.png |
+| dialogs/redesign/settings/settings_catalog.cpp | group of core options without a category | "VLC" | "Cone" |
+| dialogs/redesign/settings/SettingsDialog.qml, SettingsPlaceholder.qml (2) | "All VLC Settings", placeholder text | "VLC" | "Cone" |
+| dialogs/redesign/settings/SettingsOption.qml | restart note | "VLC uses this setting the next time it starts." | "Cone uses ..." |
+| dialogs/redesign/settings/SettingsPluginList.qml | plugins description | "the parts VLC is built from ... VLC picks" | "Cone" |
+| settings/pages/SettingsControlsPage.qml (3) | reset shortcuts text and question, web remote text | "VLC's own", "control VLC. VLC uses" | "Cone" |
+| settings/pages/SettingsExtensionsPage.qml (2) | ".vlp" name notice, "cannot install" notice | "VLC reads ...", "VLC cannot install ..." | "Cone ..." |
+| settings/pages/SettingsGeneralPage.qml (5) | language, log level, config folder, reset text and question | "VLC's menus ... VLC uses", "Same as VLC's messages", "where VLC keeps", "every setting of VLC ... when VLC was installed", "all of VLC's settings" | "Cone" |
+| settings/pages/SettingsInterfacePage.qml (2) | skins text, bring to front | "VLC's skinnable one ... VLC uses", "Bring VLC to the front ..." | "Cone" |
+| settings/pages/SettingsLibraryPage.qml | one instance | "Only allow one VLC window" | "Only allow one Cone window" |
+| settings/pages/SettingsNetworkPage.qml | buffering text | "VLC reads ahead" | "Cone reads ahead" |
+| settings/pages/SettingsPerformancePage.qml (6) | priority, its error, plugin cache text / done / failed, encoder text | "Give VLC high priority", "let VLC change", "VLC's plugin folder ... VLC uses", "Done. VLC uses", "VLC could not", "encoder VLC uses ... lets VLC pick" | "Cone" |
+| settings/pages/SettingsPlaybackPage.qml (2) | end of list text, "Quit VLC" choice | "VLC" | "Cone" |
+| settings/pages/SettingsPrivacyPage.qml (2) | privacy ask, last.fm restart note | "VLC" | "Cone" |
+| settings/pages/SettingsRecordingPage.qml | encoder preset text (+ import VLC.MainInterface) | "VLC converts" | "Cone converts" |
+| settings/pages/SettingsSubtitlesPage.qml | precise size text | "VLC's normal size" | "Cone's normal size" |
+| player/qml/Player.qml | statistics panel notice | "VLC does not collect playback statistics ..." | "Cone does not ..." |
+| bin/vlc_win32_rc.rc.in | exe icon (also the file association icon, index 0) | share/icons/vlc.ico | extras/package/win32/brand/public/cone.ico |
+| bin/vlc_win32_rc.rc.in | version info CompanyName / ProductName / InternalName / OriginalFilename / FileDescription | VideoLAN / VLC media player / vlc / vlc.exe / VLC media player | Sticky / Cone / cone / Cone.exe / Cone |
+| bin/vlc_win32_rc.rc.in | LegalCopyright, LegalTrademarks | VLC's | unchanged (copyright notice; the trademark notice stays true) |
+| extras/package/win32/package.mak (autotools) / bin/meson.build (meson) | exe name | vlc.exe | Cone.exe (autotools: renamed when packaging; meson: the executable target) |
+| package.mak / extras/package/win32/meson.build | icon file next to the exe | vlc.ico | cone.ico |
+| NSIS/vlc.win32.nsi.in | PRODUCT_NAME (installer title, shortcuts, uninstall entry, Default Programs name) | VLC media player | Cone |
+| NSIS/vlc.win32.nsi.in | PRODUCT_GROUP / PRODUCT_PUBLISHER (Start menu folder, publisher) | VideoLAN | Sticky |
+| NSIS/vlc.win32.nsi.in | PRODUCT_WEB_SITE, finish page link | https://www.videolan.org/, https://www.videolan.org/vlc/ | https://github.com/Pyr0zen/vlc-redesign-juxtopposed (both) |
+| NSIS/vlc.win32.nsi.in | PRODUCT_DIR_REGKEY, install folder, PRODUCT_ID | Software\VideoLAN\VLC, Program Files\VideoLAN\VLC, {ea92ef52-afe4-4212-bacb-dfe9fca94cd6} | Software\Cone, Program Files\Cone, {f00e45bf-087b-49ef-90e7-4cd5e2e4bd72} (own install folder and uninstall entry) |
+| NSIS/vlc.win32.nsi.in | installer / uninstaller icon | vlc.ico | cone.ico |
+| NSIS/vlc.win32.nsi.in | welcome / finish bitmap (VLC's cone) | NSIS/vlc_branding.bmp | none (NSIS's default) |
+| NSIS/vlc.win32.nsi.in, helpers/extensions.nsh, helpers/utils.nsh, spad.nsi.in | exe in shortcuts, App Paths, Applications\, file association commands and DefaultIcon, context menu, autoplay handlers, "run after install", running-process check | vlc.exe | Cone.exe |
+| NSIS/spad.nsi.in | desktop / quick launch shortcut name | "VLC media player.lnk" | "Cone.lnk" |
+| .github/workflows/build-windows.yml | profile input, artifact name | none / vlc-redesign-win64 | "brand" input / vlc-redesign-win64-public |
+
+**Not changed on purpose** (VLC is the engine or the format there, allowed by "based on VLC"): SettingsExtensionsPage "VLC's add-on catalog" (2), "Browse VLC's online add-on catalog", "VLC add-on packages (*.vlp)", "is not a VLC add-on package"; HTTP user agent and app id (bin/winvlc.c, "VLC media player" / org.VideoLAN.VLC: servers identify the engine); the volume slider (not a brand element).
+
+**Not covered yet, open for Sticky / W9.1 (public release):**
+- Update checker (configure `--enable-update-check`, build.sh enables it): UpdatePane.qml and help.cpp "A new version of VLC is available" / "You have the latest version of VLC media player", the update dialog: a public build would offer VideoLAN's VLC releases. Proposal: build the public profile with the update check off, or point it at Cone releases.
+- Settings folder: both profiles keep %APPDATA%\vlc and the "vlc-qt-interface" settings, so an installed Cone shares settings with an installed VLC.
+- Installer, rest of W9.1: the 35 NSIS language files (languages/*Extra.nsh: "Play with VLC media player", "Uninstall VLC", 83 "VLC media player" and about 960 "VLC" mentions), the ProgIDs and Default Programs keys ("VLC.<ext>", Software\Clients\Media\VLC, RegisteredApplications "VLC"), "Documentation.url" / skins links under PRODUCT_WEB_SITE, the installer file name vlc-<version>-win64.exe, and the MSI (extras/package/win32/msi: not built by CI). CI builds only the zip today.
+- Stock VLC dialogs reachable from "All Cone Settings" and old paths: the old preferences (reset questions in preferences.cpp, sprefs_interface.ui), the old first-run wizard (shown only without the main interface: skins2 / dialogs-only), sout / open / jack texts, module descriptions (qt.cpp N_ texts and every core module's help: core strings), bin/winvlc.c "VLC media player could not start" (outside modules/gui/qt).
+
+**Checks:** qmlcheck `errors: 1 files: 371 crashed: 0` (the known HighResolutionTimeWidget stub), buildlists `0 problem(s)`, privacycheck `0 problem(s)`. Not compiled (CI only). The vlc profile is meant to give byte for byte the same visible result: the same qtr / qsTr source strings, icons and paths; the redesign Settings strings now build "VLC" through `.arg()`, which is the same text (they have no translations yet).
+- Build note: this branch touches the build system and packaging (configure.ac, meson, bin/, extras/package/win32), outside modules/gui/qt: give it its own build (Build rounds rule), first with the default "vlc" (must look identical), then one "public" run.
+- To test on the builds: vlc profile: window title, tray, About, onboarding (`--qt-privacy-ask`), top bar cone with every accent, empty states, Settings texts unchanged. Public profile: the same spots say Cone and show the logo, the logo follows the accent live (top bar, onboarding, minimal view, home without library), exe Cone.exe with the Cone icon in Explorer and the taskbar, tray icon sharp at 100 / 125 / 150 %, About text and links.
+
+**Independent review (2026-10-15, branch wip/brand-layer against wip/next-batch):**
+- vlc profile: identical result. Every changed qtr / qsTr source string is the old one (BRAND_* macros in the #else branch, "VLC Media Player", "Welcome to VLC!", the welcome text pieces), icons, seasonal cones, exe name, version info, installer values and NSIS paths keep their old values; the redesign Settings strings that now use `.arg(Brand.shortName)` have no translations yet. GPL, copyright and trademark texts untouched (COPYING, About License / Authors / Credits, rc LegalCopyright / LegalTrademarks, file headers).
+- Fixed, MED: About showed VLC's release codename in the public profile (`VERSION_MESSAGE` = version + codename): new `BRAND_VERSION_TEXT` (brand.hpp: VERSION_MESSAGE for vlc, VERSION for public) in both version lines of help.cpp.
+- Fixed, MED: the public uninstaller ran `DeleteRegKey HKLM Software\VideoLAN`, removing an installed VLC's key; now only in the vlc profile (NSIS `!if "${PRODUCT_EXE}" == "vlc.exe"`). The installer is not built by CI yet.
+- Checked, no change: onboarding title is Inter Light 300, 32 px in both profiles (Onboarding.qml `Font.Light`, `rd_fontSize_display`), the same as the Figma "Onboarding" node "Welcome to VLC!" (Inter-Light, 300, 32); Inter-Light.ttf registers as family "Inter", style Light.
+- Workflow: pushes build public (`inputs.brand || 'public'` in env and concurrency); concurrency is per ref and profile; the contrib key falls back to the upstream key only when VLC's key is not an ancestor of the merge-base with origin/master and no commit since that merge-base touches contrib, extras/tools or extras/ci (the same paths as extras/ci/get-contrib-sha.sh; the fallback key adds extras/package/win32 like the script does for win64).
+- Meson / autotools parity: same profile values, same logo checks, same qrc, same rc include dirs (share/icons, extras/package/win32). LOW, open: meson names the executable target "Cone" on every OS, autotools keeps "vlc" and renames it only in the Windows package (CI uses autotools).
+- Open for W9.1 (public release), LOW now since only the zip ships: the public installer still shares VLC's ProgIDs ("VLC.<ext>", Software\Clients\Media\VLC, AudioCD / DVD "PlayWithVLC"), so installing or uninstalling Cone changes an installed VLC's file associations, and the uninstaller's "delete preferences" removes the shared %APPDATA%\vlc (same folder as the open "Settings folder" item). The BRAND_* strings are macros, so xgettext no longer finds the About text and the tray texts in help.cpp / systray.cpp: existing translations still work at runtime, but a future po regeneration would drop them unless brand.hpp gets N_() markers.
+
 ## 2026-10-15 waveform scan hang on MP3 (HIGH, build 38800817536; fix not built yet)
 - Bug: with a 3 min 192 kbit/s MP3 playing, switching Playback > "Show Waveform on Seekbar" on showed no waveform, the log had no "waveform scan" / "waveform: ready" line, and Ctrl+Q left VLC "Not responding" (about 167 s of CPU, force-closed).
 - Cause: `RdWaveformScanner::Scan::process()` (rd_waveform_scanner.cpp, the packetizer loop) released the input block after `pf_packetize()` and in its two error paths. A packetizer owns the block it is given: a bytestream packetizer (MPEG audio, also AAC, FLAC, A52 ...) pushes it into its queue and leaves `*pp_block` pointing at it, and the input core never releases it. So every MP3 block was freed while still queued: a use after free / double free that corrupts the packetizer's block chain; the next block of the same size reuses the freed memory, the chain loops on itself and the packetizer spins forever inside `pf_packetize()`, where the scan's cancel and stop checks are never reached. The scan never ended (no log line, no bars), and `~RdWaveform` waited for it with an unbounded `QThreadPool::waitForDone()` on the GUI thread: the hang on quit. The PC tests of the branch used WAV and PCM-in-MOV only, whose copy packetizer clears `*pp_block`, so they never hit it.

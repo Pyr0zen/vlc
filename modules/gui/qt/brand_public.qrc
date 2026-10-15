@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<RCC>
+    <qresource prefix="/rd">
+        <file alias="cone-logo.svg">pixmaps/brand/public/cone-logo.svg</file>
+        <file alias="cone-logo-16.svg">pixmaps/brand/public/cone-logo-16.svg</file>
+        <file alias="cone-logo-24.svg">pixmaps/brand/public/cone-logo-24.svg</file>
+    </qresource>
+    <qresource prefix="/brand">
+        <file alias="cone-16.png">pixmaps/brand/public/cone-16.png</file>
+        <file alias="cone-24.png">pixmaps/brand/public/cone-24.png</file>
+        <file alias="cone-32.png">pixmaps/brand/public/cone-32.png</file>
+        <file alias="cone-48.png">pixmaps/brand/public/cone-48.png</file>
+        <file alias="cone-64.png">pixmaps/brand/public/cone-64.png</file>
+        <file alias="cone-128.png">pixmaps/brand/public/cone-128.png</file>
+        <file alias="cone-256.png">pixmaps/brand/public/cone-256.png</file>
+    </qresource>
+</RCC>

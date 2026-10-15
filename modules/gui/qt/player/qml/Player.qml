@@ -1956,7 +1956,7 @@ FocusScope {
                 iconName: "speed"
                 values: inputStats.values
                 placeholder: !inputStats.collecting
-                             ? qsTr("VLC does not collect playback statistics. Turn on \"Collect playback statistics\" in Settings > General > Advanced Options, then play the media again.")
+                             ? qsTr("%1 does not collect playback statistics. Turn on \"Collect playback statistics\" in Settings > General > Advanced Options, then play the media again.").arg(Brand.shortName)
                              : (!Player.isStarted ? qsTr("No media") : "")
 
                 // VLC's Media Information > Statistics (dialogs/mediainfo/info_panels.cpp)

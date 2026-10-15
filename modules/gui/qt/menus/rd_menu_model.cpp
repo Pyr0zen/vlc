@@ -29,6 +29,7 @@
 #include <vlc_intf_strings.h>
 
 #include "menus/menus.hpp"
+#include "util/brand.hpp"
 #include "menus/custom_menus.hpp"
 #include "maininterface/mainctx.hpp"
 #include "dialogs/dialogs_provider.hpp"
@@ -508,7 +509,7 @@ void RdMenuModel::buildMainMenu(QMenu* menu)
     addEntry(menu, qtr("Settings"), "settings_two-tone-yes",
              shortcutText(QKeySequence(QStringLiteral("Ctrl+P"))),
              []() { THEDP->prefsDialog(); });
-    addEntry(menu, qtr("About VLC"), "info_two-tone-yes",
+    addEntry(menu, qtr(BRAND_MENU_ABOUT), "info_two-tone-yes",
              shortcutText(QKeySequence(QStringLiteral("Shift+F1"))),
              []() { THEDP->aboutDialog(); });
 }
@@ -641,7 +642,7 @@ void RdMenuModel::buildPlayerMenu(QMenu* menu)
     buildPlaylistMenu(addSubmenu(menu, qtr("Playlist"), "playlist_two-tone-yes"));
     buildOpenMenu(addSubmenu(menu, qtr("Open Media"), "file_two-tone-yes"), false);
 
-    addEntry(menu, qtr("Quit VLC"), "quit_two-tone-yes", hotkeyText("key-quit"),
+    addEntry(menu, qtr(BRAND_MENU_QUIT), "quit_two-tone-yes", hotkeyText("key-quit"),
              []() { THEDP->quit(); });
 }
 

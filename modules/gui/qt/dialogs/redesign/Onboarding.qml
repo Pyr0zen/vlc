@@ -265,7 +265,7 @@ T.Popup {
                 anchors.horizontalCenter: parent.horizontalCenter
                 y: root.dp(116)
                 size: root.dp(141)
-                name: "vlc"
+                name: Brand.logoIconLarge
                 accentColor: root.rdPalette.rdAccentLogo
             }
 
@@ -275,7 +275,7 @@ T.Popup {
                 height: root.dp(39)
                 verticalAlignment: Text.AlignVCenter
 
-                text: qsTr("Welcome to VLC!")
+                text: Brand.welcomeTitle
                 font.family: VLCStyle.rd_fontFamily
                 font.pixelSize: VLCStyle.rd_fontSize_display
                 font.weight: Font.Light
@@ -291,9 +291,7 @@ T.Popup {
                 // Figma centers each line in its 28 px; Qt puts the extra space under it
                 topPadding: Math.max(0, Math.round((lineHeight - aboutMetrics.height) / 2))
 
-                text: qsTr("VLC is a free and open source cross-platform multimedia player and framework "
-                           + "that plays most multimedia files as well as DVDs, Audio CDs, VCDs, and "
-                           + "various streaming protocols.")
+                text: Brand.welcomeText
                 wrapMode: Text.WordWrap
                 // Figma's unhinted widths: its first line is 590 of the 595 px
                 font.hintingPreference: Font.PreferNoHinting

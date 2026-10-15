@@ -14,15 +14,26 @@ on:
       - 'CREDITS.md'
       - 'docs/**'
       - '.github/ISSUE_TEMPLATE/**'
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      brand:
+        # brand layer (modules/gui/qt/util/brand.hpp): vlc = VLC's name and cone (Sticky's test
+        # builds), public = "Cone" and its logo. Pushes build "public" (Decision 50).
+        description: 'Brand profile'
+        type: choice
+        options: [vlc, public]
+        default: public
 
 concurrency:
-  group: build-windows-${{ github.ref }}
+  # one queue per branch and brand profile: a vlc and a public build of the same branch run side by side
+  group: build-windows-${{ github.ref }}-${{ inputs.brand || 'public' }}
   cancel-in-progress: true
 
 env:
   # Keep in sync with VLC_WIN64_IMAGE in extras/ci/gitlab-ci.yml
   VLC_IMAGE: registry.videolan.org/vlc-debian-win64-posix:20260611225331
+  # brand profile: the workflow_dispatch input, "public" for pushes (Decision 50)
+  VLC_BRAND: ${{ inputs.brand || 'public' }}
 
 jobs:
   win64:
@@ -43,6 +54,14 @@ jobs:
         id: sha
         run: |
           SHA=$(extras/ci/get-contrib-sha.sh win64)
+          # our own commits change the packaging scripts (brand layer: extras/package/win32), which
+          # moves VLC's contrib key to a commit VideoLAN never built; when none of our commits
+          # touches the contribs themselves, use the upstream key (VLC's master in this fork)
+          UPSTREAM=$(git merge-base HEAD origin/master)
+          if ! git merge-base --is-ancestor "$SHA" "$UPSTREAM"              && [ -z "$(git rev-list -1 HEAD ^"$UPSTREAM" -- contrib extras/tools extras/ci)" ]; then
+            SHA=$(git rev-list -1 "$UPSTREAM" -- contrib extras/tools extras/ci extras/package/win32)
+            echo "Contrib key from upstream: $SHA"
+          fi
           URL="https://artifacts.videolan.org/vlc/win64/vlc-contrib-x86_64-w64-mingw32-${SHA}.tar.zst"
           echo "sha=$SHA" >> "$GITHUB_OUTPUT"
           if extras/ci/check-url.sh "$URL"; then
@@ -79,13 +98,14 @@ jobs:
           mkdir -p .ccache
           docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/build" -w /build -e HOME=/tmp \
             -e VLC_PREBUILT_CONTRIBS_URL="${{ steps.sha.outputs.url }}" \
+            -e VLC_BRAND="$VLC_BRAND" \
             -e CCACHE_DIR=/build/.ccache \
             "$VLC_IMAGE" bash -ec '
               git config --global --add safe.directory /build
               if command -v ccache >/dev/null; then echo "ccache available"; ccache -s || true; fi
               P=""
               if [ -n "$VLC_PREBUILT_CONTRIBS_URL" ]; then P="-p"; else unset VLC_PREBUILT_CONTRIBS_URL; fi
-              extras/package/win32/build.sh -r -a x86_64 $P
+              extras/package/win32/build.sh -r -a x86_64 $P -B "$VLC_BRAND"
               cd win64
               make package-win32-zip'
           df -h /
@@ -99,6 +119,6 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: vlc-redesign-win64
+          name: ${{ env.VLC_BRAND == 'public' && 'vlc-redesign-win64-public' || 'vlc-redesign-win64' }}
           path: dist/
           retention-days: 14
