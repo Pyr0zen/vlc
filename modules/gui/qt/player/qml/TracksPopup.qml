@@ -46,12 +46,25 @@ Item {
     readonly property real _headerHeight: VLCStyle.rd_sidePanelTabHeight + VLCStyle.dp(1, VLCStyle.scale)
 
     implicitWidth: VLCStyle.rd_sidePanelWidth
-    // Figma height (524 with the tabs), shrunk to the room above the control bar; the content
-    // scrolls when it does not fit (small windows, many tracks or devices)
-    implicitHeight: _headerHeight
-                    + Math.min(Math.max(content.implicitHeight + VLCStyle.dp(20, VLCStyle.scale),
-                                        Math.min(VLCStyle.dp(524, VLCStyle.scale), maximumHeight) - _headerHeight),
-                               maximumHeight - _headerHeight)
+    // the Figma height (524 with the tabs) whatever the number of tracks or devices: each list
+    // scrolls inside its Figma frame (TrackListFrame) and Show Preferences stays pinned at the
+    // bottom; in a window too small for 524 the popup shrinks and its sections scroll
+    implicitHeight: Math.min(VLCStyle.dp(524, VLCStyle.scale), maximumHeight)
+
+    // scrolls the lists holding `item` so that it shows (keyboard focus on a row)
+    function _ensureVisible(item) {
+        for (let p = item.parent; p; p = p.parent) {
+            if (p.contentItem === undefined || p.contentY === undefined || p.contentHeight === undefined)
+                continue
+            const y = item.mapToItem(p.contentItem, 0, 0).y
+            let target = p.contentY
+            if (y < target)
+                target = y
+            else if (y + item.height > target + p.height)
+                target = y + item.height - p.height
+            p.contentY = Math.max(0, Math.min(target, p.contentHeight - p.height))
+        }
+    }
 
     visible: RdPanels.tracksOpen
 
@@ -210,9 +223,11 @@ Item {
         Flickable {
             id: flick
 
-            anchors.fill: parent
+            anchors.top: parent.top
             anchors.topMargin: root._headerHeight
-            anchors.bottomMargin: VLCStyle.dp(20, VLCStyle.scale)
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.bottom: footer.top
 
             clip: true
             boundsBehavior: Flickable.StopAtBounds
@@ -232,8 +247,7 @@ Item {
 
                 // Figma: the list frame is 138.5 tall whatever the track count (with the 20 px
                 // below the rows), so the next section label stays in place
-                TrackList {
-                    Layout.minimumHeight: VLCStyle.dp(118.5, VLCStyle.scale)
+                TrackListFrame {
                     model: root.tab === "audio" ? Player.audioTracks
                          : root.tab === "video" ? Player.videoTracks
                          : Player.subtitleTracks
@@ -265,30 +279,41 @@ Item {
                     onActionTriggered: (index) => Player.audioDevices.refresh()
                 }
 
-                TrackList {
+                TrackListFrame {
                     visible: root.tab === "audio"
                     tracks: false
                     model: Player.audioDevices
                 }
 
-                // the panel keeps the Figma height (400x524 with the tabs); Show Preferences sits at the bottom
+                // the sections stay at the top of the Figma height
                 Item {
                     Layout.fillHeight: true
                 }
+            }
+        }
 
-                Widgets.RdButton {
-                    Layout.fillWidth: true
-                    Layout.leftMargin: VLCStyle.dp(20, VLCStyle.scale)
-                    Layout.rightMargin: VLCStyle.dp(20, VLCStyle.scale)
+        // Figma "Frame 65": 72 px footer pinned at the bottom, the button 20 px from its edges
+        Item {
+            id: footer
 
-                    // Figma button 500:3075 hides its icon: text only
-                    style: Widgets.RdButton.Style.Bar
-                    text: qsTr("Show Preferences")
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            height: VLCStyle.dp(72, VLCStyle.scale)
 
-                    // opens the settings sidebar on the matching tab (Figma F-07)
-                    onClicked: RdPanels.open(root.tab === "video" ? "videoSettings"
-                                             : root.tab === "audio" ? "audioSettings" : "subtitleSettings")
-                }
+            Widgets.RdButton {
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.margins: VLCStyle.dp(20, VLCStyle.scale)
+                anchors.verticalCenter: parent.verticalCenter
+
+                // Figma button 500:3075 hides its icon: text only
+                style: Widgets.RdButton.Style.Bar
+                text: qsTr("Show Preferences")
+
+                // opens the settings sidebar on the matching tab (Figma F-07)
+                onClicked: RdPanels.open(root.tab === "video" ? "videoSettings"
+                                         : root.tab === "audio" ? "audioSettings" : "subtitleSettings")
             }
         }
     }
@@ -364,6 +389,11 @@ Item {
         Accessible.name: label
         Accessible.checked: selected
 
+        onActiveFocusChanged: {
+            if (activeFocus)
+                root._ensureVisible(row)
+        }
+
         // hover BG/A2 (Figma); pressed and keyboard focus are not in Figma: pressed keeps the
         // hover fill, keyboard focus adds the FG/A3 ring of the other redesign controls
         background: Rectangle {
@@ -393,6 +423,39 @@ Item {
                 // the selected row keeps FG/A1 (Figma): only the accent check marks it
                 color: row.hovered ? VLCStyle.palette.rdFg2 : VLCStyle.palette.rdFgA1
             }
+        }
+    }
+
+    // Figma "Frame 53" (tracks) / "Frame 64" (devices): a list frame 138.5 px tall whatever the
+    // number of rows; more rows (a film with 16 subtitle tracks) scroll inside it, so the next
+    // section and Show Preferences keep their Figma place
+    component TrackListFrame: Flickable {
+        id: frame
+
+        property alias model: frameList.model
+        property alias tracks: frameList.tracks
+
+        Layout.fillWidth: true
+        Layout.preferredHeight: VLCStyle.dp(138.5, VLCStyle.scale)
+
+        clip: true
+        boundsBehavior: Flickable.StopAtBounds
+        contentWidth: width
+        // the 20 px below the last row stay part of the list
+        contentHeight: frameList.implicitHeight + VLCStyle.dp(20, VLCStyle.scale)
+
+        // Figma draws no scroll bar: it shows while the list scrolls or the pointer is on it
+        T.ScrollBar.vertical: Widgets.ScrollBarExt {
+            id: frameScrollBar
+
+            opacity: (frameScrollBar.active || frameScrollBar.interacting) ? 1 : 0
+        }
+
+        TrackList {
+            id: frameList
+
+            x: VLCStyle.dp(20, VLCStyle.scale)
+            width: frame.width - 2 * VLCStyle.dp(20, VLCStyle.scale)
         }
     }
 
