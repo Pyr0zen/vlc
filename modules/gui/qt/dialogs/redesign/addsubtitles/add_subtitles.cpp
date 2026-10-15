@@ -443,6 +443,10 @@ void AddSubtitles::open(const QVariantMap& request)
         vlc_playlist_Unlock(playlist);
     }
 
+    // a playlist of one video is that file
+    if (mrl.isEmpty() && folder.isEmpty() && items.size() == 1)
+        mrl = items.first();
+
     m_mrl = mrl;
     m_playlistItems = items.size() > 1 ? items : QStringList();
     const QString folderPath = !folder.isEmpty() ? localPathOf(folder) : QFileInfo(localPathOf(mrl)).path();
