@@ -9,7 +9,7 @@ Branch `redesign-waveform`, from `origin/redesign` 0a514865de (2026-10-15). Web 
   - the per-file manager and its cache (C++, `RdWaveform`);
   - the bar drawing item (C++, `RdWaveformItem`);
   - the Playback tab toggle "Show Waveform on Seekbar" (QML, committed).
-- **Not hooked up:** the seek bar shows the waveform only after the PC session applies `redesign/WAVEFORM_HOOKUP.patch` (section 5). It touches the shared files `qt.cpp`, `mainui.cpp`, `VLCStyle.qml` and `SliderBar.qml`. Until then, the toggle writes an option VLC does not know yet (nothing happens).
+- **Hooked up on the PC (2026-10-15, wip/next-batch):** the patch of section 5 was applied by hand on the current SliderBar (preview card, right click, endless sliders) and deleted; the review fixes are in BUILD_NOTES.md ("W7.2 waveform seek bar merged"). Before that, the seek bar showed the waveform only after the PC session applied `redesign/WAVEFORM_HOOKUP.patch` (section 5). It touches the shared files `qt.cpp`, `mainui.cpp`, `VLCStyle.qml` and `SliderBar.qml`. Until then, the toggle writes an option VLC does not know yet (nothing happens).
 - **Checks on the last commit:**
   - qmlcheck: `errors: 1 files: 369 crashed: 0` (the known HighResolutionTimeWidget stub). Same result with the hookup patch applied. A deliberately wrong property on the new item was caught, so the stubs cover it.
   - buildlists: `0 problem(s)`.
@@ -34,8 +34,8 @@ Branch `redesign-waveform`, from `origin/redesign` 0a514865de (2026-10-15). Web 
   - VLC core itself is unchanged; everything uses exported plugin API.
 - **Full or sampled.**
   - Files up to 256 MB are decoded from start to end.
-  - Larger files (films, long recordings) are sampled: one seek per slice, then 0.25 s of audio is decoded there. A 50 GB film costs about 1000 seeks, not a full read.
-  - Without a known size, or if the demuxer cannot seek, the file is decoded fully.
+  - Larger files (films, long recordings) are sampled: one seek per slice (by time, else by position), then 0.25 s of audio is decoded there, never more than the slice holds. A 50 GB film costs about 1000 seeks, not a full read.
+  - Without a known size the file is decoded fully. A large file whose demuxer cannot seek gets no waveform (PC review: no full read of a large file).
 - **Cancel.** `cancel()` works from any thread. The scan stops within one demuxed packet, and its VLC interrupt context also aborts blocking reads.
   - Measured: a 285 MB scan cancelled after 3, 20 and 200 ms returned within 1 ms of the cancel.
 - **No audio.** A file that shows no audio track within 2000 packets stops early.
@@ -238,6 +238,8 @@ Offscreen render of `RdWaveformItem` (Qt 6.4) with the Figma frame's 244 bar hei
 - This is not verification: the real check is a screenshot of the built VLC.
 
 ## 8. Performance risks to measure first (PERF.md)
+
+The marks in VLC's debug log (verbosity 2, added on the PC): `waveform scan (full|sampled|large, not seekable|no duration): levels|no waveform|cancelled in N ms` (the scan alone, worker thread) and `waveform: ready|no waveform from the cache|from the scan, N ms after the job started` (GUI thread: the bars' data arrived).
 
 1. **The scan while playing a large local video.**
    - The sampled scan seeks through the same file the player reads. On a hard disk, the head moves between both, so watch for dropped frames during the first seconds of a 4K file with the option on.
