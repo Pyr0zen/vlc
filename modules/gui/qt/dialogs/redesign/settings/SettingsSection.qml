@@ -39,22 +39,37 @@ ColumnLayout {
                                          && _page.textMatches([title, keywords])
 
     property Item _page: null
-    property var _rows: []
+    // changed in place, counted by recount() (see SettingsPage)
+    readonly property var _rows: []
 
-    readonly property bool _anyRowMatches: {
-        for (const row of _rows) {
-            if (row && row.shown && row.matches)
-                return true
-        }
-        return false
-    }
+    property bool _anyRowMatches: true
 
     function registerRow(row) {
-        _rows = _rows.concat([row])
+        _rows.push(row)
+        recount()
     }
 
     function unregisterRow(row) {
-        _rows = _rows.filter((r) => r !== row)
+        const i = _rows.indexOf(row)
+        if (i >= 0)
+            _rows.splice(i, 1)
+        recount()
+    }
+
+    function recount() {
+        Qt.callLater(_recount)
+    }
+
+    function _recount() {
+        _anyRowMatches = _rows.some((row) => row.shown && row.matches)
+    }
+
+    Connections {
+        target: root._page
+
+        function onFilterTextChanged() {
+            root.recount()
+        }
     }
 
     visible: !_page || !_page.filtering || titleMatches || _anyRowMatches

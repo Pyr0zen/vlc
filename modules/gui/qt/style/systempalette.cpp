@@ -318,6 +318,7 @@ struct RdThemeColors
     QRgb bgA3Transparent; QRgb bgB1Transparent; QRgb bgB2Transparent;
     const char* dividerBright; const char* dividerDim;
     QRgb hoverOverlay;
+    const char* fgDestructive; const char* bgDestructive; QRgb swatchStroke;
     const char* volumeEmpty; QRgb volumeTint;
 };
 
@@ -332,6 +333,8 @@ const RdThemeColors rdDarkColors = {
     "#373737", "#222222",
     // Figma "Icon Wrapper" hover
     qRgba(0xFF, 0xFF, 0xFF, 15),
+    // Figma "Settings - global-1" red button; swatch stroke #FFFFFF 21 %
+    "#D33718", "#1A1111", qRgba(0xFF, 0xFF, 0xFF, 54),
     // Figma "Player" volume: BG/B2 and the #000000 20 % tint
     "#090909", qRgba(0x00, 0x00, 0x00, 51),
 };
@@ -351,6 +354,10 @@ const RdThemeColors rdLightColors = {
     qRgba(0xD5, 0xD5, 0xD5, 191), qRgba(0xE7, 0xE7, 0xE7, 204), qRgba(0xDE, 0xDE, 0xDE, 204),
     "#9B9B9B", "#ACACAC",
     qRgba(0x00, 0x00, 0x00, 15),
+    // the red button exists in the dark frames only: light buttons are dark (RdButton), so the
+    // dark tint over the light Standard button's FG/A2 with the red lightened to 4.4:1 (the dark
+    // pair is 3.8:1); the swatch stroke mirrored (#000000 21 %)
+    "#E8604A", "#2F2626", qRgba(0x00, 0x00, 0x00, 54),
     // Figma "Player - Light" volume: BG/A5 and the #FFFFFF 20 % tint
     "#888888", qRgba(0xFF, 0xFF, 0xFF, 51),
 };
@@ -392,6 +399,9 @@ void SystemPalette::applyRdColors()
     rdDividerBright = QColor(t.dividerBright);
     rdDividerDim = QColor(t.dividerDim);
     rdHoverOverlay = QColor::fromRgba(t.hoverOverlay);
+    rdFgDestructive = QColor(t.fgDestructive);
+    rdBgDestructive = QColor(t.bgDestructive);
+    rdSwatchStroke = QColor::fromRgba(t.swatchStroke);
     // selected text on Accent/DIm (Figma shows no text selection): FG/1 in Dark; in Light FG/1
     // (#111111) on #965916 reads badly (3.4:1), BG/A1 gives 4.8:1
     rdSelectionText = m_isDark ? rdFg1 : rdBgA1;

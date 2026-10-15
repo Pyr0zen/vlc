@@ -51,13 +51,17 @@ ColumnLayout {
     readonly property bool hasAdvanced: advancedArea.children.length > 0
     readonly property bool advancedShown: hasAdvanced
                                           && (advancedExpanded || (filtering && advancedMatchCount > 0))
-    // rows shown by the current search (all rows without a search)
-    readonly property int matchCount: _count(_rows) + advancedMatchCount
-    readonly property int advancedMatchCount: _count(_advancedRows)
+    // rows shown by the current search (all rows without a search); counted once per change of
+    // the search or of the rows (recount()), not in a binding that every row's `matches` would
+    // re-run: with a few hundred rows that was quadratic on each keystroke
+    readonly property int matchCount: _basicMatchCount + advancedMatchCount
+    property int advancedMatchCount: 0
+    property int _basicMatchCount: 0
 
     readonly property var _words: filterText.toLowerCase().split(/\s+/).filter((w) => w !== "")
-    property var _rows: []
-    property var _advancedRows: []
+    // plain arrays changed in place: a page or a plugin that opens registers its rows in bulk
+    readonly property var _rows: []
+    readonly property var _advancedRows: []
 
     // true when every word of the search appears in one of the texts
     function textMatches(texts) {
@@ -68,16 +72,30 @@ ColumnLayout {
     }
 
     function registerRow(row) {
-        if (_isAdvanced(row))
-            _advancedRows = _advancedRows.concat([row])
-        else
-            _rows = _rows.concat([row])
+        (_isAdvanced(row) ? _advancedRows : _rows).push(row)
+        recount()
     }
 
     function unregisterRow(row) {
-        _rows = _rows.filter((r) => r !== row)
-        _advancedRows = _advancedRows.filter((r) => r !== row)
+        for (const rows of [_rows, _advancedRows]) {
+            const i = rows.indexOf(row)
+            if (i >= 0)
+                rows.splice(i, 1)
+        }
+        recount()
     }
+
+    // asks for the counts again, once for every change made in the same pass
+    function recount() {
+        Qt.callLater(_recount)
+    }
+
+    function _recount() {
+        _basicMatchCount = _count(_rows)
+        advancedMatchCount = _count(_advancedRows)
+    }
+
+    onFilterTextChanged: recount()
 
     function _isAdvanced(item) {
         for (let p = item.parent; p && p !== root; p = p.parent) {

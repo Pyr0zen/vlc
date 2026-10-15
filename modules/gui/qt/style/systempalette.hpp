@@ -146,6 +146,12 @@ public:
     COLOR_DEFINITION(rdDividerBright, "#373737");
     COLOR_DEFINITION(rdDividerDim, "#222222");
     COLOR_DEFINITION(rdHoverOverlay, QColor(0xFF, 0xFF, 0xFF, 15)); // hover tint over any background
+    // Figma "Settings - global-1" "Reset all settings": red text on a red-tinted button (raw
+    // fills, dark frames only)
+    COLOR_DEFINITION(rdFgDestructive, "#D33718");
+    COLOR_DEFINITION(rdBgDestructive, "#1A1111");
+    // Figma color swatch stroke (Text Color, Shadow Color...): #FFFFFF 21 %, 1.5 px
+    COLOR_DEFINITION(rdSwatchStroke, QColor(0xFF, 0xFF, 0xFF, 54));
     // selected text on the Accent/DIm selection (no Figma style): FG/1 in Dark, BG/A1 in Light
     COLOR_DEFINITION(rdSelectionText, "#EAEAEA");
     COLOR_DEFINITION(rdShadow, QColor(0x00, 0x00, 0x00, 117)); // Figma effect drop shadow #000000 46%

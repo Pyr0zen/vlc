@@ -135,7 +135,8 @@ FocusScope {
     // fade out a few seconds after it stops; in fullscreen each bar shows while the mouse is near
     // it (video 3:46-3:55). Menus, panels, keyboard use and audio mode show both bars (in
     // fullscreen except the far one while the mouse is in the other bar's zone).
-    readonly property real _barHoverZone: VLCStyle.dp(40, VLCStyle.scale)
+    // how near the edge: Settings > Interface "Fullscreen controls sensitivity" (40 by default)
+    readonly property real _barHoverZone: VLCStyle.dp(MainCtx.fsSensitivity, VLCStyle.scale)
     readonly property bool _mouseNearTop: !_windowed && _cursorY >= 0 && _cursorY <= topBar.height + _barHoverZone
     readonly property bool _mouseNearBottom: !_windowed && _cursorY >= 0
                                              && _cursorY >= height - controlBar.height - _barHoverZone
