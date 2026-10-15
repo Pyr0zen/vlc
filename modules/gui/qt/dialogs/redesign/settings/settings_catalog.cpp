@@ -772,8 +772,9 @@ void SettingsCatalog::rescanPlugins()
         // VLC's folder needs administrator rights (Program Files): Windows asks the user. Here,
         // on the UI thread (COM is set up for the shell); the wait runs on the worker
         const std::wstring file = QDir::toNativeSeparators(program).toStdWString();
-        const std::wstring parameters = (QLatin1Char('"') + QDir::toNativeSeparators(plugins)
-                                         + QLatin1Char('"')).toStdWString();
+        const QString quotedPlugins = QLatin1Char('"') + QDir::toNativeSeparators(plugins)
+                                    + QLatin1Char('"');
+        const std::wstring parameters = quotedPlugins.toStdWString();
         SHELLEXECUTEINFOW info {};
         info.cbSize = sizeof(info);
         info.fMask = SEE_MASK_NOCLOSEPROCESS;
