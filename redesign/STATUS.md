@@ -1,7 +1,12 @@
 # STATUS
 
-- Updated: 2026-10-15 14:34 Central Europe Daylight Time
-- Stopped for credits (Sticky). Resume with "Read CLAUDE.md and continue": start at "Next, in order" below.
+- Updated: 2026-10-15 evening. Stopped at the session limit (Sticky). Resume with "continue": start at "Resume here".
+
+## Resume here
+1. Merge into redesign from wip/integ-batch5 (already holds: seek thumbnails, Settings rows, UX branch, W5.2 folders, all reviewed; checks green), then wip/w43b-playback once its independent review (running at the stop) is pushed clean, then redesign-addsubs (web session pushed it; do its section 5 hookups). qmlcheck + buildlists + privacycheck, push once = one build.
+2. Fix branches started before the stop, NOT reviewed, not for that build: wip/fix-library, wip/fix-music, wip/fix-panels (bugs of the verification round, BUILD_NOTES "2026-10-15 verification round"). Review each, merge next round.
+3. Landing page pushed (README top, docs/images, Figma gallery). Build screenshots + hero from the build replace the Figma hero after the next verified build. Social preview: docs/images/social-preview.png (Sticky uploads it in Settings > Social preview).
+4. Seek-to-start fix is in green build 38751114133 (downloaded to builds/38751114133): test the left-edge drag on the PC.
 
 ## Last 10 commits
 ```
