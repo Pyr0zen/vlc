@@ -253,9 +253,9 @@ Item {
                          : Player.subtitleTracks
                 }
 
-                // subtitles: external tracks; the pencil and + both add a subtitle file (Figma wires
-                // both to the Add Subtitles dialog, W6.5). Figma has no divider above it on this
-                // tab, only on the Audio tab.
+                // subtitles: external tracks; the pencil and + both open the Add Subtitles dialog
+                // for the playing video (Figma wires both to it; W6.5, P3-05, F-09; it closes this
+                // popup as it opens). Figma has no divider above it on this tab, only on the Audio tab.
                 SectionLabel {
                     visible: root.tab === "subtitles"
                     text: qsTr("External Tracks")
@@ -263,7 +263,7 @@ Item {
                         { icon: "edit", description: qsTr("Edit subtitle files") },
                         { icon: "add", description: qsTr("Add subtitle file") }
                     ]
-                    onActionTriggered: (index) => DialogsProvider.loadSubtitlesFile()
+                    onActionTriggered: (index) => AddSubtitles.open()
                 }
 
                 // audio: output device (refresh re-reads the device list)
