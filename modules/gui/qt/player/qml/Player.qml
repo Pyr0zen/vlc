@@ -1376,7 +1376,9 @@ FocusScope {
                  : rootPlayer.width
 
         focus: true
-        // (the title, library toggle and folder chip are controls of the top bar layout: W8.1b)
+        // the title, library toggle and folder chip are controls of the top bar layout (W8.1b);
+        // the fixed title stays for a profile model without a top bar layout
+        title: Player.title !== "" ? Player.title : Player.name
 
         pinControls: MainCtx.pinVideoControls
 
