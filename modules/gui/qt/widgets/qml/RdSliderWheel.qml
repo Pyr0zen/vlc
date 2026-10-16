@@ -21,13 +21,21 @@
 // right; on a mirrored horizontal slider right decreases, like the arrow keys). Takes no clicks.
 // The slider moves its value as for a drag or a key step (RdSliderCommit paces what reaches
 // VLC); stepSlider(slider, steps) does it for a plain T.Slider.
+// - Who gets the wheel: in a view that can scroll (an enclosing Flickable / ListView / ScrollView
+//   whose content is taller than it, `inScrollingView`, read live: a window resize or an expander
+//   can change it) the wheel scrolls the view and never moves a slider the pointer only passes
+//   over. There the slider takes it only while `armed`: a click on the slider or on its value
+//   row arms it (arm(); the owner calls it), and it is released when the pointer leaves the
+//   slider's zone (`zoneHovered`: the bar and label row, or with a value row the row and the
+//   slider), when the window loses focus, or when the slider hides or is disabled. `holding` is
+//   true while an armed slider keeps the wheel from a scrolling view: the slider shows a subtle
+//   focus state; meanwhile its value row takes the wheel too (take()). In a view that cannot
+//   scroll, or outside any view, hovering is enough.
+// - Every wheel event the slider takes is taken also at its ends, so it never scrolls the list or
+//   reaches the player behind it; one it leaves goes on to the view.
 // - High-resolution wheels and touchpads send fractions of a notch: they add up to whole steps
-//   (angleDelta, 120 per notch; pixelDelta, `pixelsPerStep` per step, where only that is sent).
-// - Every wheel event over the slider is taken, also at its ends, so the wheel never scrolls the
-//   list or reaches the player behind it. Except: a wheel gesture that is scrolling a list (the
-//   list still moving, or it scrolled or this slider let an event through less than `latch` ms
-//   ago) keeps going to the list when the slider passes under the pointer; at the list's end the
-//   panel takes it.
+//   (angleDelta, 120 per notch; pixelDelta, `pixelsPerStep` per step, where only that is sent);
+//   a remainder is dropped after `gestureGap` ms without a wheel event or on a change of direction.
 // - Natural scrolling reported by the system (`inverted`: macOS, Linux) is turned back to the
 //   finger direction; on Windows a touchpad follows the scroll direction set in Windows, as for a
 //   wheel.
@@ -41,19 +49,34 @@ MouseArea {
     // a scroll that only reports pixels: this many pixels make one step
     property real pixelsPerStep: 24
     // ms between two events of one wheel gesture
-    property int latch: 400
+    property int gestureGap: 400
+    // the slider holds the wheel in a scrolling view (see above)
+    property bool armed: false
+    // the pointer is over the slider's zone: the slider itself by default; an owner with a value
+    // row binds the hover of the row and the slider together
+    property bool zoneHovered: pointerOver
+    // the pointer is over the slider (its bar and label row)
+    readonly property alias pointerOver: hover.hovered
+    // a view holding the slider can scroll: its content is taller than the view
+    readonly property bool inScrollingView: _views.some((view) => view.contentHeight > view.height + 0.5)
+    readonly property bool takesWheel: armed || !inScrollingView
+    // armed in a scrolling view: the slider shows its focus state
+    readonly property bool holding: armed && inScrollingView
 
     signal stepped(int steps)
 
     // notches not used yet (less than a step)
     property real _accum: 0
     property double _lastTaken: 0
-    property double _lastPassed: 0
-    // the list (Flickable) holding the slider and when it last scrolled
-    property Item _list: null
-    property double _listMovedAt: 0
+    // the views (Flickable, ListView, a ScrollView's Flickable) holding the slider
+    property var _views: []
 
     acceptedButtons: Qt.NoButton
+
+    function arm() {
+        _updateViews()
+        armed = true
+    }
 
     // moves a T.Slider `steps` times by its stepSize, as its arrow keys do (the value's binding
     // stays), and reports the move with its moved() signal
@@ -69,43 +92,66 @@ MouseArea {
             slider.moved()
     }
 
-    function _findList() {
+    function _findViews() {
+        const views = []
         for (let p = root.parent; p; p = p.parent) {
             if (p.contentY !== undefined && p.moving !== undefined)
-                return p
+                views.push(p)
         }
-        return null
+        return views
     }
 
-    Component.onCompleted: _list = _findList()
-    onParentChanged: _list = _findList()
-
-    Connections {
-        target: root._list
-
-        function onContentYChanged() {
-            root._listMovedAt = Date.now()
-        }
+    // the bindings on the views are only evaluated again when the views changed
+    function _updateViews() {
+        const views = _findViews()
+        if (views.length !== _views.length || views.some((view, i) => view !== _views[i]))
+            _views = views
     }
 
-    // a list holding the slider is scrolling
-    function _listMoving() {
-        for (let p = root.parent; p; p = p.parent) {
-            if (p.moving === true)
-                return true
+    Component.onCompleted: _updateViews()
+    onParentChanged: _updateViews()
+
+    onZoneHoveredChanged: {
+        if (!zoneHovered)
+            armed = false
+    }
+
+    onVisibleChanged: {
+        if (!visible)
+            armed = false
+    }
+
+    onEnabledChanged: {
+        if (!enabled)
+            armed = false
+    }
+
+    Window.onActiveChanged: {
+        if (!Window.active)
+            armed = false
+    }
+
+    // passive: the slider keeps its own hover (thumb color). On a child item: a pointer handler
+    // on this MouseArea itself would make it take the slider's presses
+    Item {
+        anchors.fill: parent
+
+        HoverHandler {
+            id: hover
         }
-        return false
     }
 
     onWheel: (wheel) => {
-        const now = Date.now()
-        if (!_list)
-            _list = _findList()
-        if (now - _lastPassed < latch || now - _listMovedAt < latch || _listMoving()) {
-            _lastPassed = now
+        _updateViews()
+        if (takesWheel)
+            take(wheel)
+        else
             wheel.accepted = false
-            return
-        }
+    }
+
+    // turns a wheel event into steps; also for a wheel event over the slider's value row while
+    // the slider holds the wheel (RdParamSlider)
+    function take(wheel) {
         wheel.accepted = true
 
         let x = wheel.angleDelta.x
@@ -127,7 +173,8 @@ MouseArea {
             return
 
         // a new gesture or a change of direction starts from a whole notch
-        if (now - _lastTaken > latch || (delta > 0) !== (_accum > 0))
+        const now = Date.now()
+        if (now - _lastTaken > gestureGap || (delta > 0) !== (_accum > 0))
             _accum = 0
         _lastTaken = now
 
