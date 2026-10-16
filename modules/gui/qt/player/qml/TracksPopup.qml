@@ -40,8 +40,11 @@ Item {
     readonly property string tab: RdPanels.tracksOpen ? RdPanels.current : "subtitles"
     readonly property SystemPalette rdPalette: VLCStyle.palette
 
-    // room available above the control bar; the Figma height (524) shrinks to fit small windows
-    property real maximumHeight: VLCStyle.dp(524, VLCStyle.scale)
+    // room between the top bar and the 20 px margin above the control bar (Player.qml); the
+    // popup keeps 20 px below the top bar like the sidebars, so the Figma height (524) shrinks
+    // to fit small windows
+    property real maximumHeight: VLCStyle.dp(524, VLCStyle.scale) + _topGap
+    readonly property real _topGap: VLCStyle.dp(20, VLCStyle.scale)
 
     readonly property real _headerHeight: VLCStyle.rd_sidePanelTabHeight + VLCStyle.dp(1, VLCStyle.scale)
 
@@ -49,7 +52,7 @@ Item {
     // the Figma height (524 with the tabs) whatever the number of tracks or devices: each list
     // scrolls inside its Figma frame (TrackListFrame) and Show Preferences stays pinned at the
     // bottom; in a window too small for 524 the popup shrinks and its sections scroll
-    implicitHeight: Math.min(VLCStyle.dp(524, VLCStyle.scale), maximumHeight)
+    implicitHeight: Math.max(0, Math.min(VLCStyle.dp(524, VLCStyle.scale), maximumHeight - _topGap))
 
     // scrolls the lists holding `item` so that it shows (keyboard focus on a row)
     function _ensureVisible(item) {
