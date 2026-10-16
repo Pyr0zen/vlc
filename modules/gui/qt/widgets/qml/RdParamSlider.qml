@@ -20,6 +20,9 @@
 // the value on the right of a 37 px row, the slider under it at full width. The value is plain
 // text (filter parameters, sizes) or an editable value box (equalizer bands, valueBox: true).
 // limitFrom / limitTo past from..to make the slider endless (RdEndlessSlider, Decision 47).
+// Mouse wheel (Decision 54): in a page that scrolls, a click on the slider or on its name row
+// (the value box included) hands the slider the wheel until the pointer leaves the row and the
+// slider (RdSliderWheel).
 import QtQuick
 import QtQuick.Layouts
 
@@ -73,6 +76,11 @@ ColumnLayout {
     Layout.fillWidth: true
     spacing: VLCStyle.dp(5)
 
+    // the slider's wheel zone: the name row, the slider and the space between them
+    HoverHandler {
+        id: zoneHover
+    }
+
     Item {
         Layout.fillWidth: true
         Layout.preferredHeight: root.rowHeight
@@ -120,6 +128,30 @@ ColumnLayout {
                 onEdited: (value) => root.edited(value)
             }
         }
+
+        // while the slider holds the wheel, the wheel over the row moves the slider too. Takes no
+        // clicks and no hover
+        MouseArea {
+            anchors.fill: parent
+            acceptedButtons: Qt.NoButton
+
+            onWheel: (wheel) => slider.rowWheel(wheel)
+
+            // a press on the row hands the slider the wheel. The handler only watches (the value
+            // box still takes the click) and sits on an item above the row: Qt hands a press a
+            // control took to the handlers of the items above it, not to its parents; and not on
+            // the MouseArea itself, which would then take the press
+            Item {
+                anchors.fill: parent
+
+                PointHandler {
+                    onActiveChanged: {
+                        if (active)
+                            slider.armWheel()
+                    }
+                }
+            }
+        }
     }
 
     RdEndlessSlider {
@@ -127,6 +159,7 @@ ColumnLayout {
 
         Layout.fillWidth: true
         Accessible.name: label.text
+        wheelZoneHovered: zoneHover.hovered
         onValueMoved: (v) => root.moved(v)
     }
 }
