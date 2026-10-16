@@ -512,6 +512,8 @@ qt_plugin_sources = files(
     'util/accessible_compat_attached.hpp',
     'util/audio_device_model.cpp',
     'util/audio_device_model.hpp',
+    'util/rd_stereo_test.cpp',
+    'util/rd_stereo_test.hpp',
     'util/workerthreadset.cpp',
     'util/workerthreadset.hpp',
     'util/base_model.cpp',

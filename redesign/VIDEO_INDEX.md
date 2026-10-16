@@ -300,6 +300,7 @@ Approved by Decision 27 (minimal and isolated); reverse playback postponed (Deci
 - Reverse playback (P4-33): postponed.
 - Pixel-exact subtitle outline (P3-23): not done; VLC's existing outline sizes (Decision 28).
 - Subtitle speed without a video stall (P3-19/P3-20, Sticky's bug 2026-10-15): `src/input/input.c` SlaveDemux, `src/input/es_out.c/.h`, `src/input/es_out_timeshift.c`: a sub-fps change flushes only the subtitle file's own decoders (new ES_OUT_PRIV_FLUSH_SOURCE) instead of ES_OUT_RESET_PCR, which flushed the video and audio decoders too. Written (separate commit, own build), not yet built.
+- Stereo Mode choice kept across output restarts (P4-17, IA-38; found 2026-10-16 in the verification fixes): `src/audio_output/output.c` aout_PrepareStereoMode reads the requested stereo mode and then always overwrites it with Stereo / Dolby Surround (Left for dual mono), so the restart that a stereo mode change requests (StereoModeCallback) puts the output back to Stereo: Mono, Left, Right and Reverse stereo probably do not stay applied (to confirm on a build: pick Reverse stereo on a stereo file, reopen the dropdown). Proposed fix: use the dual mono / stereo default only when the requested mode is AOUT_VAR_CHAN_UNSET (aout_HasStereoMode already checks availability). Status: proposed, needs Sticky's approval; no core code changed.
 
 ## Index
 
