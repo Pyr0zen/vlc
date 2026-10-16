@@ -1,37 +1,23 @@
 # STATUS
 
-- Updated: 2026-10-15 night. Build of the merged batch running (see Builds).
+- Updated: 2026-10-16 (session near its limit: start nothing new until the reset; Sticky, 79 % session / 69 % week)
 
-## In the build now (redesign, one push)
-- W3.3b seek preview thumbnails (review fixes M1/M2 + LOWs)
-- Step 2 Settings rows S2-02..S2-10 + own tray popup (HIGH double-click fix); night mode ready for Sticky's listening test (Decision 38)
-- UX leftovers: right-click on the seek bar opens the menu, focus returns to panel buttons, queue Delete only with focus
-- W5.2 folder-based Videos / Music categories (Add row, picker start folder, insertion order, system folders per category)
-- W4.3b Playback tab: Sleep Timer, Show Metadata, Show Statistics; W4.8b Ctrl+B and Bookmarks +/- (works on a first-played file)
-- W6.5 Add Subtitles dialog (web session) with hookups: tracks popup +/pencil, library file / playlist / folder menus, Settings > Subtitles OpenSubtitles section
-- Seek-to-start fix (already green in 38751114133), landing page README
-- First CI compile for all their C++ (never compiled before): watch the run, fix compile errors first.
+## Branch state (Decision 55: redesign only receives verified code)
+- redesign = last verified state + docs: the unverified batch was reverted (725377056e5, [skip ci]); CLAUDE.md has Decision 55 / 58 and the StickyGonzales public-name rule.
+- wip/next-batch = the batch under test: waveform full/sampled rule + Ctrl+B notification + bookmark titles, library fixes (Add Folder crash, folder contents after a scan, New Playlist dialog, narrow header, grid 5/4), Customize Player + profiles (Decisions 51-53), mouse wheel fine-tuning (Decision 54) + wheel never acts over the bars (Decision 54 updated), music player view + mini player. Test build of the first part: 38829058873 (= b525e444d84, before music / wheel-bars).
+- wip/fix-panels-2 = panels / Settings fixes; its independent review was running at the stop: merge into wip/next-batch only after the review is clean.
+- wip/cone-release (PR #7) = Cone release gaps (core change src/win32/dirs.c): review agent running (privacy, Decisions 56 / 57 / 58, StickyGonzales, portable settings copy into portable\Cone). Then its own manual build; installer side-by-side test BLOCKED: Windows Sandbox is not available (Windows 10 Home): Sticky decides (VM / other PC / Windows Pro), never install on his real Windows.
+- wip/ci-release (PR #8, on top of cone-release): privacy check + safe tests after the reset: two manual build-windows runs with brand public (compare build times, cache hit rate), and one release-workflow run that must refuse. Merge order: cone-release, then ci-release, each only after it passes.
 
-## Queue after the session limit resets (Sticky, 2026-10-15 evening; no new agents before)
-0. Running at the stop: brand-layer agent (wip/brand-layer: vlc / public profiles, approved Cone logo files, Decision (Sticky)). When it reports: build once with profile=public (workflow_dispatch on that branch), real onboarding screenshot vs Sticky's mockup, then switch the workflow default to "public" and record it as a Decision (Sticky). Push wip/next-batch to redesign as soon as the current build (38796545519, link fix) is green.
-1. Customize Player extras and profiles (redesign-customize, draft PR #6, CUSTOMIZE_NOTES.md). Privacy already checked 2026-10-15: privacycheck 0 problems, commit metadata clean (only Claude noreply). Apply its hookup patch with git apply -3 only AFTER the brand layer is merged (it edits TopBar.qml, mainui.cpp, MainInterface.qml, Player.qml); the top bar must use the brand logo slot, not the hardcoded cone. Review, add its decisions to VIDEO_INDEX, measure the frame time when switching profiles (PERF.md), merge into the next batch, close PR #6. Sticky accepts its three choices: top bar right zone between maximize and close; Rename and Delete Profile as rows under "+ New"; Figma's title row in Customize Player (record as Decisions (Sticky)).
-2. One agent for the HIGH library bugs (Add Folder picker cancel crash, wrong folder contents after a scan, New Playlist dialog see-through and under the control bar), on wip/fix-library from wip/next-batch (merge the old partial WIP on that branch, fast-forward, no force), never touching files the brand layer changed (list: Onboarding*, Settings pages, mainui.cpp, mainctx.cpp, MainDisplay.qml, NoMedialibHome.qml, TopBar.qml, Player.qml, BannerCone.qml, systray.cpp, help.cpp, qt.cpp, build files; if a fix needs one, note it for after the brand merge). Medium / low library bugs only in the same files. No PC tests, nothing marked verified. Independent review by a fresh agent, merge into the next batch only after a green build; list fixed / left here.
+## After the reset, in order
+1. Verification sweep on build 38829058873 (download it when green, then wait): by screen, highest risk first: Customize + profiles (profile-switch frame time), library fixes, waveform (large files, AVI without index, no-audio file), Ctrl+B message and bookmark titles, mouse wheel, presets switching between shows. Mark rows verified only after Figma + video; log failures; keep a verified / coded-unverified count here.
+2. Fixes for failures on wip/next-batch (+ panels after review), manual build of wip/next-batch, retest; when it passes: revert the revert on redesign, merge wip/next-batch, tell Sticky.
+3. Cone release: manual build of wip/cone-release, test the portable build; ci-release tests; merges only after they pass; close PR #7 / #8 after merging.
+4. README with StickyGonzales on the next verified merge.
+5. Proposed core change for Sticky's approval: aout_PrepareStereoMode drops the requested stereo mode on output restart (src/audio_output/output.c).
 
-3. Slider wheel fine-tuning (Sticky, 2026-10-15, new): over a sidebar / popup / Settings dialog slider (every slider in the Settings dialog pages too) (the bar itself or its tick-label row, e.g. Subtitle Track Delay with -10 s / 0 s / +10 s), the mouse wheel moves the value left / right in small exact steps (one step per notch, e.g. 0.05 s for delays; endless sliders keep scrolling past their ends, Decision 47). The wheel over any popup, panel or sidebar must never reach the player's wheel-volume handler (no volume change while the pointer is on an overlay); check every panel, the tracks popup, menus and dialogs. Record as a Decision (Sticky) when built; independent review; test on the PC.
-
-4. Fix list from the 2026-10-15 tests (builds 38796545519 and public 38799712884): Ctrl+B shows no on-screen confirmation (the OSD message "Bookmark added: ..." never appears); bookmarks are named after the file name (Test_Show_S01E01 1) instead of the clean media title (Test Show S01E01 1); the Cone onboarding title must use Figma's thin weight (Inter 300, as in the mockup and Figma "Onboarding"); the public About must not show VLC's version codename ("4.0.0-dev Otto Chriek" -> version only); tray and taskbar icons of the public build still to check on the PC (firewall prompt answered by Sticky).
-
-0b. Waveform hang (2026-10-15): FIXED and verified on build 38810713227 (packetizer block ownership, 60 s scan budget, quit waits at most 500 ms). PC test: MP3, FLAC and AAC show the waveform (same shape for the same signal), VLC responsive, quits cleanly; 4K MKV sampled scan 340 ms, ready 451 ms (pass). FAIL (performance, fix next): the 249 MiB 1080p MP4 / MKV (full scan, under the 256 MB limit) were not ready within 12 s on a first scan (proposed limits 2 s MP4 / 5 s MKV); VLC stayed responsive. Fix: lower kFullScanMaxBytes (e.g. 64 MB) or base the full / sampled choice on the audio duration, so large files use the sampled scan; then re-measure. Still to test: AVI without index (single prompt), file without audio, option off / on and media changes repeatedly.
-
-- 2026-10-16 PC check of the public build 38815866248 (first Cone build of redesign): About shows "Cone", "4.0.0-dev" without VLC's codename, the wording and the not-affiliated line; the taskbar shows the Cone icon. The tray icon sits in the Windows hidden-icons overflow and was not opened (input outside the player is not sent): Sticky to glance at it. Desktop launcher "Test VLC Redesign.bat" updated for Cone.exe (builds\current-public) and tested: it downloaded and started 38815866248.
-
-## Next, in order
-1. When the build is green: hands-on test on the PC (test lists in BUILD_NOTES per package and ADDSUBS_NOTES section 9), left-edge seek drag, screenshots vs Figma; build screenshots for the README gallery and hero.
-2. Endless sliders (Decision (Sticky), approved mockup): coded by an agent on wip/endless-sliders; then independent review, merge, next build.
-3. Verification round bugs of 38727073546 (BUILD_NOTES "2026-10-15 verification round"): 5 HIGH (Add Folder picker crash, flattened folder listings, stock music player view, New Playlist dialog, bookmarks: fixed by W4.8b), 13 MED, 17 LOW. Partial unreviewed work on wip/fix-library and wip/fix-panels (agents cut off by the session limit); restart the three fix packages (library, music player + mini player, panels / settings / Customize) from the new redesign.
-4. Open from reviews: right-click on the play button / volume widget opens no menu; external subtitle tracks listed apart (P3-10, track model); OpenSubtitles needs Sticky's API key for a real test; Add Subtitles target list could open by itself as in the video (question for Sticky).
-5. Core build (Decision 27): subtitle rate change flushes only the subtitle slave, own build. Then the rest of Step 2 (BUILD_PLAN section 0): per-show presets, subtitle timeline, waveform seek bar, OSD shortcut, profiles, new Customize controls, release.
-6. PERF round 4: redesign motion captures with Sticky away.
+## Checks only Sticky can do
+Night mode listening test; Cone tray icon (Windows hidden icons); installer side-by-side test (needs a VM / other PC / Windows Pro); OpenSubtitles with his API key; Rescan plugins from Program Files (admin prompt, needs the installer); display scaling 100 / 150 %; touchpad feel of the wheel; firewall prompts for new exe paths. Open questions: speaker-button wheel now sets the volume and the speed button no longer reacts to the wheel (Decision 54 follow-ups): keep or revert?
 
 ## Last 10 commits
 ```
