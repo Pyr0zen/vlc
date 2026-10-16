@@ -610,7 +610,11 @@ FocusScope {
                 readonly property bool lyricsMode: MainCtx.lyricsMode
                 readonly property bool lyricsLayoutActive: lyricsMode
                                                         && Player.hasLyrics
-                                                        && centerContent.width > VLCStyle.colWidth(6)
+                                                        && (centerContent.width - rootPlayer._videoInset) > VLCStyle.colWidth(6)
+
+                // redesign: something under the cover takes the keyboard (the control bar and the
+                // top bar skip the view otherwise)
+                readonly property bool hasNavigable: lyricsButton.visible || syncToPlaybackCheckBox.visible
 
                 // Reset sync when entering lyrics mode
                 onLyricsModeChanged: {
@@ -772,8 +776,11 @@ FocusScope {
                         anchors.topMargin: VLCStyle.margin_large
                         anchors.bottom: parent.bottom
                         anchors.left: parent.left
+                        // redesign: the lyrics start right of the compact library, which floats over
+                        // the music view
+                        anchors.leftMargin: rootPlayer._videoInset
 
-                        width: lyricsLoader.item ? (parent.width * 0.6) : 0.0
+                        width: lyricsLoader.item ? ((parent.width - rootPlayer._videoInset) * 0.6) : 0.0
 
                         Behavior on width {
                             id: widthBehavior
@@ -1093,6 +1100,8 @@ FocusScope {
                         // stays here, shown only for a song that has lyrics.
                         Widgets.IconToolButton {
                             id: lyricsButton
+
+                            focus: true
 
                             Layout.alignment: Qt.AlignHCenter
                             Layout.topMargin: VLCStyle.margin_large
@@ -1432,7 +1441,7 @@ FocusScope {
         Navigation.downItem: {
             if (playlistVisibility.isPlaylistVisible)
                 return playlistpopup
-            if (MainCtx.hasEmbededVideo)
+            if (MainCtx.hasEmbededVideo || playerSpecializationLoader.item?.hasNavigable)
                 return playerSpecializationLoader
             if (Player.isInteractive)
                 return toggleControlBarButton
@@ -1769,7 +1778,8 @@ FocusScope {
                 return playlistpopup
             if (Player.isInteractive)
                 return toggleControlBarButton
-            if (!MainCtx.hasEmbededVideo)
+            // redesign: the music view only when something in it takes the keyboard
+            if (!MainCtx.hasEmbededVideo && playerSpecializationLoader.item?.hasNavigable)
                 return playerSpecializationLoader
             return topBar
         }
