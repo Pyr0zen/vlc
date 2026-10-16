@@ -1310,6 +1310,14 @@ FocusScope {
         clip: rootPlayer._libraryProgress < 1
         z: 1
 
+        // the presses and wheel turns the library leaves (rail, header, margins, a list at its
+        // end) stop here: they never reach the music view (volume) or the video under it
+        MouseArea {
+            anchors.fill: parent
+            acceptedButtons: Qt.AllButtons
+            onWheel: (wheel) => { wheel.accepted = true }
+        }
+
         Loader {
             id: librarySidebar
 
