@@ -187,10 +187,13 @@ QVariantList AudioDeviceModel::devices() const
     return list;
 }
 
-void AudioDeviceModel::select(const QString &id)
+bool AudioDeviceModel::select(const QString &id)
 {
-    if (m_aout)
-        aout_DeviceSet(m_aout, qtu(id));
+    if (m_aout && aout_DeviceSet(m_aout, qtu(id)) == 0)
+        return true;
+    // the device in use did not change: a view that showed the choice reads it again
+    emit currentChanged();
+    return false;
 }
 
 void AudioDeviceModel::playStereoTest()
@@ -200,8 +203,13 @@ void AudioDeviceModel::playStereoTest()
     if (!m_stereoTest)
         m_stereoTest = std::make_unique<RdStereoTest>(vlc_object_parent(m_aout));
 
+    // the stereo mode only means something for a track that offers stereo modes (the variable
+    // keeps the last stereo track's value otherwise)
+    const int stereoMode = var_CountChoices(m_aout, "stereo-mode") > 0
+                         ? static_cast<int>(var_GetInteger(m_aout, "stereo-mode"))
+                         : AOUT_VAR_CHAN_STEREO;
     char *device = aout_DeviceGet(m_aout);
-    m_stereoTest->play(static_cast<int>(var_GetInteger(m_aout, "stereo-mode")), device);
+    m_stereoTest->play(stereoMode, device, aout_VolumeGet(m_aout));
     free(device);
 }
 

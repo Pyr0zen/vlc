@@ -64,8 +64,9 @@ public:
     // device" dropdown (Figma "Settings - audio"); the default device has an empty id
     Q_INVOKABLE QVariantList devices() const;
 
-    // redesign: switches the output to the device `id` (one of devices())
-    Q_INVOKABLE void select(const QString &id);
+    // redesign: switches the output to the device `id` (one of devices()); false when the
+    // output did not take it
+    Q_INVOKABLE bool select(const QString &id);
 
     // redesign: plays the test sound of the settings sidebar's Stereo Mode "Test" button
     // (RdStereoTest) on the device in use, with the playing file's stereo mode

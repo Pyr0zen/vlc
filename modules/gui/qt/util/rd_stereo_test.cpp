@@ -26,7 +26,9 @@
 #include <QFile>
 #include <QtEndian>
 
+#include <algorithm>
 #include <cmath>
+#include <cstring>
 #include <utility>
 
 #include <vlc_aout.h>
@@ -155,7 +157,7 @@ RdStereoTest::~RdStereoTest()
         vlc_object_delete(m_object);
 }
 
-bool RdStereoTest::createPlayer()
+bool RdStereoTest::createPlayer(float volume)
 {
     if (m_player)
         return true;
@@ -180,6 +182,19 @@ bool RdStereoTest::createPlayer()
         var_SetBool(m_object, "video", false);
         var_Create(m_object, "spu", VLC_VAR_BOOL);
         var_SetBool(m_object, "spu", false);
+        // the tone has the stereo mode applied already: the output must not remix it
+        var_Create(m_object, "stereo-mode", VLC_VAR_INTEGER);
+        var_SetInteger(m_object, "stereo-mode", AOUT_VAR_CHAN_UNSET);
+        var_Create(m_object, "mix-mode", VLC_VAR_INTEGER);
+        var_SetInteger(m_object, "mix-mode", AOUT_MIX_MODE_UNSET);
+        // the output shares the playing file's audio session (one per process, or VLC's own
+        // with "volume-save"): it must not set the session volume when it opens, which would
+        // change the playing file's volume. mmdevice skips a negative start volume; waveout
+        // starts at the playing file's volume
+        var_Create(m_object, "mmdevice-volume", VLC_VAR_FLOAT);
+        var_SetFloat(m_object, "mmdevice-volume", -1.f);
+        var_Create(m_object, "waveout-volume", VLC_VAR_FLOAT);
+        var_SetFloat(m_object, "waveout-volume", volume >= 0.f ? std::min(volume, 2.f) : 1.f);
     }
 
     m_player = vlc_player_New(m_object, VLC_PLAYER_LOCK_NORMAL);
@@ -209,10 +224,10 @@ QString RdStereoTest::soundFile(int stereoMode)
     return path;
 }
 
-void RdStereoTest::play(int stereoMode, const char *device)
+void RdStereoTest::play(int stereoMode, const char *device, float volume)
 {
     const QString path = soundFile(stereoMode);
-    if (path.isEmpty() || !createPlayer())
+    if (path.isEmpty() || !createPlayer(volume))
         return;
 
     char *uri = vlc_path2uri(qtu(QDir::toNativeSeparators(path)), "file");
@@ -223,11 +238,16 @@ void RdStereoTest::play(int stereoMode, const char *device)
     if (!item)
         return;
 
-    // the device the playing file is heard on
+    // the device the playing file is heard on; switching blocks until the output has it, so
+    // only when it changed
     audio_output_t *aout = vlc_player_aout_Hold(m_player);
     if (aout)
     {
-        aout_DeviceSet(aout, device ? device : "");
+        const char *wanted = device ? device : "";
+        char *current = aout_DeviceGet(aout);
+        if (strcmp(current ? current : "", wanted) != 0)
+            aout_DeviceSet(aout, wanted);
+        free(current);
         aout_Release(aout);
     }
 

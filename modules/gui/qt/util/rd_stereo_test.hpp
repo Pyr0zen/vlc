@@ -50,11 +50,12 @@ public:
     RdStereoTest &operator=(const RdStereoTest &) = delete;
 
     // plays the test sound with `stereoMode` (AOUT_VAR_CHAN_*) on `device` (an audio output
-    // device id, "" or null for the default one); a test still playing starts again
-    void play(int stereoMode, const char *device);
+    // device id, "" or null for the default one); a test still playing starts again. `volume`
+    // is the playing file's (0 to 2, negative when unknown), for outputs without a session
+    void play(int stereoMode, const char *device, float volume);
 
 private:
-    bool createPlayer();
+    bool createPlayer(float volume);
     // the test sound for a stereo mode (written on first use); empty on failure
     QString soundFile(int stereoMode);
 
