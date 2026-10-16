@@ -83,7 +83,10 @@ rem the media library, never the installed VLC's
 if not exist "%CURRENT%\portable" mkdir "%CURRENT%\portable"
 
 echo Starting %EXE% from build %RUN%...
-start "" /D "%CURRENT%" "%CURRENT%\%EXE%" --no-qt-privacy-ask --no-qt-updates-notif
+rem Cone builds have no update checker, so that option only goes to vlc.exe
+set "EXTRA="
+if /i "%EXE%"=="vlc.exe" set "EXTRA=--no-qt-updates-notif"
+start "" /D "%CURRENT%" "%CURRENT%\%EXE%" --no-qt-privacy-ask %EXTRA%
 exit /b 0
 
 rem finds the downloaded player: sets VLCDIR, EXE and CURRENT (the fixed folder for that exe)

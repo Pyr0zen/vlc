@@ -18,6 +18,12 @@
 2. Automated verification harness in redesign/tools/verify/: launches the test build in portable mode, drives each screen and state through Windows UI Automation and keyboard shortcuts, screenshots the player window only, pixel-diffs against the matching Figma frame at the same scale; rows within a small tolerance are marked auto-passed for review, only differences and behaviour checks need a manual look. Never commit desktop screenshots; close everything after each run.
 3. Every idle window goes to verification, Player area first; rows verified per window are reported below so the pile visibly shrinks.
 
+## Build cache (2026-10-16): verified and merged
+- wip/ci-release privacy clean; two manual public runs: cold 38891929733 (ccache hit rate 2.5 %, build step 18.7 min, total 25.3 min), warm 38894781882 (hit rate 99.1 %, build step 9.6 min, total 16.9 min). Before the cache: 31-37 min per build (compile ~27 min). Same 531 files; binaries differ only in build-time stamps (PE time / checksum, debug id, container id in "compiled by", the About compile time); Cone.exe from the warm run starts, plays a file and exits cleanly.
+- The cache-only part (no Cone installer / release steps) is on redesign (adc810f8a82, its first redesign build fills redesign's cache), wip/next-batch (d5e8bb9b957) and wip/cone-release (d64e548960c, keeps BRAND_VERSION). The release workflow stays on wip/ci-release.
+- Found: Cone release builds reject --no-qt-updates-notif (no update checker): the test helper and both launchers now pass it to vlc.exe only.
+- HIGH, to fix next: on build 38829058873 several quits left Cone.exe processes stuck in termination (1 thread, no window, cannot be killed: PIDs 19040, 11360, 58492); the smoke test of the ci-release build exited cleanly. Investigate the shutdown path (abandoned waveform worker, audio output, D3D).
+
 ## Row count (VIDEO_INDEX, updated after every testing window)
 Raw statuses: verified 69, coded but not verified 172, todo 120 (of 361). The verified rows include earlier test rounds: 59 from the round on build 38727073546 (before this sweep) and 10 from this sweep on 38829058873.
 The todo rows split into: context only (old VLC shots, jokes, sponsor, surveys, montage: nothing to build), built but never moved off todo (counted as coded here, they wait for verification), still to build: must-have (part of what she shows and planned) and optional (postponed reverse playback, montage-only seek segments, polish motion).
