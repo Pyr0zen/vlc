@@ -19,7 +19,8 @@
 // redesign (W8.2, Decision 29): after a profile switch (RdProfiles.applied), tells when some of
 // the profile's settings do not apply at once. No Figma frame (Decision 21): the resume toast's
 // style (Figma "continue": 52 high pill, radius 16, BG/A3, Inter 16 FG/2, a primary button and
-// the dark close button), centered over the bottom of the window, 18 px above the control bar.
+// the dark close button), centered over the bottom of the window, 18 px above the control bar
+// (its real height: one row, or two when the seek row has its own row).
 // - settings that only apply after a restart: "Restart Now" (VLC starts again with them) and
 //   the close button; it stays until one is clicked.
 // - settings that apply from the next file, while one plays: the sentence alone, for 6 s.
@@ -44,7 +45,10 @@ T.Popup {
     parent: T.Overlay.overlay
 
     x: Math.round(((parent ? parent.width : 0) - width) / 2)
-    y: (parent ? parent.height : 0) - height - VLCStyle.rd_controlBarHeight - VLCStyle.dp(18, VLCStyle.scale)
+    readonly property real _barHeight: (RdPanels.controlBarHeight > 0) ? RdPanels.controlBarHeight
+                                                                       : VLCStyle.rd_controlBarHeight
+
+    y: (parent ? parent.height : 0) - height - _barHeight - VLCStyle.dp(18, VLCStyle.scale)
     width: Math.min(VLCStyle.dp(552, VLCStyle.scale), content.implicitWidth + VLCStyle.dp(30, VLCStyle.scale),
                     (parent ? parent.width : 0) - 2 * VLCStyle.margin_large)
     height: VLCStyle.dp(52, VLCStyle.scale)

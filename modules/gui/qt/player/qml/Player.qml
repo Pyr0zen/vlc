@@ -1793,7 +1793,8 @@ FocusScope {
 
         focus: true
 
-        // redesign: one 54 px row (Figma "Controls": padding 11 top/bottom, 20 left/right inside the layout)
+        // redesign: one 54 px row (Figma "Controls": padding 11 top/bottom, 20 left/right inside the
+        // layout); two rows when the seek row has its own row (ControlBar._seekRowOnOwnRow)
         rightPadding: VLCStyle.applicationHorizontalMargin
         leftPadding: VLCStyle.applicationHorizontalMargin
         topPadding: VLCStyle.rd_controlBarPaddingV
@@ -1878,6 +1879,13 @@ FocusScope {
         FadeControllerStateGroup {
             target: controlBar
         }
+    }
+
+    // the profile notice over every view sits above the control bar, one or two rows high
+    Binding {
+        target: RdPanels
+        property: "controlBarHeight"
+        value: controlBar.height
     }
 
     // redesign: player panels. An open panel keeps the bars visible (F-06). Each panel is created

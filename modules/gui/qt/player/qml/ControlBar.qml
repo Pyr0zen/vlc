@@ -133,9 +133,17 @@ T.Pane {
 
     // redesign: a layout with center controls has no middle slot between the left and right
     // controls, so the seek row gets its own full-width row above them (Figma "Player -
-    // customize-1" / "-6" / "-7", the alternate layout of video 19:24-19:28: two 54 px rows)
-    readonly property bool _seekRowOnOwnRow: textPosition === ControlBar.TimeTextPosition.Inline
-                                             && (playerControlLayout.model?.center?.count ?? 0) > 0
+    // customize-1" / "-6" / "-7", the alternate layout of video 19:24-19:28: two 54 px rows).
+    // A layout with no control at all has no middle slot either: the seek row is then the only
+    // row.
+    readonly property bool _seekRowOnOwnRow: {
+        if (textPosition !== ControlBar.TimeTextPosition.Inline)
+            return false
+        const model = playerControlLayout.model
+        if (!model)
+            return false
+        return model.center.count > 0 || (model.left.count === 0 && model.right.count === 0)
+    }
 
     // redesign: narrow window. The right controls are hidden first (from the queue button
     // inwards, VLC's ControlRepeater rule) while the seek row keeps both times; when even the
@@ -503,8 +511,8 @@ T.Pane {
 
             Layout.rightMargin: Layout.leftMargin
             // the rows' padding between the seek row and the controls (Figma: two 54 px rows)
-            Layout.bottomMargin: (textPosition === ControlBar.TimeTextPosition.Inline) ? 2 * VLCStyle.rd_controlBarPaddingV - parent.spacing
-                                                                                       : 0
+            Layout.bottomMargin: (textPosition === ControlBar.TimeTextPosition.Inline && playerControlLayout.visible)
+                                 ? 2 * VLCStyle.rd_controlBarPaddingV - parent.spacing : 0
         }
 
         PlayerControlLayout {
