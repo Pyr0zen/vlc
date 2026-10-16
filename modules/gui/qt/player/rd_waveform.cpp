@@ -43,8 +43,7 @@ namespace {
 
 // cache file: magic, version, slice count (16 bit little endian), the slices (0: no waveform)
 const QByteArray kCacheMagic = QByteArrayLiteral("RDWF");
-// 2: the full / sampled rule of 2026-10-16 (files scanned under the old one are scanned again)
-constexpr char kCacheVersion = 2;
+constexpr char kCacheVersion = 1;
 constexpr int kCacheHeaderSize = 7;
 
 QString cachePath(const QString& dir, const QFileInfo& file)

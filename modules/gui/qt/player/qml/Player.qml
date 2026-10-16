@@ -1268,11 +1268,6 @@ FocusScope {
         clip: rootPlayer._libraryProgress < 1
         z: 1
 
-        // the wheel over the library never reaches the video, also while it slides (Decision 54)
-        Widgets.RdWheelSink {
-            anchors.fill: parent
-        }
-
         Loader {
             id: librarySidebar
 
@@ -1381,11 +1376,11 @@ FocusScope {
                  : rootPlayer.width
 
         focus: true
-        // the title, library toggle and folder chip are controls of the top bar layout (W8.1b);
-        // the fixed title stays for a profile model without a top bar layout
+        // the media's title, or VLC's display name (the file name) when it has no title tag
         title: Player.title !== "" ? Player.title : Player.name
 
         pinControls: MainCtx.pinVideoControls
+        libraryOpen: rootPlayer._libraryShown
 
         showCSD: MainCtx.clientSideDecoration && (MainCtx.intfMainWindow.visibility !== Window.FullScreen)
         showToolbar: MainCtx.hasToolbarMenu && (MainCtx.intfMainWindow.visibility !== Window.FullScreen)
@@ -1430,14 +1425,8 @@ FocusScope {
             MainCtx.playerView = false
         }
 
-        // the library toggle and the folder chip, in either bar (W8.1b)
-        Connections {
-            target: RdPanels
-
-            function onLibraryRequested(reveal) {
-                rootPlayer.toggleLibrary(reveal)
-            }
-        }
+        onLibraryToggleRequested: rootPlayer.toggleLibrary(false)
+        onFolderRequested: rootPlayer.toggleLibrary(true)
 
         // redesign: no acrylic background behind the top bar, it paints its own background
         // (BG/A3 in Dark, BG/A3 Transparent in Light, see TopBar.qml)

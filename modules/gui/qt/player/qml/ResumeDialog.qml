@@ -135,11 +135,6 @@ FocusScope {
         radius: VLCStyle.rd_radius_toast
         // opaque: the bg blur cannot run over the native video (Decision: opaque popups)
         color: Qt.alpha(VLCStyle.palette.rdBgA3Transparent, 1.0)
-
-        // the wheel over the toast does not reach the video (volume, Decision 54)
-        Widgets.RdWheelSink {
-            anchors.fill: parent
-        }
     }
 
     RowLayout {

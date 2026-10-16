@@ -124,7 +124,6 @@ private:
     void refresh();
 
     void buildMainMenu(QMenu* menu);
-    void buildProfileMenu(QMenu* menu);
     void buildPlayerMenu(QMenu* menu);
     void buildPlaybackMenu(QMenu* menu);
     void buildMoreSettingsMenu(QMenu* menu);

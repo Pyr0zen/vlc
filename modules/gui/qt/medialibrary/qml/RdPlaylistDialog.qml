@@ -136,10 +136,9 @@ RdLibraryDialog {
             Accessible.name: qsTr("Choose a thumbnail")
 
             onClicked: {
-                RdLibraryStore.pickFiles(qsTr("Choose a thumbnail"), true, (images) => {
-                    if (images.length > 0 && dialog.opened)
-                        dialog.cover = images[0]
-                })
+                const images = RdLibraryStore.pickFiles(qsTr("Choose a thumbnail"), true)
+                if (images.length > 0)
+                    dialog.cover = images[0]
             }
 
             background: Rectangle {
@@ -201,10 +200,7 @@ RdLibraryDialog {
 
         Accessible.name: qsTr("Select files")
 
-        onClicked: RdLibraryStore.pickFiles(qsTr("Select Files"), false, (urls) => {
-            if (dialog.opened)
-                dialog._addFiles(urls)
-        })
+        onClicked: dialog._addFiles(RdLibraryStore.pickFiles(qsTr("Select Files"), false))
 
         background: Rectangle {
             radius: VLCStyle.rd_radius_normal

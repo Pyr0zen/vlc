@@ -509,9 +509,6 @@ protected:
     QTimer* m_configSaveTimer = nullptr;
     void scheduleConfigSave();
     QColor m_accentColor;
-    // redesign: the option as written ("default", "system" or a color): "system" and "default"
-    // both give an invalid color but a different palette
-    QByteArray m_accentOption;
 
     float m_safeArea = 0.0;
 

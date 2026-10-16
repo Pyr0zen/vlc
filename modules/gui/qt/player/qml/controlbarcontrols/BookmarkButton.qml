@@ -33,27 +33,12 @@ Widgets.IconToolButton {
     signal requestLockUnlockAutoHide(bool lock)
 
     text: VLCIcons.bookmark
-    // redesign (W8.1b, Figma "Player - customize" item "Bookmarks")
-    rdIcon: "bookmarks"
     description: qsTr("Bookmarks")
 
     AccessibleCompat.id: "bookmarkButton"
 
-    // redesign: in the player the button opens the queue sidebar on its Bookmarks tab (Decision
-    // 3, where Ctrl + B bookmarks are listed); elsewhere it keeps VLC's bookmarks menu
-    checked: !paintOnly && MainCtx.playerView && RdPanels.current === "bookmarks"
-
     // NOTE: We want to pop the menu above the button.
-    onClicked: {
-        if (MainCtx.playerView) {
-            if (RdPanels.current === "bookmarks")
-                RdPanels.close()
-            else
-                RdPanels.open("bookmarks")
-            return
-        }
-        menu.popup(this.mapToGlobal(0, 0), true)
-    }
+    onClicked: menu.popup(this.mapToGlobal(0, 0), true)
 
     enabled: !paintOnly && (Player.hasChapters || Player.hasTitles || MainCtx.mediaLibraryAvailable)
 

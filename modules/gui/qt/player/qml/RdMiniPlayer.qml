@@ -120,11 +120,6 @@ Item {
             blurRadius: VLCStyle.dp(11.8)
         }
 
-        // the wheel over the card does not scroll the library behind it (its queue still scrolls)
-        Widgets.RdWheelSink {
-            anchors.fill: parent
-        }
-
         // the queue sits above the player in the bottom corners, below it in the top ones
         Loader {
             id: queueLoader
@@ -168,12 +163,6 @@ Item {
                     sourceComponent: VideoSurface {
                         videoSurfaceProvider: MainCtx.videoSurfaceProvider
                     }
-                }
-
-                // nor does the wheel over the picture reach the video, which would change the
-                // volume (Decision 54)
-                Widgets.RdWheelSink {
-                    anchors.fill: parent
                 }
 
                 // songs show their cover

@@ -463,22 +463,12 @@ void MainCtx::loadPrefs(const bool callSignals)
 
     loadFromVLCOption(m_pinOpacity, "qt-fs-opacity", &MainCtx::pinOpacityChanged);
 
-    // redesign: resolve the accent color once; "default" and "system" stay invalid (palette default).
-    // Read again after a profile switch or the Settings dialog: the palette follows at once (W8.2)
+    // redesign: resolve the accent color once; "default" and "system" stay invalid (palette default)
     {
-        QColor accent;
-        char* value = var_InheritString(p_intf, "qt-accent-color");
-        const QByteArray option(value ? value : "");
-        if (value && strcmp(value, "default") && strcmp(value, "system"))
-            accent = QColor(QString::fromUtf8(value));
-        free(value);
-        if (accent != m_accentColor || option != m_accentOption)
-        {
-            m_accentColor = accent;
-            m_accentOption = option;
-            if (callSignals)
-                emit accentColorChanged();
-        }
+        char* accent = var_InheritString(p_intf, "qt-accent-color");
+        if (accent && strcmp(accent, "default") && strcmp(accent, "system"))
+            m_accentColor = QColor(QString::fromUtf8(accent));
+        free(accent);
     }
 
     loadFromVLCOption(m_safeArea, "qt-safe-area", &MainCtx::safeAreaChanged);
@@ -714,7 +704,6 @@ void MainCtx::setAccentColor(const QColor& color)
         return;
     m_accentColor = color;
     const QByteArray value = color.isValid() ? color.name(QColor::HexRgb).toUtf8() : QByteArray("default");
-    m_accentOption = value;
     config_PutPsz("qt-accent-color", value.constData());
     scheduleConfigSave();
     emit accentColorChanged();

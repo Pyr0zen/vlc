@@ -68,11 +68,6 @@ T.Slider {
     // VLC's lowest value)
     property real labelMin: -Infinity
     property real labelMax: Infinity
-    // the mouse wheel over the bar and the label row (Decision 54): one notch moves by stepSize,
-    // as an arrow key; with customWheel the notches go to wheelStepped instead (RdEndlessSlider)
-    property bool customWheel: false
-
-    signal wheelStepped(int steps)
 
     readonly property SystemPalette rdPalette: VLCStyle.palette
 
@@ -283,22 +278,5 @@ T.Slider {
         color: (control.pressed || control.hovered || control.visualFocus)
                ? (control.dimmed ? control.rdPalette.rdFgA2 : control.rdPalette.rdAccentMain)
                : (control.dimmed ? control.rdPalette.rdFgA3 : control.rdPalette.rdAccentDim)
-    }
-
-    RdSliderWheel {
-        id: wheelArea
-
-        anchors.fill: parent
-        mirrored: control.mirrored && control.horizontal
-
-        onStepped: (steps) => {
-            // held: the pointer sets the value
-            if (control.pressed)
-                return
-            if (control.customWheel)
-                control.wheelStepped(steps)
-            else
-                wheelArea.stepSlider(control, steps)
-        }
     }
 }

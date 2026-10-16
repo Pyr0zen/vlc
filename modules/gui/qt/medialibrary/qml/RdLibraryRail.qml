@@ -123,11 +123,8 @@ Rectangle {
                             : modelData.kind === "album" ? "album"
                             : modelData.kind === "genre" ? "genre" : "music"
                     image: modelData.image ?? ""
-                    // a folder's key is its MRL, which Qt, VLC and the media library encode
-                    // differently: compared decoded, as everywhere in the library (IB-32)
-                    current: RdLibraryNav.location.page === modelData.location.page
-                             && RdLibraryNav.mrlKey(RdLibraryNav.key(RdLibraryNav.location))
-                                === RdLibraryNav.mrlKey(modelData.location.key)
+                    current: RdLibraryNav.key(RdLibraryNav.location) === modelData.location.key
+                             && RdLibraryNav.location.page === modelData.location.page
                     showLabel: rail.showLabels
                     width: column.itemWidth
                     onClicked: RdLibraryNav.openPin(modelData.location)
@@ -192,12 +189,11 @@ Rectangle {
     property string _folderToPin: ""
 
     function _pinFolder() {
-        RdLibraryStore.pickFolder(qsTr("Pin a Folder"), "", "video", (url) => {
-            if (url.toString() === "")
-                return
-            RdLibraryStore.addFolder("video", url)
-            rail._folderToPin = url.toString()
-        })
+        const url = RdLibraryStore.pickFolder(qsTr("Pin a Folder"), "", "video")
+        if (url.toString() === "")
+            return
+        _folderToPin = url.toString()
+        RdLibraryStore.addFolder("video", url)
     }
 
     Connections {
