@@ -14,23 +14,24 @@
 - VLC's built-in dialogs in the Cone build must say "Cone" (e.g. the AVI "Broken or missing Index" question still says "VLC won't repair..."): public profile only; core-side dialog texts are core changes (Cone release branch, own build).
 
 ## Row count (VIDEO_INDEX, updated after every testing window)
-Raw statuses: verified 63, coded but not verified 178, todo 120 (of 361). The verified rows include earlier test rounds: 59 from the round on build 38727073546 (before this sweep) and 4 from this sweep on 38829058873.
+Raw statuses: verified 69, coded but not verified 172, todo 120 (of 361). The verified rows include earlier test rounds: 59 from the round on build 38727073546 (before this sweep) and 10 from this sweep on 38829058873.
 The todo rows split into: context only (old VLC shots, jokes, sponsor, surveys, montage: nothing to build), built but never moved off todo (counted as coded here, they wait for verification), still to build: must-have (part of what she shows and planned) and optional (postponed reverse playback, montage-only seek segments, polish motion).
 
 | Area | Verified | Coded, not verified | To build: must-have | To build: optional | Context (nothing to build) | Rows |
 |---|---|---|---|---|---|---|
 | Player (bars, look, other) | 2 | 65 | 0 | 1 | 41 | 109 |
-| Sidebars, menus and panels | 6 | 72 | 3 | 3 | 13 | 97 |
+| Sidebars, menus and panels | 7 | 71 | 3 | 3 | 13 | 97 |
 | Library and music | 20 | 24 | 0 | 0 | 6 | 50 |
 | Settings and dialogs | 25 | 9 | 0 | 0 | 2 | 36 |
-| Step 2 features | 4 | 36 | 9 | 1 | 0 | 50 |
+| Step 2 features | 9 | 31 | 9 | 1 | 0 | 50 |
 | Customize and profiles | 6 | 12 | 0 | 0 | 1 | 19 |
-| **Total** | **63** | **218** | **12** | **5** | **63** | **361** |
+| **Total** | **69** | **212** | **12** | **5** | **63** | **361** |
 | Cone release | tracked in redesign/CONE_RELEASE_NOTES.md (no VIDEO_INDEX rows) | | | | | |
 
 ## Verification sweep (build 38829058873)
 - Window 1 done (2026-10-16): Customize Player and profiles. Verified: row 308 (profiles in the main menu, submenu, switching). Bugs: MED Customize preview loses the seek bar and time labels after a drop; LOW profile switch drops one frame (23 ms); LOW footer tabs not in Figma (to decide). Details in BUILD_NOTES and PERF.
 - Count (all VIDEO_INDEX rows): verified 62, coded but not verified 177, todo 122.
+- Window 6 done (2026-10-16): presets switching between shows: rows 105-110 verified.
 - Window 4 done (2026-10-16): Ctrl+B and bookmarks: row 247 verified (title names, notification, duplicate skip); LOW stock notification look.
 - Window 3 done (2026-10-16): waveform: audio formats, no-audio file and the AVI pass; 249 MiB MP4 fails (HIGH, fix running); a Cone process stuck in termination after one quit (MED, investigate). No rows marked verified (the waveform rows wait for the MP4 fix).
 - Window 2 done (2026-10-16): library part 1: New Playlist (P6-16, IB-30) verified, narrow header fixed; LOW Continue Watching shows the file name. Library part 2 (needs folders in the Cone library: Add Folder cancel, folder contents after a scan, grid, Unknown Album, pin highlight) still open.
