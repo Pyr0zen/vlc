@@ -1,0 +1,10 @@
+{
+  "testMediaDir": "<TEST_MEDIA_DIR>",
+  "outRoot": "<WORK_DIR>\\verifyruns",
+  "builds": {
+    "public": "builds\\current-public\\Cone.exe",
+    "vlc": "builds\\current\\vlc.exe"
+  },
+  "ignorePids": [],
+  "guardRetrySec": 60
+}

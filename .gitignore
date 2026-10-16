@@ -76,3 +76,7 @@ static-lib/
 /redesign/reference/*.srt
 /redesign/reference/*.mp4
 /redesign/tools/privacy.local.txt
+# verification harness: real paths of this PC and run output (screenshots) stay local
+/redesign/tools/verify/*.local.json
+verifyruns/
+__pycache__/

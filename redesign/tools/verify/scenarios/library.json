@@ -1,0 +1,181 @@
+{
+ "area": "library",
+ "about": "Compact library sidebar opened from the top bar on the Playlists category, against Player.png (187:328). The list contents come from the test profile and are masked.",
+ "sessions": [
+  {
+   "id": "library",
+   "media": [
+    "Videos\\Verify Clip.mkv"
+   ],
+   "args": [
+    "--qt-continue=0",
+    "--start-paused"
+   ],
+   "setup": [
+    {
+     "wait": 1200
+    },
+    {
+     "wiggle": [
+      960,
+      540
+     ]
+    }
+   ],
+   "reset": [
+    {
+     "wiggle": [
+      960,
+      540
+     ],
+     "after": 400
+    }
+   ],
+   "scenarios": [
+    {
+     "id": "library-playlists",
+     "title": "Library button opens the compact library; Playlists category",
+     "rows": [
+      "P5-06",
+      "P5-30"
+     ],
+     "steps": [
+      {
+       "uia": "Library",
+       "role": "Button",
+       "after": 1200
+      },
+      {
+       "expect": {
+        "uia": "Library",
+        "role": "Pane"
+       },
+       "check": "the library sidebar opens from the top bar (P5-20 / P5-22)"
+      },
+      {
+       "uia": "Playlists",
+       "role": "Button",
+       "after": 1200
+      },
+      {
+       "hover": [
+        1200,
+        540
+       ],
+       "after": 500
+      },
+      {
+       "shot": "lib"
+      }
+     ],
+     "compare": [
+      {
+       "id": "rail",
+       "shot": "lib",
+       "ref": "187:328",
+       "anchor": "tl",
+       "node": "I856:2450;858:5375",
+       "rows": [
+        "P5-06",
+        "IA-44",
+        "IB-32"
+       ],
+       "pad": 0
+      },
+      {
+       "id": "title-row",
+       "shot": "lib",
+       "ref": "187:328",
+       "anchor": "tl",
+       "node": "I856:2450;858:5384",
+       "rows": [
+        "IA-45",
+        "P5-08"
+       ]
+      },
+      {
+       "id": "tools-row",
+       "shot": "lib",
+       "ref": "187:328",
+       "anchor": "tl",
+       "node": "I856:2450;858:5390",
+       "rows": [
+        "P5-11"
+       ],
+       "mask": [
+        {
+         "node": "I856:2450;858:5395",
+         "pad": 3
+        }
+       ],
+       "note": "item count masked (test profile)"
+      },
+      {
+       "id": "panel",
+       "shot": "lib",
+       "ref": "187:328",
+       "anchor": "tl",
+       "node": "I856:2450;858:5382",
+       "rows": [
+        "P5-06"
+       ],
+       "pad": 0,
+       "mask": [
+        {
+         "node": "I856:2450;858:5396",
+         "pad": 0
+        },
+        {
+         "node": "I856:2450;858:5395",
+         "pad": 3
+        }
+       ],
+       "note": "list masked (test profile)"
+      },
+      {
+       "id": "topbar-open",
+       "shot": "lib",
+       "ref": "187:328",
+       "anchor": "tl",
+       "node": "187:333",
+       "rows": [
+        "P5-30",
+        "IB-11",
+        "P5-22"
+       ]
+      }
+     ],
+     "human": [
+      "Rows of the list (playlists of the test profile) against Figma's Create playlist / Cool Songs / Anime to Watch: judge by eye."
+     ]
+    },
+    {
+     "id": "library-close",
+     "title": "Library button again closes the compact library",
+     "rows": [
+      "F-16"
+     ],
+     "steps": [
+      {
+       "uia": "Library",
+       "role": "Button",
+       "after": 1200
+      },
+      {
+       "expect": {
+        "uia": "Library",
+        "role": "Pane",
+        "visible": false,
+        "timeout": 800
+       },
+       "check": "a second click closes the library sidebar"
+      }
+     ],
+     "human": [
+      "Open / close animation: Figma smart animate 'slow' 208 ms (motion check)."
+     ]
+    }
+   ]
+  }
+ ]
+}

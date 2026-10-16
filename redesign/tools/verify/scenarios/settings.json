@@ -1,0 +1,1345 @@
+{
+ "area": "settings",
+ "about": "Settings dialog (in-window popup, 1048 x 865 centred): every category against its Figma frame (header, category list, page). Values come from the test profile.",
+ "sessions": [
+  {
+   "id": "settings",
+   "media": [
+    "Videos\\Verify Clip.mkv"
+   ],
+   "args": [
+    "--qt-continue=0",
+    "--start-paused"
+   ],
+   "setup": [
+    {
+     "wait": 1200
+    },
+    {
+     "wiggle": [
+      960,
+      540
+     ]
+    },
+    {
+     "uia": "Menu",
+     "role": "Button",
+     "after": 800
+    },
+    {
+     "uia": "Settings",
+     "role": "MenuItem",
+     "after": 1500
+    },
+    {
+     "expect": {
+      "uia": "Search settings",
+      "role": "Edit"
+     },
+     "check": "main menu Settings opens the Settings dialog (P7-09)"
+    }
+   ],
+   "reset": [],
+   "scenarios": [
+    {
+     "id": "settings-general",
+     "title": "Settings dialog, General category",
+     "rows": [
+      "P7-14"
+     ],
+     "steps": [
+      {
+       "uia": "General",
+       "role": "TabItem",
+       "after": 900
+      },
+      {
+       "hover": [
+        960,
+        1060
+       ],
+       "after": 400
+      },
+      {
+       "shot": "page"
+      }
+     ],
+     "compare": [
+      {
+       "id": "dialog",
+       "shot": "page",
+       "node": "999:5047",
+       "pad": 0,
+       "ref": "999:5047",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "rows": [
+        "P7-14"
+       ]
+      },
+      {
+       "id": "header",
+       "shot": "page",
+       "node": "999:5048",
+       "ref": "999:5047",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "rows": [
+        "P7-14"
+       ]
+      },
+      {
+       "id": "categories",
+       "shot": "page",
+       "node": "999:5060",
+       "ref": "999:5047",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "rows": [
+        "P7-14"
+       ]
+      },
+      {
+       "id": "page",
+       "shot": "page",
+       "node": "1088:4049",
+       "ref": "999:5047",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "rows": [
+        "P7-14"
+       ]
+      }
+     ],
+     "human": [
+      "Values depend on the test profile; a differing value or toggle state in the page is not a design difference."
+     ]
+    },
+    {
+     "id": "settings-interface",
+     "title": "Settings dialog, Interface category",
+     "rows": [
+      "P7-14",
+      "S2-02",
+      "S2-03",
+      "S2-12"
+     ],
+     "steps": [
+      {
+       "uia": "Interface",
+       "role": "TabItem",
+       "after": 900
+      },
+      {
+       "hover": [
+        960,
+        1060
+       ],
+       "after": 400
+      },
+      {
+       "shot": "page"
+      }
+     ],
+     "compare": [
+      {
+       "id": "dialog",
+       "shot": "page",
+       "node": "3046:10057",
+       "pad": 0,
+       "ref": "3046:10057",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "rows": [
+        "P7-14",
+        "S2-02",
+        "S2-03",
+        "S2-12"
+       ]
+      },
+      {
+       "id": "header",
+       "shot": "page",
+       "node": "3046:10058",
+       "ref": "3046:10057",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "rows": [
+        "P7-14"
+       ]
+      },
+      {
+       "id": "categories",
+       "shot": "page",
+       "node": "3046:10064",
+       "ref": "3046:10057",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "rows": [
+        "P7-14"
+       ]
+      },
+      {
+       "id": "page",
+       "shot": "page",
+       "node": "3046:10087",
+       "ref": "3046:10057",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "rows": [
+        "P7-14",
+        "S2-02",
+        "S2-03",
+        "S2-12"
+       ]
+      }
+     ],
+     "human": [
+      "Values depend on the test profile; a differing value or toggle state in the page is not a design difference."
+     ]
+    },
+    {
+     "id": "settings-privacy",
+     "title": "Settings dialog, Privacy category",
+     "rows": [
+      "S2-04"
+     ],
+     "steps": [
+      {
+       "uia": "Privacy",
+       "role": "TabItem",
+       "after": 900
+      },
+      {
+       "hover": [
+        960,
+        1060
+       ],
+       "after": 400
+      },
+      {
+       "shot": "page"
+      }
+     ],
+     "compare": [
+      {
+       "id": "dialog",
+       "shot": "page",
+       "node": "3062:11911",
+       "pad": 0,
+       "ref": "3062:11911",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "rows": [
+        "S2-04"
+       ]
+      },
+      {
+       "id": "header",
+       "shot": "page",
+       "node": "3062:11912",
+       "ref": "3062:11911",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "rows": [
+        "P7-14"
+       ]
+      },
+      {
+       "id": "categories",
+       "shot": "page",
+       "node": "3062:11918",
+       "ref": "3062:11911",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "rows": [
+        "P7-14"
+       ]
+      },
+      {
+       "id": "page",
+       "shot": "page",
+       "node": "3062:11941",
+       "ref": "3062:11911",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "rows": [
+        "S2-04"
+       ]
+      }
+     ],
+     "human": [
+      "Values depend on the test profile; a differing value or toggle state in the page is not a design difference."
+     ]
+    },
+    {
+     "id": "settings-controls",
+     "title": "Settings dialog, Controls category",
+     "rows": [
+      "S2-05"
+     ],
+     "steps": [
+      {
+       "uia": "Controls",
+       "role": "TabItem",
+       "after": 900
+      },
+      {
+       "hover": [
+        960,
+        1060
+       ],
+       "after": 400
+      },
+      {
+       "shot": "page"
+      }
+     ],
+     "compare": [
+      {
+       "id": "dialog",
+       "shot": "page",
+       "node": "6536:14482",
+       "pad": 0,
+       "ref": "6536:14482",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "rows": [
+        "S2-05"
+       ]
+      },
+      {
+       "id": "header",
+       "shot": "page",
+       "node": "6536:14483",
+       "ref": "6536:14482",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "rows": [
+        "P7-14"
+       ]
+      },
+      {
+       "id": "categories",
+       "shot": "page",
+       "node": "6536:14491",
+       "ref": "6536:14482",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "rows": [
+        "P7-14"
+       ]
+      },
+      {
+       "id": "page",
+       "shot": "page",
+       "node": "6536:14512",
+       "ref": "6536:14482",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "rows": [
+        "S2-05"
+       ]
+      }
+     ],
+     "human": [
+      "Values depend on the test profile; a differing value or toggle state in the page is not a design difference."
+     ]
+    },
+    {
+     "id": "settings-playback",
+     "title": "Settings dialog, Playback category",
+     "rows": [
+      "P8-09"
+     ],
+     "steps": [
+      {
+       "uia": "Playback",
+       "role": "TabItem",
+       "after": 900
+      },
+      {
+       "hover": [
+        960,
+        1060
+       ],
+       "after": 400
+      },
+      {
+       "shot": "page"
+      }
+     ],
+     "compare": [
+      {
+       "id": "dialog",
+       "shot": "page",
+       "node": "3062:12552",
+       "pad": 0,
+       "ref": "3062:12552",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "rows": [
+        "P8-09"
+       ]
+      },
+      {
+       "id": "header",
+       "shot": "page",
+       "node": "3062:12553",
+       "ref": "3062:12552",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "rows": [
+        "P7-14"
+       ]
+      },
+      {
+       "id": "categories",
+       "shot": "page",
+       "node": "3062:12559",
+       "ref": "3062:12552",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "rows": [
+        "P7-14"
+       ]
+      },
+      {
+       "id": "page",
+       "shot": "page",
+       "node": "3062:12582",
+       "ref": "3062:12552",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "rows": [
+        "P8-09"
+       ]
+      }
+     ],
+     "human": [
+      "Values depend on the test profile; a differing value or toggle state in the page is not a design difference."
+     ]
+    },
+    {
+     "id": "settings-video",
+     "title": "Settings dialog, Video category",
+     "rows": [
+      "P8-10"
+     ],
+     "steps": [
+      {
+       "uia": "Video",
+       "role": "TabItem",
+       "after": 900
+      },
+      {
+       "hover": [
+        960,
+        1060
+       ],
+       "after": 400
+      },
+      {
+       "shot": "page"
+      }
+     ],
+     "compare": [
+      {
+       "id": "dialog",
+       "shot": "page",
+       "node": "3073:14187",
+       "pad": 0,
+       "ref": "3073:14187",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "rows": [
+        "P8-10"
+       ]
+      },
+      {
+       "id": "header",
+       "shot": "page",
+       "node": "3073:14188",
+       "ref": "3073:14187",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "rows": [
+        "P7-14"
+       ]
+      },
+      {
+       "id": "categories",
+       "shot": "page",
+       "node": "3073:14194",
+       "ref": "3073:14187",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "rows": [
+        "P7-14"
+       ]
+      },
+      {
+       "id": "page",
+       "shot": "page",
+       "node": "3073:14217",
+       "ref": "3073:14187",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "rows": [
+        "P8-10"
+       ]
+      }
+     ],
+     "human": [
+      "Values depend on the test profile; a differing value or toggle state in the page is not a design difference."
+     ]
+    },
+    {
+     "id": "settings-audio",
+     "title": "Settings dialog, Audio category",
+     "rows": [
+      "P8-11",
+      "S2-06"
+     ],
+     "steps": [
+      {
+       "uia": "Audio",
+       "role": "TabItem",
+       "after": 900
+      },
+      {
+       "hover": [
+        960,
+        1060
+       ],
+       "after": 400
+      },
+      {
+       "shot": "page"
+      }
+     ],
+     "compare": [
+      {
+       "id": "dialog",
+       "shot": "page",
+       "node": "3073:15879",
+       "pad": 0,
+       "ref": "3073:15879",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "rows": [
+        "P8-11",
+        "S2-06"
+       ]
+      },
+      {
+       "id": "header",
+       "shot": "page",
+       "node": "3073:15880",
+       "ref": "3073:15879",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "rows": [
+        "P7-14"
+       ]
+      },
+      {
+       "id": "categories",
+       "shot": "page",
+       "node": "3073:15886",
+       "ref": "3073:15879",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "rows": [
+        "P7-14"
+       ]
+      },
+      {
+       "id": "page",
+       "shot": "page",
+       "node": "3073:15909",
+       "ref": "3073:15879",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "rows": [
+        "P8-11",
+        "S2-06"
+       ]
+      }
+     ],
+     "human": [
+      "Values depend on the test profile; a differing value or toggle state in the page is not a design difference."
+     ]
+    },
+    {
+     "id": "settings-subtitles",
+     "title": "Settings dialog, Subtitles category",
+     "rows": [
+      "P8-45"
+     ],
+     "steps": [
+      {
+       "uia": "Subtitles",
+       "role": "TabItem",
+       "after": 900
+      },
+      {
+       "hover": [
+        960,
+        1060
+       ],
+       "after": 400
+      },
+      {
+       "shot": "page"
+      }
+     ],
+     "compare": [
+      {
+       "id": "dialog",
+       "shot": "page",
+       "node": "3180:17989",
+       "pad": 0,
+       "ref": "3180:17989",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "rows": [
+        "P8-45"
+       ]
+      },
+      {
+       "id": "header",
+       "shot": "page",
+       "node": "3180:17990",
+       "ref": "3180:17989",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "rows": [
+        "P7-14"
+       ]
+      },
+      {
+       "id": "categories",
+       "shot": "page",
+       "node": "3180:17996",
+       "ref": "3180:17989",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "rows": [
+        "P7-14"
+       ]
+      },
+      {
+       "id": "page",
+       "shot": "page",
+       "node": "3180:18019",
+       "ref": "3180:17989",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "rows": [
+        "P8-45"
+       ]
+      }
+     ],
+     "human": [
+      "Values depend on the test profile; a differing value or toggle state in the page is not a design difference."
+     ]
+    },
+    {
+     "id": "settings-library",
+     "title": "Settings dialog, Library category",
+     "rows": [
+      "P8-14"
+     ],
+     "steps": [
+      {
+       "uia": "Library",
+       "role": "TabItem",
+       "after": 900
+      },
+      {
+       "hover": [
+        960,
+        1060
+       ],
+       "after": 400
+      },
+      {
+       "shot": "page"
+      }
+     ],
+     "compare": [
+      {
+       "id": "dialog",
+       "shot": "page",
+       "node": "6542:15251",
+       "pad": 0,
+       "ref": "6542:15251",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "mask": [
+        {
+         "node": "6542:15550",
+         "pad": 2
+        }
+       ],
+       "note": "texts naming VLC masked (the public build says Cone)",
+       "rows": [
+        "P8-14"
+       ]
+      },
+      {
+       "id": "header",
+       "shot": "page",
+       "node": "6542:15252",
+       "ref": "6542:15251",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "mask": [
+        {
+         "node": "6542:15550",
+         "pad": 2
+        }
+       ],
+       "note": "texts naming VLC masked (the public build says Cone)",
+       "rows": [
+        "P7-14"
+       ]
+      },
+      {
+       "id": "categories",
+       "shot": "page",
+       "node": "6542:15260",
+       "ref": "6542:15251",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "mask": [
+        {
+         "node": "6542:15550",
+         "pad": 2
+        }
+       ],
+       "note": "texts naming VLC masked (the public build says Cone)",
+       "rows": [
+        "P7-14"
+       ]
+      },
+      {
+       "id": "page",
+       "shot": "page",
+       "node": "6542:15281",
+       "ref": "6542:15251",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "mask": [
+        {
+         "node": "6542:15550",
+         "pad": 2
+        }
+       ],
+       "note": "texts naming VLC masked (the public build says Cone)",
+       "rows": [
+        "P8-14"
+       ]
+      }
+     ],
+     "human": [
+      "Values depend on the test profile; a differing value or toggle state in the page is not a design difference."
+     ]
+    },
+    {
+     "id": "settings-network",
+     "title": "Settings dialog, Network category",
+     "rows": [
+      "P7-15"
+     ],
+     "steps": [
+      {
+       "uia": "Network",
+       "role": "TabItem",
+       "after": 900
+      },
+      {
+       "hover": [
+        960,
+        1060
+       ],
+       "after": 400
+      },
+      {
+       "shot": "page"
+      }
+     ],
+     "compare": [
+      {
+       "id": "dialog",
+       "shot": "page",
+       "node": "6543:15649",
+       "pad": 0,
+       "ref": "6543:15649",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "rows": [
+        "P7-15"
+       ]
+      },
+      {
+       "id": "header",
+       "shot": "page",
+       "node": "6543:15650",
+       "ref": "6543:15649",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "rows": [
+        "P7-14"
+       ]
+      },
+      {
+       "id": "categories",
+       "shot": "page",
+       "node": "6543:15658",
+       "ref": "6543:15649",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "rows": [
+        "P7-14"
+       ]
+      },
+      {
+       "id": "page",
+       "shot": "page",
+       "node": "6543:15679",
+       "ref": "6543:15649",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "rows": [
+        "P7-15"
+       ]
+      }
+     ],
+     "human": [
+      "Values depend on the test profile; a differing value or toggle state in the page is not a design difference."
+     ]
+    },
+    {
+     "id": "settings-performance",
+     "title": "Settings dialog, Performance category",
+     "rows": [
+      "S2-07",
+      "S2-08"
+     ],
+     "steps": [
+      {
+       "uia": "Performance",
+       "role": "TabItem",
+       "after": 900
+      },
+      {
+       "hover": [
+        960,
+        1060
+       ],
+       "after": 400
+      },
+      {
+       "shot": "page"
+      }
+     ],
+     "compare": [
+      {
+       "id": "dialog",
+       "shot": "page",
+       "node": "6571:15958",
+       "pad": 0,
+       "ref": "6571:15958",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "mask": [
+        {
+         "node": "6571:16293",
+         "pad": 2
+        }
+       ],
+       "note": "texts naming VLC masked (the public build says Cone)",
+       "rows": [
+        "S2-07",
+        "S2-08"
+       ]
+      },
+      {
+       "id": "header",
+       "shot": "page",
+       "node": "6571:15959",
+       "ref": "6571:15958",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "mask": [
+        {
+         "node": "6571:16293",
+         "pad": 2
+        }
+       ],
+       "note": "texts naming VLC masked (the public build says Cone)",
+       "rows": [
+        "P7-14"
+       ]
+      },
+      {
+       "id": "categories",
+       "shot": "page",
+       "node": "6571:15967",
+       "ref": "6571:15958",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "mask": [
+        {
+         "node": "6571:16293",
+         "pad": 2
+        }
+       ],
+       "note": "texts naming VLC masked (the public build says Cone)",
+       "rows": [
+        "P7-14"
+       ]
+      },
+      {
+       "id": "page",
+       "shot": "page",
+       "node": "6571:15988",
+       "ref": "6571:15958",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "mask": [
+        {
+         "node": "6571:16293",
+         "pad": 2
+        }
+       ],
+       "note": "texts naming VLC masked (the public build says Cone)",
+       "rows": [
+        "S2-07",
+        "S2-08"
+       ]
+      }
+     ],
+     "human": [
+      "Values depend on the test profile; a differing value or toggle state in the page is not a design difference."
+     ]
+    },
+    {
+     "id": "settings-recording",
+     "title": "Settings dialog, Recording category",
+     "rows": [
+      "S2-10"
+     ],
+     "steps": [
+      {
+       "uia": "Recording",
+       "role": "TabItem",
+       "after": 900
+      },
+      {
+       "hover": [
+        960,
+        1060
+       ],
+       "after": 400
+      },
+      {
+       "shot": "page"
+      }
+     ],
+     "compare": [
+      {
+       "id": "dialog",
+       "shot": "page",
+       "node": "6571:16429",
+       "pad": 0,
+       "ref": "6571:16429",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "rows": [
+        "S2-10"
+       ]
+      },
+      {
+       "id": "header",
+       "shot": "page",
+       "node": "6571:16430",
+       "ref": "6571:16429",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "rows": [
+        "P7-14"
+       ]
+      },
+      {
+       "id": "categories",
+       "shot": "page",
+       "node": "6571:16438",
+       "ref": "6571:16429",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "rows": [
+        "P7-14"
+       ]
+      },
+      {
+       "id": "page",
+       "shot": "page",
+       "node": "6571:16459",
+       "ref": "6571:16429",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "rows": [
+        "S2-10"
+       ]
+      }
+     ],
+     "human": [
+      "Values depend on the test profile; a differing value or toggle state in the page is not a design difference."
+     ]
+    },
+    {
+     "id": "settings-extensions",
+     "title": "Settings dialog, Extensions category",
+     "rows": [
+      "P7-15"
+     ],
+     "steps": [
+      {
+       "uia": "Extensions",
+       "role": "TabItem",
+       "after": 900
+      },
+      {
+       "hover": [
+        960,
+        1060
+       ],
+       "after": 400
+      },
+      {
+       "shot": "page"
+      }
+     ],
+     "compare": [
+      {
+       "id": "dialog",
+       "shot": "page",
+       "node": "6575:17137",
+       "pad": 0,
+       "ref": "6575:17137",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "rows": [
+        "P7-15"
+       ]
+      },
+      {
+       "id": "header",
+       "shot": "page",
+       "node": "6575:17138",
+       "ref": "6575:17137",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "rows": [
+        "P7-14"
+       ]
+      },
+      {
+       "id": "categories",
+       "shot": "page",
+       "node": "6575:17146",
+       "ref": "6575:17137",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "rows": [
+        "P7-14"
+       ]
+      },
+      {
+       "id": "page",
+       "shot": "page",
+       "node": "6575:17167",
+       "ref": "6575:17137",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "rows": [
+        "P7-15"
+       ]
+      }
+     ],
+     "human": [
+      "Values depend on the test profile; a differing value or toggle state in the page is not a design difference."
+     ]
+    },
+    {
+     "id": "settings-close",
+     "title": "Escape closes the Settings dialog",
+     "rows": [
+      "P7-14"
+     ],
+     "steps": [
+      {
+       "keys": "{ESC}",
+       "after": 800
+      },
+      {
+       "expect": {
+        "uia": "Search settings",
+        "role": "Edit",
+        "present": false,
+        "timeout": 600
+       },
+       "check": "Escape closes the Settings dialog (UX pass)"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "advanced",
+   "media": [
+    "Videos\\Verify Clip.mkv"
+   ],
+   "args": [
+    "--qt-continue=0",
+    "--start-paused"
+   ],
+   "setup": [
+    {
+     "wait": 1200
+    },
+    {
+     "wiggle": [
+      960,
+      540
+     ]
+    }
+   ],
+   "reset": [],
+   "scenarios": [
+    {
+     "id": "open-advanced-audio",
+     "title": "Open Advanced Settings in the Audio tab opens the Settings dialog on Audio",
+     "rows": [
+      "F-08"
+     ],
+     "steps": [
+      {
+       "uia": "Playback Settings",
+       "role": "Button",
+       "after": 900
+      },
+      {
+       "uia": "Audio",
+       "role": "TabItem",
+       "after": 700
+      },
+      {
+       "uia": "Open Advanced Settings",
+       "role": "Button",
+       "match": "contains",
+       "after": 1500
+      },
+      {
+       "hover": [
+        960,
+        1060
+       ],
+       "after": 400
+      },
+      {
+       "expect": {
+        "uia": "Search settings",
+        "role": "Edit"
+       },
+       "check": "Open Advanced Settings opens the Settings dialog"
+      },
+      {
+       "shot": "page"
+      },
+      {
+       "keys": "{ESC}",
+       "after": 600
+      }
+     ],
+     "compare": [
+      {
+       "id": "page",
+       "shot": "page",
+       "ref": "3073:15879",
+       "at": [
+        436,
+        108
+       ],
+       "search": 6,
+       "node": "3073:15909",
+       "rows": [
+        "F-08",
+        "P8-11"
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}
