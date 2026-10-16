@@ -32,11 +32,16 @@
  * (the same modules playback uses, no audio output, no clock) and measures the loudness of
  * the first audio track over `kBins` equal slices of the file's duration.
  *
- * - Files up to `kFullScanMaxBytes` are decoded from start to end, as fast as the decoder goes.
- * - Larger files (films, long recordings) are sampled: one short stretch of audio is decoded
- *   after a seek to each slice, so a 50 GB file costs about `kBins` seeks, not a full read. A
- *   stretch is never longer than its slice. A large file the demuxer cannot seek in gets no
- *   waveform rather than a full read.
+ * - A full scan decodes the file from start to end, as fast as the decoder goes, but it reads
+ *   every byte of the file, video included. So it is only for files where that is quick: any
+ *   file up to `kFullScanMaxBytes`, and a file without video (music: every byte read is audio
+ *   the waveform needs) up to `kAudioFullScanMaxBytes`. Their waveform is exact.
+ * - Other files (videos over `kFullScanMaxBytes`, long audio recordings) are sampled: one short
+ *   stretch of audio is decoded after a seek to each slice, so a 50 GB file costs about `kBins`
+ *   seeks, not a full read. A stretch is never longer than its slice. A video track that only
+ *   shows up while a full scan reads (MPEG-PS) moves a file over `kFullScanMaxBytes` to the
+ *   sampled scan. A file to sample that the demuxer cannot seek in gets no waveform rather
+ *   than a full read.
  *
  * run() blocks and is meant for a low priority worker thread. cancel() may be called from any
  * thread: run() then returns an empty array within one demuxed packet (the VLC interrupt
@@ -50,8 +55,10 @@ class RdWaveformScanner
 {
 public:
     static constexpr int kBins = 1000;
-    static constexpr quint64 kFullScanMaxBytes = 256ull * 1024 * 1024;
-    // the longest a run may take (a 256 MB file decodes in a few seconds)
+    // the full scan's size limits: any file, and a file without video (WAVEFORM_NOTES section 2)
+    static constexpr quint64 kFullScanMaxBytes = 32ull * 1024 * 1024;
+    static constexpr quint64 kAudioFullScanMaxBytes = 256ull * 1024 * 1024;
+    // the longest a run may take (a 256 MB audio file decodes in a few seconds)
     static constexpr int kTimeBudgetSeconds = 60;
 
     // `parent`: the VLC object the scan's objects hang from (the libvlc instance); `url`: a
