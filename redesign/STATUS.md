@@ -1,6 +1,12 @@
 # STATUS
 
-- Updated: 2026-10-16 (session near its limit: start nothing new until the reset; Sticky, 79 % session / 69 % week)
+- Updated: 2026-10-16 afternoon (session at 94 %: start nothing new until the reset)
+
+## Now (in flight when the session limit hits)
+- Verification spec (web session, PR #9): reviewed (privacy 0, generator deterministic, bounds equal figma_file.json on 249 spot-checked elements), re-authored to the project identity and merged into wip/next-batch (f667e0dddd6); PR #9 closed.
+- Verification harness (redesign/tools/verify, wip/verify-harness, not merged yet): first run on 38829058873: 116 rows: 27 auto-passed, 34 near-match, 53 differ, 2 inconclusive; 31/31 behaviour checks pass. Now being wired to the spec (element bounds vs UI Automation rects, token colours, masks, brand masked on Cone, design demo state such as delay -4.000 s and speed 1x set in a run-specific profile) and run on the next-batch build 38890442361 (from builds\38890442361: builds\current-public is locked by the stuck processes until a reboot). Auto-passed rows are confirmed by hand against Figma + video before any row is marked verified; row suggestions in the spec are hints only.
+- HIGH stuck exit: cause found (toolchain runtime: on the Qt thread's exit, libgcc emutls frees thread_local storage before libstdc++ runs the thread_local destructors; the fault leaves the winpthreads key lock read-locked and ExitProcess waits on it forever). Reproduced by the harness tracks session 2 of 4 runs (several audio tracks + --sub-file). Fix on wip/sweep-fix-exit (rd_thread_exit_win32.cpp registers libstdc++'s key first; ~RdWaveform no longer abandons its worker): review in progress, then a manual build and the PC retest (6 runs per session, 0 stuck processes).
+- Next after those: review + merge wip/verify-harness into wip/next-batch, confirm the auto-passed rows, build next-batch with the exit fix, then the waiting retests (wheel window, waveform times, Customize footer and seek row, resume toast) and the Cone portable test (38890154778).
 
 ## Branch state (Decision 55: redesign only receives verified code)
 - redesign = last verified state + docs: the unverified batch was reverted (725377056e5, [skip ci]); CLAUDE.md has Decision 55 / 58 and the StickyGonzales public-name rule.
@@ -22,7 +28,7 @@
 - wip/ci-release privacy clean; two manual public runs: cold 38891929733 (ccache hit rate 2.5 %, build step 18.7 min, total 25.3 min), warm 38894781882 (hit rate 99.1 %, build step 9.6 min, total 16.9 min). Before the cache: 31-37 min per build (compile ~27 min). Same 531 files; binaries differ only in build-time stamps (PE time / checksum, debug id, container id in "compiled by", the About compile time); Cone.exe from the warm run starts, plays a file and exits cleanly.
 - The cache-only part (no Cone installer / release steps) is on redesign (adc810f8a82, its first redesign build fills redesign's cache), wip/next-batch (d5e8bb9b957) and wip/cone-release (d64e548960c, keeps BRAND_VERSION). The release workflow stays on wip/ci-release.
 - Found: Cone release builds reject --no-qt-updates-notif (no update checker): the test helper and both launchers now pass it to vlc.exe only.
-- HIGH, to fix next: on build 38829058873 several quits left Cone.exe processes stuck in termination (1 thread, no window, cannot be killed: PIDs 19040, 11360, 58492); the smoke test of the ci-release build exited cleanly. Investigate the shutdown path (abandoned waveform worker, audio output, D3D).
+- HIGH: on build 38829058873 several quits left Cone.exe processes stuck in termination (1 thread, no window, cannot be killed); cause and fix under "Now" above.
 
 ## Row count (VIDEO_INDEX, updated after every testing window)
 Raw statuses: verified 69, coded but not verified 172, todo 120 (of 361). The verified rows include earlier test rounds: 59 from the round on build 38727073546 (before this sweep) and 10 from this sweep on 38829058873.
