@@ -23,6 +23,8 @@
 
 0b. Waveform hang (2026-10-15): FIXED and verified on build 38810713227 (packetizer block ownership, 60 s scan budget, quit waits at most 500 ms). PC test: MP3, FLAC and AAC show the waveform (same shape for the same signal), VLC responsive, quits cleanly; 4K MKV sampled scan 340 ms, ready 451 ms (pass). FAIL (performance, fix next): the 249 MiB 1080p MP4 / MKV (full scan, under the 256 MB limit) were not ready within 12 s on a first scan (proposed limits 2 s MP4 / 5 s MKV); VLC stayed responsive. Fix: lower kFullScanMaxBytes (e.g. 64 MB) or base the full / sampled choice on the audio duration, so large files use the sampled scan; then re-measure. Still to test: AVI without index (single prompt), file without audio, option off / on and media changes repeatedly.
 
+- 2026-10-16 PC check of the public build 38815866248 (first Cone build of redesign): About shows "Cone", "4.0.0-dev" without VLC's codename, the wording and the not-affiliated line; the taskbar shows the Cone icon. The tray icon sits in the Windows hidden-icons overflow and was not opened (input outside the player is not sent): Sticky to glance at it. Desktop launcher "Test VLC Redesign.bat" updated for Cone.exe (builds\current-public) and tested: it downloaded and started 38815866248.
+
 ## Next, in order
 1. When the build is green: hands-on test on the PC (test lists in BUILD_NOTES per package and ADDSUBS_NOTES section 9), left-edge seek drag, screenshots vs Figma; build screenshots for the README gallery and hero.
 2. Endless sliders (Decision (Sticky), approved mockup): coded by an agent on wip/endless-sliders; then independent review, merge, next build.
