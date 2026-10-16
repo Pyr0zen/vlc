@@ -241,8 +241,13 @@ Rectangle {
                     anchors.fill: parent
                     zoneHovered: bandHover.hovered
                     onStepped: (steps) => {
-                        if (!slider.pressed)
-                            bandWheel.stepSlider(slider, steps)
+                        if (slider.pressed)
+                            return
+                        // after a click on the value box: it shows the new value, so Enter
+                        // never brings the old one back
+                        if (valueBox.editing)
+                            valueBox.cancelEdit()
+                        bandWheel.stepSlider(slider, steps)
                     }
                 }
             }
@@ -265,6 +270,8 @@ Rectangle {
             }
 
             Widgets.RdValueBox {
+                id: valueBox
+
                 implicitWidth: VLCStyle.dp(60)
                 implicitHeight: VLCStyle.dp(32)
                 leftPadding: VLCStyle.dp(6)
@@ -293,6 +300,22 @@ Rectangle {
                 onActiveChanged: {
                     if (active)
                         bandWheel.arm()
+                }
+            }
+
+            // while the slider holds the wheel, the wheel over the name, the value box and the
+            // gaps moves it too (else it goes on: to the bar below, or the page). Takes no clicks
+            // and no hover; the handlers above stay off this MouseArea, which would then take
+            // the presses
+            MouseArea {
+                anchors.fill: parent
+                acceptedButtons: Qt.NoButton
+
+                onWheel: (wheel) => {
+                    if (bandWheel.holding)
+                        bandWheel.take(wheel)
+                    else
+                        wheel.accepted = false
                 }
             }
         }

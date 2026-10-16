@@ -133,6 +133,8 @@ ColumnLayout {
         // clicks and no hover
         MouseArea {
             anchors.fill: parent
+            // the gap down to the slider too (part of the zone)
+            anchors.bottomMargin: -root.spacing
             acceptedButtons: Qt.NoButton
 
             onWheel: (wheel) => slider.rowWheel(wheel)
@@ -160,6 +162,12 @@ ColumnLayout {
         Layout.fillWidth: true
         Accessible.name: label.text
         wheelZoneHovered: zoneHover.hovered
+        // a wheel step after a click on the value box: the box shows the new value, so Enter
+        // never brings the old one back
+        onWheelStepped: {
+            if (box.editing)
+                box.cancelEdit()
+        }
         onValueMoved: (v) => root.moved(v)
     }
 }

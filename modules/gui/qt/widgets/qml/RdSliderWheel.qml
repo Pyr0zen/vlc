@@ -74,7 +74,7 @@ MouseArea {
     acceptedButtons: Qt.NoButton
 
     function arm() {
-        _views = _findViews()
+        _updateViews()
         armed = true
     }
 
@@ -101,8 +101,15 @@ MouseArea {
         return views
     }
 
-    Component.onCompleted: _views = _findViews()
-    onParentChanged: _views = _findViews()
+    // the bindings on the views are only evaluated again when the views changed
+    function _updateViews() {
+        const views = _findViews()
+        if (views.length !== _views.length || views.some((view, i) => view !== _views[i]))
+            _views = views
+    }
+
+    Component.onCompleted: _updateViews()
+    onParentChanged: _updateViews()
 
     onZoneHoveredChanged: {
         if (!zoneHovered)
@@ -135,7 +142,7 @@ MouseArea {
     }
 
     onWheel: (wheel) => {
-        _views = _findViews()
+        _updateViews()
         if (takesWheel)
             take(wheel)
         else
