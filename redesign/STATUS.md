@@ -9,6 +9,25 @@
 - wip/cone-release (PR #7) = Cone release gaps: REVIEWED and pushed (6a328a87a72): privacy clean; Decisions 56 / 57 / 58 and StickyGonzales in the code; core changes all public-profile-only (src/win32/dirs.c settings folder, src/win32/specific.c + modules/control/win_msg.c single-instance name, modules/audio_output/mmdevice.c + winstore.c audio session GUID); portable interface settings copied into builds\current-public\portable\Cone. Not built yet (next: its own manual build after the reset). Then its own manual build; installer side-by-side test BLOCKED: Windows Sandbox is not available (Windows 10 Home): Sticky decides (VM / other PC / Windows Pro), never install on his real Windows.
 - wip/ci-release (PR #8, on top of cone-release): privacy check + safe tests after the reset: two manual build-windows runs with brand public (compare build times, cache hit rate), and one release-workflow run that must refuse. Merge order: cone-release, then ci-release, each only after it passes.
 
+## Row count (VIDEO_INDEX, updated after every testing window)
+Raw statuses: verified 62, coded but not verified 179, todo 120 (of 361). The verified rows include earlier test rounds: 59 from the round on build 38727073546 (before this sweep) and 3 from this sweep on 38829058873.
+The todo rows split into: context only (old VLC shots, jokes, sponsor, surveys, montage: nothing to build), built but never moved off todo (counted as coded here, they wait for verification), still to build: must-have (part of what she shows and planned) and optional (postponed reverse playback, montage-only seek segments, polish motion).
+
+| Area | Verified | Coded, not verified | To build: must-have | To build: optional | Context (nothing to build) | Rows |
+|---|---|---|---|---|---|---|
+| Player (bars, look, other) | 2 | 65 | 0 | 1 | 41 | 109 |
+| Sidebars, menus and panels | 6 | 72 | 3 | 3 | 13 | 97 |
+| Library and music | 20 | 24 | 0 | 0 | 6 | 50 |
+| Settings and dialogs | 25 | 9 | 0 | 0 | 2 | 36 |
+| Step 2 features | 3 | 37 | 9 | 1 | 0 | 50 |
+| Customize and profiles | 6 | 12 | 0 | 0 | 1 | 19 |
+| **Total** | **62** | **219** | **12** | **5** | **63** | **361** |
+| Cone release | tracked in redesign/CONE_RELEASE_NOTES.md (no VIDEO_INDEX rows) | | | | | |
+
+## Fix list additions (Sticky, 2026-10-16)
+- The resume toast text must never be cut off ("You already watched t... 00:00:14" seen on 38829058873): it fits or wraps at every window size.
+- VLC's built-in dialogs in the Cone build must say "Cone" (e.g. the AVI "Broken or missing Index" question still says "VLC won't repair..."): public profile only; core-side dialog texts are core changes (Cone release branch, own build).
+
 ## Verification sweep (build 38829058873)
 - Window 1 done (2026-10-16): Customize Player and profiles. Verified: row 308 (profiles in the main menu, submenu, switching). Bugs: MED Customize preview loses the seek bar and time labels after a drop; LOW profile switch drops one frame (23 ms); LOW footer tabs not in Figma (to decide). Details in BUILD_NOTES and PERF.
 - Count (all VIDEO_INDEX rows): verified 62, coded but not verified 177, todo 122.
