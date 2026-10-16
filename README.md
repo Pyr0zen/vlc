@@ -120,7 +120,7 @@ VLC itself is documented on the [VideoLAN wiki](https://wiki.videolan.org/Win32C
   ([video](https://youtu.be/ERFeOgqk324)), CC BY 4.0.
 - VLC media player by VideoLAN and its contributors, GPLv2 or later (libVLC LGPLv2 or later).
 - Fonts: Inter and DM Mono, SIL Open Font License.
-- Built by Pyr0zen (Sticky). Details in [CREDITS.md](CREDITS.md).
+- Built by StickyGonzales (GitHub: Pyr0zen). Details in [CREDITS.md](CREDITS.md).
 
 ---
 

@@ -5,8 +5,11 @@
 
 ; redesign: brand layer, the BRAND values come from configure --with-brand (vlc / public)
 !define PRODUCT_NAME "@BRAND_PRODUCT_NAME@"
-!define VERSION @VERSION@
-!define PRODUCT_VERSION @VERSION@
+; the product's version: Cone's own in the public profile (Decision 58), VLC's in the vlc profile;
+; VLC_VERSION is the engine's
+!define VERSION @BRAND_VERSION@
+!define PRODUCT_VERSION @BRAND_VERSION@
+!define VLC_VERSION @VERSION@
 !define PRODUCT_GROUP "@BRAND_COMPANY@"
 !define PRODUCT_PUBLISHER "@BRAND_COMPANY@"
 !define PRODUCT_WEB_SITE "@BRAND_WEBSITE@"
@@ -29,6 +32,8 @@
   !define PRODUCT_SKINS_URL "${PRODUCT_WEB_SITE}/vlc/skins.php"
   !define PRODUCT_WEBSITE_LINK "${PRODUCT_GROUP} Website"
   !define PRODUCT_BRANDING_TEXT "${PRODUCT_GROUP} ${PRODUCT_NAME}"
+  !define PRODUCT_TITLE "${PRODUCT_NAME}"
+  !define PRODUCT_DISPLAY_NAME "$(^Name)"
 !else
   !define PRODUCT_SHORT_NAME "${PRODUCT_NAME}"
   !define PRODUCT_DESCRIPTION "${PRODUCT_NAME}, a media player based on VLC media player"
@@ -37,7 +42,11 @@
   !define PRODUCT_DOC_URL "${PRODUCT_WEB_SITE}#readme"
   !define PRODUCT_SKINS_URL "https://www.videolan.org/vlc/skins.php"
   !define PRODUCT_WEBSITE_LINK "${PRODUCT_NAME} Website"
-  !define PRODUCT_BRANDING_TEXT "${PRODUCT_NAME}"
+  ; Decision 58: "Cone 0.1.0" in the window title and on the welcome and finish pages, "based on
+  ; VLC <version>" under every page; the Windows Apps list shows "Cone" with the version 0.1.0
+  !define PRODUCT_BRANDING_TEXT "based on VLC ${VLC_VERSION}"
+  !define PRODUCT_TITLE "${PRODUCT_NAME} ${PRODUCT_VERSION}"
+  !define PRODUCT_DISPLAY_NAME "${PRODUCT_NAME}"
 !endif
 
 !define MUI_LANGDLL_REGISTRY_ROOT "HKLM"
@@ -69,7 +78,7 @@ Var 32bitPath
 ; General configuration ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 
-Name "${PRODUCT_NAME}"
+Name "${PRODUCT_TITLE}"
 @HAVE_WIN64_FALSE@                   OutFile ..\@BRAND_INTERNAL_NAME@-${VERSION}-win32.exe
 @HAVE_WIN64_TRUE@ @HAVE_ARM64_FALSE@ OutFile ..\@BRAND_INTERNAL_NAME@-${VERSION}-win64.exe
 @HAVE_WIN64_TRUE@ @HAVE_ARM64_TRUE@  OutFile ..\@BRAND_INTERNAL_NAME@-${VERSION}-winarm64.exe
@@ -874,7 +883,7 @@ Section -Post
   WriteRegStr HKLM "${PRODUCT_DIR_REGKEY}" "" "$INSTDIR\${PRODUCT_EXE}"
 
   WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" \
-    "DisplayName" "$(^Name)"
+    "DisplayName" "${PRODUCT_DISPLAY_NAME}"
   WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" \
     "UninstallString" "$\"$INSTDIR\uninstall.exe$\""
   WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" \
@@ -888,9 +897,9 @@ Section -Post
   WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" \
     "Publisher" "${PRODUCT_PUBLISHER}"
   WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" \
-    "VersionMajor"  "@VERSION_MAJOR@"
+    "VersionMajor"  "@BRAND_VERSION_MAJOR@"
   WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" \
-    "VersionMinor" "@VERSION_MINOR@"
+    "VersionMinor" "@BRAND_VERSION_MINOR@"
 SectionEnd
 
 ;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1006,7 +1015,7 @@ Section "un.$(Name_Section91)" SEC91
 
 !if "${PRODUCT_PROGID}" == "VLC"
   DeleteRegKey HKLM \
-    "SOFTWARE\MozillaPlugins\@videolan.org/vlc,version=${VERSION}"
+    "SOFTWARE\MozillaPlugins\@videolan.org/vlc,version=${VLC_VERSION}"
 !endif
 
   DeleteRegKey HKLM \

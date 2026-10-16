@@ -96,9 +96,13 @@ jobs:
         run: |
           # run as the runner's user so the checkout, caches and build output have one owner
           mkdir -p .ccache
+          # the public profile's own version (Decision 58): a vX.Y.Z tag sets it, otherwise 0.1.0
+          BRAND_VERSION=""
+          case "$GITHUB_REF" in refs/tags/v*) BRAND_VERSION="${GITHUB_REF_NAME#v}" ;; esac
           docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/build" -w /build -e HOME=/tmp \
             -e VLC_PREBUILT_CONTRIBS_URL="${{ steps.sha.outputs.url }}" \
             -e VLC_BRAND="$VLC_BRAND" \
+            -e BRAND_VERSION="$BRAND_VERSION" \
             -e CCACHE_DIR=/build/.ccache \
             "$VLC_IMAGE" bash -ec '
               git config --global --add safe.directory /build
