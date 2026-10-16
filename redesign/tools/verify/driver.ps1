@@ -80,7 +80,15 @@ function Write-VLog([string]$m) { & $script:Log $m }
 # keeps $script:StartedPids to the started processes that are still running
 function Update-Started {
     $script:StartedPids.Clear()
-    foreach ($p in $script:StartedProcs) { try { if (-not $p.HasExited) { $script:StartedPids.Add($p.Id) } } catch {} }
+    foreach ($p in $script:StartedProcs) {
+        try {
+            if (-not $p.HasExited) { $script:StartedPids.Add($p.Id); continue }
+            # Cone builds can report "exited" while the process stays listed with one thread
+            # (stuck in termination): still count it, so the cleanup reports it
+            $q = Get-Process -Id $p.Id -ErrorAction SilentlyContinue
+            if ($q -and $q.StartTime -eq $p.StartTime) { $script:StartedPids.Add($p.Id) }
+        } catch {}
+    }
 }
 function Test-NoWindow([int]$procId) {
     $script:nw = $true
