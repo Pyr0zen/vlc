@@ -1,0 +1,31 @@
+{
+ "about": "Differences already known and being fixed elsewhere: the manifests mark these rows 'differs (known regression, fix pending)' so confirmers skip them.",
+ "issues": [
+  {
+   "text": "control bar right side squeezed: volume cone over the audio / subtitle buttons, seek track ~120 px wider (fix: wip/sweep-fix-bar)",
+   "rows": [
+    "P2-02",
+    "P2-03",
+    "P1-15",
+    "P1-17",
+    "P1-19",
+    "P2-01",
+    "IA-12",
+    "IA-10",
+    "P3-13",
+    "P2-16",
+    "P2-17",
+    "IB-16",
+    "IA-13"
+   ]
+  },
+  {
+   "text": "bars do not auto-hide while playing (fix: wip/sweep-fix-bar)",
+   "rows": [
+    "P2-08",
+    "IA-15",
+    "P3-11"
+   ]
+  }
+ ]
+}

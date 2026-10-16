@@ -518,6 +518,7 @@ def measure_item(fig, item, shot, run_dir, out_dir, scen_id):
         if cx < -0.5 or cy < -0.5 or cx + bw > wl + 0.5 or cy + bh > hl + 0.5:
             continue
         r = {"element": e["id"], "path": e["path"], "type": e["type"], "rows": e["rows"], "rows_source": e["rows_source"],
+             "box": [round(v, 2) for v in rect], "abs": [ox + bx, oy + by, bw, bh], "placing": placing, "derived": "derived" in st.source,
              "row_count": e["row_count"], "checks": []}
         if public and e["brand"]:
             r["status"] = "skipped"
@@ -625,7 +626,9 @@ def video_index():
     for line in open(os.path.join(REDESIGN, "VIDEO_INDEX.md"), encoding="utf-8"):
         m = re.match(r"^\| (\d+) \| ([A-Z0-9-]+) \| [^|]* \| ([^|]*) \| ([^|]*) \|.*\| ([^|]*) \|\s*$", line)
         if m:
-            rows[m.group(2)] = {"num": int(m.group(1)), "area": m.group(3).strip(), "item": m.group(4).strip(), "status": m.group(5).strip()}
+            cells = [c.strip() for c in line.strip().strip("|").split("|")]
+            rows[m.group(2)] = {"num": int(m.group(1)), "area": m.group(3).strip(), "item": m.group(4).strip(), "status": m.group(5).strip(),
+                                "what": cells[5] if len(cells) > 8 else "", "figma": cells[6] if len(cells) > 8 else ""}
     return rows
 
 
@@ -692,6 +695,8 @@ def run_compare(run_dir):
                 for m in ms:
                     bad = [c for c in m["checks"] if c["pass"] is False]
                     r["compares"].append({"id": f"{spec['id']}:{m['path']}", "element": m["element"], "path": m["path"],
+                                          "box": m.get("box"), "abs": m.get("abs"), "placing": m.get("placing"), "shot": spec["shot"],
+                                          "derived": m.get("derived", False), "spec_source": st.source,
                                           "status": m["status"], "kind": "element", "checks": m["checks"], "note": m.get("note"),
                                           "rows": m["rows"], "rows_source": m["rows_source"], "row_count": m["row_count"],
                                           "detail": "; ".join(f"{c['what']}: {c['detail']}" for c in bad)})
@@ -771,6 +776,16 @@ def run_compare(run_dir):
               "cleanup": run.get("cleanup"), "demo": run.get("demo") or {}, "rows": row_out, "scenarios": results}
     json.dump(report, open(os.path.join(run_dir, "report.json"), "w", encoding="utf-8"), indent=1)
     write_md(report, os.path.join(run_dir, "report.md"))
+    # contact sheets and per-group manifests (sheets.py); known regressions from known_issues.json
+    kp = os.path.join(HERE, "known_issues.json")
+    known = {}
+    if os.path.exists(kp):
+        for k in json.load(open(kp, encoding="utf-8")).get("issues", []):
+            for row in k["rows"]:
+                known[row] = k["text"]
+    import sheets
+    for g, mp in sheets.make_sheets(sys.modules[__name__], fig, report, run, run_dir, vi, known).items():
+        print(f"manifest {g}: {mp}")
     counts = {}
     for x in row_out:
         counts[x["status"]] = counts.get(x["status"], 0) + 1
