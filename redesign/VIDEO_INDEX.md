@@ -276,6 +276,7 @@ Approved by Decision 27 (minimal and isolated); reverse playback postponed (Deci
 - Reverse playback (P4-33): postponed.
 - Pixel-exact subtitle outline (P3-23): not done; VLC's existing outline sizes (Decision 28).
 - Subtitle speed without a video stall (P3-19/P3-20, Sticky's bug 2026-10-15): `src/input/input.c` SlaveDemux, `src/input/es_out.c/.h`, `src/input/es_out_timeshift.c`: a sub-fps change flushes only the subtitle file's own decoders (new ES_OUT_PRIV_FLUSH_SOURCE) instead of ES_OUT_RESET_PCR, which flushed the video and audio decoders too. Written (separate commit, own build), not yet built.
+- Cone next to VLC (public profile only, every change inside `#ifdef VLC_BRAND_PUBLIC`; the vlc profile compiles the same tokens; branch wip/cone-release, redesign/CONE_RELEASE_NOTES.md): `src/win32/dirs.c` settings / data folder `%APPDATA%\Cone` (254361a596); `src/win32/specific.c` + `modules/control/win_msg.c` single-instance mutex / IPC window "Cone ipc <version>" (Decision 57, b1d5a41ca4); `modules/audio_output/mmdevice.c` + `winstore.c` own audio session GUID, session name "Cone" via `bin/winvlc.c` (Decision 57, f2580bbf40). Written, not yet built (own build).
 
 ## Index
 
