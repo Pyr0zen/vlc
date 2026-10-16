@@ -106,7 +106,10 @@ SettingsRow {
     }
 
     readonly property bool _integer: info.type === "integer"
-    readonly property var _choices: choices ?? RdEffects.optionChoices(option)
+    // VLC words "no module" as "Disable" (Visualizer...): Figma and the settings sidebar say
+    // "Disabled"
+    readonly property var _choices: choices ?? RdEffects.optionChoices(option).map((c) =>
+        (info.type === "module" && c.value === "none") ? { value: c.value, text: qsTr("Disabled") } : c)
 
     // options the interface reads into MainCtx (MainCtx::loadPrefs): it reads them again once
     // RdEffects has written the change, so they apply at once (as after VLC's preferences).
