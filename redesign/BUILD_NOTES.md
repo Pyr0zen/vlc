@@ -748,3 +748,17 @@ From the verification of build 38727073546 (seen again on 38800817536): P6-04 / 
 - Verified: New Playlist dialog (P6-16, IB-30) opaque, fully inside the window, Cancel / Save visible, layout as Figma; the full library header at an 830 px window keeps back / forward, the address, the view button, a shrunk search field and "..." with no overlap (the item count hides first), Sticky's report fixed.
 - LOW: Home "Continue Watching" labels the test episode with its file name (Test_Show_S01E01.mp4) instead of the media title, like the bookmark-name fix.
 - Not tested yet (the Cone portable library is nearly empty; adding folders needs the native picker): Add Folder cancel crash, folder contents after a scan, grid 5 / 4 at 1920, Unknown Album, pinned folder highlight.
+
+## 2026-10-16 verification sweep, window 3: waveform (build 38829058873, public; partly done)
+- Log: the lines are there ("waveform: job started", "waveform scan (<mode>): ... in N ms", "waveform: ready ..., N ms after the job started"; qt debug, verbose 2), but VLC's log file is buffered, so they show up seconds after the event. The main session's earlier look came before the flush. Cache: `portable/waveforms/<sha1>.wf`, one per file; a second open is read from it.
+- Look (1080p MP4, 1600x900 window): thick seek bar with bars, played part in the accent dim, the rest gray, accent playhead: same style as Figma "Player - Music" (bars, trough, playhead). Shape follows the test tone bursts.
+- Time to ready, fresh scan (cache moved aside), measured by the app's own line:
+  - wave_1080p_250MiB.mp4 (sampled): 14 873 ms and 13 519 ms (target <= 2 s): FAIL (HIGH). One CPU core busy (12.5 % of 8 threads) for the whole scan, then idle. Cause: the MP4 demuxer aligns every seek to the video keyframe before the time (even with the video track unselected: mp4.c Seek() uses the video track's sync samples), so after each of the 1000 seeks the scanner decodes on average about 4 s of AAC before the 0.25 s stretch it keeps (consume() skips it only after decoding). Fix: in the sampled scan, drop the audio packets that end before the stretch (minus a short decoder warm-up) before the packetizer and decoder, instead of decoding and skipping them.
+  - wave_1080p_250MiB.mkv (sampled): 4 826 ms (target <= 5 s): pass, close to the limit (same fix will speed it up).
+  - wave_4k60_80mbps_remux.mkv (sampled): 2 554 ms: pass. Playback smooth, quit 1.2 s.
+  - Quit while playing (MP4, MKV): 1.5 to 1.8 s, no process left.
+- wave_broken_index.avi: VLC's "Broken or missing Index" dialog shows once at the start (normal playback asking). Not finished: whether it ever comes a second time (the scan sets avi-index "never fix") and the waveform result. BUG (MED, to confirm): quitting with that dialog open took 8.8 s (Escape, then Ctrl+Q). LOW: the dialog text still says "VLC won't repair your file" in the Cone build (stock string).
+- Not tested yet: wave_no_audio.mp4 (plain bar), wave_3min_192k.mp3 / _aac.m4a / .flac (full scan), responsiveness while scanning.
+- LOW (seen in passing): the resume toast elides its text ("You already watched t... 00:00:14") at 1600 px.
+- Paused once by itself? The 1080p MKV run showed the play button (paused) at 00:00:26 and the log has one pause; nothing was clicked. Watch for it in the next window.
+- Reclassified: window 2's "Continue Watching shows the file name" matches the design (Figma's Home node and the video both label those cards with file names; RdLibraryItems::fromMedia does it on purpose): not a bug, no change.
