@@ -31,6 +31,7 @@ The user can switch Dark / Light / System and pick one of 9 accent colors at any
 - Fullscreen: same bars and zones; window buttons hidden; video frame (W3.7) not drawn; the fullscreen button in the top bar shows the exit icon.
 - Side panels and the compact library dock inside the inset video area (IA-28, IA-43, P5-23); the video frame, panels, toast and seek thumbnail must not overlap each other badly at small window sizes.
 - Pinned controls (VLC's existing option) keep working: bars always visible, video between them.
+- Music view (P6-04): it is the picture area of audio media: drawn with the dark palette in every theme, framed like the video, the compact library floats over it without resizing it (the cover stays centred on the window), and its blurred artwork is drawn once per cover (no live blur): anything new drawn on it keeps VLCStyle.darkPalette and must not resize it per frame.
 - In-window modal dialogs (Open Network Stream, W6.4) dim the whole window, bars included; the bars may fade underneath and come back on the next mouse move. Closing a dialog (Save, Cancel, X, Escape) gives the keyboard focus back to the item that had it.
 
 - The Settings dialog is a modal panel over the whole window (hosted by MainInterface.qml, not by the player page): it does not lock the bars, so in a window they may fade while it is open; Escape closes the top-most popup first (dropdown list or info popover, then a non-empty search text, then the dialog).

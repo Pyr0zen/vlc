@@ -21,8 +21,8 @@
 // shadow) with the video (375x211, radius 6, 2 px BG/B2 border) or the cover of a song, a thin
 // seek bar, the file name, the folder (and artist) chips and the queue button (accent while the
 // queue shows). Hovering the picture dims it and shows close, open, previous, play and next.
-// The queue opens attached to the card. The card is dragged by its picture and snaps to the
-// nearest corner (300 ms, ease out).
+// The queue opens attached to the card. The card is dragged by its player part (picture, title,
+// chips) and snaps to the nearest corner (300 ms, ease out).
 import QtQuick
 import QtQuick.Templates as T
 
@@ -120,6 +120,15 @@ Item {
             blurRadius: VLCStyle.dp(11.8)
         }
 
+        // the card (queue included) takes the presses and wheel turns that no control takes, so
+        // they never reach the library under it (a library row took the mouse there, and a drag
+        // of the card was lost)
+        MouseArea {
+            anchors.fill: parent
+            acceptedButtons: Qt.AllButtons
+            onWheel: (wheel) => { wheel.accepted = true }
+        }
+
         // the queue sits above the player in the bottom corners, below it in the top ones
         Loader {
             id: queueLoader
@@ -140,6 +149,31 @@ Item {
             anchors.right: parent.right
             y: root.atTop || !root.queueOpen ? 0 : root.queueHeight
             height: root.playerHeight
+
+            // drag the card by its player part (also from the title and chips rows); it snaps to
+            // the nearest corner. A handler of the item under the controls also sees the presses
+            // the video takes; the seek bar keeps its own drags (preventStealing).
+            DragHandler {
+                id: dragHandler
+
+                target: root
+                cursorShape: Qt.DragMoveCursor
+
+                onActiveChanged: {
+                    if (active || !root.parent)
+                        return
+                    const left = root.x + root.width / 2 < root.parent.width / 2
+                    const top = root.y + root.height / 2 < root.parent.height / 2
+                    root.corner = (top ? "top" : "bottom") + (left ? "Left" : "Right")
+                    // back to the corner bindings, animated by the Behaviors
+                    root._snapping = true
+                    root.x = Qt.binding(() => root._left ? root.margin : root.parent.width - root.width - root.margin)
+                    root.y = Qt.binding(() => root.atTop ? root.topInset + root.margin : root.parent.height - root.height - root.margin)
+                    // released right on its corner: nothing to animate
+                    if (!snapX.running && !snapY.running)
+                        root._snapping = false
+                }
+            }
 
             Rectangle {
                 id: picture
@@ -167,6 +201,8 @@ Item {
 
                 // songs show their cover
                 Image {
+                    id: coverImage
+
                     anchors.fill: parent
                     anchors.margins: parent.border.width
                     visible: !Player.hasVideoOutput && status === Image.Ready
@@ -176,31 +212,18 @@ Item {
                     sourceSize: Qt.size(width * 2, height * 2)
                 }
 
-                HoverHandler {
-                    id: pictureHover
+                // a song without cover: the library's placeholder (media base with the "music"
+                // icon, 48 px as on the library cards)
+                Widgets.RdIcon {
+                    anchors.centerIn: parent
+                    visible: !Player.hasVideoOutput && !coverImage.visible
+                    name: "music"
+                    size: VLCStyle.dp(48)
+                    color: VLCStyle.palette.rdFgA2
                 }
 
-                // drag the card by its picture; it snaps to the nearest corner
-                DragHandler {
-                    id: dragHandler
-
-                    target: root
-                    cursorShape: Qt.DragMoveCursor
-
-                    onActiveChanged: {
-                        if (active || !root.parent)
-                            return
-                        const left = root.x + root.width / 2 < root.parent.width / 2
-                        const top = root.y + root.height / 2 < root.parent.height / 2
-                        root.corner = (top ? "top" : "bottom") + (left ? "Left" : "Right")
-                        // back to the corner bindings, animated by the Behaviors
-                        root._snapping = true
-                        root.x = Qt.binding(() => root._left ? root.margin : root.parent.width - root.width - root.margin)
-                        root.y = Qt.binding(() => root.atTop ? root.topInset + root.margin : root.parent.height - root.height - root.margin)
-                        // released right on its corner: nothing to animate
-                        if (!snapX.running && !snapY.running)
-                            root._snapping = false
-                    }
+                HoverHandler {
+                    id: pictureHover
                 }
 
                 // hover overlay (IB-18): dimmed picture, white controls
@@ -307,6 +330,8 @@ Item {
 
                     anchors.fill: parent
                     hoverEnabled: true
+                    // seeking, not moving the card
+                    preventStealing: true
                     cursorShape: Qt.PointingHandCursor
                     onPressed: (mouse) => Player.position = Math.max(0, Math.min(1, mouse.x / width))
                     onPositionChanged: (mouse) => {
@@ -332,23 +357,39 @@ Item {
                 color: VLCStyle.palette.rdFgA1
             }
 
+            // the chips share the room left of the queue button: both keep their whole label when
+            // they fit, else the longer one is elided first (never below half of the room)
             Row {
+                id: chips
+
+                readonly property real room: Math.max(0, queueButton.x - x - VLCStyle.dp(8))
+                readonly property bool both: folderChip.visible && artistChip.visible
+                readonly property real available: room - (both ? spacing : 0)
+
                 anchors.left: titleText.left
                 anchors.top: titleText.bottom
                 anchors.topMargin: VLCStyle.dp(14)
                 spacing: VLCStyle.dp(20)
 
                 Chip {
+                    id: folderChip
+
                     visible: root.folderName !== ""
                     iconName: "folder"
                     text: root.folderName
+                    maximumWidth: chips.both ? Math.max(chips.available / 2, chips.available - artistChip.naturalWidth)
+                                             : chips.available
                     onClicked: root.folderClicked()
                 }
 
                 Chip {
+                    id: artistChip
+
                     visible: !Player.hasVideoOutput && Player.artist !== ""
                     iconName: "artist"
                     text: Player.artist
+                    maximumWidth: chips.both ? chips.available - Math.min(folderChip.naturalWidth, folderChip.maximumWidth)
+                                             : chips.available
                     enabled: false
                 }
             }
@@ -356,6 +397,8 @@ Item {
             // Figma: 30 x 32 at card x 345, centred 30 px below the title, "lists" state=active
             // (accent, 2 px) while the queue shows, the #FFFFFF 6 % wrapper on hover
             OverlayButton {
+                id: queueButton
+
                 anchors.right: picture.right
                 anchors.rightMargin: VLCStyle.dp(8)
                 anchors.verticalCenter: titleText.bottom
@@ -416,6 +459,10 @@ Item {
         id: chip
 
         property string iconName: ""
+        // the room it may take; the label is elided to fit
+        property real maximumWidth: Number.POSITIVE_INFINITY
+        // icon, gap and the whole label
+        readonly property real naturalWidth: chipIcon.width + chipRow.spacing + chipLabel.implicitWidth
 
         // Figma "Frame 114": 32 high, the 24 px chips centred
         implicitHeight: VLCStyle.dp(32)
@@ -431,15 +478,19 @@ Item {
             spacing: VLCStyle.dp(8)
 
             Widgets.RdIcon {
+                id: chipIcon
+
                 anchors.verticalCenter: parent.verticalCenter
                 name: chip.iconName
                 color: chip.hovered && chip.enabled ? VLCStyle.palette.rdFg2 : VLCStyle.palette.rdFgA2
             }
 
             Text {
+                id: chipLabel
+
                 anchors.verticalCenter: parent.verticalCenter
                 text: chip.text
-                width: Math.min(implicitWidth, VLCStyle.dp(130))
+                width: Math.max(0, Math.min(implicitWidth, chip.maximumWidth - chipIcon.width - chipRow.spacing))
                 elide: Text.ElideRight
                 font.family: VLCStyle.rd_fontFamily
                 font.pixelSize: VLCStyle.rd_fontSize_header
