@@ -1,526 +1,2755 @@
 {
-  "area": "player",
-  "about": "Player area (Sticky's priority): control bar, top bar, seek bar and time label states, volume, tracks popup, settings sidebar tabs, queue / bookmarks / chapters, main menu, right-click menu, Hide UI, bars show / hide, fullscreen. Figma refs: Player-6.png (247:445), Controls.png variants, menu.png, right-click menu.png, Player - hide UI.png, Current Time.png, Duration.png, audio value.png, thumbnail.png.",
-  "sessions": [
+ "area": "player",
+ "about": "Player area (Sticky's priority): control bar, top bar, seek bar and time label states, volume, tracks popup, settings sidebar tabs, queue / bookmarks / chapters, main menu, right-click menu, Hide UI, bars show / hide, fullscreen. Figma refs: Player-6.png (247:445), Controls.png variants, menu.png, right-click menu.png, Player - hide UI.png, Current Time.png, Duration.png, audio value.png, thumbnail.png.",
+ "sessions": [
+  {
+   "id": "bar",
+   "about": "Three clips queued, the middle one shown paused at 00:02:10 of 00:25:40 with the volume at 50 % (the Figma control bar state; previous and next are enabled).",
+   "media": [
+    "Videos\\Verify Chapters.mkv",
+    "Videos\\Verify Clip.mkv",
+    "Videos\\Verify Tracks.mkv"
+   ],
+   "args": [
+    "--qt-continue=0",
+    "--start-paused"
+   ],
+   "setup": [
     {
-      "id": "bar",
-      "about": "Three clips queued, the middle one shown paused at 00:02:10 of 00:25:40 with the volume at 50 % (the Figma control bar state; previous and next are enabled).",
-      "media": ["Videos\\Verify Chapters.mkv", "Videos\\Verify Clip.mkv", "Videos\\Verify Tracks.mkv"],
-      "args": ["--qt-continue=0", "--start-paused"],
-      "setup": [
-        {"wait": 1000},
-        {"keys": "n", "after": 1500},
-        {"keys": " ", "after": 500},
-        {"wiggle": [960, 540]},
-        {"click": [208, 28], "from": "bl", "after": 500},
-        {"keys": "^a", "after": 150},
-        {"keys": "00:02:10{ENTER}", "after": 800},
-        {"volume": 0.5},
-        {"expect": {"uia": "Progress", "value": 0.0844, "tol": 0.0006}, "check": "seek position is 00:02:10 of 00:25:40"}
-      ],
-      "reset": [
-        {"keys": "{ESC}", "after": 300},
-        {"wiggle": [960, 540], "after": 700}
-      ],
-      "scenarios": [
-        {
-          "id": "bar-default",
-          "title": "Control bar, paused, pointer over the video",
-          "rows": ["P2-03"],
-          "steps": [
-            {"expect": {"uia": "Player controls", "visible": true}, "check": "control bar shown after a mouse move"},
-            {"shot": "bar", "uiaRects": ["Progress", "Volume", "Play/Pause"], "specScreen": "player"}
-          ],
-          "compare": [
-            {"id": "bar", "shot": "bar", "ref": "491:1779", "anchor": "bl", "node": "491:1779", "pad": 0, "rows": ["P2-03", "P2-02"], "specMasks": "player"},
-            {"id": "spec", "shot": "bar", "measure": "spec", "screen": "player", "note": "UIA geometry and sampled colours against spec.py (fixture until wip/verify-spec lands)"},
-            {"id": "transport", "shot": "bar", "ref": "491:1779", "anchor": "bl", "node": "3603:12301", "rows": ["P1-14", "IA-08", "P4-38"]},
-            {"id": "play", "shot": "bar", "ref": "491:1779", "anchor": "bl", "node": "3603:12304", "rows": ["IA-06", "P2-12", "IA-17"]},
-            {"id": "current-time", "shot": "bar", "ref": "491:1779", "anchor": "bl", "node": "1908:7386", "rows": ["P2-02", "IA-13"]},
-            {"id": "seek", "shot": "bar", "ref": "491:1779", "anchor": "bl", "node": "1908:7387", "rows": ["P2-02", "IA-13", "IB-17"],
-             "mask": [{"rect": [336, 13, 34, 28], "pad": 0}], "note": "handle area masked: Figma draws the handle at 7.9 % of the track, 00:02:10 of 00:25:40 is 8.4 %"},
-            {"id": "duration", "shot": "bar", "ref": "491:1779", "anchor": "bl", "node": "1908:7390", "rows": ["P2-02", "IA-13"]},
-            {"id": "volume", "shot": "bar", "ref": "491:1779", "anchor": "bl", "node": "491:1731", "rows": ["P1-19", "P2-01", "IA-12"]},
-            {"id": "track-buttons", "shot": "bar", "ref": "491:1779", "anchor": "br", "node": "491:1728", "rows": ["P1-15", "P1-17", "IA-10", "P3-13", "P2-16", "P2-17", "IB-16"]},
-            {"id": "queue-button", "shot": "bar", "ref": "491:1779", "anchor": "br", "node": "491:1734", "rows": ["P1-17", "IA-09", "IB-16"]}
-          ],
-          "human": ["The bar floats over the video and fades about 3 s after the pointer stops while playing (Decision 30): see bars-autohide."]
-        },
-        {
-          "id": "topbar",
-          "title": "Top bar and the inset video frame",
-          "rows": ["P2-06"],
-          "steps": [
-            {"shot": "top", "uiaRects": ["Menu", "Library", "Fullscreen"]}
-          ],
-          "compare": [
-            {"id": "topbar", "shot": "top", "ref": "247:445", "anchor": "tl", "node": "247:447", "pad": 0, "mask": [{"node": "247:450", "pad": 3}], "rows": ["P2-06", "IA-21"],
-             "note": "the cone logo is masked: the public build shows its own logo (public release rules)"},
-            {"id": "left-group", "shot": "top", "ref": "247:445", "anchor": "tl", "node": "247:448", "mask": [{"node": "247:450", "pad": 3}], "rows": ["P2-20", "P5-20", "IB-10", "P5-22", "IB-11"]},
-            {"id": "menu-button", "shot": "top", "ref": "247:445", "anchor": "tl", "node": "247:452", "rows": ["P2-20"]},
-            {"id": "sidebar-and-chip", "shot": "top", "ref": "247:445", "anchor": "tl", "node": "247:457", "rows": ["P5-22", "IB-11"]},
-            {"id": "folder-chip", "shot": "top", "ref": "247:445", "anchor": "tl", "node": "247:459", "rows": ["P5-20", "IB-10"]},
-            {"id": "title", "shot": "top", "ref": "247:445", "anchor": "tl", "node": "247:463", "pad": 8, "rows": ["IA-21", "P2-06"]},
-            {"id": "window-buttons", "shot": "top", "ref": "247:445", "anchor": "tr", "node": "247:464", "rows": ["P2-09", "IA-16", "P2-10"]},
-            {"id": "video-corner-tl", "shot": "top", "ref": "247:445", "anchor": "tl", "rect": [0, 28, 48, 60], "pad": 0, "rows": ["IB-08"]},
-            {"id": "video-corner-tr", "shot": "top", "ref": "247:445", "anchor": "tr", "rect": [1872, 28, 48, 60], "pad": 0, "rows": ["IB-08"]},
-            {"id": "video-edge-bl", "shot": "top", "ref": "247:445", "anchor": "bl", "rect": [0, 970, 48, 56], "pad": 0, "rows": ["IB-08"]}
-          ]
-        },
-        {
-          "id": "current-time-hover",
-          "title": "Current time label, hover state",
-          "rows": ["F-02"],
-          "steps": [
-            {"hover": [208, 28], "from": "bl", "after": 700},
-            {"shot": "hover"}
-          ],
-          "compare": [
-            {"id": "hover", "shot": "hover", "ref": "1904:7239", "at": [170, 41], "from": "bl", "node": "1904:7239", "pad": 2, "backdrop": {"node": "491:1779", "at": [160, 27]}}
-          ]
-        },
-        {
-          "id": "current-time-edit",
-          "title": "Current time label, click to edit",
-          "rows": ["F-02"],
-          "steps": [
-            {"click": [208, 28], "from": "bl", "after": 600},
-            {"shot": "edit"},
-            {"keys": "{ESC}", "after": 400},
-            {"expect": {"uia": "00:02:10", "role": "Text"}, "check": "Escape leaves the time unchanged (00:02:10)"}
-          ],
-          "compare": [
-            {"id": "edit", "shot": "edit", "ref": "1904:7241", "at": [170, 41], "from": "bl", "node": "1904:7241", "pad": 2, "backdrop": {"node": "491:1779", "at": [160, 27]}}
-          ],
-          "human": ["Type a time and press Enter: the player jumps there (used by the bar session setup: passes when the setup check passes)."]
-        },
-        {
-          "id": "duration-remaining",
-          "title": "Total time label switches to the remaining time",
-          "rows": ["F-01"],
-          "steps": [
-            {"click": [1538, 28], "from": "bl", "after": 600},
-            {"hover": [960, 540], "after": 500},
-            {"expect": {"uia": "-00:23:30", "role": "Text"}, "check": "label shows -00:23:30 (remaining) after a click"},
-            {"shot": "remaining"},
-            {"click": [1538, 28], "from": "bl", "after": 600},
-            {"expect": {"uia": "00:25:40", "role": "Text"}, "check": "a second click switches back to 00:25:40"}
-          ],
-          "compare": [
-            {"id": "remaining", "shot": "remaining", "ref": "1905:7317", "at": [1500, 41], "from": "bl", "node": "1905:7317", "pad": 2, "backdrop": {"node": "491:1779", "at": [160, 27]}}
-          ]
-        },
-        {
-          "id": "volume-tooltip",
-          "title": "Volume percentage tooltip on hover",
-          "rows": ["F-03"],
-          "steps": [
-            {"hover": [1608, 27], "from": "bl", "after": 900},
-            {"shot": "tooltip"}
-          ],
-          "compare": [
-            {"id": "tooltip", "shot": "tooltip", "ref": "2245:9805", "at": [1594, 102], "from": "bl", "node": "2245:9805", "pad": 2, "search": 40,
-             "mask": [{"node": "2245:9804", "pad": 4}], "tolerance": {"place": 4}, "note": "text masked: Figma shows 100 %, the run sets 50 %; place: Figma opens it 2 px left of / 63 px above the speaker icon"}
-          ],
-          "human": ["The tooltip text shows the current volume (50 % here) and follows the wheel / drag."]
-        },
-        {
-          "id": "seek-thumbnail",
-          "title": "Seek preview card while hovering the seek bar",
-          "rows": ["P2-04", "IA-14"],
-          "steps": [
-            {"hover": [700, 27], "from": "bl", "after": 200},
-            {"hover": [760, 27], "from": "bl", "after": 200},
-            {"hover": [800, 27], "from": "bl", "after": 1000},
-            {"hover": [805, 26], "from": "bl", "after": 3000},
-            {"shot": "thumb"}
-          ],
-          "compare": [
-            {"id": "card", "shot": "thumb", "ref": "2151:9673", "at": [669, 248], "from": "bl", "node": "2151:9673", "pad": 2, "search": 24,
-             "mask": [{"node": "2151:9674", "pad": -2}, {"node": "5970:13199", "pad": 4}], "tolerance": {"minValid": 0.15}, "note": "preview picture and time masked (they show the hovered position): the card frame is compared"}
-          ],
-          "human": ["The preview frame matches the hovered position and follows the pointer along the whole bar (Decision 6)."]
-        }
-      ]
+     "wait": 1000
     },
     {
-      "id": "tracks",
-      "about": "Tracks popup with two embedded audio and subtitle tracks (English / Japanese, as in Figma) and the external subtitle file The_Wand_S01_EN.srt.",
-      "media": ["Videos\\Verify Tracks.mkv"],
-      "args": ["--qt-continue=0", "--start-paused", "--sub-file={media}\\Videos\\The_Wand_S01_EN.srt"],
-      "setup": [
-        {"wait": 1200},
-        {"wiggle": [960, 540]}
-      ],
-      "reset": [
-        {"wiggle": [960, 540], "after": 500}
-      ],
-      "scenarios": [
-        {
-          "id": "tracks-subtitles",
-          "title": "Subtitle button opens the tracks popup on Subtitles; English selected",
-          "rows": ["P2-16", "P3-04"],
-          "steps": [
-            {"uia": "Subtitles", "role": "Button", "after": 800},
-            {"expect": {"uia": "Subtitles", "role": "TabItem"}, "check": "the popup opens with its tabs"},
-            {"uia": "English", "role": "RadioButton", "match": "contains", "after": 700},
-            {"hover": [960, 540], "after": 600},
-            {"shot": "popup"}
-          ],
-          "compare": [
-            {"id": "popup", "shot": "popup", "ref": "491:2216", "anchor": "br", "node": "491:2243", "pad": 2, "rows": ["P3-04", "P2-16"]},
-            {"id": "tabs", "shot": "popup", "ref": "491:2216", "anchor": "br", "node": "491:2244", "rows": ["P3-04", "P2-18"]},
-            {"id": "embedded", "shot": "popup", "ref": "491:2216", "anchor": "br", "node": "491:2258", "rows": ["P3-04"]},
-            {"id": "external", "shot": "popup", "ref": "491:2216", "anchor": "br", "node": "2410:13482", "rows": ["P3-05", "F-09"]},
-            {"id": "external-list", "shot": "popup", "ref": "491:2216", "anchor": "br", "node": "2410:13492", "rows": ["P3-04"]},
-            {"id": "footer", "shot": "popup", "ref": "491:2216", "anchor": "br", "node": "505:3083", "rows": ["F-07"]},
-            {"id": "button-active", "shot": "popup", "ref": "491:2216", "anchor": "br", "node": "491:2236", "rows": ["P2-16", "F-06"]}
-          ],
-          "human": ["Clicking outside the popup and Escape close it; the subtitle button toggles it (UX pass)."]
-        },
-        {
-          "id": "tracks-audio",
-          "title": "Audio tab of the tracks popup",
-          "rows": ["P2-17"],
-          "steps": [
-            {"uia": "Audio", "role": "TabItem", "after": 700},
-            {"hover": [960, 540], "after": 500},
-            {"shot": "popup"}
-          ],
-          "compare": [
-            {"id": "popup", "shot": "popup", "ref": "496:2495", "anchor": "br", "node": "496:2523", "pad": 2},
-            {"id": "tabs", "shot": "popup", "ref": "496:2495", "anchor": "br", "node": "496:2524"}
-          ],
-          "human": ["Output Device lists the real devices of this PC (Figma: Speakers / Headphones)."]
-        },
-        {
-          "id": "tracks-video",
-          "title": "Video tab of the tracks popup",
-          "rows": ["P2-18"],
-          "steps": [
-            {"uia": "Video", "role": "TabItem", "after": 700},
-            {"hover": [960, 540], "after": 500},
-            {"shot": "popup"}
-          ],
-          "compare": [
-            {"id": "popup", "shot": "popup", "ref": "498:2674", "anchor": "br", "node": "498:2702", "pad": 2},
-            {"id": "tabs", "shot": "popup", "ref": "498:2674", "anchor": "br", "node": "498:2703"}
-          ]
-        },
-        {
-          "id": "show-preferences",
-          "title": "Show Preferences on the Video tab opens the settings sidebar on Video",
-          "rows": ["F-07"],
-          "steps": [
-            {"uia": "Show Preferences", "role": "Button", "after": 900},
-            {"hover": [960, 540], "after": 500},
-            {"expect": {"uia": "Playback", "role": "TabItem"}, "check": "the settings sidebar is open"},
-            {"shot": "sidebar"},
-            {"keys": "{ESC}", "after": 400}
-          ],
-          "compare": [
-            {"id": "sidebar-video", "shot": "sidebar", "ref": "498:2937", "anchor": "br", "node": "498:2965", "pad": 2}
-          ]
-        }
-      ]
+     "keys": "n",
+     "after": 1500
     },
     {
-      "id": "sidebar",
-      "about": "Settings sidebar (gear) and its four tabs; paused clip without audio.",
-      "media": ["Videos\\Verify Clip.mkv"],
-      "args": ["--qt-continue=0", "--start-paused"],
-      "setup": [
-        {"wait": 1200},
-        {"wiggle": [960, 540]}
-      ],
-      "reset": [
-        {"wiggle": [960, 540], "after": 500}
-      ],
-      "scenarios": [
-        {
-          "id": "sidebar-playback",
-          "title": "Gear opens the settings sidebar on Playback",
-          "rows": ["P4-03", "F-06", "P3-17", "P3-18"],
-          "steps": [
-            {"uia": "Playback Settings", "role": "Button", "after": 900},
-            {"hover": [960, 540], "after": 600},
-            {"expect": {"uia": "Playback", "role": "TabItem"}, "check": "gear opens the sidebar (Decision 5: Playback tab)"},
-            {"shot": "sidebar"}
-          ],
-          "compare": [
-            {"id": "sidebar", "shot": "sidebar", "ref": "2238:9432", "anchor": "br", "node": "5187:24308", "pad": 2, "rows": ["P3-18", "IA-28"],
-             "mask": [{"rect": [1500, -915, 400, 166], "pad": 0}], "note": "toggle rows masked (Decision 13)"},
-            {"id": "tabs", "shot": "sidebar", "ref": "2238:9432", "anchor": "br", "node": "5187:24309", "rows": ["P3-18", "IA-28", "IA-41"]},
-            {"id": "content", "shot": "sidebar", "ref": "2238:9432", "anchor": "br", "node": "5187:24330", "rows": ["P4-31", "P4-32", "IA-42", "P4-34", "P4-37"],
-             "mask": [{"rect": [1500, -915, 400, 166], "pad": 0}], "note": "the three toggle rows are masked: Decision 13 puts the video's items there (Show Waveform, Show Metadata, Show Statistics), Figma has Show Subtitle Timeline, Show Statistics, Reverse"},
-            {"id": "gear-active", "shot": "sidebar", "ref": "2238:9432", "anchor": "br", "node": "2238:9449", "rows": ["P4-03", "F-06"]}
-          ],
-          "human": ["Toggle states depend on the test profile (Show Waveform on Seekbar is ON there, OFF in Figma)."]
-        },
-        {
-          "id": "sidebar-video",
-          "title": "Settings sidebar, Video tab",
-          "rows": ["P4-27", "P4-28"],
-          "steps": [
-            {"uia": "Video", "role": "TabItem", "after": 700},
-            {"hover": [960, 540], "after": 500},
-            {"shot": "sidebar"}
-          ],
-          "compare": [
-            {"id": "sidebar", "shot": "sidebar", "ref": "498:2937", "anchor": "br", "node": "498:2965", "pad": 2},
-            {"id": "tabs", "shot": "sidebar", "ref": "498:2937", "anchor": "br", "node": "498:2966"},
-            {"id": "content", "shot": "sidebar", "ref": "498:2937", "anchor": "br", "node": "536:1772", "rows": ["P4-27", "P4-28", "P4-30", "IA-32"]},
-            {"id": "footer", "shot": "sidebar", "ref": "498:2937", "anchor": "br", "node": "812:1580", "rows": ["P4-21"]}
-          ]
-        },
-        {
-          "id": "sidebar-audio",
-          "title": "Settings sidebar, Audio tab",
-          "rows": ["P4-15", "P4-17"],
-          "steps": [
-            {"uia": "Audio", "role": "TabItem", "after": 700},
-            {"hover": [960, 540], "after": 500},
-            {"shot": "sidebar"}
-          ],
-          "compare": [
-            {"id": "sidebar", "shot": "sidebar", "ref": "536:1059", "anchor": "br", "node": "536:1087", "pad": 2},
-            {"id": "tabs", "shot": "sidebar", "ref": "536:1059", "anchor": "br", "node": "536:1088"},
-            {"id": "content", "shot": "sidebar", "ref": "536:1059", "anchor": "br", "node": "536:1617", "rows": ["P4-15", "P4-17", "P4-18", "P4-19", "P4-20", "IA-38", "IA-36"]},
-            {"id": "footer", "shot": "sidebar", "ref": "536:1059", "anchor": "br", "node": "812:1563", "rows": ["P4-21"]}
-          ]
-        },
-        {
-          "id": "sidebar-subtitles",
-          "title": "Settings sidebar, Subtitles tab",
-          "rows": ["P3-19", "P3-21"],
-          "steps": [
-            {"uia": "Subtitles", "role": "TabItem", "after": 700},
-            {"hover": [960, 540], "after": 500},
-            {"shot": "sidebar"}
-          ],
-          "compare": [
-            {"id": "sidebar", "shot": "sidebar", "ref": "763:1958", "anchor": "br", "node": "763:1986", "pad": 2},
-            {"id": "tabs", "shot": "sidebar", "ref": "763:1958", "anchor": "br", "node": "763:1987"},
-            {"id": "content", "shot": "sidebar", "ref": "763:1958", "anchor": "br", "node": "763:1997", "rows": ["P3-19", "P3-20", "P3-21", "IA-29", "IA-30", "IA-31", "P4-12", "P3-23", "IA-32"]},
-            {"id": "footer", "shot": "sidebar", "ref": "763:1958", "anchor": "br", "node": "763:2037", "rows": ["P4-21"]}
-          ]
-        },
-        {
-          "id": "sidebar-close",
-          "title": "Gear again closes the sidebar",
-          "rows": ["F-06"],
-          "steps": [
-            {"uia": "Playback Settings", "role": "Button", "after": 900},
-            {"expect": {"uia": "Playback", "role": "TabItem", "present": false, "timeout": 600}, "check": "a second click on the gear closes the sidebar"}
-          ]
-        }
-      ]
+     "keys": " ",
+     "after": 500
     },
     {
-      "id": "queue",
-      "about": "Queue sidebar with three items; the chapters clip is current (Chapters tab).",
-      "media": ["Videos\\Verify Chapters.mkv", "Videos\\Verify Clip.mkv", "Videos\\Verify Tracks.mkv"],
-      "args": ["--qt-continue=0", "--start-paused"],
-      "setup": [
-        {"wait": 1200},
-        {"wiggle": [960, 540]}
-      ],
-      "reset": [
-        {"wiggle": [960, 540], "after": 500}
-      ],
-      "scenarios": [
-        {
-          "id": "queue-tab",
-          "title": "Queue button opens the queue sidebar",
-          "rows": ["P5-02", "IA-43"],
-          "steps": [
-            {"uia": "Queue", "role": "Button", "after": 900},
-            {"hover": [960, 540], "after": 600},
-            {"expect": {"uia": "Bookmarks", "role": "TabItem"}, "check": "queue sidebar has Queue / Bookmarks / Chapters tabs (Decision 3)"},
-            {"shot": "queue"}
-          ],
-          "compare": [
-            {"id": "panel", "shot": "queue", "ref": "491:1781", "anchor": "br", "node": "463:831", "pad": 2, "rows": ["P5-02", "IA-43"],
-             "mask": [{"node": "463:846", "pad": 0}], "note": "item list masked: Figma lists other files"},
-
-            {"id": "tabs", "shot": "queue", "ref": "491:1781", "anchor": "br", "node": "463:832", "rows": ["P5-02"]},
-            {"id": "header", "shot": "queue", "ref": "491:1781", "anchor": "br", "node": "463:840", "rows": ["IA-43"]},
-            {"id": "queue-button-active", "shot": "queue", "ref": "491:1781", "anchor": "br", "node": "491:1807", "rows": ["F-06"]}
-          ],
-          "human": ["Item rows differ by content (Figma shows other titles); judge spacing and states by eye."]
-        },
-        {
-          "id": "bookmarks-tab",
-          "title": "Queue sidebar, Bookmarks tab",
-          "rows": ["P5-02"],
-          "steps": [
-            {"uia": "Bookmarks", "role": "TabItem", "after": 700},
-            {"hover": [960, 540], "after": 500},
-            {"shot": "bookmarks"}
-          ],
-          "compare": [
-            {"id": "panel", "shot": "bookmarks", "ref": "6320:13763", "anchor": "br", "node": "6320:13784", "pad": 2,
-             "mask": [{"node": "6320:13811", "pad": 0}], "note": "bookmark list masked: the test clip has no bookmarks"},
-            {"id": "tabs", "shot": "bookmarks", "ref": "6320:13763", "anchor": "br", "node": "6320:13785"},
-            {"id": "header", "shot": "bookmarks", "ref": "6320:13763", "anchor": "br", "node": "6320:13801"}
-          ]
-        },
-        {
-          "id": "chapters-tab",
-          "title": "Queue sidebar, Chapters tab",
-          "rows": ["P5-02"],
-          "steps": [
-            {"uia": "Chapters", "role": "TabItem", "after": 700},
-            {"hover": [960, 540], "after": 500},
-            {"shot": "chapters"},
-            {"uia": "Queue", "role": "Button", "after": 700},
-            {"expect": {"uia": "Bookmarks", "role": "TabItem", "present": false, "timeout": 600}, "check": "queue button again closes the sidebar"}
-          ],
-          "compare": [
-            {"id": "panel", "shot": "chapters", "ref": "6321:14024", "anchor": "br", "node": "6321:14045", "pad": 2},
-            {"id": "tabs", "shot": "chapters", "ref": "6321:14024", "anchor": "br", "node": "6321:14046"}
-          ]
-        }
-      ]
+     "wiggle": [
+      960,
+      540
+     ]
     },
     {
-      "id": "menus",
-      "about": "Main menu, right-click menu, Hide UI.",
-      "media": ["Videos\\Verify Clip.mkv"],
-      "args": ["--qt-continue=0", "--start-paused"],
-      "setup": [
-        {"wait": 1200},
-        {"wiggle": [960, 540]}
-      ],
-      "reset": [
-        {"keys": "{ESC}", "after": 300},
-        {"wiggle": [960, 540], "after": 500}
-      ],
-      "scenarios": [
-        {
-          "id": "main-menu",
-          "title": "The ... button opens the main menu",
-          "rows": ["P2-21", "P6-11"],
-          "steps": [
-            {"uia": "Menu", "role": "Button", "after": 900},
-            {"expect": {"uia": "Keyboard Shortcuts", "role": "MenuItem"}, "check": "main menu open with Keyboard Shortcuts (P7-13)"},
-            {"shot": "menu"},
-            {"keys": "{ESC}", "after": 400},
-            {"expect": {"uia": "Keyboard Shortcuts", "role": "MenuItem", "present": false, "timeout": 600}, "check": "Escape closes the main menu"}
-          ],
-          "compare": [
-            {"id": "menu", "shot": "menu", "ref": "6062:13354", "at": [36, 46], "node": "6062:13354", "pad": 2, "search": 40,
-             "mask": [{"node": "6062:13502", "pad": 2}, {"node": "6062:13506", "pad": 2}], "note": "masked: the profile name (test profile state) and About VLC (the public build says About Cone, public release rules)",
-             "rows": ["P2-21", "IA-22", "IB-26", "IB-27", "P6-11", "P7-09", "P7-13", "F-21", "P8-49"]},
-            {"id": "first-items", "shot": "menu", "ref": "6062:13354", "at": [36, 46], "rect": [0, 0, 375, 340], "pad": 0, "search": 40, "rows": ["IA-22", "IB-26", "IB-27"]}
-          ],
-          "human": ["Every item opens its own dialog (P6-12): Settings, Keyboard Shortcuts, Open Network Stream, Customize Player."]
-        },
-        {
-          "id": "right-click-menu",
-          "title": "Right-click on the video opens the context menu at the pointer",
-          "rows": ["P2-23", "IA-23"],
-          "steps": [
-            {"click": [900, 300], "button": "right", "after": 900},
-            {"expect": {"uia": "Hide UI", "role": "MenuItem"}, "check": "context menu has Hide UI (P2-24)"},
-            {"shot": "menu"},
-            {"keys": "{ESC}", "after": 400}
-          ],
-          "compare": [
-            {"id": "menu", "shot": "menu", "ref": "6065:13616", "at": [900, 300], "node": "6065:13616", "pad": 2, "search": 40, "rows": ["P2-23", "IA-23", "P2-24", "F-21"],
-             "mask": [{"node": "6077:14267", "pad": 2}], "note": "Quit VLC masked: the public build says Quit Cone"},
-            {"id": "first-items", "shot": "menu", "ref": "6065:13616", "at": [900, 300], "rect": [0, 0, 292, 294], "pad": 0, "search": 40, "rows": ["IA-23", "P2-24"]}
-          ]
-        },
-        {
-          "id": "hide-ui",
-          "title": "Hide UI from the context menu hides both bars",
-          "rows": ["P2-24", "P2-25"],
-          "steps": [
-            {"click": [900, 300], "button": "right", "after": 900},
-            {"uia": "Hide UI", "role": "MenuItem", "after": 900},
-            {"wiggle": [960, 540], "after": 800},
-            {"expect": {"uia": "Player controls", "visible": false}, "check": "control bar hidden after Hide UI, also when the mouse moves"},
-            {"shot": "hidden"},
-            {"click": [900, 300], "button": "right", "after": 900},
-            {"uia": "UI", "role": "MenuItem", "match": "contains", "after": 900, "optional": true},
-            {"wiggle": [960, 540], "after": 800},
-            {"expect": {"uia": "Player controls", "visible": true}, "check": "the context menu item shows the UI again"}
-          ],
-          "compare": [
-            {"id": "frame", "shot": "hidden", "ref": "3328:11554", "anchor": "tl", "node": "3328:11554", "pad": 0, "mask": [{"rect": [700, 330, 520, 500]}],
-             "note": "cat picture masked (the verify clip is a flat picture in the same colour)"}
-          ],
-          "human": ["Ctrl + \\ toggles Hide UI too: on keyboard layouts where \\ needs AltGr the harness cannot type it reliably."]
-        }
-      ]
+     "click": [
+      208,
+      28
+     ],
+     "from": "bl",
+     "after": 500
     },
     {
-      "id": "bars",
-      "about": "Bars show / hide while playing, windowed (Decision 30) and fullscreen.",
-      "media": ["Videos\\Verify Chapters.mkv", "Videos\\Verify Clip.mkv", "Videos\\Verify Tracks.mkv"],
-      "args": ["--qt-continue=0", "--start-paused"],
-      "setup": [
-        {"wait": 1000},
-        {"keys": "n", "after": 1500},
-        {"wiggle": [960, 540]},
-        {"volume": 0.5}
-      ],
-      "reset": [
-        {"wiggle": [960, 540], "after": 500}
-      ],
-      "scenarios": [
-        {
-          "id": "bars-autohide",
-          "title": "Windowed, playing: bars fade about 3 s after the pointer stops and come back on a move",
-          "rows": ["P2-08", "IA-15", "P3-11"],
-          "steps": [
-            {"hover": [960, 540], "after": 4500},
-            {"expect": {"uia": "Player controls", "visible": false}, "check": "control bar hidden 4.5 s after the pointer stopped (playing)"},
-            {"shot": "hidden"},
-            {"wiggle": [960, 540], "after": 400},
-            {"expect": {"uia": "Player controls", "visible": true}, "check": "control bar back on a mouse move"},
-            {"shot": "shown"}
-          ],
-          "compare": [
-            {"id": "hidden-bottom", "shot": "hidden", "ref": "3328:11554", "anchor": "bl", "rect": [0, 960, 1920, 120], "pad": 0, "rows": ["P2-08", "IA-15"],
-             "note": "Figma Player - hide UI: no bar, the video reaches the window edge"},
-            {"id": "shown-bar", "shot": "shown", "ref": "491:1779", "anchor": "br", "node": "491:1728", "rows": ["P2-08"]}
-          ],
-          "human": ["Fade timing and curve (300 ms ease-in-out in Figma) need the motion check (60 fps recording)."]
-        },
-        {
-          "id": "fullscreen",
-          "title": "Fullscreen: bars appear near their edge and hide when the pointer leaves",
-          "rows": ["P2-09", "P2-10"],
-          "steps": [
-            {"uia": "Fullscreen", "role": "Button", "after": 1800},
-            {"hover": [960, 2], "from": "bl", "after": 300},
-            {"hover": [962, 3], "from": "bl", "after": 900},
-            {"expect": {"uia": "Player controls", "visible": true}, "check": "fullscreen: control bar shows with the pointer at the bottom edge"},
-            {"shot": "fs-bottom"},
-            {"hover": [960, 2], "after": 300},
-            {"hover": [962, 3], "after": 900},
-            {"expect": {"uia": "Player topbar", "visible": true}, "check": "fullscreen: top bar shows with the pointer at the top edge"},
-            {"shot": "fs-top"},
-            {"hover": [900, 500], "after": 300},
-            {"hover": [902, 502], "after": 2500},
-            {"expect": {"uia": "Player controls", "visible": false}, "check": "fullscreen: control bar hidden with the pointer in the middle"},
-            {"shot": "fs-middle"},
-            {"keys": "{ESC}", "after": 1500},
-            {"wiggle": [960, 540], "after": 600},
-            {"expect": {"uia": "Player controls", "visible": true}, "check": "Escape leaves fullscreen, bar back"}
-          ],
-          "compare": [
-            {"id": "fs-previous", "shot": "fs-bottom", "ref": "491:1779", "anchor": "bl", "node": "3603:12302", "rows": ["P2-08"], "note": "the clip plays here: only the previous button (the play pill shows pause)"},
-            {"id": "fs-volume", "shot": "fs-bottom", "ref": "491:1779", "anchor": "br", "node": "491:1731", "rows": ["P2-08"]},
-            {"id": "fs-right", "shot": "fs-bottom", "ref": "491:1779", "anchor": "br", "node": "491:1728", "rows": ["P2-08"]},
-            {"id": "fs-window-buttons", "shot": "fs-top", "ref": "247:445", "anchor": "tr", "node": "247:464", "rows": ["P2-09", "P2-10", "IA-16"]},
-            {"id": "fs-left", "shot": "fs-top", "ref": "247:445", "anchor": "tl", "node": "247:448", "mask": [{"node": "247:450", "pad": 3}], "rows": ["P2-08"]}
-          ],
-          "human": ["Fullscreen top bar shows the exit-fullscreen glyph where Figma (windowed) shows the fullscreen glyph: judge the glyph by eye."]
-        }
-      ]
+     "keys": "^a",
+     "after": 150
+    },
+    {
+     "keys": "00:02:10{ENTER}",
+     "after": 800
+    },
+    {
+     "volume": 0.5
+    },
+    {
+     "expect": {
+      "uia": "Progress",
+      "value": 0.0844,
+      "tol": 0.0006
+     },
+     "check": "seek position is 00:02:10 of 00:25:40"
     }
-  ]
+   ],
+   "reset": [
+    {
+     "keys": "{ESC}",
+     "after": 300
+    },
+    {
+     "wiggle": [
+      960,
+      540
+     ],
+     "after": 700
+    }
+   ],
+   "scenarios": [
+    {
+     "id": "bar-default",
+     "title": "Control bar, paused, pointer over the video",
+     "rows": [
+      "P2-03"
+     ],
+     "steps": [
+      {
+       "expect": {
+        "uia": "Player controls",
+        "visible": true
+       },
+       "check": "control bar shown after a mouse move"
+      },
+      {
+       "shot": "bar",
+       "uiaRects": [
+        "Progress",
+        "Volume",
+        "Play/Pause"
+       ],
+       "uiaAll": true
+      }
+     ],
+     "compare": [
+      {
+       "id": "bar",
+       "shot": "bar",
+       "ref": "491:1779",
+       "anchor": "bl",
+       "node": "491:1779",
+       "pad": 0,
+       "rows": [
+        "P2-03",
+        "P2-02"
+       ],
+       "specMasks": {
+        "png": "Controls.png",
+        "props": {
+         "Property 1": "default"
+        }
+       }
+      },
+      {
+       "id": "transport",
+       "shot": "bar",
+       "ref": "491:1779",
+       "anchor": "bl",
+       "node": "3603:12301",
+       "rows": [
+        "P1-14",
+        "IA-08",
+        "P4-38"
+       ]
+      },
+      {
+       "id": "play",
+       "shot": "bar",
+       "ref": "491:1779",
+       "anchor": "bl",
+       "node": "3603:12304",
+       "rows": [
+        "IA-06",
+        "P2-12",
+        "IA-17"
+       ]
+      },
+      {
+       "id": "current-time",
+       "shot": "bar",
+       "ref": "491:1779",
+       "anchor": "bl",
+       "node": "1908:7386",
+       "rows": [
+        "P2-02",
+        "IA-13"
+       ]
+      },
+      {
+       "id": "seek",
+       "shot": "bar",
+       "ref": "491:1779",
+       "anchor": "bl",
+       "node": "1908:7387",
+       "rows": [
+        "P2-02",
+        "IA-13",
+        "IB-17"
+       ],
+       "mask": [
+        {
+         "rect": [
+          336,
+          13,
+          34,
+          28
+         ],
+         "pad": 0
+        }
+       ],
+       "note": "handle area masked: Figma draws the handle at 7.9 % of the track, 00:02:10 of 00:25:40 is 8.4 %"
+      },
+      {
+       "id": "duration",
+       "shot": "bar",
+       "ref": "491:1779",
+       "anchor": "bl",
+       "node": "1908:7390",
+       "rows": [
+        "P2-02",
+        "IA-13"
+       ]
+      },
+      {
+       "id": "volume",
+       "shot": "bar",
+       "ref": "491:1779",
+       "anchor": "bl",
+       "node": "491:1731",
+       "rows": [
+        "P1-19",
+        "P2-01",
+        "IA-12"
+       ]
+      },
+      {
+       "id": "track-buttons",
+       "shot": "bar",
+       "ref": "491:1779",
+       "anchor": "br",
+       "node": "491:1728",
+       "rows": [
+        "P1-15",
+        "P1-17",
+        "IA-10",
+        "P3-13",
+        "P2-16",
+        "P2-17",
+        "IB-16"
+       ]
+      },
+      {
+       "id": "queue-button",
+       "shot": "bar",
+       "ref": "491:1779",
+       "anchor": "br",
+       "node": "491:1734",
+       "rows": [
+        "P1-17",
+        "IA-09",
+        "IB-16"
+       ]
+      },
+      {
+       "id": "spec",
+       "shot": "bar",
+       "measure": "spec",
+       "png": "Controls.png",
+       "props": {
+        "Property 1": "default"
+       },
+       "anchor": "bl"
+      }
+     ],
+     "human": [
+      "The bar floats over the video and fades about 3 s after the pointer stops while playing (Decision 30): see bars-autohide."
+     ]
+    },
+    {
+     "id": "topbar",
+     "title": "Top bar and the inset video frame",
+     "rows": [
+      "P2-06"
+     ],
+     "steps": [
+      {
+       "shot": "top",
+       "uiaRects": [
+        "Menu",
+        "Library",
+        "Fullscreen"
+       ],
+       "uiaAll": true
+      }
+     ],
+     "compare": [
+      {
+       "id": "topbar",
+       "shot": "top",
+       "ref": "247:445",
+       "anchor": "tl",
+       "node": "247:447",
+       "pad": 0,
+       "mask": [
+        {
+         "node": "247:450",
+         "pad": 3
+        }
+       ],
+       "rows": [
+        "P2-06",
+        "IA-21"
+       ],
+       "note": "the cone logo is masked: the public build shows its own logo (public release rules)"
+      },
+      {
+       "id": "left-group",
+       "shot": "top",
+       "ref": "247:445",
+       "anchor": "tl",
+       "node": "247:448",
+       "mask": [
+        {
+         "node": "247:450",
+         "pad": 3
+        }
+       ],
+       "rows": [
+        "P2-20",
+        "P5-20",
+        "IB-10",
+        "P5-22",
+        "IB-11"
+       ]
+      },
+      {
+       "id": "menu-button",
+       "shot": "top",
+       "ref": "247:445",
+       "anchor": "tl",
+       "node": "247:452",
+       "rows": [
+        "P2-20"
+       ]
+      },
+      {
+       "id": "sidebar-and-chip",
+       "shot": "top",
+       "ref": "247:445",
+       "anchor": "tl",
+       "node": "247:457",
+       "rows": [
+        "P5-22",
+        "IB-11"
+       ]
+      },
+      {
+       "id": "folder-chip",
+       "shot": "top",
+       "ref": "247:445",
+       "anchor": "tl",
+       "node": "247:459",
+       "rows": [
+        "P5-20",
+        "IB-10"
+       ]
+      },
+      {
+       "id": "title",
+       "shot": "top",
+       "ref": "247:445",
+       "anchor": "tl",
+       "node": "247:463",
+       "pad": 8,
+       "rows": [
+        "IA-21",
+        "P2-06"
+       ]
+      },
+      {
+       "id": "window-buttons",
+       "shot": "top",
+       "ref": "247:445",
+       "anchor": "tr",
+       "node": "247:464",
+       "rows": [
+        "P2-09",
+        "IA-16",
+        "P2-10"
+       ]
+      },
+      {
+       "id": "video-corner-tl",
+       "shot": "top",
+       "ref": "247:445",
+       "anchor": "tl",
+       "rect": [
+        0,
+        28,
+        48,
+        60
+       ],
+       "pad": 0,
+       "rows": [
+        "IB-08"
+       ]
+      },
+      {
+       "id": "video-corner-tr",
+       "shot": "top",
+       "ref": "247:445",
+       "anchor": "tr",
+       "rect": [
+        1872,
+        28,
+        48,
+        60
+       ],
+       "pad": 0,
+       "rows": [
+        "IB-08"
+       ]
+      },
+      {
+       "id": "video-edge-bl",
+       "shot": "top",
+       "ref": "247:445",
+       "anchor": "bl",
+       "rect": [
+        0,
+        970,
+        48,
+        56
+       ],
+       "pad": 0,
+       "rows": [
+        "IB-08"
+       ]
+      },
+      {
+       "id": "spec",
+       "shot": "top",
+       "measure": "spec",
+       "png": "Player-6.png",
+       "anchor": "tl"
+      }
+     ]
+    },
+    {
+     "id": "current-time-hover",
+     "title": "Current time label, hover state",
+     "rows": [
+      "F-02"
+     ],
+     "steps": [
+      {
+       "hover": [
+        208,
+        28
+       ],
+       "from": "bl",
+       "after": 700
+      },
+      {
+       "shot": "hover",
+       "uiaAll": true
+      }
+     ],
+     "compare": [
+      {
+       "id": "hover",
+       "shot": "hover",
+       "ref": "1904:7239",
+       "at": [
+        170,
+        41
+       ],
+       "from": "bl",
+       "node": "1904:7239",
+       "pad": 2,
+       "backdrop": {
+        "node": "491:1779",
+        "at": [
+         160,
+         27
+        ]
+       }
+      },
+      {
+       "id": "spec",
+       "shot": "hover",
+       "measure": "spec",
+       "png": "Current Time.png",
+       "props": {
+        "state": "hover"
+       },
+       "at": [
+        170,
+        41
+       ],
+       "from": "bl"
+      }
+     ]
+    },
+    {
+     "id": "current-time-edit",
+     "title": "Current time label, click to edit",
+     "rows": [
+      "F-02"
+     ],
+     "steps": [
+      {
+       "click": [
+        208,
+        28
+       ],
+       "from": "bl",
+       "after": 600
+      },
+      {
+       "shot": "edit"
+      },
+      {
+       "keys": "{ESC}",
+       "after": 400
+      },
+      {
+       "expect": {
+        "uia": "00:02:10",
+        "role": "Text"
+       },
+       "check": "Escape leaves the time unchanged (00:02:10)"
+      }
+     ],
+     "compare": [
+      {
+       "id": "edit",
+       "shot": "edit",
+       "ref": "1904:7241",
+       "at": [
+        170,
+        41
+       ],
+       "from": "bl",
+       "node": "1904:7241",
+       "pad": 2,
+       "backdrop": {
+        "node": "491:1779",
+        "at": [
+         160,
+         27
+        ]
+       }
+      }
+     ],
+     "human": [
+      "Type a time and press Enter: the player jumps there (used by the bar session setup: passes when the setup check passes)."
+     ]
+    },
+    {
+     "id": "duration-remaining",
+     "title": "Total time label switches to the remaining time",
+     "rows": [
+      "F-01"
+     ],
+     "steps": [
+      {
+       "click": [
+        1538,
+        28
+       ],
+       "from": "bl",
+       "after": 600
+      },
+      {
+       "hover": [
+        960,
+        540
+       ],
+       "after": 500
+      },
+      {
+       "expect": {
+        "uia": "-00:23:30",
+        "role": "Text"
+       },
+       "check": "label shows -00:23:30 (remaining) after a click"
+      },
+      {
+       "shot": "remaining",
+       "uiaAll": true
+      },
+      {
+       "click": [
+        1538,
+        28
+       ],
+       "from": "bl",
+       "after": 600
+      },
+      {
+       "expect": {
+        "uia": "00:25:40",
+        "role": "Text"
+       },
+       "check": "a second click switches back to 00:25:40"
+      }
+     ],
+     "compare": [
+      {
+       "id": "remaining",
+       "shot": "remaining",
+       "ref": "1905:7317",
+       "at": [
+        1500,
+        41
+       ],
+       "from": "bl",
+       "node": "1905:7317",
+       "pad": 2,
+       "backdrop": {
+        "node": "491:1779",
+        "at": [
+         160,
+         27
+        ]
+       }
+      },
+      {
+       "id": "spec",
+       "shot": "remaining",
+       "measure": "spec",
+       "png": "Duration.png",
+       "props": {
+        "state": "click"
+       },
+       "at": [
+        1500,
+        41
+       ],
+       "from": "bl"
+      }
+     ]
+    },
+    {
+     "id": "volume-tooltip",
+     "title": "Volume percentage tooltip on hover",
+     "rows": [
+      "F-03"
+     ],
+     "steps": [
+      {
+       "hover": [
+        1608,
+        27
+       ],
+       "from": "bl",
+       "after": 900
+      },
+      {
+       "shot": "tooltip",
+       "uiaAll": true
+      }
+     ],
+     "compare": [
+      {
+       "id": "tooltip",
+       "shot": "tooltip",
+       "ref": "2245:9805",
+       "at": [
+        1594,
+        102
+       ],
+       "from": "bl",
+       "node": "2245:9805",
+       "pad": 2,
+       "search": 40,
+       "mask": [
+        {
+         "node": "2245:9804",
+         "pad": 4
+        }
+       ],
+       "tolerance": {
+        "place": 4
+       },
+       "note": "text masked: Figma shows 100 %, the run sets 50 %; place: Figma opens it 2 px left of / 63 px above the speaker icon"
+      },
+      {
+       "id": "spec",
+       "shot": "tooltip",
+       "measure": "spec",
+       "png": "audio value.png",
+       "at": [
+        1594,
+        102
+       ],
+       "from": "bl",
+       "alignTo": "tooltip"
+      }
+     ],
+     "human": [
+      "The tooltip text shows the current volume (50 % here) and follows the wheel / drag."
+     ]
+    },
+    {
+     "id": "seek-thumbnail",
+     "title": "Seek preview card while hovering the seek bar",
+     "rows": [
+      "P2-04",
+      "IA-14"
+     ],
+     "steps": [
+      {
+       "hover": [
+        700,
+        27
+       ],
+       "from": "bl",
+       "after": 200
+      },
+      {
+       "hover": [
+        760,
+        27
+       ],
+       "from": "bl",
+       "after": 200
+      },
+      {
+       "hover": [
+        800,
+        27
+       ],
+       "from": "bl",
+       "after": 1000
+      },
+      {
+       "hover": [
+        805,
+        26
+       ],
+       "from": "bl",
+       "after": 3000
+      },
+      {
+       "shot": "thumb",
+       "uiaAll": true
+      }
+     ],
+     "compare": [
+      {
+       "id": "card",
+       "shot": "thumb",
+       "ref": "2151:9673",
+       "at": [
+        669,
+        248
+       ],
+       "from": "bl",
+       "node": "2151:9673",
+       "pad": 2,
+       "search": 24,
+       "mask": [
+        {
+         "node": "2151:9674",
+         "pad": -2
+        },
+        {
+         "node": "5970:13199",
+         "pad": 4
+        }
+       ],
+       "tolerance": {
+        "minValid": 0.15
+       },
+       "note": "preview picture and time masked (they show the hovered position): the card frame is compared"
+      },
+      {
+       "id": "spec",
+       "shot": "thumb",
+       "measure": "spec",
+       "png": "thumbnail.png",
+       "at": [
+        669,
+        248
+       ],
+       "from": "bl",
+       "alignTo": "card"
+      }
+     ],
+     "human": [
+      "The preview frame matches the hovered position and follows the pointer along the whole bar (Decision 6)."
+     ]
+    }
+   ]
+  },
+  {
+   "id": "tracks",
+   "about": "Tracks popup with two embedded audio and subtitle tracks (English / Japanese, as in Figma) and the external subtitle file The_Wand_S01_EN.srt.",
+   "media": [
+    "Videos\\Verify Tracks.mkv"
+   ],
+   "args": [
+    "--qt-continue=0",
+    "--start-paused",
+    "--sub-file={media}\\Videos\\The_Wand_S01_EN.srt"
+   ],
+   "setup": [
+    {
+     "wait": 1200
+    },
+    {
+     "wiggle": [
+      960,
+      540
+     ]
+    }
+   ],
+   "reset": [
+    {
+     "wiggle": [
+      960,
+      540
+     ],
+     "after": 500
+    }
+   ],
+   "scenarios": [
+    {
+     "id": "tracks-subtitles",
+     "title": "Subtitle button opens the tracks popup on Subtitles; English selected",
+     "rows": [
+      "P2-16",
+      "P3-04"
+     ],
+     "steps": [
+      {
+       "uia": "Subtitles",
+       "role": "Button",
+       "after": 800
+      },
+      {
+       "expect": {
+        "uia": "Subtitles",
+        "role": "TabItem"
+       },
+       "check": "the popup opens with its tabs"
+      },
+      {
+       "uia": "English",
+       "role": "RadioButton",
+       "match": "contains",
+       "after": 700
+      },
+      {
+       "hover": [
+        960,
+        540
+       ],
+       "after": 600
+      },
+      {
+       "demo": "tracks-subtitles"
+      },
+      {
+       "shot": "popup",
+       "uiaAll": true
+      }
+     ],
+     "compare": [
+      {
+       "id": "popup",
+       "shot": "popup",
+       "ref": "491:2216",
+       "anchor": "br",
+       "node": "491:2243",
+       "pad": 2,
+       "rows": [
+        "P3-04",
+        "P2-16"
+       ],
+       "specMasks": {
+        "png": "Controls.png",
+        "props": {
+         "Property 1": "subtitles"
+        },
+        "node": "491:2243"
+       },
+       "demo": "tracks-subtitles"
+      },
+      {
+       "id": "tabs",
+       "shot": "popup",
+       "ref": "491:2216",
+       "anchor": "br",
+       "node": "491:2244",
+       "rows": [
+        "P3-04",
+        "P2-18"
+       ],
+       "specMasks": {
+        "png": "Controls.png",
+        "props": {
+         "Property 1": "subtitles"
+        },
+        "node": "491:2243"
+       },
+       "demo": "tracks-subtitles"
+      },
+      {
+       "id": "embedded",
+       "shot": "popup",
+       "ref": "491:2216",
+       "anchor": "br",
+       "node": "491:2258",
+       "rows": [
+        "P3-04"
+       ],
+       "specMasks": {
+        "png": "Controls.png",
+        "props": {
+         "Property 1": "subtitles"
+        },
+        "node": "491:2243"
+       },
+       "demo": "tracks-subtitles"
+      },
+      {
+       "id": "external",
+       "shot": "popup",
+       "ref": "491:2216",
+       "anchor": "br",
+       "node": "2410:13482",
+       "rows": [
+        "P3-05",
+        "F-09"
+       ],
+       "specMasks": {
+        "png": "Controls.png",
+        "props": {
+         "Property 1": "subtitles"
+        },
+        "node": "491:2243"
+       },
+       "demo": "tracks-subtitles"
+      },
+      {
+       "id": "external-list",
+       "shot": "popup",
+       "ref": "491:2216",
+       "anchor": "br",
+       "node": "2410:13492",
+       "rows": [
+        "P3-04"
+       ],
+       "specMasks": {
+        "png": "Controls.png",
+        "props": {
+         "Property 1": "subtitles"
+        },
+        "node": "491:2243"
+       },
+       "demo": "tracks-subtitles"
+      },
+      {
+       "id": "footer",
+       "shot": "popup",
+       "ref": "491:2216",
+       "anchor": "br",
+       "node": "505:3083",
+       "rows": [
+        "F-07"
+       ],
+       "specMasks": {
+        "png": "Controls.png",
+        "props": {
+         "Property 1": "subtitles"
+        },
+        "node": "491:2243"
+       },
+       "demo": "tracks-subtitles"
+      },
+      {
+       "id": "button-active",
+       "shot": "popup",
+       "ref": "491:2216",
+       "anchor": "br",
+       "node": "491:2236",
+       "rows": [
+        "P2-16",
+        "F-06"
+       ],
+       "specMasks": {
+        "png": "Controls.png",
+        "props": {
+         "Property 1": "subtitles"
+        },
+        "node": "491:2243"
+       },
+       "demo": "tracks-subtitles"
+      },
+      {
+       "id": "spec",
+       "shot": "popup",
+       "measure": "spec",
+       "png": "Controls.png",
+       "props": {
+        "Property 1": "subtitles"
+       },
+       "node": "491:2243",
+       "ref": "491:2216",
+       "anchor": "br",
+       "demo": "tracks-subtitles"
+      }
+     ],
+     "human": [
+      "Clicking outside the popup and Escape close it; the subtitle button toggles it (UX pass)."
+     ]
+    },
+    {
+     "id": "tracks-audio",
+     "title": "Audio tab of the tracks popup",
+     "rows": [
+      "P2-17"
+     ],
+     "steps": [
+      {
+       "uia": "Audio",
+       "role": "TabItem",
+       "after": 700
+      },
+      {
+       "hover": [
+        960,
+        540
+       ],
+       "after": 500
+      },
+      {
+       "demo": "tracks-audio"
+      },
+      {
+       "shot": "popup",
+       "uiaAll": true
+      }
+     ],
+     "compare": [
+      {
+       "id": "popup",
+       "shot": "popup",
+       "ref": "496:2495",
+       "anchor": "br",
+       "node": "496:2523",
+       "pad": 2,
+       "specMasks": {
+        "png": "Controls.png",
+        "props": {
+         "Property 1": "audio"
+        },
+        "node": "496:2523"
+       },
+       "demo": "tracks-audio"
+      },
+      {
+       "id": "tabs",
+       "shot": "popup",
+       "ref": "496:2495",
+       "anchor": "br",
+       "node": "496:2524",
+       "specMasks": {
+        "png": "Controls.png",
+        "props": {
+         "Property 1": "audio"
+        },
+        "node": "496:2523"
+       },
+       "demo": "tracks-audio"
+      },
+      {
+       "id": "spec",
+       "shot": "popup",
+       "measure": "spec",
+       "png": "Controls.png",
+       "props": {
+        "Property 1": "audio"
+       },
+       "node": "496:2523",
+       "ref": "496:2495",
+       "anchor": "br",
+       "demo": "tracks-audio"
+      }
+     ],
+     "human": [
+      "Output Device lists the real devices of this PC (Figma: Speakers / Headphones)."
+     ]
+    },
+    {
+     "id": "tracks-video",
+     "title": "Video tab of the tracks popup",
+     "rows": [
+      "P2-18"
+     ],
+     "steps": [
+      {
+       "uia": "Video",
+       "role": "TabItem",
+       "after": 700
+      },
+      {
+       "hover": [
+        960,
+        540
+       ],
+       "after": 500
+      },
+      {
+       "demo": "tracks-video"
+      },
+      {
+       "shot": "popup",
+       "uiaAll": true
+      }
+     ],
+     "compare": [
+      {
+       "id": "popup",
+       "shot": "popup",
+       "ref": "498:2674",
+       "anchor": "br",
+       "node": "498:2702",
+       "pad": 2,
+       "specMasks": {
+        "png": "Controls.png",
+        "props": {
+         "Property 1": "video"
+        },
+        "node": "498:2702"
+       },
+       "demo": "tracks-video"
+      },
+      {
+       "id": "tabs",
+       "shot": "popup",
+       "ref": "498:2674",
+       "anchor": "br",
+       "node": "498:2703",
+       "specMasks": {
+        "png": "Controls.png",
+        "props": {
+         "Property 1": "video"
+        },
+        "node": "498:2702"
+       },
+       "demo": "tracks-video"
+      },
+      {
+       "id": "spec",
+       "shot": "popup",
+       "measure": "spec",
+       "png": "Controls.png",
+       "props": {
+        "Property 1": "video"
+       },
+       "node": "498:2702",
+       "ref": "498:2674",
+       "anchor": "br",
+       "demo": "tracks-video"
+      }
+     ]
+    },
+    {
+     "id": "show-preferences",
+     "title": "Show Preferences on the Video tab opens the settings sidebar on Video",
+     "rows": [
+      "F-07"
+     ],
+     "steps": [
+      {
+       "uia": "Show Preferences",
+       "role": "Button",
+       "after": 900
+      },
+      {
+       "hover": [
+        960,
+        540
+       ],
+       "after": 500
+      },
+      {
+       "expect": {
+        "uia": "Playback",
+        "role": "TabItem"
+       },
+       "check": "the settings sidebar is open"
+      },
+      {
+       "demo": "sidebar-video"
+      },
+      {
+       "shot": "sidebar",
+       "uiaAll": true
+      },
+      {
+       "keys": "{ESC}",
+       "after": 400
+      }
+     ],
+     "compare": [
+      {
+       "id": "sidebar-video",
+       "shot": "sidebar",
+       "ref": "498:2937",
+       "anchor": "br",
+       "node": "498:2965",
+       "pad": 2,
+       "specMasks": {
+        "png": "Controls.png",
+        "props": {
+         "Property 1": "video settings"
+        },
+        "node": "498:2965"
+       },
+       "demo": "sidebar-video"
+      },
+      {
+       "id": "spec",
+       "shot": "sidebar",
+       "measure": "spec",
+       "png": "Controls.png",
+       "props": {
+        "Property 1": "video settings"
+       },
+       "node": "498:2965",
+       "ref": "498:2937",
+       "anchor": "br",
+       "demo": "sidebar-video"
+      }
+     ]
+    }
+   ],
+   "demo": [
+    "tracks-subtitles",
+    "tracks-audio",
+    "tracks-video",
+    "sidebar-video"
+   ]
+  },
+  {
+   "id": "sidebar",
+   "about": "Settings sidebar (gear) and its four tabs; paused clip without audio.",
+   "media": [
+    "Videos\\Verify Clip.mkv"
+   ],
+   "args": [
+    "--qt-continue=0",
+    "--start-paused"
+   ],
+   "setup": [
+    {
+     "wait": 1200
+    },
+    {
+     "wiggle": [
+      960,
+      540
+     ]
+    }
+   ],
+   "reset": [
+    {
+     "wiggle": [
+      960,
+      540
+     ],
+     "after": 500
+    }
+   ],
+   "scenarios": [
+    {
+     "id": "sidebar-playback",
+     "title": "Gear opens the settings sidebar on Playback",
+     "rows": [
+      "P4-03",
+      "F-06",
+      "P3-17",
+      "P3-18"
+     ],
+     "steps": [
+      {
+       "uia": "Playback Settings",
+       "role": "Button",
+       "after": 900
+      },
+      {
+       "hover": [
+        960,
+        540
+       ],
+       "after": 600
+      },
+      {
+       "expect": {
+        "uia": "Playback",
+        "role": "TabItem"
+       },
+       "check": "gear opens the sidebar (Decision 5: Playback tab)"
+      },
+      {
+       "demo": "sidebar-playback"
+      },
+      {
+       "shot": "sidebar",
+       "uiaAll": true
+      }
+     ],
+     "compare": [
+      {
+       "id": "sidebar",
+       "shot": "sidebar",
+       "ref": "2238:9432",
+       "anchor": "br",
+       "node": "5187:24308",
+       "pad": 2,
+       "rows": [
+        "P3-18",
+        "IA-28"
+       ],
+       "mask": [
+        {
+         "rect": [
+          1500,
+          -915,
+          400,
+          166
+         ],
+         "pad": 0
+        }
+       ],
+       "note": "toggle rows masked (Decision 13)",
+       "specMasks": {
+        "png": "Controls.png",
+        "props": {
+         "Property 1": "playback"
+        },
+        "node": "5187:24308"
+       },
+       "demo": "sidebar-playback"
+      },
+      {
+       "id": "tabs",
+       "shot": "sidebar",
+       "ref": "2238:9432",
+       "anchor": "br",
+       "node": "5187:24309",
+       "rows": [
+        "P3-18",
+        "IA-28",
+        "IA-41"
+       ],
+       "specMasks": {
+        "png": "Controls.png",
+        "props": {
+         "Property 1": "playback"
+        },
+        "node": "5187:24308"
+       },
+       "demo": "sidebar-playback"
+      },
+      {
+       "id": "content",
+       "shot": "sidebar",
+       "ref": "2238:9432",
+       "anchor": "br",
+       "node": "5187:24330",
+       "rows": [
+        "P4-31",
+        "P4-32",
+        "IA-42",
+        "P4-34",
+        "P4-37"
+       ],
+       "mask": [
+        {
+         "rect": [
+          1500,
+          -915,
+          400,
+          166
+         ],
+         "pad": 0
+        }
+       ],
+       "note": "the three toggle rows are masked: Decision 13 puts the video's items there (Show Waveform, Show Metadata, Show Statistics), Figma has Show Subtitle Timeline, Show Statistics, Reverse",
+       "specMasks": {
+        "png": "Controls.png",
+        "props": {
+         "Property 1": "playback"
+        },
+        "node": "5187:24308"
+       },
+       "demo": "sidebar-playback"
+      },
+      {
+       "id": "gear-active",
+       "shot": "sidebar",
+       "ref": "2238:9432",
+       "anchor": "br",
+       "node": "2238:9449",
+       "rows": [
+        "P4-03",
+        "F-06"
+       ],
+       "specMasks": {
+        "png": "Controls.png",
+        "props": {
+         "Property 1": "playback"
+        },
+        "node": "5187:24308"
+       },
+       "demo": "sidebar-playback"
+      },
+      {
+       "id": "spec",
+       "shot": "sidebar",
+       "measure": "spec",
+       "png": "Controls.png",
+       "props": {
+        "Property 1": "playback"
+       },
+       "node": "5187:24308",
+       "ref": "2238:9432",
+       "anchor": "br",
+       "demo": "sidebar-playback"
+      }
+     ],
+     "human": [
+      "Toggle states depend on the test profile (Show Waveform on Seekbar is ON there, OFF in Figma)."
+     ]
+    },
+    {
+     "id": "sidebar-video",
+     "title": "Settings sidebar, Video tab",
+     "rows": [
+      "P4-27",
+      "P4-28"
+     ],
+     "steps": [
+      {
+       "uia": "Video",
+       "role": "TabItem",
+       "after": 700
+      },
+      {
+       "hover": [
+        960,
+        540
+       ],
+       "after": 500
+      },
+      {
+       "demo": "sidebar-video"
+      },
+      {
+       "shot": "sidebar",
+       "uiaAll": true
+      }
+     ],
+     "compare": [
+      {
+       "id": "sidebar",
+       "shot": "sidebar",
+       "ref": "498:2937",
+       "anchor": "br",
+       "node": "498:2965",
+       "pad": 2,
+       "specMasks": {
+        "png": "Controls.png",
+        "props": {
+         "Property 1": "video settings"
+        },
+        "node": "498:2965"
+       },
+       "demo": "sidebar-video"
+      },
+      {
+       "id": "tabs",
+       "shot": "sidebar",
+       "ref": "498:2937",
+       "anchor": "br",
+       "node": "498:2966",
+       "specMasks": {
+        "png": "Controls.png",
+        "props": {
+         "Property 1": "video settings"
+        },
+        "node": "498:2965"
+       },
+       "demo": "sidebar-video"
+      },
+      {
+       "id": "content",
+       "shot": "sidebar",
+       "ref": "498:2937",
+       "anchor": "br",
+       "node": "536:1772",
+       "rows": [
+        "P4-27",
+        "P4-28",
+        "P4-30",
+        "IA-32"
+       ],
+       "specMasks": {
+        "png": "Controls.png",
+        "props": {
+         "Property 1": "video settings"
+        },
+        "node": "498:2965"
+       },
+       "demo": "sidebar-video"
+      },
+      {
+       "id": "footer",
+       "shot": "sidebar",
+       "ref": "498:2937",
+       "anchor": "br",
+       "node": "812:1580",
+       "rows": [
+        "P4-21"
+       ],
+       "specMasks": {
+        "png": "Controls.png",
+        "props": {
+         "Property 1": "video settings"
+        },
+        "node": "498:2965"
+       },
+       "demo": "sidebar-video"
+      },
+      {
+       "id": "spec",
+       "shot": "sidebar",
+       "measure": "spec",
+       "png": "Controls.png",
+       "props": {
+        "Property 1": "video settings"
+       },
+       "node": "498:2965",
+       "ref": "498:2937",
+       "anchor": "br",
+       "demo": "sidebar-video"
+      }
+     ]
+    },
+    {
+     "id": "sidebar-audio",
+     "title": "Settings sidebar, Audio tab",
+     "rows": [
+      "P4-15",
+      "P4-17"
+     ],
+     "steps": [
+      {
+       "uia": "Audio",
+       "role": "TabItem",
+       "after": 700
+      },
+      {
+       "hover": [
+        960,
+        540
+       ],
+       "after": 500
+      },
+      {
+       "demo": "sidebar-audio"
+      },
+      {
+       "shot": "sidebar",
+       "uiaAll": true
+      }
+     ],
+     "compare": [
+      {
+       "id": "sidebar",
+       "shot": "sidebar",
+       "ref": "536:1059",
+       "anchor": "br",
+       "node": "536:1087",
+       "pad": 2,
+       "specMasks": {
+        "png": "Controls.png",
+        "props": {
+         "Property 1": "audio settings"
+        },
+        "node": "536:1087"
+       },
+       "demo": "sidebar-audio"
+      },
+      {
+       "id": "tabs",
+       "shot": "sidebar",
+       "ref": "536:1059",
+       "anchor": "br",
+       "node": "536:1088",
+       "specMasks": {
+        "png": "Controls.png",
+        "props": {
+         "Property 1": "audio settings"
+        },
+        "node": "536:1087"
+       },
+       "demo": "sidebar-audio"
+      },
+      {
+       "id": "content",
+       "shot": "sidebar",
+       "ref": "536:1059",
+       "anchor": "br",
+       "node": "536:1617",
+       "rows": [
+        "P4-15",
+        "P4-17",
+        "P4-18",
+        "P4-19",
+        "P4-20",
+        "IA-38",
+        "IA-36"
+       ],
+       "specMasks": {
+        "png": "Controls.png",
+        "props": {
+         "Property 1": "audio settings"
+        },
+        "node": "536:1087"
+       },
+       "demo": "sidebar-audio"
+      },
+      {
+       "id": "footer",
+       "shot": "sidebar",
+       "ref": "536:1059",
+       "anchor": "br",
+       "node": "812:1563",
+       "rows": [
+        "P4-21"
+       ],
+       "specMasks": {
+        "png": "Controls.png",
+        "props": {
+         "Property 1": "audio settings"
+        },
+        "node": "536:1087"
+       },
+       "demo": "sidebar-audio"
+      },
+      {
+       "id": "spec",
+       "shot": "sidebar",
+       "measure": "spec",
+       "png": "Controls.png",
+       "props": {
+        "Property 1": "audio settings"
+       },
+       "node": "536:1087",
+       "ref": "536:1059",
+       "anchor": "br",
+       "demo": "sidebar-audio"
+      }
+     ]
+    },
+    {
+     "id": "sidebar-subtitles",
+     "title": "Settings sidebar, Subtitles tab",
+     "rows": [
+      "P3-19",
+      "P3-21"
+     ],
+     "steps": [
+      {
+       "uia": "Subtitles",
+       "role": "TabItem",
+       "after": 700
+      },
+      {
+       "hover": [
+        960,
+        540
+       ],
+       "after": 500
+      },
+      {
+       "demo": "sidebar-subtitles"
+      },
+      {
+       "shot": "sidebar",
+       "uiaAll": true
+      }
+     ],
+     "compare": [
+      {
+       "id": "sidebar",
+       "shot": "sidebar",
+       "ref": "763:1958",
+       "anchor": "br",
+       "node": "763:1986",
+       "pad": 2,
+       "specMasks": {
+        "png": "Controls.png",
+        "props": {
+         "Property 1": "subtitle settings"
+        },
+        "node": "763:1986"
+       },
+       "demo": "sidebar-subtitles"
+      },
+      {
+       "id": "tabs",
+       "shot": "sidebar",
+       "ref": "763:1958",
+       "anchor": "br",
+       "node": "763:1987",
+       "specMasks": {
+        "png": "Controls.png",
+        "props": {
+         "Property 1": "subtitle settings"
+        },
+        "node": "763:1986"
+       },
+       "demo": "sidebar-subtitles"
+      },
+      {
+       "id": "content",
+       "shot": "sidebar",
+       "ref": "763:1958",
+       "anchor": "br",
+       "node": "763:1997",
+       "rows": [
+        "P3-19",
+        "P3-20",
+        "P3-21",
+        "IA-29",
+        "IA-30",
+        "IA-31",
+        "P4-12",
+        "P3-23",
+        "IA-32"
+       ],
+       "specMasks": {
+        "png": "Controls.png",
+        "props": {
+         "Property 1": "subtitle settings"
+        },
+        "node": "763:1986"
+       },
+       "demo": "sidebar-subtitles"
+      },
+      {
+       "id": "footer",
+       "shot": "sidebar",
+       "ref": "763:1958",
+       "anchor": "br",
+       "node": "763:2037",
+       "rows": [
+        "P4-21"
+       ],
+       "specMasks": {
+        "png": "Controls.png",
+        "props": {
+         "Property 1": "subtitle settings"
+        },
+        "node": "763:1986"
+       },
+       "demo": "sidebar-subtitles"
+      },
+      {
+       "id": "spec",
+       "shot": "sidebar",
+       "measure": "spec",
+       "png": "Controls.png",
+       "props": {
+        "Property 1": "subtitle settings"
+       },
+       "node": "763:1986",
+       "ref": "763:1958",
+       "anchor": "br",
+       "demo": "sidebar-subtitles"
+      }
+     ]
+    },
+    {
+     "id": "sidebar-close",
+     "title": "Gear again closes the sidebar",
+     "rows": [
+      "F-06"
+     ],
+     "steps": [
+      {
+       "uia": "Playback Settings",
+       "role": "Button",
+       "after": 900
+      },
+      {
+       "expect": {
+        "uia": "Playback",
+        "role": "TabItem",
+        "present": false,
+        "timeout": 600
+       },
+       "check": "a second click on the gear closes the sidebar"
+      }
+     ]
+    }
+   ],
+   "demo": [
+    "sidebar-playback",
+    "sidebar-video",
+    "sidebar-audio",
+    "sidebar-subtitles"
+   ]
+  },
+  {
+   "id": "queue",
+   "about": "Queue sidebar with three items; the chapters clip is current (Chapters tab).",
+   "media": [
+    "Videos\\Verify Chapters.mkv",
+    "Videos\\Verify Clip.mkv",
+    "Videos\\Verify Tracks.mkv"
+   ],
+   "args": [
+    "--qt-continue=0",
+    "--start-paused"
+   ],
+   "setup": [
+    {
+     "wait": 1200
+    },
+    {
+     "wiggle": [
+      960,
+      540
+     ]
+    }
+   ],
+   "reset": [
+    {
+     "wiggle": [
+      960,
+      540
+     ],
+     "after": 500
+    }
+   ],
+   "scenarios": [
+    {
+     "id": "queue-tab",
+     "title": "Queue button opens the queue sidebar",
+     "rows": [
+      "P5-02",
+      "IA-43"
+     ],
+     "steps": [
+      {
+       "uia": "Queue",
+       "role": "Button",
+       "after": 900
+      },
+      {
+       "hover": [
+        960,
+        540
+       ],
+       "after": 600
+      },
+      {
+       "expect": {
+        "uia": "Bookmarks",
+        "role": "TabItem"
+       },
+       "check": "queue sidebar has Queue / Bookmarks / Chapters tabs (Decision 3)"
+      },
+      {
+       "shot": "queue",
+       "uiaAll": true
+      }
+     ],
+     "compare": [
+      {
+       "id": "panel",
+       "shot": "queue",
+       "ref": "491:1781",
+       "anchor": "br",
+       "node": "463:831",
+       "pad": 2,
+       "rows": [
+        "P5-02",
+        "IA-43"
+       ],
+       "mask": [
+        {
+         "node": "463:846",
+         "pad": 0
+        }
+       ],
+       "note": "item list masked: Figma lists other files",
+       "specMasks": {
+        "png": "Controls.png",
+        "props": {
+         "Property 1": "queue"
+        },
+        "node": "463:831"
+       }
+      },
+      {
+       "id": "tabs",
+       "shot": "queue",
+       "ref": "491:1781",
+       "anchor": "br",
+       "node": "463:832",
+       "rows": [
+        "P5-02"
+       ],
+       "specMasks": {
+        "png": "Controls.png",
+        "props": {
+         "Property 1": "queue"
+        },
+        "node": "463:831"
+       }
+      },
+      {
+       "id": "header",
+       "shot": "queue",
+       "ref": "491:1781",
+       "anchor": "br",
+       "node": "463:840",
+       "rows": [
+        "IA-43"
+       ],
+       "specMasks": {
+        "png": "Controls.png",
+        "props": {
+         "Property 1": "queue"
+        },
+        "node": "463:831"
+       }
+      },
+      {
+       "id": "queue-button-active",
+       "shot": "queue",
+       "ref": "491:1781",
+       "anchor": "br",
+       "node": "491:1807",
+       "rows": [
+        "F-06"
+       ],
+       "specMasks": {
+        "png": "Controls.png",
+        "props": {
+         "Property 1": "queue"
+        },
+        "node": "463:831"
+       }
+      },
+      {
+       "id": "spec",
+       "shot": "queue",
+       "measure": "spec",
+       "png": "Controls.png",
+       "props": {
+        "Property 1": "queue"
+       },
+       "node": "463:831",
+       "ref": "491:1781",
+       "anchor": "br"
+      }
+     ],
+     "human": [
+      "Item rows differ by content (Figma shows other titles); judge spacing and states by eye."
+     ]
+    },
+    {
+     "id": "bookmarks-tab",
+     "title": "Queue sidebar, Bookmarks tab",
+     "rows": [
+      "P5-02"
+     ],
+     "steps": [
+      {
+       "uia": "Bookmarks",
+       "role": "TabItem",
+       "after": 700
+      },
+      {
+       "hover": [
+        960,
+        540
+       ],
+       "after": 500
+      },
+      {
+       "shot": "bookmarks",
+       "uiaAll": true
+      }
+     ],
+     "compare": [
+      {
+       "id": "panel",
+       "shot": "bookmarks",
+       "ref": "6320:13763",
+       "anchor": "br",
+       "node": "6320:13784",
+       "pad": 2,
+       "mask": [
+        {
+         "node": "6320:13811",
+         "pad": 0
+        }
+       ],
+       "note": "bookmark list masked: the test clip has no bookmarks",
+       "specMasks": {
+        "png": "Controls.png",
+        "props": {
+         "Property 1": "bookmarks"
+        },
+        "node": "6320:13784"
+       }
+      },
+      {
+       "id": "tabs",
+       "shot": "bookmarks",
+       "ref": "6320:13763",
+       "anchor": "br",
+       "node": "6320:13785",
+       "specMasks": {
+        "png": "Controls.png",
+        "props": {
+         "Property 1": "bookmarks"
+        },
+        "node": "6320:13784"
+       }
+      },
+      {
+       "id": "header",
+       "shot": "bookmarks",
+       "ref": "6320:13763",
+       "anchor": "br",
+       "node": "6320:13801",
+       "specMasks": {
+        "png": "Controls.png",
+        "props": {
+         "Property 1": "bookmarks"
+        },
+        "node": "6320:13784"
+       }
+      },
+      {
+       "id": "spec",
+       "shot": "bookmarks",
+       "measure": "spec",
+       "png": "Controls.png",
+       "props": {
+        "Property 1": "bookmarks"
+       },
+       "node": "6320:13784",
+       "ref": "6320:13763",
+       "anchor": "br"
+      }
+     ]
+    },
+    {
+     "id": "chapters-tab",
+     "title": "Queue sidebar, Chapters tab",
+     "rows": [
+      "P5-02"
+     ],
+     "steps": [
+      {
+       "uia": "Chapters",
+       "role": "TabItem",
+       "after": 700
+      },
+      {
+       "hover": [
+        960,
+        540
+       ],
+       "after": 500
+      },
+      {
+       "shot": "chapters",
+       "uiaAll": true
+      },
+      {
+       "uia": "Queue",
+       "role": "Button",
+       "after": 700
+      },
+      {
+       "expect": {
+        "uia": "Bookmarks",
+        "role": "TabItem",
+        "present": false,
+        "timeout": 600
+       },
+       "check": "queue button again closes the sidebar"
+      }
+     ],
+     "compare": [
+      {
+       "id": "panel",
+       "shot": "chapters",
+       "ref": "6321:14024",
+       "anchor": "br",
+       "node": "6321:14045",
+       "pad": 2,
+       "specMasks": {
+        "png": "Controls.png",
+        "props": {
+         "Property 1": "chapters"
+        },
+        "node": "6321:14045"
+       }
+      },
+      {
+       "id": "tabs",
+       "shot": "chapters",
+       "ref": "6321:14024",
+       "anchor": "br",
+       "node": "6321:14046",
+       "specMasks": {
+        "png": "Controls.png",
+        "props": {
+         "Property 1": "chapters"
+        },
+        "node": "6321:14045"
+       }
+      },
+      {
+       "id": "spec",
+       "shot": "chapters",
+       "measure": "spec",
+       "png": "Controls.png",
+       "props": {
+        "Property 1": "chapters"
+       },
+       "node": "6321:14045",
+       "ref": "6321:14024",
+       "anchor": "br"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "menus",
+   "about": "Main menu, right-click menu, Hide UI.",
+   "media": [
+    "Videos\\Verify Clip.mkv"
+   ],
+   "args": [
+    "--qt-continue=0",
+    "--start-paused"
+   ],
+   "setup": [
+    {
+     "wait": 1200
+    },
+    {
+     "wiggle": [
+      960,
+      540
+     ]
+    }
+   ],
+   "reset": [
+    {
+     "keys": "{ESC}",
+     "after": 300
+    },
+    {
+     "wiggle": [
+      960,
+      540
+     ],
+     "after": 500
+    }
+   ],
+   "scenarios": [
+    {
+     "id": "main-menu",
+     "title": "The ... button opens the main menu",
+     "rows": [
+      "P2-21",
+      "P6-11"
+     ],
+     "steps": [
+      {
+       "uia": "Menu",
+       "role": "Button",
+       "after": 900
+      },
+      {
+       "expect": {
+        "uia": "Keyboard Shortcuts",
+        "role": "MenuItem"
+       },
+       "check": "main menu open with Keyboard Shortcuts (P7-13)"
+      },
+      {
+       "shot": "menu",
+       "uiaAll": true
+      },
+      {
+       "keys": "{ESC}",
+       "after": 400
+      },
+      {
+       "expect": {
+        "uia": "Keyboard Shortcuts",
+        "role": "MenuItem",
+        "present": false,
+        "timeout": 600
+       },
+       "check": "Escape closes the main menu"
+      }
+     ],
+     "compare": [
+      {
+       "id": "menu",
+       "shot": "menu",
+       "ref": "6062:13354",
+       "at": [
+        36,
+        46
+       ],
+       "node": "6062:13354",
+       "pad": 2,
+       "search": 40,
+       "mask": [
+        {
+         "node": "6062:13502",
+         "pad": 2
+        },
+        {
+         "node": "6062:13506",
+         "pad": 2
+        }
+       ],
+       "note": "masked: the profile name (test profile state) and About VLC (the public build says About Cone, public release rules)",
+       "rows": [
+        "P2-21",
+        "IA-22",
+        "IB-26",
+        "IB-27",
+        "P6-11",
+        "P7-09",
+        "P7-13",
+        "F-21",
+        "P8-49"
+       ]
+      },
+      {
+       "id": "first-items",
+       "shot": "menu",
+       "ref": "6062:13354",
+       "at": [
+        36,
+        46
+       ],
+       "rect": [
+        0,
+        0,
+        375,
+        340
+       ],
+       "pad": 0,
+       "search": 40,
+       "rows": [
+        "IA-22",
+        "IB-26",
+        "IB-27"
+       ]
+      },
+      {
+       "id": "spec",
+       "shot": "menu",
+       "measure": "spec",
+       "png": "menu.png",
+       "at": [
+        36,
+        46
+       ],
+       "alignTo": "menu"
+      }
+     ],
+     "human": [
+      "Every item opens its own dialog (P6-12): Settings, Keyboard Shortcuts, Open Network Stream, Customize Player."
+     ]
+    },
+    {
+     "id": "right-click-menu",
+     "title": "Right-click on the video opens the context menu at the pointer",
+     "rows": [
+      "P2-23",
+      "IA-23"
+     ],
+     "steps": [
+      {
+       "click": [
+        900,
+        300
+       ],
+       "button": "right",
+       "after": 900
+      },
+      {
+       "expect": {
+        "uia": "Hide UI",
+        "role": "MenuItem"
+       },
+       "check": "context menu has Hide UI (P2-24)"
+      },
+      {
+       "shot": "menu",
+       "uiaAll": true
+      },
+      {
+       "keys": "{ESC}",
+       "after": 400
+      }
+     ],
+     "compare": [
+      {
+       "id": "menu",
+       "shot": "menu",
+       "ref": "6065:13616",
+       "at": [
+        900,
+        300
+       ],
+       "node": "6065:13616",
+       "pad": 2,
+       "search": 40,
+       "rows": [
+        "P2-23",
+        "IA-23",
+        "P2-24",
+        "F-21"
+       ],
+       "mask": [
+        {
+         "node": "6077:14267",
+         "pad": 2
+        }
+       ],
+       "note": "Quit VLC masked: the public build says Quit Cone"
+      },
+      {
+       "id": "first-items",
+       "shot": "menu",
+       "ref": "6065:13616",
+       "at": [
+        900,
+        300
+       ],
+       "rect": [
+        0,
+        0,
+        292,
+        294
+       ],
+       "pad": 0,
+       "search": 40,
+       "rows": [
+        "IA-23",
+        "P2-24"
+       ]
+      },
+      {
+       "id": "spec",
+       "shot": "menu",
+       "measure": "spec",
+       "png": "right-click menu.png",
+       "at": [
+        900,
+        300
+       ],
+       "alignTo": "menu"
+      }
+     ]
+    },
+    {
+     "id": "hide-ui",
+     "title": "Hide UI from the context menu hides both bars",
+     "rows": [
+      "P2-24",
+      "P2-25"
+     ],
+     "steps": [
+      {
+       "click": [
+        900,
+        300
+       ],
+       "button": "right",
+       "after": 900
+      },
+      {
+       "uia": "Hide UI",
+       "role": "MenuItem",
+       "after": 900
+      },
+      {
+       "wiggle": [
+        960,
+        540
+       ],
+       "after": 800
+      },
+      {
+       "expect": {
+        "uia": "Player controls",
+        "visible": false
+       },
+       "check": "control bar hidden after Hide UI, also when the mouse moves"
+      },
+      {
+       "shot": "hidden",
+       "uiaAll": true
+      },
+      {
+       "click": [
+        900,
+        300
+       ],
+       "button": "right",
+       "after": 900
+      },
+      {
+       "uia": "UI",
+       "role": "MenuItem",
+       "match": "contains",
+       "after": 900,
+       "optional": true
+      },
+      {
+       "wiggle": [
+        960,
+        540
+       ],
+       "after": 800
+      },
+      {
+       "expect": {
+        "uia": "Player controls",
+        "visible": true
+       },
+       "check": "the context menu item shows the UI again"
+      }
+     ],
+     "compare": [
+      {
+       "id": "frame",
+       "shot": "hidden",
+       "ref": "3328:11554",
+       "anchor": "tl",
+       "node": "3328:11554",
+       "pad": 0,
+       "mask": [
+        {
+         "rect": [
+          700,
+          330,
+          520,
+          500
+         ]
+        }
+       ],
+       "note": "cat picture masked (the verify clip is a flat picture in the same colour)"
+      },
+      {
+       "id": "spec",
+       "shot": "hidden",
+       "measure": "spec",
+       "png": "Player - hide UI.png",
+       "anchor": "tl"
+      }
+     ],
+     "human": [
+      "Ctrl + \\ toggles Hide UI too: on keyboard layouts where \\ needs AltGr the harness cannot type it reliably."
+     ]
+    }
+   ]
+  },
+  {
+   "id": "bars",
+   "about": "Bars show / hide while playing, windowed (Decision 30) and fullscreen.",
+   "media": [
+    "Videos\\Verify Chapters.mkv",
+    "Videos\\Verify Clip.mkv",
+    "Videos\\Verify Tracks.mkv"
+   ],
+   "args": [
+    "--qt-continue=0",
+    "--start-paused"
+   ],
+   "setup": [
+    {
+     "wait": 1000
+    },
+    {
+     "keys": "n",
+     "after": 1500
+    },
+    {
+     "wiggle": [
+      960,
+      540
+     ]
+    },
+    {
+     "volume": 0.5
+    }
+   ],
+   "reset": [
+    {
+     "wiggle": [
+      960,
+      540
+     ],
+     "after": 500
+    }
+   ],
+   "scenarios": [
+    {
+     "id": "bars-autohide",
+     "title": "Windowed, playing: bars fade about 3 s after the pointer stops and come back on a move",
+     "rows": [
+      "P2-08",
+      "IA-15",
+      "P3-11"
+     ],
+     "steps": [
+      {
+       "hover": [
+        960,
+        540
+       ],
+       "after": 4500
+      },
+      {
+       "expect": {
+        "uia": "Player controls",
+        "visible": false
+       },
+       "check": "control bar hidden 4.5 s after the pointer stopped (playing)"
+      },
+      {
+       "shot": "hidden"
+      },
+      {
+       "wiggle": [
+        960,
+        540
+       ],
+       "after": 400
+      },
+      {
+       "expect": {
+        "uia": "Player controls",
+        "visible": true
+       },
+       "check": "control bar back on a mouse move"
+      },
+      {
+       "shot": "shown"
+      }
+     ],
+     "compare": [
+      {
+       "id": "hidden-bottom",
+       "shot": "hidden",
+       "ref": "3328:11554",
+       "anchor": "bl",
+       "rect": [
+        0,
+        960,
+        1920,
+        120
+       ],
+       "pad": 0,
+       "rows": [
+        "P2-08",
+        "IA-15"
+       ],
+       "note": "Figma Player - hide UI: no bar, the video reaches the window edge"
+      },
+      {
+       "id": "shown-bar",
+       "shot": "shown",
+       "ref": "491:1779",
+       "anchor": "br",
+       "node": "491:1728",
+       "rows": [
+        "P2-08"
+       ]
+      }
+     ],
+     "human": [
+      "Fade timing and curve (300 ms ease-in-out in Figma) need the motion check (60 fps recording)."
+     ]
+    },
+    {
+     "id": "fullscreen",
+     "title": "Fullscreen: bars appear near their edge and hide when the pointer leaves",
+     "rows": [
+      "P2-09",
+      "P2-10"
+     ],
+     "steps": [
+      {
+       "uia": "Fullscreen",
+       "role": "Button",
+       "after": 1800
+      },
+      {
+       "hover": [
+        960,
+        2
+       ],
+       "from": "bl",
+       "after": 300
+      },
+      {
+       "hover": [
+        962,
+        3
+       ],
+       "from": "bl",
+       "after": 900
+      },
+      {
+       "expect": {
+        "uia": "Player controls",
+        "visible": true
+       },
+       "check": "fullscreen: control bar shows with the pointer at the bottom edge"
+      },
+      {
+       "shot": "fs-bottom"
+      },
+      {
+       "hover": [
+        960,
+        2
+       ],
+       "after": 300
+      },
+      {
+       "hover": [
+        962,
+        3
+       ],
+       "after": 900
+      },
+      {
+       "expect": {
+        "uia": "Player topbar",
+        "visible": true
+       },
+       "check": "fullscreen: top bar shows with the pointer at the top edge"
+      },
+      {
+       "shot": "fs-top"
+      },
+      {
+       "hover": [
+        900,
+        500
+       ],
+       "after": 300
+      },
+      {
+       "hover": [
+        902,
+        502
+       ],
+       "after": 2500
+      },
+      {
+       "expect": {
+        "uia": "Player controls",
+        "visible": false
+       },
+       "check": "fullscreen: control bar hidden with the pointer in the middle"
+      },
+      {
+       "shot": "fs-middle"
+      },
+      {
+       "keys": "{ESC}",
+       "after": 1500
+      },
+      {
+       "wiggle": [
+        960,
+        540
+       ],
+       "after": 600
+      },
+      {
+       "expect": {
+        "uia": "Player controls",
+        "visible": true
+       },
+       "check": "Escape leaves fullscreen, bar back"
+      }
+     ],
+     "compare": [
+      {
+       "id": "fs-previous",
+       "shot": "fs-bottom",
+       "ref": "491:1779",
+       "anchor": "bl",
+       "node": "3603:12302",
+       "rows": [
+        "P2-08"
+       ],
+       "note": "the clip plays here: only the previous button (the play pill shows pause)"
+      },
+      {
+       "id": "fs-volume",
+       "shot": "fs-bottom",
+       "ref": "491:1779",
+       "anchor": "br",
+       "node": "491:1731",
+       "rows": [
+        "P2-08"
+       ]
+      },
+      {
+       "id": "fs-right",
+       "shot": "fs-bottom",
+       "ref": "491:1779",
+       "anchor": "br",
+       "node": "491:1728",
+       "rows": [
+        "P2-08"
+       ]
+      },
+      {
+       "id": "fs-window-buttons",
+       "shot": "fs-top",
+       "ref": "247:445",
+       "anchor": "tr",
+       "node": "247:464",
+       "rows": [
+        "P2-09",
+        "P2-10",
+        "IA-16"
+       ]
+      },
+      {
+       "id": "fs-left",
+       "shot": "fs-top",
+       "ref": "247:445",
+       "anchor": "tl",
+       "node": "247:448",
+       "mask": [
+        {
+         "node": "247:450",
+         "pad": 3
+        }
+       ],
+       "rows": [
+        "P2-08"
+       ]
+      }
+     ],
+     "human": [
+      "Fullscreen top bar shows the exit-fullscreen glyph where Figma (windowed) shows the fullscreen glyph: judge the glyph by eye."
+     ]
+    }
+   ]
+  }
+ ]
 }

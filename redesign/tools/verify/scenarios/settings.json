@@ -61,7 +61,11 @@
        "after": 400
       },
       {
-       "shot": "page"
+       "demo": "settings-general"
+      },
+      {
+       "shot": "page",
+       "uiaAll": true
       }
      ],
      "compare": [
@@ -78,7 +82,11 @@
        "search": 6,
        "rows": [
         "P7-14"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - global.png"
+       },
+       "demo": "settings-general"
       },
       {
        "id": "header",
@@ -92,7 +100,11 @@
        "search": 6,
        "rows": [
         "P7-14"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - global.png"
+       },
+       "demo": "settings-general"
       },
       {
        "id": "categories",
@@ -106,7 +118,11 @@
        "search": 6,
        "rows": [
         "P7-14"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - global.png"
+       },
+       "demo": "settings-general"
       },
       {
        "id": "page",
@@ -120,7 +136,23 @@
        "search": 6,
        "rows": [
         "P7-14"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - global.png"
+       },
+       "demo": "settings-general"
+      },
+      {
+       "id": "spec",
+       "shot": "page",
+       "measure": "spec",
+       "png": "Settings - global.png",
+       "at": [
+        436,
+        108
+       ],
+       "alignTo": "dialog",
+       "demo": "settings-general"
       }
      ],
      "human": [
@@ -150,7 +182,11 @@
        "after": 400
       },
       {
-       "shot": "page"
+       "demo": "settings-interface"
+      },
+      {
+       "shot": "page",
+       "uiaAll": true
       }
      ],
      "compare": [
@@ -170,7 +206,11 @@
         "S2-02",
         "S2-03",
         "S2-12"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - interface.png"
+       },
+       "demo": "settings-interface"
       },
       {
        "id": "header",
@@ -184,7 +224,11 @@
        "search": 6,
        "rows": [
         "P7-14"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - interface.png"
+       },
+       "demo": "settings-interface"
       },
       {
        "id": "categories",
@@ -198,7 +242,11 @@
        "search": 6,
        "rows": [
         "P7-14"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - interface.png"
+       },
+       "demo": "settings-interface"
       },
       {
        "id": "page",
@@ -215,7 +263,23 @@
         "S2-02",
         "S2-03",
         "S2-12"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - interface.png"
+       },
+       "demo": "settings-interface"
+      },
+      {
+       "id": "spec",
+       "shot": "page",
+       "measure": "spec",
+       "png": "Settings - interface.png",
+       "at": [
+        436,
+        108
+       ],
+       "alignTo": "dialog",
+       "demo": "settings-interface"
       }
      ],
      "human": [
@@ -242,7 +306,11 @@
        "after": 400
       },
       {
-       "shot": "page"
+       "demo": "settings-privacy"
+      },
+      {
+       "shot": "page",
+       "uiaAll": true
       }
      ],
      "compare": [
@@ -259,7 +327,11 @@
        "search": 6,
        "rows": [
         "S2-04"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - privacy.png"
+       },
+       "demo": "settings-privacy"
       },
       {
        "id": "header",
@@ -273,7 +345,11 @@
        "search": 6,
        "rows": [
         "P7-14"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - privacy.png"
+       },
+       "demo": "settings-privacy"
       },
       {
        "id": "categories",
@@ -287,7 +363,11 @@
        "search": 6,
        "rows": [
         "P7-14"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - privacy.png"
+       },
+       "demo": "settings-privacy"
       },
       {
        "id": "page",
@@ -301,7 +381,23 @@
        "search": 6,
        "rows": [
         "S2-04"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - privacy.png"
+       },
+       "demo": "settings-privacy"
+      },
+      {
+       "id": "spec",
+       "shot": "page",
+       "measure": "spec",
+       "png": "Settings - privacy.png",
+       "at": [
+        436,
+        108
+       ],
+       "alignTo": "dialog",
+       "demo": "settings-privacy"
       }
      ],
      "human": [
@@ -328,7 +424,11 @@
        "after": 400
       },
       {
-       "shot": "page"
+       "demo": "settings-controls"
+      },
+      {
+       "shot": "page",
+       "uiaAll": true
       }
      ],
      "compare": [
@@ -345,7 +445,11 @@
        "search": 6,
        "rows": [
         "S2-05"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - controls.png"
+       },
+       "demo": "settings-controls"
       },
       {
        "id": "header",
@@ -359,7 +463,11 @@
        "search": 6,
        "rows": [
         "P7-14"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - controls.png"
+       },
+       "demo": "settings-controls"
       },
       {
        "id": "categories",
@@ -373,7 +481,11 @@
        "search": 6,
        "rows": [
         "P7-14"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - controls.png"
+       },
+       "demo": "settings-controls"
       },
       {
        "id": "page",
@@ -387,7 +499,23 @@
        "search": 6,
        "rows": [
         "S2-05"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - controls.png"
+       },
+       "demo": "settings-controls"
+      },
+      {
+       "id": "spec",
+       "shot": "page",
+       "measure": "spec",
+       "png": "Settings - controls.png",
+       "at": [
+        436,
+        108
+       ],
+       "alignTo": "dialog",
+       "demo": "settings-controls"
       }
      ],
      "human": [
@@ -414,7 +542,11 @@
        "after": 400
       },
       {
-       "shot": "page"
+       "demo": "settings-playback"
+      },
+      {
+       "shot": "page",
+       "uiaAll": true
       }
      ],
      "compare": [
@@ -431,7 +563,11 @@
        "search": 6,
        "rows": [
         "P8-09"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - playback.png"
+       },
+       "demo": "settings-playback"
       },
       {
        "id": "header",
@@ -445,7 +581,11 @@
        "search": 6,
        "rows": [
         "P7-14"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - playback.png"
+       },
+       "demo": "settings-playback"
       },
       {
        "id": "categories",
@@ -459,7 +599,11 @@
        "search": 6,
        "rows": [
         "P7-14"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - playback.png"
+       },
+       "demo": "settings-playback"
       },
       {
        "id": "page",
@@ -473,7 +617,23 @@
        "search": 6,
        "rows": [
         "P8-09"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - playback.png"
+       },
+       "demo": "settings-playback"
+      },
+      {
+       "id": "spec",
+       "shot": "page",
+       "measure": "spec",
+       "png": "Settings - playback.png",
+       "at": [
+        436,
+        108
+       ],
+       "alignTo": "dialog",
+       "demo": "settings-playback"
       }
      ],
      "human": [
@@ -500,7 +660,11 @@
        "after": 400
       },
       {
-       "shot": "page"
+       "demo": "settings-video"
+      },
+      {
+       "shot": "page",
+       "uiaAll": true
       }
      ],
      "compare": [
@@ -517,7 +681,11 @@
        "search": 6,
        "rows": [
         "P8-10"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - video.png"
+       },
+       "demo": "settings-video"
       },
       {
        "id": "header",
@@ -531,7 +699,11 @@
        "search": 6,
        "rows": [
         "P7-14"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - video.png"
+       },
+       "demo": "settings-video"
       },
       {
        "id": "categories",
@@ -545,7 +717,11 @@
        "search": 6,
        "rows": [
         "P7-14"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - video.png"
+       },
+       "demo": "settings-video"
       },
       {
        "id": "page",
@@ -559,7 +735,23 @@
        "search": 6,
        "rows": [
         "P8-10"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - video.png"
+       },
+       "demo": "settings-video"
+      },
+      {
+       "id": "spec",
+       "shot": "page",
+       "measure": "spec",
+       "png": "Settings - video.png",
+       "at": [
+        436,
+        108
+       ],
+       "alignTo": "dialog",
+       "demo": "settings-video"
       }
      ],
      "human": [
@@ -587,7 +779,11 @@
        "after": 400
       },
       {
-       "shot": "page"
+       "demo": "settings-audio"
+      },
+      {
+       "shot": "page",
+       "uiaAll": true
       }
      ],
      "compare": [
@@ -605,7 +801,11 @@
        "rows": [
         "P8-11",
         "S2-06"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - audio.png"
+       },
+       "demo": "settings-audio"
       },
       {
        "id": "header",
@@ -619,7 +819,11 @@
        "search": 6,
        "rows": [
         "P7-14"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - audio.png"
+       },
+       "demo": "settings-audio"
       },
       {
        "id": "categories",
@@ -633,7 +837,11 @@
        "search": 6,
        "rows": [
         "P7-14"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - audio.png"
+       },
+       "demo": "settings-audio"
       },
       {
        "id": "page",
@@ -648,7 +856,23 @@
        "rows": [
         "P8-11",
         "S2-06"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - audio.png"
+       },
+       "demo": "settings-audio"
+      },
+      {
+       "id": "spec",
+       "shot": "page",
+       "measure": "spec",
+       "png": "Settings - audio.png",
+       "at": [
+        436,
+        108
+       ],
+       "alignTo": "dialog",
+       "demo": "settings-audio"
       }
      ],
      "human": [
@@ -675,7 +899,11 @@
        "after": 400
       },
       {
-       "shot": "page"
+       "demo": "settings-subtitles"
+      },
+      {
+       "shot": "page",
+       "uiaAll": true
       }
      ],
      "compare": [
@@ -692,7 +920,11 @@
        "search": 6,
        "rows": [
         "P8-45"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - subtitles.png"
+       },
+       "demo": "settings-subtitles"
       },
       {
        "id": "header",
@@ -706,7 +938,11 @@
        "search": 6,
        "rows": [
         "P7-14"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - subtitles.png"
+       },
+       "demo": "settings-subtitles"
       },
       {
        "id": "categories",
@@ -720,7 +956,11 @@
        "search": 6,
        "rows": [
         "P7-14"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - subtitles.png"
+       },
+       "demo": "settings-subtitles"
       },
       {
        "id": "page",
@@ -734,7 +974,23 @@
        "search": 6,
        "rows": [
         "P8-45"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - subtitles.png"
+       },
+       "demo": "settings-subtitles"
+      },
+      {
+       "id": "spec",
+       "shot": "page",
+       "measure": "spec",
+       "png": "Settings - subtitles.png",
+       "at": [
+        436,
+        108
+       ],
+       "alignTo": "dialog",
+       "demo": "settings-subtitles"
       }
      ],
      "human": [
@@ -761,7 +1017,11 @@
        "after": 400
       },
       {
-       "shot": "page"
+       "demo": "settings-library"
+      },
+      {
+       "shot": "page",
+       "uiaAll": true
       }
      ],
      "compare": [
@@ -785,7 +1045,11 @@
        "note": "texts naming VLC masked (the public build says Cone)",
        "rows": [
         "P8-14"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - library.png"
+       },
+       "demo": "settings-library"
       },
       {
        "id": "header",
@@ -806,7 +1070,11 @@
        "note": "texts naming VLC masked (the public build says Cone)",
        "rows": [
         "P7-14"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - library.png"
+       },
+       "demo": "settings-library"
       },
       {
        "id": "categories",
@@ -827,7 +1095,11 @@
        "note": "texts naming VLC masked (the public build says Cone)",
        "rows": [
         "P7-14"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - library.png"
+       },
+       "demo": "settings-library"
       },
       {
        "id": "page",
@@ -848,7 +1120,23 @@
        "note": "texts naming VLC masked (the public build says Cone)",
        "rows": [
         "P8-14"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - library.png"
+       },
+       "demo": "settings-library"
+      },
+      {
+       "id": "spec",
+       "shot": "page",
+       "measure": "spec",
+       "png": "Settings - library.png",
+       "at": [
+        436,
+        108
+       ],
+       "alignTo": "dialog",
+       "demo": "settings-library"
       }
      ],
      "human": [
@@ -875,7 +1163,11 @@
        "after": 400
       },
       {
-       "shot": "page"
+       "demo": "settings-network"
+      },
+      {
+       "shot": "page",
+       "uiaAll": true
       }
      ],
      "compare": [
@@ -892,7 +1184,11 @@
        "search": 6,
        "rows": [
         "P7-15"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - network.png"
+       },
+       "demo": "settings-network"
       },
       {
        "id": "header",
@@ -906,7 +1202,11 @@
        "search": 6,
        "rows": [
         "P7-14"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - network.png"
+       },
+       "demo": "settings-network"
       },
       {
        "id": "categories",
@@ -920,7 +1220,11 @@
        "search": 6,
        "rows": [
         "P7-14"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - network.png"
+       },
+       "demo": "settings-network"
       },
       {
        "id": "page",
@@ -934,7 +1238,23 @@
        "search": 6,
        "rows": [
         "P7-15"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - network.png"
+       },
+       "demo": "settings-network"
+      },
+      {
+       "id": "spec",
+       "shot": "page",
+       "measure": "spec",
+       "png": "Settings - network.png",
+       "at": [
+        436,
+        108
+       ],
+       "alignTo": "dialog",
+       "demo": "settings-network"
       }
      ],
      "human": [
@@ -962,7 +1282,11 @@
        "after": 400
       },
       {
-       "shot": "page"
+       "demo": "settings-performance"
+      },
+      {
+       "shot": "page",
+       "uiaAll": true
       }
      ],
      "compare": [
@@ -987,7 +1311,11 @@
        "rows": [
         "S2-07",
         "S2-08"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - performance.png"
+       },
+       "demo": "settings-performance"
       },
       {
        "id": "header",
@@ -1008,7 +1336,11 @@
        "note": "texts naming VLC masked (the public build says Cone)",
        "rows": [
         "P7-14"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - performance.png"
+       },
+       "demo": "settings-performance"
       },
       {
        "id": "categories",
@@ -1029,7 +1361,11 @@
        "note": "texts naming VLC masked (the public build says Cone)",
        "rows": [
         "P7-14"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - performance.png"
+       },
+       "demo": "settings-performance"
       },
       {
        "id": "page",
@@ -1051,7 +1387,23 @@
        "rows": [
         "S2-07",
         "S2-08"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - performance.png"
+       },
+       "demo": "settings-performance"
+      },
+      {
+       "id": "spec",
+       "shot": "page",
+       "measure": "spec",
+       "png": "Settings - performance.png",
+       "at": [
+        436,
+        108
+       ],
+       "alignTo": "dialog",
+       "demo": "settings-performance"
       }
      ],
      "human": [
@@ -1078,7 +1430,11 @@
        "after": 400
       },
       {
-       "shot": "page"
+       "demo": "settings-recording"
+      },
+      {
+       "shot": "page",
+       "uiaAll": true
       }
      ],
      "compare": [
@@ -1095,7 +1451,11 @@
        "search": 6,
        "rows": [
         "S2-10"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - recording.png"
+       },
+       "demo": "settings-recording"
       },
       {
        "id": "header",
@@ -1109,7 +1469,11 @@
        "search": 6,
        "rows": [
         "P7-14"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - recording.png"
+       },
+       "demo": "settings-recording"
       },
       {
        "id": "categories",
@@ -1123,7 +1487,11 @@
        "search": 6,
        "rows": [
         "P7-14"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - recording.png"
+       },
+       "demo": "settings-recording"
       },
       {
        "id": "page",
@@ -1137,7 +1505,23 @@
        "search": 6,
        "rows": [
         "S2-10"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - recording.png"
+       },
+       "demo": "settings-recording"
+      },
+      {
+       "id": "spec",
+       "shot": "page",
+       "measure": "spec",
+       "png": "Settings - recording.png",
+       "at": [
+        436,
+        108
+       ],
+       "alignTo": "dialog",
+       "demo": "settings-recording"
       }
      ],
      "human": [
@@ -1164,7 +1548,11 @@
        "after": 400
       },
       {
-       "shot": "page"
+       "demo": "settings-extensions"
+      },
+      {
+       "shot": "page",
+       "uiaAll": true
       }
      ],
      "compare": [
@@ -1181,7 +1569,11 @@
        "search": 6,
        "rows": [
         "P7-15"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - extensions.png"
+       },
+       "demo": "settings-extensions"
       },
       {
        "id": "header",
@@ -1195,7 +1587,11 @@
        "search": 6,
        "rows": [
         "P7-14"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - extensions.png"
+       },
+       "demo": "settings-extensions"
       },
       {
        "id": "categories",
@@ -1209,7 +1605,11 @@
        "search": 6,
        "rows": [
         "P7-14"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - extensions.png"
+       },
+       "demo": "settings-extensions"
       },
       {
        "id": "page",
@@ -1223,7 +1623,23 @@
        "search": 6,
        "rows": [
         "P7-15"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - extensions.png"
+       },
+       "demo": "settings-extensions"
+      },
+      {
+       "id": "spec",
+       "shot": "page",
+       "measure": "spec",
+       "png": "Settings - extensions.png",
+       "at": [
+        436,
+        108
+       ],
+       "alignTo": "dialog",
+       "demo": "settings-extensions"
       }
      ],
      "human": [
@@ -1252,6 +1668,21 @@
       }
      ]
     }
+   ],
+   "demo": [
+    "settings-general",
+    "settings-interface",
+    "settings-privacy",
+    "settings-controls",
+    "settings-playback",
+    "settings-video",
+    "settings-audio",
+    "settings-subtitles",
+    "settings-library",
+    "settings-network",
+    "settings-performance",
+    "settings-recording",
+    "settings-extensions"
    ]
   },
   {
@@ -1314,7 +1745,11 @@
        "check": "Open Advanced Settings opens the Settings dialog"
       },
       {
-       "shot": "page"
+       "demo": "settings-audio"
+      },
+      {
+       "shot": "page",
+       "uiaAll": true
       },
       {
        "keys": "{ESC}",
@@ -1335,10 +1770,29 @@
        "rows": [
         "F-08",
         "P8-11"
-       ]
+       ],
+       "specMasks": {
+        "png": "Settings - audio.png"
+       },
+       "demo": "settings-audio"
+      },
+      {
+       "id": "spec",
+       "shot": "page",
+       "measure": "spec",
+       "png": "Settings - audio.png",
+       "at": [
+        436,
+        108
+       ],
+       "alignTo": "page",
+       "demo": "settings-audio"
       }
      ]
     }
+   ],
+   "demo": [
+    "settings-audio"
    ]
   }
  ]

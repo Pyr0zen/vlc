@@ -1,10 +1,13 @@
 {
-  "testMediaDir": "<TEST_MEDIA_DIR>",
-  "outRoot": "<WORK_DIR>\\verifyruns",
-  "builds": {
-    "public": "builds\\current-public\\Cone.exe",
-    "vlc": "builds\\current\\vlc.exe"
-  },
-  "ignorePids": [],
-  "guardRetrySec": 60
+    "testMediaDir":  "\u003cTEST_MEDIA_DIR\u003e",
+    "outRoot":  "\u003cWORK_DIR\u003e\\verifyruns",
+    "builds":  {
+                   "public":  "builds\\current-public\\Cone.exe",
+                   "vlc":  "builds\\current\\vlc.exe"
+               },
+    "ignorePids":  [
+
+                   ],
+    "guardRetrySec":  60,
+    "profileSource":  "builds\\current-public\\portable"
 }

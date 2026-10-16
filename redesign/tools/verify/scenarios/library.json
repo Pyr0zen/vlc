@@ -65,7 +65,8 @@
        "after": 500
       },
       {
-       "shot": "lib"
+       "shot": "lib",
+       "uiaAll": true
       }
      ],
      "compare": [
@@ -80,7 +81,10 @@
         "IA-44",
         "IB-32"
        ],
-       "pad": 0
+       "pad": 0,
+       "specMasks": {
+        "png": "Player.png"
+       }
       },
       {
        "id": "title-row",
@@ -91,7 +95,10 @@
        "rows": [
         "IA-45",
         "P5-08"
-       ]
+       ],
+       "specMasks": {
+        "png": "Player.png"
+       }
       },
       {
        "id": "tools-row",
@@ -108,7 +115,10 @@
          "pad": 3
         }
        ],
-       "note": "item count masked (test profile)"
+       "note": "item count masked (test profile)",
+       "specMasks": {
+        "png": "Player.png"
+       }
       },
       {
        "id": "panel",
@@ -130,7 +140,10 @@
          "pad": 3
         }
        ],
-       "note": "list masked (test profile)"
+       "note": "list masked (test profile)",
+       "specMasks": {
+        "png": "Player.png"
+       }
       },
       {
        "id": "topbar-open",
@@ -142,7 +155,17 @@
         "P5-30",
         "IB-11",
         "P5-22"
-       ]
+       ],
+       "specMasks": {
+        "png": "Player.png"
+       }
+      },
+      {
+       "id": "spec",
+       "shot": "lib",
+       "measure": "spec",
+       "png": "Player.png",
+       "anchor": "tl"
       }
      ],
      "human": [

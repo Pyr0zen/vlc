@@ -37,7 +37,13 @@ foreach ($f in $Files) {
 $nScen = ($plan | ForEach-Object { $_.Scenarios.Count } | Measure-Object -Sum).Sum
 "plan: $($plan.Count) session(s), $nScen scenario(s), build '$Build'"
 
-$exe = Join-Path $cfg.testMediaDir $cfg.builds.$Build
+$exePath = [string]$cfg.builds.$Build
+$exe = if ([IO.Path]::IsPathRooted($exePath)) { $exePath } else { Join-Path $cfg.testMediaDir $exePath }
+$script:PublicBuild = ($Build -eq 'public')
+# demo state: values the Figma screens show (subtitle delay -4 s, toggles, colours), set per
+# session in a run-specific copy of the test profile (vlcrc) or through the UI (per-media values)
+$demoFile = Join-Path $here 'demo_state.json'
+$script:Demo = if (Test-Path $demoFile) { Get-Content -Raw -Encoding UTF8 $demoFile | ConvertFrom-Json } else { $null }
 $mediaRoot = Join-Path $cfg.testMediaDir 'builds\test-media\verify'
 # --no-one-instance: the started process never hands its media to another running player
 # --no-qt-updates-notif only for vlc.exe: the Cone builds have no update checker and refuse to
@@ -75,6 +81,7 @@ $logFile = Join-Path $runDir 'run.log'
 $script:Log = { param($m) Write-Host $m; Add-Content -LiteralPath $logFile -Value $m -Encoding utf8 }
 $buildId = ''
 $br = Join-Path (Split-Path $exe) 'build-run.txt'; if (Test-Path $br) { $buildId = (Get-Content $br -Raw).Trim() }
+if ($exe -match '\\builds\\(\d{6,})\\') { $buildId = "run $($Matches[1])" + $(if ($buildId) { " ($buildId)" } else { '' }) }
 Write-VLog "run $runName, build '$Build' ($buildId), $nScen scenario(s)"
 
 # another test player (the main session's manual test) must not be running: wait for it before
@@ -92,6 +99,45 @@ function Wait-ForOtherPlayers {
 }
 Wait-ForOtherPlayers
 
+# run-specific profile: a snapshot of the profile source (never edited in place), mirrored into the
+# build's portable folder before every session and then given the session's demo values
+$profileSource = if ($cfg.PSObject.Properties['profileSource'] -and $cfg.profileSource) {
+    if ([IO.Path]::IsPathRooted([string]$cfg.profileSource)) { [string]$cfg.profileSource } else { Join-Path $cfg.testMediaDir ([string]$cfg.profileSource) } } else { $null }
+$profileTarget = Join-Path (Split-Path $exe) 'portable'
+$profileBase = $null
+if ($profileSource) {
+    if ($profileTarget -like (Join-Path $cfg.testMediaDir 'builds\current*')) { throw "refusing to overwrite the profile of a fixed test folder: $profileTarget" }
+    if ([string]::Equals($profileTarget.TrimEnd([char]92), $profileSource.TrimEnd([char]92), [StringComparison]::OrdinalIgnoreCase)) { throw "profileSource and the build's portable folder are the same" }
+    $profileBase = Join-Path $runDir 'profile-base'
+    robocopy $profileSource $profileBase /E /R:1 /W:1 /NFL /NDL /NJH /NJS /NP | Out-Null
+    if ($LASTEXITCODE -ge 8) { throw "copying the profile source failed ($LASTEXITCODE)" }
+    Write-VLog "profile: snapshot of the profile source in profile-base; each session starts from it"
+}
+function Initialize-Profile($se) {
+    $applied = @()
+    if (-not $profileBase) { return $applied }
+    robocopy $profileBase $profileTarget /MIR /R:1 /W:1 /NFL /NDL /NJH /NJS /NP | Out-Null
+    if ($LASTEXITCODE -ge 8) { throw "preparing the run profile failed ($LASTEXITCODE)" }
+    $vlcrc = Join-Path $profileTarget 'vlcrc'
+    if (-not $script:Demo -or -not $se.PSObject.Properties['demo'] -or -not (Test-Path $vlcrc)) { return $applied }
+    $text = [IO.File]::ReadAllText($vlcrc)
+    foreach ($sid in @($se.demo)) {
+        $scr = $script:Demo.screens.$sid
+        if (-not $scr) { continue }
+        foreach ($v in @($scr.values)) {
+            if ($v.how -ne 'vlcrc' -or -not $v.option) { continue }
+            $key = [regex]::Escape([string]$v.option)
+            $line = "$($v.option)=$($v.value)"
+            if ($text -match "(?m)^#?$key=.*$") { $text = [regex]::Replace($text, "(?m)^#?$key=.*$", $line.Replace('$', '$$'), 1) }
+            else { $text += "`n$line`n" }
+            $applied += "${sid}: $($v.label) = $($v.figma) (vlcrc $line)"
+        }
+    }
+    [IO.File]::WriteAllText($vlcrc, $text, (New-Object System.Text.UTF8Encoding $false))
+    return $applied
+}
+$demoLog = [ordered]@{}
+
 $results = New-Object System.Collections.ArrayList
 $cleanup = @()
 $aborted = $null
@@ -108,6 +154,8 @@ try {
         $setupChecks = @()
         try {
             Wait-ForOtherPlayers
+            $applied = @(Initialize-Profile $se)
+            if ($applied.Count) { $demoLog[$se.id] = $applied; foreach ($x in $applied) { Write-VLog "  demo: $x" } }
             Start-Player $exe $a | Out-Null
             $size = if ($se.size) { $se.size } else { @(1920, 1080) }
             Set-PlayerSize ([double]$size[0]) ([double]$size[1]) | Out-Null
@@ -156,7 +204,7 @@ try {
     $cleanup += "final: $final; started players left: $($left.Count)" + $(if ($script:StuckPids.Count) { "; stuck in termination (no window, cannot be ended): $($script:StuckPids -join ', ')" } else { '' })
     Write-VLog "cleanup: $($cleanup[-1])"
     $run = [ordered]@{ run = $runName; build = "$Build $buildId"; started = $t0.ToString('o'); seconds = [math]::Round(((Get-Date) - $t0).TotalSeconds, 1)
-        aborted = $aborted; cleanup = ($cleanup -join ' | '); scenarios = @($results) }
+        aborted = $aborted; cleanup = ($cleanup -join ' | '); demo = $demoLog; scenarios = @($results) }
     $run | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath (Join-Path $runDir 'run.json') -Encoding utf8
 }
 if (-not $NoCompare) { & python (Join-Path $here 'compare.py') $runDir }

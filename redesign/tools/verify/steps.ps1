@@ -77,6 +77,7 @@ function Invoke-Step($step, $ctx) {
     }
     if ($names -contains 'shot') { Save-ScenarioShot $step $ctx; return }
     if ($names -contains 'expect') { Test-Expectation $step $ctx; return }
+    if ($names -contains 'demo') { Set-DemoState ([string]$step.demo) $ctx; return }
     if ($names -contains 'volume') { Set-PlayerVolume ([double]$step.volume) $ctx; return }
     if ($names -contains 'uiaDump') { Get-UiaTree | Set-Content -Encoding utf8 (Join-Path $ctx.OutDir ("{0}__{1}.uia.txt" -f $ctx.Scenario, $step.uiaDump)); return }
     if ($names -contains 'note') { [void]$ctx.Notes.Add([string]$step.note); return }
@@ -108,17 +109,10 @@ function Save-ScenarioShot($step, $ctx) {
         $el = Find-UiaElement ([string]$u) '' 800
         if ($el) { $meta.uia[[string]$u] = Get-UiaRect $el }
     }
-    # "specScreen": rectangles of every element of that spec screen that has a UIA lookup, for
-    # the measured checks in compare.py (spec.py: the machine-readable Figma spec)
-    $specScreen = [string](Get-StepProp $step 'specScreen' '')
-    if ($specScreen) {
-        $meta.specScreen = $specScreen; $meta.spec = [ordered]@{}
-        foreach ($u in (Get-SpecUia $specScreen)) {
-            $match = if ($u.PSObject.Properties['match']) { [string]$u.match } else { 'exact' }
-            $el = Find-UiaElement ([string]$u.name) ([string]$u.role) 800 $match
-            if ($el) { $meta.spec[[string]$u.element] = Get-UiaRect $el }
-        }
-    }
+    # "uiaAll": every UI Automation element of the player's windows with a rectangle (logical px
+    # in the client area), for the measured checks against the Figma spec in compare.py
+    $meta.public = [bool]$script:PublicBuild
+    if ([bool](Get-StepProp $step 'uiaAll' $false)) { $meta.uiaAll = @(Get-UiaRects) }
     [void]$ctx.Shots.Add($meta)
     Write-VLog ("    shot {0} ({1}, {2}x{3})" -f $name, $shot.Method, $c.Width, $c.Height)
 }
@@ -179,12 +173,50 @@ function Restore-PlayerVolume {
     try { Set-PlayerVolume $script:OrigVolume $null; Write-VLog ("  volume restored to {0:N2}" -f $script:OrigVolume) } catch { Write-VLog "  volume not restored: $($_.Exception.Message)" }
     $script:OrigVolume = $null
 }
-# UIA lookups of a spec screen (from spec.py, cached per screen)
-$script:SpecUiaCache = @{}
-function Get-SpecUia([string]$screen) {
-    if (-not $script:SpecUiaCache.ContainsKey($screen)) {
-        $json = & python (Join-Path $PSScriptRoot 'spec.py') --uia $screen
-        $script:SpecUiaCache[$screen] = @((ConvertFrom-Json ($json -join "`n")) | ForEach-Object { $_ })
+# all UIA elements with an on-screen rectangle: {n name, t type, x, y, w, h} in client logical px
+function Get-UiaRects {
+    $m = Get-MainWindow; $sc = Get-Scale $m.Handle; $cl = Get-ClientRect $m.Handle
+    $out = New-Object System.Collections.ArrayList
+    foreach ($w in (Get-PlayerWindows)) {
+        if ($w.Class -eq 'Static') { continue }
+        try { $root = [System.Windows.Automation.AutomationElement]::FromHandle($w.Handle) } catch { continue }
+        $all = $root.FindAll([System.Windows.Automation.TreeScope]::Descendants, [System.Windows.Automation.Condition]::TrueCondition)
+        foreach ($el in $all) {
+            try {
+                $cur = $el.Current; $r = $cur.BoundingRectangle
+                if ($r.IsEmpty -or $r.Width -le 0 -or $cur.IsOffscreen) { continue }
+                [void]$out.Add([ordered]@{ n = $cur.Name; t = $cur.ControlType.ProgrammaticName.Replace('ControlType.', '')
+                    x = [math]::Round(($r.X - $cl.Left) / $sc, 1); y = [math]::Round(($r.Y - $cl.Top) / $sc, 1)
+                    w = [math]::Round($r.Width / $sc, 1); h = [math]::Round($r.Height / $sc, 1) })
+            } catch {}
+        }
     }
-    return $script:SpecUiaCache[$screen]
+    return $out.ToArray()
+}
+
+# per-media / per-session values of the design's demo state (demo_state.json, how = "ui"): set
+# through the UI before the screen is compared; each value set (or not) is noted in the run
+function Set-DemoState([string]$screen, $ctx) {
+    if (-not $script:Demo) { [void]$ctx.Notes.Add("demo ${screen}: demo_state.json missing"); return }
+    $scr = $script:Demo.screens.$screen
+    if (-not $scr) { return }
+    foreach ($v in @($scr.values)) {
+        if ($v.how -ne 'ui' -or -not $v.uia) { continue }
+        $role = if ($v.uia.PSObject.Properties['role']) { [string]$v.uia.role } else { '' }
+        $match = if ($v.uia.PSObject.Properties['match']) { [string]$v.uia.match } else { 'exact' }
+        $el = Find-UiaElement ([string]$v.uia.name) $role 2000 $match
+        if (-not $el) { [void]$ctx.Notes.Add("demo ${screen}: '$($v.label)' not set (control '$($v.uia.name)' not found)"); continue }
+        try {
+            if ($role -eq 'Edit' -or $v.PSObject.Properties['input']) {
+                $text = if ($v.PSObject.Properties['input']) { [string]$v.input } else { [string]$v.figma }
+                Invoke-UiaElement $el | Out-Null; Start-Sleep -Milliseconds 250
+                Send-Keys '^a'; Send-Keys ($text.Replace('+', '{+}').Replace('%', '{%}').Replace('^', '{^}')); Send-Keys '{ENTER}'
+                Start-Sleep -Milliseconds 400
+                [void]$ctx.Notes.Add("demo ${screen}: $($v.label) = $($v.figma) (typed '$text' into '$($v.uia.name)')")
+            } else {
+                Invoke-UiaElement $el | Out-Null; Start-Sleep -Milliseconds 400
+                [void]$ctx.Notes.Add("demo ${screen}: $($v.label) = $($v.figma) (clicked '$($v.uia.name)')")
+            }
+        } catch { [void]$ctx.Notes.Add("demo ${screen}: '$($v.label)' not set: $($_.Exception.Message)") }
+    }
 }

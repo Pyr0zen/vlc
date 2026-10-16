@@ -14,8 +14,8 @@ and marks VIDEO_INDEX itself (the harness never edits VIDEO_INDEX).
 | `steps.ps1` | step executor (the step reference below) |
 | `compare.py` | Figma crop + diff + images + `report.json` / `report.md`; also `--validate` and `--nodes` |
 | `make_media.py` | generates the harness's own test media (ffmpeg) |
-| `spec.py` | the machine-readable Figma spec behind one small interface (elements by screen, rows by element, mask regions); reads `spec/*.json` when present, else `spec_fixture.json` |
-| `spec_fixture.json` | hand-written stand-in with 3 Player elements in the assumed shape (see `spec.py`) |
+| `spec.py` | loads the machine-readable Figma spec (`spec/`, made by `make_spec.py`, see `redesign/VERIFY_SPEC_NOTES.md`): one screen state's elements, normalised; parts the spec files leave out (the Controls popups and sidebars) are built with make_spec's own Builder |
+| `demo_state.json` | the design's demo values per screen (subtitle delay -4 s, toggles, colours) and how the harness sets each: run profile (vlcrc), UI, already the default, or masked |
 | `probe.ps1` | authoring helper: starts the player, runs steps, dumps the UIA tree and a screenshot |
 | `scenarios/*.json` | the scenario table, one file per area |
 | `verify.example.json` | settings with placeholders (committed) |
@@ -25,7 +25,9 @@ and marks VIDEO_INDEX itself (the harness never edits VIDEO_INDEX).
 1. Python 3 with Pillow and NumPy (`pip install pillow numpy`), ffmpeg on PATH, Windows PowerShell 5.1.
 2. Create `verify.local.json` next to this file (gitignored):
    ```json
-   { "testMediaDir": "<TEST_MEDIA_DIR>", "outRoot": "<WORK_DIR>\\verifyruns", "ignorePids": [] }
+   { "testMediaDir": "<TEST_MEDIA_DIR>", "outRoot": "<WORK_DIR>\\verifyruns", "ignorePids": [],
+     "builds": { "public": "<path to Cone.exe>", "vlc": "builds\\current\\vlc.exe" },
+     "profileSource": "builds\\current-public\\portable" }
    ```
    with the real folders. `outRoot` must be outside the repository (screenshots never go into
    the repo; `verifyruns/` is also gitignored as a safety net). `ignorePids`: player processes
@@ -140,16 +142,33 @@ Compare metrics (defaults in `compare.py`, per compare item `"tolerance"` overri
   `backdrop` {"node", "at"} gives components drawn without a background their Figma background.
 - `rows` on a compare item says which VIDEO_INDEX rows it covers (default: the scenario's rows).
 
+### Run profile and demo state
+- `profileSource` is copied once per run (`<run>\profile-base`); before every session that copy is
+  mirrored into the build's `portable` folder, so each session starts from the same profile and
+  the source is never edited. The harness refuses to mirror into a `builds\current*` folder.
+- A session's `"demo": [screen ids]` writes those screens' `vlcrc` values from `demo_state.json`
+  into the run profile; a `{"demo": "<screen>"}` step sets the per-media ones through the UI
+  (e.g. the subtitle delay typed into its value box). A compare / measure item with
+  `"demo": "<screen>"` compares the values that could not be set by position only. The report
+  lists what was set and how ("Demo state").
+
 ### Measured checks (spec.py)
-A compare item `{"id": "spec", "shot": "bar", "measure": "spec", "screen": "player"}` checks
-every element of that spec screen: its UI Automation rectangle (logical px, collected by a shot
-step with `"specScreen": "player"`) against the spec rect with the element's anchor applied
-(tolerance `pos` / `size`, default 1 px), and the screenshot colour at each spec colour point
-(3 x 3 mean, tolerance `color`, default 6 levels). Fonts are listed but not measured (UIA has no
-font information; the pixel compare covers them). `"specMasks": "<screen>"` on a pixel compare
-leaves the spec's sample content (times, titles) out before the diff. Each element becomes its
-own compare entry with the element's rows. When the real spec lands in `spec/`, only
-`spec.py` `load_spec()` / `_normalise()` change; the assumed fields are listed in its docstring.
+A compare item `{"id": "spec", "shot": "bar", "measure": "spec", "png": "Controls.png", "props":
+{"Property 1": "default"}, "anchor": "bl"}` (optional `"node"` for a part such as a popup, `"ref"`
+for where it is placed, `"alignTo"` for popups found by a region compare) checks every element of
+that spec state that is inside the window:
+- geometry: the UI Automation rectangle that overlaps it best (IoU >= 0.6, texts by their text)
+  against `bounds`, +-1 logical px (texts: the centre +-3 px); the shot needs `"uiaAll": true`;
+- colour: the dark token fill on a 5 x 5 grid inside it (children left out), 8 levels (24 for
+  `translucent`); texts: the text colour must appear in the text box;
+- pixels: leaf elements (icons, texts, small shapes; not thin lines) as a fuzzy crop;
+- `mask` elements and unset demo values: geometry only; `brand` elements: skipped on the public
+  build; the frame background image (`background_mask: image`) is never compared.
+Each element is its own entry under its `rows` (the frame's rows when it has none). The report
+lists for every auto-passed row the elements that support it and flags weak rows: only
+frame-level fallback rows, or only elements that suggest 4+ rows (generic containers).
+`"specMasks": {"png", "props", "node", "texts"}` on a region compare leaves the spec's sample
+content, brand elements (public build) and unset demo values out of its pixel diff.
 
 ### Step reference
 Positions are logical px inside the client area, from the corner `"from"` (tl default, tr, bl, br).
@@ -163,7 +182,8 @@ Positions are logical px inside the client area, from the corner `"from"` (tl de
 | `{"uia": "Name", "role": "Button", "action": "click/rightclick/hover/invoke/setvalue/focus", "match": "exact/contains", "optional": true}` | act on a UI Automation element (click = real mouse click on its centre) |
 | `{"volume": 0.5}` | volume (1.0 = 100 %) with the wheel over the volume slider; restored at session end |
 | `{"resize": [w, h]}` | client size in logical px |
-| `{"shot": "name", "windows": "all", "uiaRects": ["Progress"], "specScreen": "player"}` | screenshot (client area; `all` adds the player's other windows; `specScreen` records the UIA rects of that spec screen's elements) |
+| `{"shot": "name", "windows": "all", "uiaRects": ["Progress"], "uiaAll": true}` | screenshot (client area; `all` adds the player's other windows; `uiaAll` records every UIA rectangle for the measured checks) |
+| `{"demo": "<screen>"}` | sets the screen's per-media demo values through the UI (demo_state.json) |
 | `{"expect": {"uia": "Player controls", "visible": false, "present": true, "value": 0.08, "tol": 0.001, "name": "*x*"}, "check": "text"}` | automatic behaviour check (recorded, a failure makes the row "differs") |
 | `{"uiaDump": "name"}` / `{"note": "text"}` | write the UIA tree / a note into the run |
 

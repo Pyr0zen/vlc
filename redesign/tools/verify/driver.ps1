@@ -90,7 +90,7 @@ function Test-NoWindow([int]$procId) {
         return $true }, [IntPtr]::Zero) | Out-Null
     return $script:nw
 }
-# other players from the fixed test folders (builds\current*) that this run did not start (the
+# other players from the builds folder (builds\*: the fixed test folders and downloaded runs) that this run did not start (the
 # main session's manual tests). A process without any visible window that started more than a
 # minute ago is stuck in termination, not a running player, and is skipped; "ignorePids" only
 # count while they have no window.
@@ -99,7 +99,7 @@ function Get-ForeignTestPlayers([string]$buildsDir, [int[]]$ignorePids) {
     @(Get-Process vlc, Cone -ErrorAction SilentlyContinue | Where-Object {
         $p = $null; try { $p = $_.Path } catch {}
         $proc = $_
-        if (-not $p -or -not $p.StartsWith((Join-Path $buildsDir 'current'), [StringComparison]::OrdinalIgnoreCase)) { return $false }
+        if (-not $p -or -not $p.StartsWith($buildsDir.TrimEnd([char]92) + [char]92, [StringComparison]::OrdinalIgnoreCase)) { return $false }
         if ($script:StartedPids -contains $proc.Id) { return $false }
         $noWin = Test-NoWindow $proc.Id
         if ($noWin -and (($ignorePids -contains $proc.Id) -or ($script:StuckPids -contains $proc.Id))) { return $false }
