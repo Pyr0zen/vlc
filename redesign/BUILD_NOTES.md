@@ -743,3 +743,8 @@ From the verification of build 38727073546 (seen again on 38800817536): P6-04 / 
 - Difference (LOW, to decide): Customize Player's footer has VLC's "Video player / Audio player / Mini player" tabs; Figma "Player - customize" has none.
 - Not differences: "Quit Cone" / "Cone Settings" in the grid (brand); Stop / Record not in the grid because they are already in the bar; the grid scrolls at a 1600x900 window (Figma frame is 1920x1080).
 - Profile switch frame time (Desktop Duplication at 240 Hz, changed frames only): the new layout is on screen in the frame right after the menu closes (about 7 ms later); one gap of about 23 ms (one missed refresh at 99 Hz) at the switch, then steady 10 ms updates. Target <= 16.7 ms: one dropped frame (LOW); the review's mitigation applies (keep the bar controls when only settings differ, color scheme on the next frame).
+
+## 2026-10-16 verification sweep, window 2: library, part 1 (build 38829058873, public)
+- Verified: New Playlist dialog (P6-16, IB-30) opaque, fully inside the window, Cancel / Save visible, layout as Figma; the full library header at an 830 px window keeps back / forward, the address, the view button, a shrunk search field and "..." with no overlap (the item count hides first), Sticky's report fixed.
+- LOW: Home "Continue Watching" labels the test episode with its file name (Test_Show_S01E01.mp4) instead of the media title, like the bookmark-name fix.
+- Not tested yet (the Cone portable library is nearly empty; adding folders needs the native picker): Add Folder cancel crash, folder contents after a scan, grid 5 / 4 at 1920, Unknown Album, pinned folder highlight.

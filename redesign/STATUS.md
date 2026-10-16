@@ -11,8 +11,9 @@
 
 ## Verification sweep (build 38829058873)
 - Window 1 done (2026-10-16): Customize Player and profiles. Verified: row 308 (profiles in the main menu, submenu, switching). Bugs: MED Customize preview loses the seek bar and time labels after a drop; LOW profile switch drops one frame (23 ms); LOW footer tabs not in Figma (to decide). Details in BUILD_NOTES and PERF.
-- Count (all VIDEO_INDEX rows): verified 60, coded but not verified 179, todo 122.
-- Next windows after the reset: library fixes, waveform (large files, AVI without index, no-audio), Ctrl+B message and bookmark titles, mouse wheel, presets switching between shows; then the music view and panels on the next-batch build.
+- Count (all VIDEO_INDEX rows): verified 62, coded but not verified 177, todo 122.
+- Window 2 done (2026-10-16): library part 1: New Playlist (P6-16, IB-30) verified, narrow header fixed; LOW Continue Watching shows the file name. Library part 2 (needs folders in the Cone library: Add Folder cancel, folder contents after a scan, grid, Unknown Album, pin highlight) still open.
+- Next windows after the reset: library part 2, waveform (large files, AVI without index, no-audio), Ctrl+B message and bookmark titles, mouse wheel, presets switching between shows; then the music view and panels on the next-batch build.
 - Queued for the next batch after this testing window (Sticky, 2026-10-16): Decision 54 change: in any panel / sidebar / popup / Settings page that can scroll, the wheel always scrolls the panel and never changes a slider by hovering (remove the 0.4 s pause); a slider there takes the wheel only after a click on it or its value row, releases it when the pointer leaves the slider or on a click elsewhere, with a subtle focus state while it holds the wheel; in panels that cannot scroll, hovering is still enough. Update Decision 54 and INTERACTIONS.md.
 
 ## After the reset, in order
