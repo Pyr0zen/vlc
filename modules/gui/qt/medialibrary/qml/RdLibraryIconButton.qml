@@ -54,6 +54,7 @@ T.AbstractButton {
     Keys.priority: Keys.AfterItem
     Keys.onPressed: (event) => {
         if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+            control._toolTipDismissed = true
             control.clicked()
             event.accepted = true
             return
