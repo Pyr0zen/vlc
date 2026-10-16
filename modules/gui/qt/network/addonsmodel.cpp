@@ -328,7 +328,11 @@ QVariant AddonsModel::data( const QModelIndex& index, int role ) const
             vlc_mutex_locker locker{&item->entry->lock};
             if ( !( item->entry->e_flags & ADDON_MANAGEABLE ) )
             {
-                return qtr(BRAND_ADDON_MANUAL);
+#ifdef VLC_BRAND_PUBLIC
+                return qtr("This addon has been installed manually. Cone can't manage it by itself.");
+#else
+                return qtr("This addon has been installed manually. VLC can't manage it by itself.");
+#endif
             }
             return QVariant{};
         }

@@ -36,7 +36,6 @@
 #include "open_panels.hpp"
 #include "dialogs/open/open.hpp"
 #include "dialogs/dialogs_provider.hpp" /* Open Subtitle file */
-#include "util/brand.hpp"
 #include "util/qt_dirs.hpp"
 #include "util/validators.hpp"
 #include "util/colorizedsvgicon.hpp"
@@ -953,7 +952,11 @@ void CaptureOpenPanel::initialize()
     /* Jack Props panel */
 
     /* Pace */
-    jackPace = new QCheckBox(qtr( BRAND_JACK_PACE ));
+#ifdef VLC_BRAND_PUBLIC
+    jackPace = new QCheckBox(qtr( "Use Cone pace" ));
+#else
+    jackPace = new QCheckBox(qtr( "Use VLC pace" ));
+#endif
     jackPropLayout->addWidget( jackPace, 1, 1 );
 
     /* Auto Connect */

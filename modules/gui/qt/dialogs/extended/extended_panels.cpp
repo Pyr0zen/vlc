@@ -49,7 +49,6 @@
 #include "qt.hpp"
 #include "maininterface/mainctx.hpp"
 #include "player/player_controller.hpp"
-#include "util/brand.hpp"
 #include "util/qt_dirs.hpp"
 #include "widgets/native/customwidgets.hpp"
 #include "dialogs/dialogs_provider.hpp"
@@ -619,7 +618,15 @@ ExtV4l2::ExtV4l2( qt_intf_t *_p_intf, QWidget *_parent )
     : QWidget( _parent ), p_intf( _p_intf ), box( NULL )
 {
     QVBoxLayout *layout = new QVBoxLayout( this );
-    help = new QLabel( qtr( BRAND_V4L2_HELP )
+#ifdef VLC_BRAND_PUBLIC
+    help = new QLabel( qtr( "No v4l2 instance found.\n"
+                            "Please check that the device has been opened with Cone and is playing.\n\n"
+                            "Controls will automatically appear here." )
+#else
+    help = new QLabel( qtr("No v4l2 instance found.\n"
+      "Please check that the device has been opened with VLC and is playing.\n\n"
+      "Controls will automatically appear here.")
+#endif
       , this );
     help->setAlignment( Qt::AlignHCenter | Qt::AlignVCenter );
     help->setWordWrap( true );

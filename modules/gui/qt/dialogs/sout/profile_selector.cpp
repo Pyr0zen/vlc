@@ -653,7 +653,11 @@ void VLCProfileEditor::muxSelected()
     if( current->property("module").toString() == "avformat" )
         ui.muxerwarning->setText(
                     QString( "<img src=\":/menu/info.svg\" width=%2 height=%2/> %1" )
-                    .arg( qtr( BRAND_MUXER_WARNING ) )
+#ifdef VLC_BRAND_PUBLIC
+                    .arg( qtr( "This muxer is not provided directly by Cone: It could be missing." ) )
+#else
+                    .arg( qtr( "This muxer is not provided directly by VLC: It could be missing." ) )
+#endif
                     .arg(textsize)
                     );
     else if ( !caps["muxers"].contains( current->property("module").toString() ) &&

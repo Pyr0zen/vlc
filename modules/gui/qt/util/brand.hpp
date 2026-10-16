@@ -86,36 +86,6 @@
 # define BRAND_PROGID           "Cone"
 # define BRAND_INSTALL_REGKEY   "Software\\Cone"
 
-/* dialog texts that name the app (redesign/CONE_RELEASE_NOTES.md "Dialog texts"): new English
- * msgids in Cone, VLC's own msgids and translations in the vlc profile */
-# define BRAND_PREFS_RESTART_TEXT   "Cone needs to be restarted for the reset to take full effect.\n\nRestart now?"
-# define BRAND_PREFS_RESET_TEXT     "Are you sure you want to reset your Cone preferences?"
-# define BRAND_MUXER_WARNING        "This muxer is not provided directly by Cone: It could be missing."
-# define BRAND_ADDON_MANUAL         "This addon has been installed manually. Cone can't manage it by itself."
-# define BRAND_JACK_PACE            "Use Cone pace"
-# define BRAND_SKINS_TEXT           "This is Cone's skinnable interface. You can download other skins at"
-# define BRAND_V4L2_HELP            "No v4l2 instance found.\n" \
-                                    "Please check that the device has been opened with Cone and is playing.\n\n" \
-                                    "Controls will automatically appear here."
-# define BRAND_PRIVACY_POLICY       "<p>In order to protect your privacy, <i>Cone</i> " \
-                                    "does <b>not</b> collect personal data or transmit them, " \
-                                    "not even in anonymized form, to anyone." \
-                                    "</p>\n" \
-                                    "<p>Nevertheless, <i>Cone</i> is able to automatically retrieve " \
-                                    "information about the media in your play queue from third party " \
-                                    "Internet-based services. This includes cover art, track names, " \
-                                    "artist names and other meta-data." \
-                                    "</p>\n" \
-                                    "<p>Consequently, this may entail identifying some of your media files to third party " \
-                                    "entities. Therefore the <i>Cone</i> developers require your express " \
-                                    "consent for the media player to access the Internet automatically." \
-                                    "</p>\n"
-# define BRAND_FIRSTRUN_COLOR_SYSTEM "<i>Cone will automatically switch to dark mode accordingly with system settings</i>"
-# define BRAND_FIRSTRUN_COLOR_LIGHT "<i>Cone will automatically use light mode</i>"
-# define BRAND_FIRSTRUN_COLOR_DARK  "<i>Cone will automatically use dark mode</i>"
-# define BRAND_FIRSTRUN_LAYOUT_MODERN "<i>Cone will use a modern layout with no menubar or pinned controls but with client-side decoration</i>"
-# define BRAND_FIRSTRUN_LAYOUT_CLASSIC "<i>Cone will use a classic layout with a menubar and pinned controls but with no client-side decoration</i>"
-
 #else
 
 # define BRAND_NAME             "VLC media player"
@@ -145,34 +115,6 @@
 # define BRAND_REGISTRY_KEY     "Software\\VideoLAN\\VLC\\"
 # define BRAND_PROGID           "VLC"
 # define BRAND_INSTALL_REGKEY   "Software\\VideoLAN\\VLC"
-
-# define BRAND_PREFS_RESTART_TEXT   "VLC needs to be restarted for the reset to take full effect.\n\nRestart now?"
-# define BRAND_PREFS_RESET_TEXT     "Are you sure you want to reset your VLC media player preferences?"
-# define BRAND_MUXER_WARNING        "This muxer is not provided directly by VLC: It could be missing."
-# define BRAND_ADDON_MANUAL         "This addon has been installed manually. VLC can't manage it by itself."
-# define BRAND_JACK_PACE            "Use VLC pace"
-# define BRAND_SKINS_TEXT           "This is VLC's skinnable interface. You can download other skins at"
-# define BRAND_V4L2_HELP            "No v4l2 instance found.\n" \
-                                    "Please check that the device has been opened with VLC and is playing.\n\n" \
-                                    "Controls will automatically appear here."
-# define BRAND_PRIVACY_POLICY       "<p>In order to protect your privacy, <i>VLC media player</i> " \
-                                    "does <b>not</b> collect personal data or transmit them, " \
-                                    "not even in anonymized form, to anyone." \
-                                    "</p>\n" \
-                                    "<p>Nevertheless, <i>VLC</i> is able to automatically retrieve " \
-                                    "information about the media in your play queue from third party " \
-                                    "Internet-based services. This includes cover art, track names, " \
-                                    "artist names and other meta-data." \
-                                    "</p>\n" \
-                                    "<p>Consequently, this may entail identifying some of your media files to third party " \
-                                    "entities. Therefore the <i>VLC</i> developers require your express " \
-                                    "consent for the media player to access the Internet automatically." \
-                                    "</p>\n"
-# define BRAND_FIRSTRUN_COLOR_SYSTEM "<i>VLC will automatically switch to dark mode accordingly with system settings</i>"
-# define BRAND_FIRSTRUN_COLOR_LIGHT "<i>VLC will automatically use light mode</i>"
-# define BRAND_FIRSTRUN_COLOR_DARK  "<i>VLC will automatically use dark mode</i>"
-# define BRAND_FIRSTRUN_LAYOUT_MODERN "<i>VLC will use a modern layout with no menubar or pinned controls but with client-side decoration</i>"
-# define BRAND_FIRSTRUN_LAYOUT_CLASSIC "<i>VLC will use a classic layout with a menubar and pinned controls but with no client-side decoration</i>"
 
 #endif
 

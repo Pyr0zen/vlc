@@ -725,7 +725,11 @@ SPrefsPanel::SPrefsPanel( qt_intf_t *_p_intf, QWidget *_parent,
 
 //            ui.defaultLabel->setFont( italicFont );
             ui.skinsLabel->setText(
-                    qtr( BRAND_SKINS_TEXT )
+#ifdef VLC_BRAND_PUBLIC
+                    qtr( "This is Cone's skinnable interface. You can download other skins at" )
+#else
+                    qtr( "This is VLC's skinnable interface. You can download other skins at" )
+#endif
                     + QString( " <a href=\"https://www.videolan.org/vlc/skins.php\">" )
                     + qtr( "VLC skins website" ) + QString( "</a>." ) );
             ui.skinsLabel->setFont( italicFont );
