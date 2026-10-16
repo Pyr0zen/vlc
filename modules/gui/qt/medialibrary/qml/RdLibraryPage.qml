@@ -539,7 +539,9 @@ FocusScope {
                               || modelKind === "service"
             return { kind: container ? "browse" : "stream", index: index, title: model.name ?? "",
                      mrl: model.mrl ? model.mrl.toString() : "", thumbnail: model.artwork ? model.artwork.toString() : "",
-                     tree: model.tree, progress: -1, watched: false, isVideo: true }
+                     // held by value, like the ids: Back to a stream folder needs it later
+                     tree: model.tree ? RdLibraryStore.detached(model.tree) : model.tree,
+                     progress: -1, watched: false, isVideo: true }
         }
         default: {
             // media of VLC's media models (MLMediaModel roles); a playlist's media
@@ -711,9 +713,11 @@ FocusScope {
             Text {
                 // a folder's subfolders load next to its media: wait for both, so a folder of
                 // folders does not flash the text
-                visible: !!page.dataModel && page.dataModel.count === 0 && !page.dataModel.loading
-                         && !(page.subfolderModel && (page.subfolderModel.count > 0 || page.subfolderModel.loading))
-                         && page.searchText === ""
+                // (a folder or playlist that is gone, e.g. a pin of a removed folder, too)
+                visible: !page._hasParent
+                         || (!!page.dataModel && page.dataModel.count === 0 && !page.dataModel.loading
+                             && !(page.subfolderModel && (page.subfolderModel.count > 0 || page.subfolderModel.loading))
+                             && page.searchText === "")
                 width: parent.width
                 wrapMode: Text.WordWrap
                 text: {
@@ -842,20 +846,27 @@ FocusScope {
             }
         }
 
-        T.ScrollBar.vertical: T.ScrollBar {
-            id: scrollBar
+        T.ScrollBar.vertical: scrollBar
+    }
 
-            policy: grid.contentHeight > grid.height ? T.ScrollBar.AsNeeded : T.ScrollBar.AlwaysOff
-            width: VLCStyle.dp(6)
-            contentItem: Rectangle {
-                implicitWidth: VLCStyle.dp(4)
-                radius: width / 2
-                color: VLCStyle.palette.rdDividerBright
-                opacity: scrollBar.active ? 1 : 0
+    // at the page's right edge in every view (the grid reaches one gap further in the full
+    // library); a scroll bar with another parent than the view is not placed by it
+    T.ScrollBar {
+        id: scrollBar
 
-                Behavior on opacity {
-                    NumberAnimation { duration: VLCStyle.duration_long }
-                }
+        anchors.right: parent.right
+        anchors.top: grid.top
+        anchors.bottom: grid.bottom
+        policy: grid.contentHeight > grid.height ? T.ScrollBar.AsNeeded : T.ScrollBar.AlwaysOff
+        width: VLCStyle.dp(6)
+        contentItem: Rectangle {
+            implicitWidth: VLCStyle.dp(4)
+            radius: width / 2
+            color: VLCStyle.palette.rdDividerBright
+            opacity: scrollBar.active ? 1 : 0
+
+            Behavior on opacity {
+                NumberAnimation { duration: VLCStyle.duration_long }
             }
         }
     }

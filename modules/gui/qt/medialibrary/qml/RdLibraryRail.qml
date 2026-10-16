@@ -195,8 +195,8 @@ Rectangle {
         RdLibraryStore.pickFolder(qsTr("Pin a Folder"), "", "video", (url) => {
             if (url.toString() === "")
                 return
-            rail._folderToPin = url.toString()
             RdLibraryStore.addFolder("video", url)
+            rail._folderToPin = url.toString()
         })
     }
 

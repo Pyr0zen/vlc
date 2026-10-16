@@ -125,7 +125,7 @@ QtObject {
     function detachedId(id) {
         if (!id || typeof id.isValid !== "function" || !id.isValid())
             return id
-        return MediaLib.deserializeMlItemIdFromString(id.toString())
+        return RdLibraryStore.detached(id)
     }
 
     function _go(loc) {

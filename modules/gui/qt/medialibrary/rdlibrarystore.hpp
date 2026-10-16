@@ -89,6 +89,11 @@ public:
                                 QJSValue callback);
     Q_INVOKABLE void pickFiles(const QString& title, bool images, QJSValue callback);
 
+    // `value` held by value. In Qt 6 a value type read from a model row in a delegate (an
+    // MLItemId, a network tree) is a reference to that row: kept after the row changes or the
+    // delegate is destroyed, it reads another row's value or nothing (RdLibraryNav.detached)
+    Q_INVOKABLE QVariant detached(const QVariant& value) const { return value; }
+
     // library folders of a category ("video" or "music")
     Q_INVOKABLE void addFolder(const QString& category, const QUrl& url);
     Q_INVOKABLE void removeFolder(const QString& category, const QString& mrl);
@@ -174,6 +179,8 @@ private:
     // runs `dialog` (a native dialog) from the event loop, after the current event; dropped
     // while a dialog is open or waiting
     void openDialogLater(std::function<void()> dialog);
+    // logs an error a picker callback threw
+    void warnOnError(const QJSValue& result) const;
     // the M3U8 file of exportPlaylist()
     void writePlaylist(const MLItemId& playlistId, const QString& file);
 

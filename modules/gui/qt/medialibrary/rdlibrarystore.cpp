@@ -213,6 +213,13 @@ void RdLibraryStore::openDialogLater(std::function<void()> dialog)
     }, Qt::QueuedConnection);
 }
 
+void RdLibraryStore::warnOnError(const QJSValue& result) const
+{
+    // the callback runs after the click: the item that asked may be gone by then
+    if (result.isError())
+        msg_Warn(p_intf, "library picker callback: %s", qtu(result.toString()));
+}
+
 void RdLibraryStore::pickFolder(const QString& title, const QUrl& start, const QString& category,
                                 QJSValue callback)
 {
@@ -235,7 +242,7 @@ void RdLibraryStore::pickFolder(const QString& title, const QUrl& start, const Q
 
         QJSEngine* engine = qjsEngine(this);
         if (engine && callback.isCallable())
-            callback.call({ engine->toScriptValue(url) });
+            warnOnError(callback.call({ engine->toScriptValue(url) }));
     });
 }
 
@@ -248,7 +255,7 @@ void RdLibraryStore::pickFiles(const QString& title, bool images, QJSValue callb
 
         QJSEngine* engine = qjsEngine(this);
         if (engine && callback.isCallable())
-            callback.call({ engine->toScriptValue(urls) });
+            warnOnError(callback.call({ engine->toScriptValue(urls) }));
     });
 }
 

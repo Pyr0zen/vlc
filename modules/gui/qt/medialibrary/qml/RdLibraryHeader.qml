@@ -160,7 +160,7 @@ Item {
         // search 325 x 34, "...", 20 apart). It never runs into back / forward: when the row is
         // short the count elides, then hides, then the search field shrinks to its minimum, then
         // the address line gives way (it folds and elides its parts); in a very small window the
-        // search field hides last (Ctrl+F then has nothing to focus)
+        // search field hides (its search is cleared), then sort and view; "..." always shows
         Row {
             id: fullTools
 
@@ -174,17 +174,26 @@ Item {
             // are taken
             readonly property real _room: firstRow.width - navButtons.width - breadcrumb.anchors.leftMargin
                                           - breadcrumb.anchors.rightMargin - crumbsMinWidth
+            // sort and view fit next to "..." (the address line may give up all its room)
+            readonly property bool toolsFit: _room + crumbsMinWidth >= fullPageTools.implicitWidth + spacing
+                                                                       + fullMore.width
             // the parts that always show, with the gaps around the search field
-            readonly property real _fixedWidth: fullPageTools.width + fullMore.width + 2 * spacing
+            readonly property real _fixedWidth: fullPageTools.implicitWidth + fullMore.width + 2 * spacing
             readonly property real searchWidth: {
                 const room = _room - _fixedWidth
                 if (room >= searchMinWidth)
                     return Math.min(searchMaxWidth, room)
-                return room + crumbsMinWidth >= searchMinWidth ? searchMinWidth : 0
+                return toolsFit && room + crumbsMinWidth >= searchMinWidth ? searchMinWidth : 0
             }
             readonly property real countWidth: {
                 const room = _room - _fixedWidth - searchWidth - spacing
                 return room >= countMinWidth ? Math.min(fullCount.implicitWidth, room) : 0
+            }
+
+            // a search nobody can see or clear does not stay applied
+            onSearchWidthChanged: {
+                if (searchWidth === 0)
+                    fullSearch.text = ""
             }
 
             visible: !root.compact
@@ -205,6 +214,7 @@ Item {
                 id: fullPageTools
 
                 anchors.verticalCenter: parent.verticalCenter
+                visible: fullTools.toolsFit
                 header: root
                 menu: toolMenu
                 showSearchButton: false
