@@ -37,7 +37,7 @@ Row {
 
     // redesign (W8.1b): an item shown between maximize and close, where Figma's top bar has its
     // fullscreen button: the right zone of the editable top bar (TopBar.qml). The slot takes its
-    // width; its owner binds it into `middleSlotItem`, and back into its own place when this set goes
+    // width; the owner draws the item over `middleSlotItem` (the item stays the owner's child)
     property Item middleItem: null
     readonly property Item middleSlotItem: middleSlot
 
@@ -174,11 +174,15 @@ Row {
 
         width: windowButtonGroup.middleItem ? windowButtonGroup.middleItem.width : 0
         height: windowButtonGroup.height
+    }
 
-        // the close button moves with the slot's width: the window's hit test learns where
-        onWidthChanged: {
-            for (let i = 0; i < closeRepeater.count; ++i) {
-                const button = closeRepeater.itemAt(i)
+    // redesign (W8.1b): the set is anchored to the right, so a wider middle slot (or the
+    // fullscreen button shown or hidden) moves minimize and maximize: the window's hit test learns
+    // where every button is now (after the Row placed them)
+    onWidthChanged: {
+        for (const rep of [repeater, closeRepeater]) {
+            for (let i = 0; i < rep.count; ++i) {
+                const button = rep.itemAt(i)
                 if (button)
                     Qt.callLater(button.updateRect)
             }

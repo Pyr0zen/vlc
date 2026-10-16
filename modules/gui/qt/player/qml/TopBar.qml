@@ -206,13 +206,16 @@ FocusScope{
             visible: root._editable
             anchors.left: leftGroup.right
             anchors.verticalCenter: parent.verticalCenter
-            width: Math.min(implicitWidth, Math.max(0, centerZone.x - VLCStyle.dp(10, VLCStyle.scale) - x))
+            // shrinks (the folder chip and names elide) before it reaches the window buttons
+            width: Math.min(implicitWidth, Math.max(0, Math.min(centerZone.x, rightGroup.x)
+                                                       - VLCStyle.dp(10, VLCStyle.scale) - x))
             height: parent.height
 
             model: root._editable ? RdProfiles.topBarModel.left : null
 
             Navigation.parentItem: root
-            Navigation.rightItem: centerZone
+            // an empty zone is passed over
+            Navigation.rightItem: (centerZone.count > 0 && centerZone.width > 0) ? centerZone : rightZone
 
             onRequestLockUnlockAutoHide: (lock) => root.requestLockUnlockAutoHide(lock)
             Component.onCompleted: root.forceUnlock.connect(leftZone.forceUnlock)
@@ -235,8 +238,8 @@ FocusScope{
             model: root._editable ? RdProfiles.topBarModel.center : null
 
             Navigation.parentItem: root
-            Navigation.leftItem: leftZone
-            Navigation.rightItem: rightZone
+            Navigation.leftItem: leftZone.count > 0 ? leftZone : null
+            Navigation.rightItem: rightZone.count > 0 ? rightZone : null
 
             onRequestLockUnlockAutoHide: (lock) => root.requestLockUnlockAutoHide(lock)
             Component.onCompleted: root.forceUnlock.connect(centerZone.forceUnlock)
@@ -271,7 +274,8 @@ FocusScope{
             anchors.top: parent.top
             anchors.bottom: parent.bottom
 
-            width: root.showCSD ? csdDecorations.width
+            // (a themed window button set has no middle slot: the right zone sits before it)
+            width: root.showCSD ? csdDecorations.width + ((root._editable && !rightZone._slot) ? rightZone.width : 0)
                                 : (root._editable ? rightZone.width : fullscreenButton.width) + VLCStyle.dp(6, VLCStyle.scale)
 
             Loader {
@@ -309,17 +313,20 @@ FocusScope{
             RdTopBarZone {
                 id: rightZone
 
-                readonly property bool _inButtons: root.showCSD && !!csdDecorations.item
-                                                   && !!csdDecorations.item.middleSlotItem
+                // the window buttons' middle slot (CSDWindowButtonSet makes it as wide as this
+                // zone while it is its middleItem). The zone stays a child of the group, drawn
+                // over the slot: no reparenting, so focus, hover and the zone's place survive the
+                // set being unloaded (fullscreen, native decorations)
+                readonly property Item _slot: (root.showCSD && !!csdDecorations.item
+                                               && !!csdDecorations.item.middleSlotItem)
+                                              ? csdDecorations.item.middleSlotItem : null
 
-                // in the window buttons' middle slot while they exist (the binding takes it back
-                // when the set is unloaded: fullscreen, native decorations)
-                parent: _inButtons ? csdDecorations.item.middleSlotItem : rightGroup
                 visible: root._editable
                 width: implicitWidth
                 height: rightGroup.height
-                anchors.right: _inButtons ? undefined : (root.showCSD ? csdDecorations.left : parent.right)
-                anchors.rightMargin: (_inButtons || root.showCSD) ? 0 : VLCStyle.dp(6, VLCStyle.scale)
+                x: _slot ? csdDecorations.x + _slot.x
+                         : (root.showCSD ? csdDecorations.x - width
+                                         : rightGroup.width - VLCStyle.dp(6, VLCStyle.scale) - width)
 
                 // Figma: 36 wide cells as the window buttons, no gap
                 iconWidth: VLCStyle.dp(36, VLCStyle.scale)
@@ -328,7 +335,7 @@ FocusScope{
                 model: root._editable ? RdProfiles.topBarModel.right : null
 
                 Navigation.parentItem: root
-                Navigation.leftItem: centerZone
+                Navigation.leftItem: (centerZone.count > 0 && centerZone.width > 0) ? centerZone : leftZone
 
                 onRequestLockUnlockAutoHide: (lock) => root.requestLockUnlockAutoHide(lock)
                 Component.onCompleted: root.forceUnlock.connect(rightZone.forceUnlock)
