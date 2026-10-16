@@ -40,6 +40,10 @@ namespace {
 // reach it (a video packet comes between audio packets; a broken file must not read forever)
 constexpr double kSampleSeconds = 0.25;
 constexpr int kSampleMaxPackets = 4000;
+// sampled scan: decoded audio this far before the slice comes from a seek that landed early
+// (MP4 aligns every track to the video keyframe before the time) and is skipped; audio further
+// away has timestamps that do not follow the duration (MPEG-TS) and is taken as it comes
+constexpr double kMaxPrerollSeconds = 30.0;
 // a file that has shown no audio track after this many packets has none (a video-only file
 // is not read to its end for nothing)
 constexpr int kNoAudioPackets = 2000;
@@ -60,6 +64,9 @@ struct RdWaveformScanner::Scan
     explicit Scan(const RdWaveformScanner& scanner);
 
     QByteArray execute();
+    // false: it stopped for the sampled scan (a video track in a file over kFullScanMaxBytes)
+    bool scanFull(demux_t* demux, bool smallFile);
+    void scanSampled(demux_t* demux);
 
     // es_out
     es_out_id_t* addTrack(const es_format_t* fmt);
@@ -100,6 +107,8 @@ struct RdWaveformScanner::Scan
     bool failed = false;
     // the levels are made: the demuxer's closing deletes its tracks without a drain
     bool finished = false;
+    // the file has a video track (a cover picture does not count): a full scan would read it
+    bool hasVideo = false;
 
     double lengthSeconds = 0;
     std::vector<double> sumSquares;
@@ -112,9 +121,11 @@ struct RdWaveformScanner::Scan
     // how the file was read, for the log
     const char* mode = "not opened";
 
-    // sampled scan: the slice being sampled (-1: none) and the audio still wanted for it
+    // sampled scan: the slice being sampled (-1: none), where its stretch starts (seconds) and
+    // the audio still wanted for it
     bool sampled = false;
     int targetBin = -1;
+    double sampleStart = 0;
     double sampleLeft = 0;
 };
 
@@ -205,6 +216,22 @@ bool supportedFormat(vlc_fourcc_t format)
     }
 }
 
+// a still picture shown as a video track (cover art, chapter images of an audio file)
+bool isPicture(vlc_fourcc_t codec)
+{
+    switch (codec)
+    {
+    case VLC_CODEC_JPEG:
+    case VLC_CODEC_PNG:
+    case VLC_CODEC_BMP:
+    case VLC_CODEC_GIF:
+    case VLC_CODEC_WEBP:
+        return true;
+    default:
+        return false;
+    }
+}
+
 // what the core does for an audio output, without one: a passthrough decoder (S/PDIF) is
 // refused, so VLC loads the next decoder, one that outputs samples
 int DecoderFormatUpdate(decoder_t* dec)
@@ -278,6 +305,8 @@ es_out_id_t* RdWaveformScanner::Scan::addTrack(const es_format_t* fmt)
     es_format_Copy(&track->fmt, fmt);
     tracks.push_back(track);
 
+    if (fmt->i_cat == VIDEO_ES && !isPicture(fmt->i_codec))
+        hasVideo = true;
     if (!audio && fmt->i_cat == AUDIO_ES && openDecoders(track))
         audio = track;
     return reinterpret_cast<es_out_id_t*>(track);
@@ -497,8 +526,20 @@ void RdWaveformScanner::Scan::consume(const audio_format_t& fmt, const block_t* 
     {
         if (targetBin < 0 || sampleLeft <= 0)
             return;
-        const size_t used = std::min(frames, static_cast<size_t>(std::ceil(sampleLeft * rate)));
-        accumulate(targetBin, fmt, frame->p_buffer, used);
+        // the audio before the stretch is not the slice's (a seek that landed on an earlier
+        // keyframe): skipped, so neighbouring slices do not measure the same audio
+        size_t skip = 0;
+        if (frame->i_pts != VLC_TICK_INVALID)
+        {
+            const double early = sampleStart - secf_from_vlc_tick(frame->i_pts - VLC_TICK_0);
+            if (early > 0 && early <= kMaxPrerollSeconds)
+                skip = std::min(frames, static_cast<size_t>(early * rate));
+        }
+        if (skip >= frames)
+            return;
+        const size_t used = std::min(frames - skip,
+                                     static_cast<size_t>(std::ceil(sampleLeft * rate)));
+        accumulate(targetBin, fmt, frame->p_buffer + skip * bytesPerFrame, used);
         sampleLeft -= static_cast<double>(used) / rate;
         return;
     }
@@ -601,6 +642,54 @@ QByteArray RdWaveformScanner::Scan::result() const
     return levels;
 }
 
+bool RdWaveformScanner::Scan::scanFull(demux_t* demux, bool smallFile)
+{
+    for (int packet = 0; !stopped() && demux_Demux(demux) == VLC_DEMUXER_SUCCESS; ++packet)
+    {
+        if (!audio && packet >= kNoAudioPackets)
+            break;
+        // a demuxer that announces its tracks while reading (MPEG-PS) showed video in a file
+        // too large to read through
+        if (hasVideo && !smallFile)
+            return false;
+    }
+    if (audio && !stopped())
+        process(audio, nullptr);
+    return true;
+}
+
+void RdWaveformScanner::Scan::scanSampled(demux_t* demux)
+{
+    // never more audio per slice than the slice holds: a short file of a high bitrate (a 30 s
+    // 4K clip) decodes at most its own audio, not 0.25 s per 1/1000 of it
+    const double slice = lengthSeconds / kBins;
+    const double sampleSeconds = std::min(kSampleSeconds, slice);
+    for (int bin = 0; bin < kBins && !stopped(); ++bin)
+    {
+        // a stretch centered in the slice; by time, else by position (demuxers without an
+        // index, such as an MPEG-TS recording, seek better by position)
+        const double start = std::max(0.0, (bin + 0.5) * slice - sampleSeconds / 2);
+        if (demux_SetTime(demux, vlc_tick_from_sec(start), false) != VLC_SUCCESS
+            && demux_SetPosition(demux, start / lengthSeconds, false) != VLC_SUCCESS)
+            continue;
+        if (audio)
+            flush(audio);
+        targetBin = bin;
+        sampleStart = start;
+        sampleLeft = sampleSeconds;
+        for (int packet = 0; packet < kSampleMaxPackets && sampleLeft > 0 && !stopped(); ++packet)
+        {
+            if (demux_Demux(demux) != VLC_DEMUXER_SUCCESS)
+                break;
+            if (!audio && packet >= kNoAudioPackets)
+                break;
+        }
+        targetBin = -1;
+        if (!audio)
+            break;
+    }
+}
+
 QByteArray RdWaveformScanner::Scan::execute()
 {
     stream_t* stream = vlc_stream_NewURL(obj, scanner.m_url.constData());
@@ -632,50 +721,35 @@ QByteArray RdWaveformScanner::Scan::execute()
         lengthSeconds = secf_from_vlc_tick(length);
         sumSquares.assign(kBins, 0.0);
         counts.assign(kBins, 0.0);
-        // a large file the demuxer cannot seek in is never read from start to end: no waveform
-        const bool large = sizeKnown && size > kFullScanMaxBytes;
-        sampled = large && canSeek;
-        mode = !large ? "full" : sampled ? "sampled" : "large, not seekable";
-
-        if (!large)
+        // full or sampled (WAVEFORM_NOTES section 2): a full scan reads the whole file, video
+        // included, so it is only for small files and for files without video (music) up to
+        // kAudioFullScanMaxBytes; the tracks the demuxer announced while opening tell which
+        const bool smallFile = !sizeKnown || size <= kFullScanMaxBytes;
+        bool full = smallFile || (size <= kAudioFullScanMaxBytes && !hasVideo);
+        bool videoFound = false;
+        mode = "full";
+        if (full && !scanFull(demux, smallFile))
         {
-            for (int packet = 0; !stopped() && demux_Demux(demux) == VLC_DEMUXER_SUCCESS; ++packet)
-            {
-                if (!audio && packet >= kNoAudioPackets)
-                    break;
-            }
-            if (audio && !stopped())
-                process(audio, nullptr);
+            // the demuxer announced a video track while reading: start again, sampled
+            full = false;
+            videoFound = true;
+            sumSquares.assign(kBins, 0.0);
+            counts.assign(kBins, 0.0);
+            positionKnown = false;
+            position = 0;
         }
-        else if (sampled)
+        if (!full)
         {
-            // never more audio per slice than the slice holds: a short file of a high bitrate
-            // (a 30 s 4K clip) decodes at most its own audio, not 0.25 s per 1/1000 of it
-            const double slice = lengthSeconds / kBins;
-            const double sampleSeconds = std::min(kSampleSeconds, slice);
-            for (int bin = 0; bin < kBins && !stopped(); ++bin)
-            {
-                // a stretch centered in the slice; by time, else by position (demuxers without
-                // an index, such as an MPEG-TS recording, seek better by position)
-                const double start = std::max(0.0, (bin + 0.5) * slice - sampleSeconds / 2);
-                if (demux_SetTime(demux, vlc_tick_from_sec(start), false) != VLC_SUCCESS
-                    && demux_SetPosition(demux, start / lengthSeconds, false) != VLC_SUCCESS)
-                    continue;
-                if (audio)
-                    flush(audio);
-                targetBin = bin;
-                sampleLeft = sampleSeconds;
-                for (int packet = 0; packet < kSampleMaxPackets && sampleLeft > 0 && !stopped(); ++packet)
-                {
-                    if (demux_Demux(demux) != VLC_DEMUXER_SUCCESS)
-                        break;
-                    if (!audio && packet >= kNoAudioPackets)
-                        break;
-                }
-                targetBin = -1;
-                if (!audio)
-                    break;
-            }
+            // a file to sample that the demuxer cannot seek in is never read from start to
+            // end: no waveform
+            sampled = canSeek;
+            if (videoFound)
+                mode = sampled ? "sampled, video found while reading"
+                               : "not seekable, video found while reading";
+            else
+                mode = sampled ? "sampled" : "large, not seekable";
+            if (sampled)
+                scanSampled(demux);
         }
 
         if (!stopped())
