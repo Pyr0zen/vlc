@@ -89,7 +89,7 @@ Branch `redesign-waveform`, from `origin/redesign` 0a514865de (2026-10-15). Web 
   - the playhead narrows from 8 to 4 px around the same center (100 ms).
 - **Until then,** the plain bar stays as it is.
 - **Unchanged.** The layer takes no input:
-  - Seeking, dragging, hover, the preview card, the wheel, the keys and the right-click menu are SliderBar's, unchanged.
+  - Seeking, dragging, hover, the preview card, the keys and the right-click menu are SliderBar's, unchanged (the seek bar takes no wheel since Decision 54).
   - The seek to 00:00:00 (417fc21e96) is unchanged: it lives in the FSM and the player, which the patch does not touch.
 
 ## 3. VIDEO_INDEX rows covered

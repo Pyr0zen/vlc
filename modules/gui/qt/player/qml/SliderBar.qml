@@ -385,39 +385,8 @@ T.ProgressBar {
             }
         }
 
-        WheelHandler {
-            orientation: Qt.Vertical | Qt.Horizontal
-
-            acceptedDevices: PointerDevice.AllDevices
-
-            onWheel: (wheel) => {
-                wheelToVLC.qmlWheelEvent(wheel)
-                wheel.accepted = true
-            }
-        }
-
-        WheelToVLCConverter {
-            id: wheelToVLC
-
-            function handleVertical(steps: int) {
-                if (steps > 0)
-                    Player.jumpFwd()
-                else
-                    Player.jumpBwd()
-            }
-
-            function handleHorizontal(steps: int) {
-                if (steps > 0)
-                    Player.jumpBwd()
-                else
-                    Player.jumpFwd()
-            }
-
-            Component.onCompleted: {
-                wheelUpDown.connect(wheelToVLC, wheelToVLC.handleVertical)
-                wheelLeftRight.connect(wheelToVLC, wheelToVLC.handleHorizontal)
-            }
-        }
+        // redesign: the seek bar takes no wheel (Decision 54): over the bars only the volume control
+        // reacts to it, the control bar takes the rest
     }
 
     background: Item {

@@ -70,6 +70,11 @@ T.Pane {
 
     enabled: visible
 
+    // the bar takes the wheel its controls leave, its empty parts included, so it never reaches
+    // the video or the music view behind it (volume / seek, Decision 54); only the volume control
+    // in the bar uses the wheel
+    wheelEnabled: true
+
     Keys.priority: Keys.AfterItem
     Keys.onPressed: (event) => root.Navigation.defaultKeyAction(event)
     Navigation.cancelAction: function() { History.previous(Qt.BacktabFocusReason) }
