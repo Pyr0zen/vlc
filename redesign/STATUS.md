@@ -13,6 +13,11 @@
 - The resume toast text must never be cut off ("You already watched t... 00:00:14" seen on 38829058873): it fits or wraps at every window size.
 - VLC's built-in dialogs in the Cone build must say "Cone" (e.g. the AVI "Broken or missing Index" question still says "VLC won't repair..."): public profile only; core-side dialog texts are core changes (Cone release branch, own build).
 
+## Priorities until the coded-but-unverified pile is under 50 (Sticky, 2026-10-16)
+1. No new features except the 12 must-haves; bug fixes from testing come first.
+2. Automated verification harness in redesign/tools/verify/: launches the test build in portable mode, drives each screen and state through Windows UI Automation and keyboard shortcuts, screenshots the player window only, pixel-diffs against the matching Figma frame at the same scale; rows within a small tolerance are marked auto-passed for review, only differences and behaviour checks need a manual look. Never commit desktop screenshots; close everything after each run.
+3. Every idle window goes to verification, Player area first; rows verified per window are reported below so the pile visibly shrinks.
+
 ## Row count (VIDEO_INDEX, updated after every testing window)
 Raw statuses: verified 69, coded but not verified 172, todo 120 (of 361). The verified rows include earlier test rounds: 59 from the round on build 38727073546 (before this sweep) and 10 from this sweep on 38829058873.
 The todo rows split into: context only (old VLC shots, jokes, sponsor, surveys, montage: nothing to build), built but never moved off todo (counted as coded here, they wait for verification), still to build: must-have (part of what she shows and planned) and optional (postponed reverse playback, montage-only seek segments, polish motion).
