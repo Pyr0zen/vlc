@@ -37,11 +37,15 @@
  *   file up to `kFullScanMaxBytes`, and a file without video (music: every byte read is audio
  *   the waveform needs) up to `kAudioFullScanMaxBytes`. Their waveform is exact.
  * - Other files (videos over `kFullScanMaxBytes`, long audio recordings) are sampled: one short
- *   stretch of audio is decoded after a seek to each slice, so a 50 GB file costs about `kBins`
- *   seeks, not a full read. A stretch is never longer than its slice. A video track that only
- *   shows up while a full scan reads (MPEG-PS) moves a file over `kFullScanMaxBytes` to the
- *   sampled scan. A file to sample that the demuxer cannot seek in gets no waveform rather
- *   than a full read.
+ *   stretch of audio is decoded in each slice, so a 50 GB file costs at most about `kBins`
+ *   seeks, not a full read. A stretch is never longer than its slice. The stretches are read in
+ *   order: the scan seeks to a stretch only when reading on to it would cost more than the
+ *   seek (stretches that touch, in a file up to `kBins` x 0.25 s, are read once from the start),
+ *   and the audio packets before a stretch (from the keyframe an MP4 seek lands on, or between
+ *   two stretches) are dropped before the packetizer, undecoded, except a short decoder
+ *   warm-up. A video track that only shows up while a full scan reads (MPEG-PS) moves a file
+ *   over `kFullScanMaxBytes` to the sampled scan. A file to sample that the demuxer cannot seek
+ *   in gets no waveform rather than a full read.
  *
  * run() blocks and is meant for a low priority worker thread. cancel() may be called from any
  * thread: run() then returns an empty array within one demuxed packet (the VLC interrupt
