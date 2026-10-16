@@ -510,8 +510,9 @@ T.Pane {
                                                                                      : 0
 
             Layout.rightMargin: Layout.leftMargin
-            // the rows' padding between the seek row and the controls (Figma: two 54 px rows)
-            Layout.bottomMargin: (textPosition === ControlBar.TimeTextPosition.Inline && playerControlLayout.visible)
+            // the rows' padding between the seek row and the controls (Figma: two 54 px rows);
+            // from the model, not the controls' visibility, which a faded out bar also clears
+            Layout.bottomMargin: (root._seekRowOnOwnRow && !(playerControlLayout.model?.empty ?? true))
                                  ? 2 * VLCStyle.rd_controlBarPaddingV - parent.spacing : 0
         }
 

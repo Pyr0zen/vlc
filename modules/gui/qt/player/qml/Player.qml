@@ -1840,6 +1840,11 @@ FocusScope {
 
         onHoveredChanged: rootPlayer.lockUnlockAutoHide(hovered)
 
+        // the profile notice over every view sits above the control bar, one or two rows high
+        onHeightChanged: RdPanels.controlBarHeight = height
+        Component.onCompleted: RdPanels.controlBarHeight = height
+        Component.onDestruction: RdPanels.controlBarHeight = 0
+
         background: Rectangle {
             id: controlBarBackground
 
@@ -1879,13 +1884,6 @@ FocusScope {
         FadeControllerStateGroup {
             target: controlBar
         }
-    }
-
-    // the profile notice over every view sits above the control bar, one or two rows high
-    Binding {
-        target: RdPanels
-        property: "controlBarHeight"
-        value: controlBar.height
     }
 
     // redesign: player panels. An open panel keeps the bars visible (F-06). Each panel is created

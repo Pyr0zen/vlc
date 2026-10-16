@@ -442,7 +442,7 @@ T.Popup {
 
                     model: layouts.map((layout) => layout.name)
                     currentIndex: layouts.findIndex((layout) => layout.identifier === root.identifier)
-                    Accessible.name: qsTr("Player layout")
+                    Accessible.name: qsTr("Player layout: %1").arg(model[currentIndex] ?? "")
 
                     KeyNavigation.tab: cancelButton
                     KeyNavigation.backtab: closeButton
