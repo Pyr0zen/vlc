@@ -468,12 +468,14 @@ void MainCtx::loadPrefs(const bool callSignals)
     {
         QColor accent;
         char* value = var_InheritString(p_intf, "qt-accent-color");
+        const QByteArray option(value ? value : "");
         if (value && strcmp(value, "default") && strcmp(value, "system"))
             accent = QColor(QString::fromUtf8(value));
         free(value);
-        if (accent != m_accentColor)
+        if (accent != m_accentColor || option != m_accentOption)
         {
             m_accentColor = accent;
+            m_accentOption = option;
             if (callSignals)
                 emit accentColorChanged();
         }
@@ -712,6 +714,7 @@ void MainCtx::setAccentColor(const QColor& color)
         return;
     m_accentColor = color;
     const QByteArray value = color.isValid() ? color.name(QColor::HexRgb).toUtf8() : QByteArray("default");
+    m_accentOption = value;
     config_PutPsz("qt-accent-color", value.constData());
     scheduleConfigSave();
     emit accentColorChanged();
