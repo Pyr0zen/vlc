@@ -257,7 +257,13 @@ function Send-Keys([string]$keys) {
 function Move-Mouse([double]$x, [double]$y, [switch]$Screen) {
     Assert-Guard
     if ($Screen) { $p = @([int]$x, [int]$y) } else { $p = Convert-ToScreen $x $y }
-    if (-not (Test-PlayerAt $p[0] $p[1])) { throw "GUARD: $($p[0]),$($p[1]) is not on the player (outside the window or covered); pointer not moved" }
+    # another window over the target (a prompt, the taskbar): wait for it to go, never click it
+    $end = (Get-Date).AddSeconds($script:GuardRetrySec); $warned = $false
+    while (-not (Test-PlayerAt $p[0] $p[1])) {
+        if ((Get-Date) -gt $end) { throw "GUARD: $($p[0]),$($p[1]) is not on the player (outside the window or covered); pointer not moved" }
+        if (-not $warned) { Write-VLog "  guard: another window covers $($p[0]),$($p[1]); waiting"; $warned = $true }
+        Start-Sleep -Seconds 2
+    }
     [RdVerifyWin2]::SetCursorPos($p[0], $p[1]) | Out-Null; Set-Injected
     return , $p
 }

@@ -119,8 +119,18 @@ function Initialize-Profile($se) {
     robocopy $profileBase $profileTarget /MIR /R:1 /W:1 /NFL /NDL /NJH /NJS /NP | Out-Null
     if ($LASTEXITCODE -ge 8) { throw "preparing the run profile failed ($LASTEXITCODE)" }
     $vlcrc = Join-Path $profileTarget 'vlcrc'
-    if (-not $script:Demo -or -not $se.PSObject.Properties['demo'] -or -not (Test-Path $vlcrc)) { return $applied }
+    if (-not (Test-Path $vlcrc)) { return $applied }
     $text = [IO.File]::ReadAllText($vlcrc)
+    # harness overrides (config "profileOverrides"), e.g. qt-cast-discovery=0: no cast discovery,
+    # so no listening socket and no Windows Firewall prompt over the player for a new build path
+    if ($cfg.PSObject.Properties['profileOverrides'] -and $cfg.profileOverrides) {
+        foreach ($p in $cfg.profileOverrides.PSObject.Properties) {
+            $key = [regex]::Escape($p.Name); $line = "$($p.Name)=$($p.Value)"
+            if ($text -match "(?m)^#?$key=.*$") { $text = [regex]::Replace($text, "(?m)^#?$key=.*$", $line.Replace('$', '$$'), 1) } else { $text += "`n$line`n" }
+            $applied += "harness: $line"
+        }
+    }
+    if (-not $script:Demo -or -not $se.PSObject.Properties['demo']) { [IO.File]::WriteAllText($vlcrc, $text, (New-Object System.Text.UTF8Encoding $false)); return $applied }
     foreach ($sid in @($se.demo)) {
         $scr = $script:Demo.screens.$sid
         if (-not $scr) { continue }
