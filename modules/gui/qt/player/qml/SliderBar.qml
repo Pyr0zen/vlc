@@ -103,7 +103,7 @@ T.ProgressBar {
     // Playback tab's "Show Waveform on Seekbar" on, the thick bar draws the playing file's
     // waveform once its background scan is ready (RdWaveform); until then the plain fill stays,
     // then the bars fade in over it and the playhead narrows to 4 px around the same center.
-    // The layer takes no input: hover, drag, the preview card, wheel, keys and the right click
+    // The layer takes no input: hover, drag, the preview card, keys and the right click
     // stay the bar's
     readonly property bool _waveformOption: RdEffects.values[RdEffects.optionKey("qt-seek-waveform")] === true
     readonly property bool waveformShown: waveform.ready
