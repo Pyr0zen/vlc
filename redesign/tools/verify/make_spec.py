@@ -521,7 +521,13 @@ def main():
         node = top[node_id]
         frame_rows = sorted(cites.get(png, set()))
         if not frame_rows:
-            unmapped.append({"node": node_id, "name": node["name"], "png": png, "kind": kind})
+            unmapped.append({"node": node_id, "name": node["name"], "png": png, "kind": kind,
+                             "reason": "no VIDEO_INDEX row cites it"})
+            continue
+        if kind == "text":
+            unmapped.append({"node": node_id, "name": node["name"], "png": png, "kind": kind,
+                             "reason": "a text label of the Figma page, not a frame",
+                             "cited_by": frame_rows})
             continue
         used_rows |= set(frame_rows)
         bb = node["absoluteBoundingBox"]
@@ -572,7 +578,6 @@ def main():
                              "kind": kind, "size": spec["size"], "theme": theme,
                              "rows": frame_rows, "elements": total, "masked": masked})
 
-    cited_rows = {n for ns in cites.values() for n in ns}
     index = {
         "format": FORMAT,
         "source": {"figma_file": "redesign/reference/figma/figma_file.json",
@@ -588,11 +593,11 @@ def main():
         "unmapped_frames": unmapped,
         "rows": {str(n): {k: v for k, v in rows[n].items() if not k.startswith("_")}
                  for n in sorted(used_rows)},
-        "rows_without_figma_frame": sorted(set(rows) - cited_rows),
+        "rows_without_figma_frame": sorted(set(rows) - used_rows),
         "unknown_png_references": {k: sorted(v) for k, v in sorted(unknown_refs.items())},
     }
     dump(os.path.join(OUT, "index.json"), index)
-    print("spec: %d frames (%d elements), %d frames not cited by any row, %d rows cited"
+    print("spec: %d frames (%d elements), %d top-level layers not mapped, %d rows covered"
           % (len(index_frames), sum(f["elements"] for f in index_frames), len(unmapped),
              len(used_rows)))
 

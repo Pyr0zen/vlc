@@ -2188,24 +2188,6 @@
    ],
    "elements": 60,
    "masked": 1
-  },
-  {
-   "file": "designs.json",
-   "node": "6841:16197",
-   "name": "Designs",
-   "png": "Designs.png",
-   "kind": "text",
-   "size": [
-    2645,
-    847
-   ],
-   "theme": "dark",
-   "rows": [
-    237,
-    238
-   ],
-   "elements": 0,
-   "masked": 0
   }
  ],
  "unmapped_frames": [
@@ -2213,31 +2195,47 @@
    "node": "2107:5903",
    "name": "context menu",
    "png": "context menu.png",
-   "kind": "frame"
+   "kind": "frame",
+   "reason": "no VIDEO_INDEX row cites it"
   },
   {
    "node": "1959:5325",
    "name": "target",
    "png": "target.png",
-   "kind": "component_set"
+   "kind": "component_set",
+   "reason": "no VIDEO_INDEX row cites it"
   },
   {
    "node": "1963:5465",
    "name": "origin",
    "png": "origin.png",
-   "kind": "component_set"
+   "kind": "component_set",
+   "reason": "no VIDEO_INDEX row cites it"
   },
   {
    "node": "2107:5935",
    "name": "option",
    "png": "option.png",
-   "kind": "component_set"
+   "kind": "component_set",
+   "reason": "no VIDEO_INDEX row cites it"
   },
   {
    "node": "6841:16196",
    "name": "Components",
    "png": "Components.png",
-   "kind": "text"
+   "kind": "text",
+   "reason": "no VIDEO_INDEX row cites it"
+  },
+  {
+   "node": "6841:16197",
+   "name": "Designs",
+   "png": "Designs.png",
+   "kind": "text",
+   "reason": "a text label of the Figma page, not a frame",
+   "cited_by": [
+    237,
+    238
+   ]
   }
  ],
  "rows": {
@@ -3066,16 +3064,6 @@
    "area": "library",
    "item": "Home section headers and compact list visuals"
   },
-  "237": {
-   "id": "P6-21",
-   "area": "library",
-   "item": "Full library home vs old blank cone"
-  },
-  "238": {
-   "id": "IB-34",
-   "area": "library",
-   "item": "Full-library Home cards"
-  },
   "243": {
    "id": "IB-17",
    "area": "control bar",
@@ -3574,6 +3562,8 @@
   208,
   216,
   223,
+  237,
+  238,
   239,
   240,
   241,
