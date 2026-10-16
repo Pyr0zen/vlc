@@ -50,7 +50,14 @@ AudioDeviceModel::AudioDeviceModel(vlc_player_t *player, QObject *parent)
 
     m_aout = vlc_player_aout_Hold(m_player);
     if (m_aout)
+    {
         m_inputs = aout_DevicesList(m_aout, &m_ids, &m_names);
+
+        // redesign: the device in use before any change is reported
+        char *device = aout_DeviceGet(m_aout);
+        m_current = qfu(device);
+        free(device);
+    }
 }
 
 AudioDeviceModel::~AudioDeviceModel()
@@ -144,6 +151,8 @@ void AudioDeviceModel::updateCurrent(QString current)
         emit dataChanged(index(oldIndex), index(oldIndex), { Qt::DisplayRole, Qt::CheckStateRole });
     if(currentIndex >= 0)
         emit dataChanged(index(currentIndex), index(currentIndex), { Qt::DisplayRole, Qt::CheckStateRole });
+
+    emit currentChanged();
 }
 
 void AudioDeviceModel::refresh()
@@ -163,6 +172,21 @@ void AudioDeviceModel::refresh()
     m_names = nullptr;
     m_inputs = aout_DevicesList(m_aout, &m_ids, &m_names);
     endResetModel();
+}
+
+QVariantList AudioDeviceModel::devices() const
+{
+    QVariantList list;
+    for (int i = 0; i < m_inputs; i++)
+        list << QVariantMap{ { QStringLiteral("value"), qfu(m_ids[i]) },
+                             { QStringLiteral("text"), qfu(m_names[i]) } };
+    return list;
+}
+
+void AudioDeviceModel::select(const QString &id)
+{
+    if (m_aout)
+        aout_DeviceSet(m_aout, qtu(id));
 }
 
 QHash<int, QByteArray> AudioDeviceModel::roleNames() const

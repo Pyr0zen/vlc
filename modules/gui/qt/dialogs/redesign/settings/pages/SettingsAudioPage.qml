@@ -140,9 +140,57 @@ SettingsPage {
             text: qsTr("Enable audio")
         }
 
-        SettingsOption {
-            option: root._deviceOption
+        // VLC's outputs list their devices only while they run: the devices of the player's
+        // output, as in the tracks popup (Player.audioDevices), the system default first as
+        // "System default" (Figma). The dropdown shows the device in use; a choice switches the
+        // output at once and is kept for the next start
+        SettingsRow {
+            id: deviceRow
+
+            // bumped when the output's device list changes
+            property int _revision: 0
+
+            readonly property var devices: {
+                void _revision
+                const list = Player.audioDevices.devices().filter((d) => d.value !== "")
+                list.unshift({ value: "", text: qsTr("System default") })
+                return list
+            }
+
             text: qsTr("Output device")
+            description: RdEffects.optionDescription(root._deviceOption)
+            keywords: "audio-device speakers headphones " + root._deviceOption
+            shown: SettingsCatalog.exists(root._deviceOption)
+
+            Connections {
+                target: Player.audioDevices
+
+                function onModelReset() { ++deviceRow._revision }
+                function onRowsInserted() { ++deviceRow._revision }
+                function onRowsRemoved() { ++deviceRow._revision }
+            }
+
+            Widgets.RdDropdown {
+                id: deviceDropdown
+
+                implicitWidth: VLCStyle.dp(320)
+                implicitHeight: VLCStyle.dp(36)
+                model: deviceRow.devices.map((d) => d.text)
+                currentIndex: Math.max(0, deviceRow.devices.findIndex((d) => d.value === Player.audioDevices.current))
+                Accessible.name: qsTr("Output device")
+                onActivated: (index) => {
+                    const id = deviceRow.devices[index].value
+                    Player.audioDevices.select(id)
+                    RdEffects.setOption(root._deviceOption, id)
+                }
+
+                // devices plugged in since the list was read
+                Connections {
+                    target: deviceDropdown.popup
+
+                    function onAboutToShow() { Player.audioDevices.refresh() }
+                }
+            }
         }
 
         SettingsOption {

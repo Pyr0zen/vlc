@@ -33,6 +33,9 @@ class AudioDeviceModel : public QAbstractListModel
 {
     Q_OBJECT
 
+    // redesign: the id of the device the output plays on ("" = the system default)
+    Q_PROPERTY(QString current READ current NOTIFY currentChanged FINAL)
+
 public:
     AudioDeviceModel(vlc_player_t *player, QObject *parent = nullptr);
 
@@ -52,6 +55,18 @@ public:
 
     // redesign: re-read the output devices (refresh button of the tracks popup, video 4:41)
     Q_INVOKABLE void refresh();
+
+    // redesign: the devices as [{ value: id, text: name }] for the Settings dialog's "Output
+    // device" dropdown (Figma "Settings - audio"); the default device has an empty id
+    Q_INVOKABLE QVariantList devices() const;
+
+    // redesign: switches the output to the device `id` (one of devices())
+    Q_INVOKABLE void select(const QString &id);
+
+    QString current() const { return m_current; }
+
+signals:
+    void currentChanged();
 
 private:
     int m_inputs = 0;
