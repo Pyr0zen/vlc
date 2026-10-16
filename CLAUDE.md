@@ -84,7 +84,7 @@ READY TO BUILD. Next session: read CLAUDE.md, VIDEO_INDEX.md, FIGMA_FLOWS.md and
 ## Privacy and copyright (Sticky, 2026-10-15, permanent)
 - The repo is public. Never commit anything personal or from Sticky's PC: no real names, Windows user name, PC paths, e-mail addresses (commits use the noreply identity), personal files or their names, his music, his test videos or screenshots of his screen. Committed files use neutral placeholders (<TEST_MEDIA_DIR>, <WORK_DIR>, <TEST_VIDEO>, ...); the real values live only in the gitignored CLAUDE.local.md and *.local.* settings files.
 - Never commit the designer's video content (frames, transcript, the video, quotes from it); her Figma file (CC BY 4.0) may be committed, with credit (CREDITS.md).
-- Committed files refer to the owner only as Sticky (studio tag; GitHub Pyr0zen), never by real name; the private word list catches the real name.
+- The owner's public name is **StickyGonzales** (Sticky, 2026-10-16): every place people see his name uses it (About "Built by StickyGonzales", installer publisher, exe company / publisher info, CREDITS.md, README, release notes, the Windows Apps list), and committed files name the owner StickyGonzales from now on (older notes may still say Sticky; GitHub handle Pyr0zen). His real name never appears anywhere; the private word list catches it.
 - Before every commit and push run `python redesign/tools/privacycheck.py` (generic checks plus the private word list in the gitignored redesign/tools/privacy.local.txt); it must print `privacycheck: 0 problem(s)`. Public screenshots show only the VLC window with generated or public test media.
 
 ## Decision questions to Sticky (Sticky, 2026-10-15, permanent)
@@ -159,6 +159,8 @@ General rule for anything not listed (updated by Sticky 2026-10-13): the final U
 30. (2026-10-13, updated) Windowed: both bars float over the video, appear whenever the mouse moves over the window and fade out about 3 s after it stops (with the cursor), like modern players. Fullscreen: each bar appears when the mouse is near its edge and fades out smoothly when it leaves. VLC's own "pin video controls" option still pins both bars in a window.
 31. (2026-10-13) The final UIs are in the Figma file; the video shows iterations on the way. Look: Figma. Functionality and relations: the video and its transcript.
 32. (2026-10-13) Dialogs open and close instantly, like the Figma prototype and the Settings dialog, so all dialogs behave the same (Open Network Stream, Settings, Keyboard Shortcuts and later ones); the video's dialog fades are editing dissolves. Menus keep the 120 ms fade in measured from her unedited demo (5:08).
+55. (2026-10-16) `redesign` only receives verified code: every batch is built from its own branch with a manual workflow run (`gh workflow run build-windows.yml --ref <branch>`), tested on Sticky's PC and merged into `redesign` only after it passes; failures are fixed on the branch and rebuilt before merging (details: Working rules, "Verified-only redesign"). Decisions 33-54 and 56+ are in redesign/VIDEO_INDEX.md "Decisions (Sticky)".
+58. (2026-10-16) Cone has its own version number: About and the installer show "Cone 0.1.0" with "based on VLC 4.0.0-dev" underneath, the Windows Apps list shows Cone 0.1.0, and the release workflow's version tag sets it.
 
 ## Report format (use for every progress report to Sticky; plain text, no em dashes)
 PROGRESS REPORT
