@@ -44,24 +44,25 @@ RdSidePanelPage {
     Component.onCompleted: {
         if (active)
             RdEffects.refresh()
-        _countStereoModes()
+        _countModes()
     }
 
-    // VLC offers stereo modes (Mono, Left, Right...) for a stereo track and mix modes (Stereo,
-    // Binaural, 5.1...) for a multichannel one, never both: the dropdown lists the ones the
-    // playing track has, like VLC's Audio menu
-    property int _stereoModeCount: 0
+    // VLC offers mix modes (Original, Stereo, Binaural, 5.1...) for a multichannel track and
+    // stereo modes (Mono, Left, Right...) for a stereo one; a multichannel track mixed down to
+    // stereo has both, and its mix modes must stay reachable (back to Original). The dropdown
+    // lists the mix modes when there are some, else the stereo modes, like VLC's Audio menu
+    property int _mixModeCount: 0
 
-    function _countStereoModes() {
-        _stereoModeCount = Player.audioStereoMode.rowCount()
+    function _countModes() {
+        _mixModeCount = Player.audioMixMode.rowCount()
     }
 
     Connections {
-        target: Player.audioStereoMode
+        target: Player.audioMixMode
 
-        function onModelReset() { root._countStereoModes() }
-        function onRowsInserted() { root._countStereoModes() }
-        function onRowsRemoved() { root._countStereoModes() }
+        function onModelReset() { root._countModes() }
+        function onRowsInserted() { root._countModes() }
+        function onRowsRemoved() { root._countModes() }
     }
 
     // a binding reading RdEffects.values[key] follows only that value
@@ -142,7 +143,7 @@ RdSidePanelPage {
 
             below: Widgets.RdChoiceDropdown {
                 width: parent.width
-                choices: root._stereoModeCount > 0 ? Player.audioStereoMode : Player.audioMixMode
+                choices: root._mixModeCount > 0 ? Player.audioMixMode : Player.audioStereoMode
                 // nothing playing: VLC has no modes to offer, the sound stays as it is
                 placeholderText: qsTr("Original")
                 Accessible.name: qsTr("Stereo Mode")
@@ -463,7 +464,8 @@ RdSidePanelPage {
             cursorShape: Qt.PointingHandCursor
         }
 
-        implicitWidth: implicitContentWidth + leftPadding + rightPadding
+        // Figma: fixed 68 wide
+        implicitWidth: Math.max(VLCStyle.dp(68), implicitContentWidth + leftPadding + rightPadding)
         implicitHeight: VLCStyle.dp(32)
         leftPadding: VLCStyle.dp(16)
         rightPadding: VLCStyle.dp(16)
