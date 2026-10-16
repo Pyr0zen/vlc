@@ -20,11 +20,12 @@
 // VLC's toolbar editor in the redesign. One large frame in the middle of VLC with outlined buttons and
 // icons: a 1048 wide box over the window (BG/B1, radius 14, shadow; header BG/B2 94
 // high with the title and the description; the palette of controls; Cancel / Save footer) and,
-// at the bottom of the window where the control bar is, the edited bar with dashed outlines.
-// Controls are dragged from the box into the bar, around in it, and back into the box to remove
-// them. VLC's layout profiles (select, new, duplicate, rename, delete) are in the title row and
-// its three player layouts (video, audio, mini player) in the footer, since the design has no
-// place for them (profiles move to the main menu with W8.2).
+// at the bottom of the window where the control bar is, the edited bar with dashed outlines;
+// at the top, where the top bar is, the edited top bar (W8.1b, CustomizeTopBar). Controls are
+// dragged from the box into either bar, around in them, from one bar to the other, and back into
+// the box to remove them. VLC's three player layouts (video, audio, mini player) are in the
+// footer, since the design has no place for them; the profiles are in the main menu (W8.2,
+// Figma "Profiles"), the title row is Figma's (title and X).
 // Opens and closes instantly (Decision 32). Save keeps the changes, Cancel / X / Escape restore
 // the saved layouts (VLC's toolbar editor semantics); the live bars follow every change.
 import QtQuick
@@ -47,11 +48,9 @@ T.Popup {
         return profile ? profile.getModel(identifier) : null
     }
 
-    // something to save: a layout changed, or the profiles (added, removed, renamed, selected)
-    property bool _profilesChanged: false
-    readonly property bool dirty: _profilesChanged
-                                  || (!!MainCtx.controlbarProfileModel.currentModel
-                                      && MainCtx.controlbarProfileModel.currentModel.dirty)
+    // something to save: a layout of the selected profile changed (the top bar's too)
+    readonly property bool dirty: !!MainCtx.controlbarProfileModel.currentModel
+                                  && MainCtx.controlbarProfileModel.currentModel.dirty
 
     property bool _accepted: false
 
@@ -115,7 +114,6 @@ T.Popup {
             _holdsModal = true
         }
         _accepted = false
-        _profilesChanged = false
 
         // what Cancel goes back to (VLC's toolbar editor saves first too)
         MainCtx.controlbarProfileModel.save(false)
@@ -139,8 +137,6 @@ T.Popup {
             RdPanels.releaseModal()
             _holdsModal = false
         }
-        profileMenu.close()
-        namePrompt.close()
         if (_restoreFocusItem)
             _restoreFocusItem.forceActiveFocus(Qt.PopupFocusReason)
     }
@@ -204,8 +200,8 @@ T.Popup {
         // the popup, which closes
         Keys.onPressed: (event) => {
             if (event.key === Qt.Key_Tab || event.key === Qt.Key_Backtab) {
-                profileDropdown.forceActiveFocus(event.key === Qt.Key_Tab ? Qt.TabFocusReason
-                                                                           : Qt.BacktabFocusReason)
+                closeButton.forceActiveFocus(event.key === Qt.Key_Tab ? Qt.TabFocusReason
+                                                                       : Qt.BacktabFocusReason)
                 event.accepted = true
                 return
             }
@@ -228,14 +224,15 @@ T.Popup {
         Rectangle {
             id: box
 
-            readonly property real _maxHeight: content.height - bar.height - 2 * VLCStyle.margin_large
+            readonly property real _maxHeight: content.height - topBar.height - bar.height - 2 * VLCStyle.margin_large
 
             width: Math.min(VLCStyle.rd_dialogWidth, content.width - 2 * VLCStyle.margin_large)
             height: Math.min(_maxHeight, header.height + body.implicitHeight + footer.height)
 
             x: Math.round((content.width - width) / 2)
-            // centered in the space above the bar (Figma: 189.5 above, 181.5 below)
-            y: Math.max(0, Math.round((content.height - bar.height - height) / 2))
+            // centered in the space above the bar (Figma: 189.5 above, 181.5 below), under the
+            // top bar
+            y: Math.max(topBar.height, Math.round((content.height - bar.height - height) / 2))
 
             radius: VLCStyle.rd_radius_large
             // opaque over the native video (Figma's BG/B1 95 % assumes a background blur)
@@ -283,7 +280,7 @@ T.Popup {
                     Text {
                         anchors.left: parent.left
                         anchors.leftMargin: VLCStyle.dp(10)
-                        anchors.right: profileDropdown.left
+                        anchors.right: closeButton.left
                         anchors.rightMargin: VLCStyle.dp(10)
                         anchors.verticalCenter: parent.verticalCenter
 
@@ -297,51 +294,6 @@ T.Popup {
                         Accessible.name: text
                     }
 
-                    // VLC's layout profiles (not in the design, Decision 21)
-                    Widgets.RdDropdown {
-                        id: profileDropdown
-
-                        anchors.right: moreButton.left
-                        anchors.rightMargin: VLCStyle.dp(4)
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: Math.min(VLCStyle.dp(240), titleRow.width / 3)
-                        height: VLCStyle.dp(32)
-
-                        model: MainCtx.controlbarProfileModel
-                        textRole: "name"
-                        currentIndex: MainCtx.controlbarProfileModel.selectedProfile
-                        displayText: MainCtx.controlbarProfileModel.currentModel
-                                     ? MainCtx.controlbarProfileModel.currentModel.name : ""
-
-                        Accessible.name: qsTr("Profile")
-
-                        KeyNavigation.tab: moreButton
-                        KeyNavigation.backtab: saveButton.enabled ? saveButton : cancelButton
-
-                        onActivated: (index) => {
-                            if (index === MainCtx.controlbarProfileModel.selectedProfile)
-                                return
-                            MainCtx.controlbarProfileModel.selectedProfile = index
-                            root._profilesChanged = true
-                        }
-                    }
-
-                    HeaderButton {
-                        id: moreButton
-
-                        anchors.right: closeButton.left
-                        anchors.rightMargin: VLCStyle.dp(4)
-                        anchors.verticalCenter: parent.verticalCenter
-
-                        iconName: "more"
-                        Accessible.name: qsTr("Profile options")
-
-                        KeyNavigation.tab: closeButton
-                        KeyNavigation.backtab: profileDropdown
-
-                        onClicked: profileMenu.opened ? profileMenu.close() : profileMenu.open()
-                    }
-
                     HeaderButton {
                         id: closeButton
 
@@ -352,7 +304,7 @@ T.Popup {
                         Accessible.name: qsTr("Close")
 
                         KeyNavigation.tab: playerTabs.firstTab
-                        KeyNavigation.backtab: moreButton
+                        KeyNavigation.backtab: saveButton.enabled ? saveButton : cancelButton
 
                         onClicked: root.close()
                     }
@@ -427,6 +379,7 @@ T.Popup {
 
                     editor: content
                     playerModel: root.playerModel
+                    topBarModel: RdProfiles.topBarModel
                 }
             }
 
@@ -448,7 +401,7 @@ T.Popup {
 
                     text: qsTr("Cancel")
 
-                    KeyNavigation.tab: saveButton.enabled ? saveButton : profileDropdown
+                    KeyNavigation.tab: saveButton.enabled ? saveButton : closeButton
                     KeyNavigation.backtab: playerTabs.lastTab
 
                     onClicked: root.close()
@@ -486,12 +439,25 @@ T.Popup {
                     text: qsTr("Save")
                     enabled: root.dirty
 
-                    KeyNavigation.tab: profileDropdown
+                    KeyNavigation.tab: closeButton
                     KeyNavigation.backtab: cancelButton
 
                     onClicked: root.accept()
                 }
             }
+        }
+
+        // ------------------------------------------------------------------ top bar
+
+        CustomizeTopBar {
+            id: topBar
+
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: parent.top
+
+            editor: content
+            topBarModel: RdProfiles.topBarModel
         }
 
         // ---------------------------------------------------------------------- bar
@@ -518,87 +484,6 @@ T.Popup {
             // (the palette puts the drag hot spot where the item was grabbed)
             visible: Drag.active
             z: 100
-        }
-
-        // -------------------------------------------------------------- popups
-
-        Widgets.RdMenuPanel {
-            id: profileMenu
-
-            parent: moreButton
-            x: moreButton.width - width
-            y: moreButton.height + VLCStyle.dp(4)
-
-            Widgets.RdOptionRow {
-                text: qsTr("New Profile")
-                rdIcon: "add"
-                onClicked: namePrompt.askFor("new", qsTr("New Profile"),
-                                             qsTr("Profile %1").arg(MainCtx.controlbarProfileModel.rowCount() + 1))
-            }
-
-            Widgets.RdOptionRow {
-                text: qsTr("Duplicate")
-                reserveIconSpace: true
-                enabled: !!MainCtx.controlbarProfileModel.currentModel
-                onClicked: namePrompt.askFor("duplicate", qsTr("Duplicate Profile"),
-                                             MainCtx.controlbarProfileModel.currentModel.name)
-            }
-
-            Widgets.RdOptionRow {
-                text: qsTr("Rename")
-                rdIcon: "edit"
-                enabled: !!MainCtx.controlbarProfileModel.currentModel
-                onClicked: namePrompt.askFor("rename", qsTr("Rename Profile"),
-                                             MainCtx.controlbarProfileModel.currentModel.name)
-            }
-
-            Widgets.RdOptionRow {
-                // VLC: deleting every profile brings back the default styles
-                text: qsTr("Delete")
-                rdIcon: "remove"
-                enabled: !!MainCtx.controlbarProfileModel.currentModel
-                onClicked: {
-                    MainCtx.controlbarProfileModel.deleteSelectedProfile()
-                    root._profilesChanged = true
-                }
-            }
-        }
-
-        CustomizeNamePrompt {
-            id: namePrompt
-
-            // "new", "duplicate" or "rename"
-            property string _mode: ""
-
-            parent: content
-
-            function askFor(mode, title, name) {
-                _mode = mode
-                ask(title, name)
-            }
-
-            onAccepted: (name) => {
-                const model = MainCtx.controlbarProfileModel
-                const count = model.rowCount()
-                switch (_mode) {
-                case "new":
-                    model.newProfile(name)
-                    model.selectedProfile = count
-                    break
-                case "duplicate":
-                    model.cloneSelectedProfile(name)
-                    model.selectedProfile = count
-                    break
-                case "rename":
-                    model.setData(model.index(model.selectedProfile, 0), name, Qt.DisplayRole)
-                    break
-                default:
-                    return
-                }
-                root._profilesChanged = true
-            }
-
-            onClosed: profileDropdown.forceActiveFocus(Qt.PopupFocusReason)
         }
     }
 
