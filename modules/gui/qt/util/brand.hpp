@@ -78,6 +78,11 @@
  * and the registry key of the interface language (bin/winvlc.c reads it at startup) */
 # define BRAND_CONFIG_DIR       "Cone"
 # define BRAND_REGISTRY_KEY     "Software\\Cone\\"
+/* the installer's ProgID prefix and registered application name, and its install key
+ * (extras/package/win32/NSIS, configure BRAND_PROGID / BRAND_REGKEY): the file association
+ * dialog of the preferences uses them */
+# define BRAND_PROGID           "Cone"
+# define BRAND_INSTALL_REGKEY   "Software\\Cone"
 
 #else
 
@@ -105,6 +110,8 @@
 
 # define BRAND_CONFIG_DIR       "vlc"
 # define BRAND_REGISTRY_KEY     "Software\\VideoLAN\\VLC\\"
+# define BRAND_PROGID           "VLC"
+# define BRAND_INSTALL_REGKEY   "Software\\VideoLAN\\VLC"
 
 #endif
 
