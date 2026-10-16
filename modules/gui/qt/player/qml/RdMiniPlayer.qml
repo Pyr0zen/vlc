@@ -120,13 +120,25 @@ Item {
             blurRadius: VLCStyle.dp(11.8)
         }
 
-        // the card (queue included) takes the presses and wheel turns that no control takes, so
-        // they never reach the library under it (a library row took the mouse there, and a drag
-        // of the card was lost)
+        // the card (queue included) takes the presses, hover and wheel turns that no control
+        // takes, so they never reach the library under it (a library row took the mouse there,
+        // and a drag of the card was lost)
         MouseArea {
             anchors.fill: parent
             acceptedButtons: Qt.AllButtons
+            hoverEnabled: true
             onWheel: (wheel) => { wheel.accepted = true }
+        }
+
+        // the drag handlers of the library rows under the card still see its presses (Qt hands
+        // a press to the handlers under an item that took it): this one takes a mouse drag on the
+        // card first and does nothing with it, so no library drag starts from the card. The card
+        // move (player part) and the queue's reorder handle are handlers of items above, they
+        // take the drag before it; a library handler cannot take over from it (same type).
+        DragHandler {
+            target: null
+            acceptedDevices: PointerDevice.AllDevices & ~(PointerDevice.TouchScreen)
+            grabPermissions: PointerHandler.CanTakeOverFromItems | PointerHandler.CanTakeOverFromHandlersOfDifferentType
         }
 
         // the queue sits above the player in the bottom corners, below it in the top ones
