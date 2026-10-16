@@ -1268,6 +1268,11 @@ FocusScope {
         clip: rootPlayer._libraryProgress < 1
         z: 1
 
+        // the wheel over the library never reaches the video, also while it slides (Decision 51)
+        Widgets.RdWheelSink {
+            anchors.fill: parent
+        }
+
         Loader {
             id: librarySidebar
 

@@ -292,6 +292,9 @@ T.Slider {
         mirrored: control.mirrored && control.horizontal
 
         onStepped: (steps) => {
+            // held: the pointer sets the value
+            if (control.pressed)
+                return
             if (control.customWheel)
                 control.wheelStepped(steps)
             else

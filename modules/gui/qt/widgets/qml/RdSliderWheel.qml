@@ -25,8 +25,12 @@
 //   (angleDelta, 120 per notch; pixelDelta, `pixelsPerStep` per step, where only that is sent).
 // - Every wheel event over the slider is taken, also at its ends, so the wheel never scrolls the
 //   list or reaches the player behind it. Except: a wheel gesture that is scrolling a list (the
-//   list still moving, or the gesture's previous event let through less than `latch` ms ago)
-//   keeps scrolling it when the slider passes under the pointer.
+//   list still moving, or it scrolled or this slider let an event through less than `latch` ms
+//   ago) keeps going to the list when the slider passes under the pointer; at the list's end the
+//   panel takes it.
+// - Natural scrolling reported by the system (`inverted`: macOS, Linux) is turned back to the
+//   finger direction; on Windows a touchpad follows the scroll direction set in Windows, as for a
+//   wheel.
 import QtQuick
 
 MouseArea {
@@ -45,6 +49,9 @@ MouseArea {
     property real _accum: 0
     property double _lastTaken: 0
     property double _lastPassed: 0
+    // the list (Flickable) holding the slider and when it last scrolled
+    property Item _list: null
+    property double _listMovedAt: 0
 
     acceptedButtons: Qt.NoButton
 
@@ -62,6 +69,25 @@ MouseArea {
             slider.moved()
     }
 
+    function _findList() {
+        for (let p = root.parent; p; p = p.parent) {
+            if (p.contentY !== undefined && p.moving !== undefined)
+                return p
+        }
+        return null
+    }
+
+    Component.onCompleted: _list = _findList()
+    onParentChanged: _list = _findList()
+
+    Connections {
+        target: root._list
+
+        function onContentYChanged() {
+            root._listMovedAt = Date.now()
+        }
+    }
+
     // a list holding the slider is scrolling
     function _listMoving() {
         for (let p = root.parent; p; p = p.parent) {
@@ -73,7 +99,9 @@ MouseArea {
 
     onWheel: (wheel) => {
         const now = Date.now()
-        if (now - _lastPassed < latch || _listMoving()) {
+        if (!_list)
+            _list = _findList()
+        if (now - _lastPassed < latch || now - _listMovedAt < latch || _listMoving()) {
             _lastPassed = now
             wheel.accepted = false
             return
@@ -88,7 +116,7 @@ MouseArea {
             y = wheel.pixelDelta.y
             unit = pixelsPerStep
         }
-        // natural scrolling: back to the direction the fingers moved
+        // natural scrolling (see above): back to the direction the fingers moved
         if (wheel.inverted) {
             x = -x
             y = -y

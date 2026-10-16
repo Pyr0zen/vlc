@@ -179,11 +179,14 @@ RdSlider {
     }
 
     // `steps` wheel notches from the value shown, on the multiples of the wheel step from
-    // rangeFrom: a value between two of them goes to the next one in that direction first
+    // rangeFrom: a value between two of them goes to the next one in that direction first. A value
+    // within 5 % of a step of a multiple counts as on it: VLC hands values back as 32-bit floats
+    // (2.1x reads 2.0999999) or rounded (Background Opacity 38.25 is stored as 38)
     function _wheelMove(steps) {
         const quantum = wheelStep > 0 ? wheelStep : (step > 0 ? step : _span / 100)
         const n = (_shown - rangeFrom) / quantum
-        const base = steps > 0 ? Math.floor(n + 1e-6) : Math.ceil(n - 1e-6)
+        const near = Math.round(n)
+        const base = Math.abs(n - near) < 0.05 ? near : (steps > 0 ? Math.floor(n) : Math.ceil(n))
         // rounded: no floating point residue in the value box or the stored value
         const target = Math.round((rangeFrom + (base + steps) * quantum) * 1e9) / 1e9
         const v = endless ? _limit(target) : Math.max(rangeFrom, Math.min(rangeTo, target))

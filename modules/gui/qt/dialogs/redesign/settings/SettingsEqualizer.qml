@@ -230,7 +230,10 @@ Rectangle {
                 id: bandWheel
 
                 anchors.fill: parent
-                onStepped: (steps) => bandWheel.stepSlider(slider, steps)
+                onStepped: (steps) => {
+                    if (!slider.pressed)
+                        bandWheel.stepSlider(slider, steps)
+                }
             }
         }
 
