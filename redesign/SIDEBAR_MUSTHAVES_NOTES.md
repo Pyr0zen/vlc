@@ -30,3 +30,55 @@ Checks with the patch applied: buildlists 0, qmlcheck errors 1 / crashed 0 (401 
 - **Filters the previews leave unchanged:** sharpen, gradfun, grain, extract, colorthres and gradient. The previews also apply filters in one fixed order, while VLC uses the order they were turned on.
 - **EQ shapes:** our shapes come from the real gains, so they differ in detail from Figma's hand-drawn icons. Compare them on the build.
 - **Still to do on the build:** the video is not used here; the PC session checks rows 132-134 and 139 against it. Also to do: screenshots against Figma 2372:8487 and 543:995, the UX pass, 60 fps, the independent review and the VIDEO_INDEX status updates.
+
+## Review
+
+This is an independent review of the branch (commits d86caafb90 to 85a4d4e6e6) against CLAUDE.md, the Figma file and `redesign/tools/verify/spec/` (taken from wip/verify-spec: `eq-presets.json`, `eq.json`, `video-crop.json`, `icon-wrapper.json`). The review is offline only. Nothing is verified yet: there was no build and there are no screenshots.
+
+### What was checked
+- **EQ icons against Figma**
+  - Geometry matches all 18 "name=EQ" icon variants: baseline x 1-23 on y 12, boost lobes ending on y 10, cut lobes starting on y 14, lobes up to 6 px tall.
+  - Row layout matches the open "EQ presets" frame (2372:8490): icon at x 16 centred in the 44 px row, text at x 50, check at x 322. "None" has no icon and its text sits at x 16.
+  - The colours are live palette bindings: FG/A2 (light theme #2E2E2E) and Accent/Main, which follows the accent setting through `orange500`.
+  - Painting happens only when the gains, colours or size change, and each icon is one small texture. RdEqCurve is used in a single place (AudioSettingsPage).
+- **Crop link against `video-crop.json`**
+  - Layout matches: 141x33 boxes 8 px apart, button 30x32 at x 314 vertically centred, rows 16 px apart, paddings 6 and 16.
+  - Icon colours match: default link FG/A2 at 1.5 px, hover 6 % white with radius 4 (the ToolButton colour set), active `link_state-active` in the live accent.
+  - The ratio logic is safe: no division by 0, values clamped to 0 or more, the link state is remembered, and values go to VLC's real `crop-*` variables.
+- **Filter math against the VLC sources**
+  - `adjust`: the luma table and the U/V hue and saturation formulas match adjust.c and adjust_sat_hue.c exactly.
+  - `sepia`, `invert`, `posterize`, `transform` and `rotate` use VLC's default values.
+  - The value names match what RdPresets stores.
+- **Preview engine**
+  - Thumbnailer lifetime: the request is released on every path and the preparser is deleted before the in-flight request is released, as in the seek preview.
+  - The worker-thread results are posted to the UI thread. The worker thread runs at the lowest priority. Decoding is software-only on the file's own input. Local files only.
+  - The cache is mutex-guarded, and the image provider only copies small images from it.
+- **Hookup patch**: it applies cleanly. Registrations go into the right modules, the image provider is added in the same place as the seek preview's, and both build lists contain all files.
+
+### What was fixed (pushed)
+- **b38bf8e296 Fast seek for the capture:** the preview now takes the keyframe at or before the current time instead of the exact frame. A precise seek decodes every frame from the previous keyframe in software, which costs seconds of CPU next to the playback on 4K or long-GOP files and can hit the 3 s timeout. That breaks the snappiness rule. A 24 px preview doesn't need the exact frame.
+- **fde98a5d7c Cache size 32 to 256:** with more than 32 previews on screen, an evicted preview was asked for again and evicted another one, an endless loop of filter runs and binding updates. Each new frame empties the cache, so it only has to hold one frame's previews: about 4 MB at most.
+- **721ee3898d Retake only after a size change:** a capture that ended after a media change (its cancel came too late) started an unrequested capture of the new file. Now only a preview size change during a capture retakes the frame.
+
+Checks after the fixes:
+- Offline compile with moc: 0 warnings.
+- buildlists: 0 problems, with and without the patch.
+- qmlcheck: errors 1 / crashed 0 (401 files with the patch, 400 without).
+- privacycheck: 0 problems.
+
+### What is left
+- **Everything on the real build**:
+  - side-by-side screenshots against "EQ presets" and "Video - Crop" (default, hover and linked);
+  - the UX pass (keyboard toggling of the link, Tab order, tooltips);
+  - the light theme and an accent change while the dropdown is open;
+  - a 60 fps check while the EQ dropdown scrolls.
+- **Filter preview placement** is still StickyGonzales's decision; there is no Figma or video reference. Until it is placed, the engine and RdFilterPreviewImage are unused.
+- **Behaviours to know when placing the previews** (none of them are bugs right now):
+  - All previews share one size: previews of two different sizes on screen at once would keep resetting each other's frame.
+  - After a media change the previews show the placeholder until the list opens again.
+  - A newer frame briefly shows the placeholder while its previews are made.
+  - The fast seek can show a frame up to one keyframe interval before the playing position.
+- **Small known differences, accepted:**
+  - A row whose two crop values are both 0 links as equal, not by ratio.
+  - A linked edit sets the two crop variables one after the other, so one frame may show only one side changed.
+  - The EQ curve shapes come from the real gains and differ in detail from Figma's hand-drawn ones.
