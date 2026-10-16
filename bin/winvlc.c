@@ -44,13 +44,16 @@
 
 /* redesign (brand layer, public profile): Cone reads its interface language from its own key
  * and writes crash dumps in its own folder, never an installed VLC's
- * (modules/gui/qt/util/brand.hpp BRAND_REGISTRY_KEY, src/win32/dirs.c APP_DIR_NAME) */
+ * (modules/gui/qt/util/brand.hpp BRAND_REGISTRY_KEY, src/win32/dirs.c APP_DIR_NAME); its audio
+ * session (volume mixer entry, modules/audio_output/mmdevice.c) carries its own name */
 #ifdef VLC_BRAND_PUBLIC
 # define LANG_REGISTRY_KEY "Software\\Cone\\"
 # define CRASHDUMP_DIR L"\\Cone\\crashdump"
+# define USER_AGENT_NAME "Cone"
 #else
 # define LANG_REGISTRY_KEY "Software\\VideoLAN\\VLC\\"
 # define CRASHDUMP_DIR L"\\vlc\\crashdump"
+# define USER_AGENT_NAME "VLC media player"
 #endif
 
 #ifdef HAVE_BREAKPAD
@@ -229,7 +232,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
         libvlc_SetExitHandler(vlc->p_libvlc_int, vlc_kill, &sem);
         libvlc_set_app_id (vlc, "org.VideoLAN.VLC", PACKAGE_VERSION,
                            PACKAGE_NAME);
-        libvlc_set_user_agent (vlc, "VLC media player", "VLC/"PACKAGE_VERSION);
+        libvlc_set_user_agent (vlc, USER_AGENT_NAME, "VLC/"PACKAGE_VERSION);
         libvlc_InternalAddIntf (vlc->p_libvlc_int, NULL);
         libvlc_InternalPlay (vlc->p_libvlc_int);
 
