@@ -644,7 +644,7 @@ Decision 48 (two profiles) and Decision 49 (Cone logo approved, Q6). Branch work
 | Window opacity, Fullscreen controls opacity (Settings Interface) | 5 % |
 | Fullscreen controls sensitivity (Settings Interface) | 1 stop (Low / Medium / High) |
 | Hue, Brightness, Contrast, Saturation, Gamma (Settings Video) | hue 1 degree, the others 1/100 of the range |
-| Control bar volume, seek bar, stock speed popup | unchanged: their own wheel (volume, seek, rate) |
+| Control bar volume, seek bar, stock speed popup | unchanged: their own wheel (volume, seek, rate); seek bar and speed button changed the same day, see the next section |
 
 | Overlay | Before | Now |
 |---|---|---|
@@ -658,7 +658,7 @@ Decision 48 (two profiles) and Decision 49 (Cone logo approved, Q6). Branch work
 | Mini player | leaked: the library list behind it scrolled; over its picture the VideoSurface changed the volume | RdWheelSink on the card (its queue list scrolls as before) and over the picture |
 | Compact library (RdLibrarySidebar in Player.qml `libraryHost`) | leaked over the video while sliding in or out (the sidebar is disabled while it closes) | RdWheelSink in `libraryHost`, under the sidebar |
 | Resume toast | leaked to the video (volume) | RdWheelSink |
-| Top bar, control bar | not overlays: empty parts pass the wheel to the video, as in stock VLC | unchanged |
+| Top bar, control bar | not overlays: empty parts pass the wheel to the video, as in stock VLC | unchanged here; changed the same day, see the next section |
 
 - Checks (after merging origin/wip/next-batch, Customize Player; its Decisions 51-53 came first, so this one is 54): qmlcheck `errors: 1 files: 400 crashed: 0` (the known HighResolutionTimeWidget stub), buildlists `0 problem(s)`, privacycheck `0 problem(s)`. Not compiled (CI only), not seen on a build. The new Customize Player profile notice (RdProfileNotice, a non-modal popup) takes the wheel over itself like every Qt popup.
 - Known limits (LOW): a plain RdSlider (the two in Settings Interface / Video, increase() / decrease()) steps from its current value, so a dragged value between steps stays between steps and float sums such as 0.30000000000000004 reach RdEffects (as a drag's arbitrary values do; not visible); the gesture latch is time based (400 ms), so a very slow scroll that pauses over a slider for more than 400 ms hands the next notch to the slider.
@@ -691,3 +691,28 @@ From the verification of build 38727073546 (seen again on 38800817536): P6-04 / 
   - LOW: placeholder square in short windows; one "Cover" for accessibility; the placeholder icon size steps by 8 px (no SVG render on every pixel of a resize); a video played in its own window shows the video icon (747d3c40f3b); hover over the mini player card no longer reaches library rows (4b774be52c3).
 - Not changed: a mouse drag of the mini player that starts on its video sends the press to the video output and never a release (the card drag takes the mouse over); it was the same before (the handler sat on the picture) and needs a VideoSurface change (mouseUngrabEvent), logged for a later package. A focused lyrics toggle that hides at a track change drops the focus to the view (rare: lyrics to no lyrics while it has the keyboard).
 - Checks after the fixes: qmlcheck `errors: 1 files: 371 crashed: 0`, buildlists `0 problem(s)`, privacycheck `0 problem(s)`.
+
+## 2026-10-16 mouse wheel over the bars (Decision 54 changed by Sticky; worktree, not built yet)
+- Asked by Sticky: the wheel over the top bar and the control bar, their empty parts included, must not change the volume or seek; only the video area (the music view's picture area in its place) and the volume control itself react to the wheel. Sliders in panels keep their fine-tuning (unchanged).
+- Before: Qt Quick hands the wheel to every item under the pointer, top first, until one takes it; the bars' empty parts, their labels and buttons took none, so it reached `VideoSurface::wheelEvent` (video) or the audio view's `centerContent` MouseArea in Player.qml (music view), both sending VLC's wheel hotkey (volume or seek, Settings > Controls > Mouse); the seek bar (SliderBar's WheelHandler: jump forward / back) and the stock speed button (its WheelHandler: rate) had their own wheel.
+- Now: ControlBar.qml sets `wheelEnabled: true` (Qt Quick Controls: a Control with it takes every wheel event its children leave, over its whole area); TopBar.qml has an RdWheelSink filling the bar under its controls (the editable zones, the window buttons, the CSD drag area). SliderBar.qml and PlaybackSpeedButton.qml lose their WheelHandler and WheelToVLCConverter. VolumeWidget.qml: the cone keeps its wheel and a NoButton MouseArea under the widget gives the speaker the same wheel (the cone's code, now `wheelVolume`), so the whole volume control reacts wherever the profile puts it (control bar or a top bar zone). Player.qml is unchanged: the bars sit above the video and the audio view, so their wheel never reaches them.
+
+| Where | Before | Now |
+|---|---|---|
+| Control bar, empty parts and labels (player, windowed and fullscreen, video and music view) | video / music view: volume or seek | nothing |
+| Seek bar (control bar) | jump forward / back | nothing |
+| Speed button (if a layout has it, either bar) | rate step | nothing |
+| Other bar buttons (play, prev / next, tracks, gear, queue, fullscreen, ...) | video: volume or seek | nothing |
+| Volume control: cone | volume | volume (unchanged) |
+| Volume control: speaker button | video: volume or seek (by the wheel mode) | volume, as the cone |
+| Top bar, empty parts, title, cone logo, "...", window buttons, editable zones (player) | video / music view: volume or seek | nothing (a volume control in a zone reacts) |
+| Library top bar (MainDisplay.qml, same TopBar) | nothing behind it | nothing |
+| Minimal view: window buttons (CSD) over the video | video: volume or seek | nothing; the rest of the window is the video |
+| Mini player (RdMiniPlayer: card, picture, its seek strip) | already taken (RdWheelSink, first Decision 54 pass) | unchanged |
+| Customize Player preview bars and palette (CustomizeZoneItem, EditorDNDDelegate) | previews are `enabled: false` (disabled items get no pointer events in Qt) inside a modal popup: no volume | unchanged, checked |
+| Video area, music view picture area | volume or seek (wheel mode) | unchanged |
+
+- Not changed: the windowed video frame (10 px BG/A3 rim around the video, `enabled: false`) stays part of the video area; Ctrl+wheel interface zoom (window level) works everywhere as before.
+- Code: ControlBar.qml +5, TopBar.qml +6, MinimalView.qml +7, VolumeWidget.qml +13 / -1, SliderBar.qml and PlaybackSpeedButton.qml only lose their wheel code; no Player.qml edit.
+- Independent review (sub-agent, Qt 6.8.3 delivery sources): no HIGH or MED. Fixed LOW: a SliderBar comment still listed the wheel; this note named the stock MiniPlayer.qml bar, which nothing creates (the library uses RdMiniPlayer); a line count. Checked clean: bar geometry (paddings, top margin, inline seek row and bookmarks inside the Pane), items above the bars, fades and disabled controls, fullscreen and the audio view, VolumeWidget's contentItem and stacking (also in a top bar zone), paintOnly and the disabled previews in the modal Customize Player, no click / hover / cursor / drag taken (CSD drag and double click, Customize drags), library top bar, Ctrl+wheel zoom, removed ids and imports, no other bar control with a wheel.
+- To test on the build (mouse wheel set to Volume, then to Seek, in Settings > Controls; and a touchpad): wheel over every part of the control bar (gaps, time labels, seek bar, every button) and of the top bar (gaps, title, cone, zones, window buttons) in a window and in fullscreen, with a video and with a song (music view): no volume or position change, no OSD; wheel over the speaker and the cone: volume changes; a profile with the volume control in a top bar zone: the wheel there changes the volume; wheel over the video / music picture: volume or seek as set; with the bars hidden (faded out) the wheel at the window edges acts on the video; Customize Player: wheel over the preview bars and the palette changes nothing; minimal view (Ctrl+H): wheel over the video works, over the window buttons nothing.

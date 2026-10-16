@@ -100,6 +100,12 @@ FocusScope{
         color: VLCStyle.palette.isDark ? VLCStyle.palette.rdBgA3 : VLCStyle.palette.rdBgA3Transparent
     }
 
+    // the wheel over the top bar, its empty parts included, never reaches the video (volume /
+    // seek, Decision 54); under the controls, so a volume control in a zone still gets it first
+    Widgets.RdWheelSink {
+        anchors.fill: parent
+    }
+
     //drag and dbl click the titlebar in CSD mode
     Loader {
         id: tapNDrag

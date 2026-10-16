@@ -51,6 +51,17 @@ T.Pane {
     Keys.priority: Keys.AfterItem
     Keys.onPressed: (event) => Navigation.defaultKeyAction(event)
 
+    // redesign: the wheel over the whole volume control, the speaker included, sets the volume as
+    // over the cone (Decision 54: over the bars only the volume control reacts to the wheel)
+    MouseArea {
+        anchors.fill: parent
+
+        acceptedButtons: Qt.NoButton
+        enabled: !root.paintOnly
+
+        onWheel: (wheel) => sliderMouseArea.wheelVolume(wheel)
+    }
+
     RowLayout {
         id: volumeWidget
 
@@ -351,8 +362,9 @@ T.Pane {
                         adjustVolume(mouse)
                 }
 
-                onWheel: (wheel) => {
+                onWheel: (wheel) => wheelVolume(wheel)
 
+                function wheelVolume(wheel) {
                     if ((Math.abs(wheel.pixelDelta.x) % 120 > 0) || (Math.abs(wheel.pixelDelta.y) % 120 > 0)) {
                         let delta = 0
                         if (Math.abs(wheel.pixelDelta.x) > Math.abs(wheel.pixelDelta.y))
