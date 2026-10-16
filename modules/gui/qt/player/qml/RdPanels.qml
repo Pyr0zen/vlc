@@ -83,6 +83,10 @@ QtObject {
     // the player finds it open again after a visit to the full library (11:58).
     property bool libraryOpen: false
 
+    // the sidebar toggle (reveal false) and the folder chip (reveal true) controls, in either bar
+    // (W8.1b): Player.qml opens or closes the compact library (toggleLibrary)
+    signal libraryRequested(bool reveal)
+
     // the info overlays over the video, switched by the settings sidebar's Playback tab
     // toggles "Show Metadata" and "Show Statistics" (W4.3b; Decisions 13 and 24). They are not
     // panels: they stay open next to any panel until switched off (toggle or their X), are kept
