@@ -47,7 +47,8 @@
     <?define IconFile = "@BRAND_ICON_FILE@" ?>
     <?define RegKey = "@BRAND_REGKEY@" ?>
     <?define ProgIdPrefix = "@BRAND_PROGID@" ?>
-    <?define BannerBmp = "brand/public/bannrbmp.bmp" ?>
+    <?define BannerBmp = "../brand/public/msi-banner.bmp" ?>
+    <?define DialogBmp = "../brand/public/msi-dialog.bmp" ?>
     <?define UpgradeCode = "9bb28ebc-9905-4529-a697-d46342b0d3fb" ?>
     <?define BaseGuid = "177cca66-4e68-4358-926d-235fdf97a7" ?>
     <?define GuidCompTXT = "30f4c932-e3b0-4624-a3d2-2ea8b2ecd2b6" ?>

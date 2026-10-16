@@ -87,6 +87,13 @@ spad_nsi = configure_file(
 
 install_data('nsProcess.nsh',    install_dir : 'NSIS')
 install_data('vlc_branding.bmp', install_dir : 'NSIS')
+# redesign: brand layer, Cone's installer images and texts
+if get_option('brand') == 'public'
+    install_data(vlc_src_root / 'extras/package/win32/brand/public/nsis-welcome.bmp',
+                 vlc_src_root / 'extras/package/win32/brand/public/nsis-header.bmp',
+                 install_dir : 'NSIS')
+    meson.add_install_script('brand-languages.sh', 'languages', brand['product_name'])
+endif
 install_subdir('languages',      install_dir : '.')
 install_subdir('helpers',        install_dir : '.')
 

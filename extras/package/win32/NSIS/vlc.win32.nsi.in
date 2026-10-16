@@ -27,6 +27,8 @@
   !define PRODUCT_APPDATA_DIR "vlc"
   !define PRODUCT_DOC_URL "${PRODUCT_WEB_SITE}/doc/"
   !define PRODUCT_SKINS_URL "${PRODUCT_WEB_SITE}/vlc/skins.php"
+  !define PRODUCT_WEBSITE_LINK "${PRODUCT_GROUP} Website"
+  !define PRODUCT_BRANDING_TEXT "${PRODUCT_GROUP} ${PRODUCT_NAME}"
 !else
   !define PRODUCT_SHORT_NAME "${PRODUCT_NAME}"
   !define PRODUCT_DESCRIPTION "${PRODUCT_NAME}, a media player based on VLC media player"
@@ -34,6 +36,8 @@
   ; the project page holds the documentation; VLC's skins work in the skinned interface too
   !define PRODUCT_DOC_URL "${PRODUCT_WEB_SITE}#readme"
   !define PRODUCT_SKINS_URL "https://www.videolan.org/vlc/skins.php"
+  !define PRODUCT_WEBSITE_LINK "${PRODUCT_NAME} Website"
+  !define PRODUCT_BRANDING_TEXT "${PRODUCT_NAME}"
 !endif
 
 !define MUI_LANGDLL_REGISTRY_ROOT "HKLM"
@@ -78,7 +82,7 @@ SetCompressor /SOLID lzma
 
 SetOverwrite ifdiff
 CRCCheck on
-BrandingText "${PRODUCT_GROUP} ${PRODUCT_NAME}"
+BrandingText "${PRODUCT_BRANDING_TEXT}"
 
 InstType "$(Name_InstTypeRecommended)"
 InstType "$(Name_InstTypeMinimum)"
@@ -110,6 +114,16 @@ RequestExecutionLevel admin
 @BRAND_NSIS_BITMAP_TRUE@  !define MUI_WELCOMEFINISHPAGE_BITMAP "NSIS/vlc_branding.bmp"
   ; Banner for uninstaller
 @BRAND_NSIS_BITMAP_TRUE@  !define MUI_UNWELCOMEFINISHPAGE_BITMAP "NSIS/vlc_branding.bmp"
+!if "${PRODUCT_PROGID}" != "VLC"
+  ; redesign: brand layer, Cone's side image (welcome and finish pages of the installer and
+  ; uninstaller) and page header image (extras/package/win32/brand/public, installer-art.js)
+  !define MUI_WELCOMEFINISHPAGE_BITMAP "NSIS/nsis-welcome.bmp"
+  !define MUI_UNWELCOMEFINISHPAGE_BITMAP "NSIS/nsis-welcome.bmp"
+  !define MUI_HEADERIMAGE
+  !define MUI_HEADERIMAGE_RIGHT
+  !define MUI_HEADERIMAGE_BITMAP "NSIS/nsis-header.bmp"
+  !define MUI_HEADERIMAGE_UNBITMAP "NSIS/nsis-header.bmp"
+!endif
 
 ; Installer pages
   ; Welcome page
@@ -352,8 +366,8 @@ skip_uninstall32_cleanup:
 
 
   ; URLs
-  WriteIniStr "$INSTDIR\${PRODUCT_GROUP} Website.url" "InternetShortcut" "URL" "${PRODUCT_WEB_SITE}"
-  FileWrite $UninstallLog "${PRODUCT_GROUP} Website.url$\r$\n"
+  WriteIniStr "$INSTDIR\${PRODUCT_WEBSITE_LINK}.url" "InternetShortcut" "URL" "${PRODUCT_WEB_SITE}"
+  FileWrite $UninstallLog "${PRODUCT_WEBSITE_LINK}.url$\r$\n"
   WriteIniStr "$INSTDIR\Documentation.url" "InternetShortcut" "URL" "${PRODUCT_DOC_URL}"
   FileWrite $UninstallLog "Documentation.url$\r$\n"
   WriteIniStr "$INSTDIR\New_Skins.url" "InternetShortcut" "URL" "${PRODUCT_SKINS_URL}"
@@ -398,8 +412,8 @@ ${MementoSection} "$(Name_Section02a)" SEC02a
     "$INSTDIR\Documentation.url"
   CreateShortCut "$SMPROGRAMS\${PRODUCT_PUBLISHER}\Release Notes.lnk" \
     "$INSTDIR\NEWS.txt" ""
-  CreateShortCut "$SMPROGRAMS\${PRODUCT_PUBLISHER}\${PRODUCT_GROUP} Website.lnk" \
-    "$INSTDIR\${PRODUCT_GROUP} Website.url"
+  CreateShortCut "$SMPROGRAMS\${PRODUCT_PUBLISHER}\${PRODUCT_WEBSITE_LINK}.lnk" \
+    "$INSTDIR\${PRODUCT_WEBSITE_LINK}.url"
   CreateShortCut "$SMPROGRAMS\${PRODUCT_PUBLISHER}\${PRODUCT_NAME} - reset preferences and cache files.lnk" \
     "$INSTDIR\${PRODUCT_EXE}" "--reset-config --reset-plugins-cache vlc://quit"
 ${MementoSectionEnd}
@@ -912,6 +926,11 @@ Section "un.$(Name_Section91)" SEC91
   DeleteRegKey HKLM SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\AutoplayHandlers\Handlers\${PRODUCT_PROGID}PlayVideoFilesOnArrival
   DeleteRegValue HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\AutoplayHandlers\EventHandlers\PlayMusicFilesOnArrival" "${PRODUCT_PROGID}PlayMusicFilesOnArrival"
   DeleteRegKey HKLM SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\AutoplayHandlers\Handlers\${PRODUCT_PROGID}PlayMusicFilesOnArrival
+!if "${PRODUCT_PROGID}" != "VLC"
+  ; redesign: brand layer, the Blu-ray handler the installer adds (VLC's uninstaller leaves it)
+  DeleteRegValue HKLM "Software\Microsoft\Windows\CurrentVersion\Explorer\AutoplayHandlers\EventHandlers\PlayBlurayOnArrival" "${PRODUCT_PROGID}PlayBlurayOnArrival"
+  DeleteRegKey HKLM Software\Microsoft\Windows\CurrentVersion\Explorer\AutoplayHandlers\Handlers\${PRODUCT_PROGID}PlayBlurayOnArrival
+!endif
 
   DeleteRegKey HKLM Software\Clients\Media\${PRODUCT_PROGID}
   DeleteRegValue HKLM "Software\RegisteredApplications" "${PRODUCT_PROGID}"

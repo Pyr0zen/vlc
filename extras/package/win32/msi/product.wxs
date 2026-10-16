@@ -69,6 +69,9 @@
         <WixVariable Id="WixUISupportPerUser" Value="1" />
         <WixVariable Id="WixUILicenseRtf" Value="$(sys.SOURCEFILEDIR)/LICENSE.rtf" />
         <WixVariable Id="WixUIBannerBmp" Value="$(sys.SOURCEFILEDIR)/$(var.BannerBmp)" />
+        <?ifdef DialogBmp ?>
+        <WixVariable Id="WixUIDialogBmp" Value="$(sys.SOURCEFILEDIR)/$(var.DialogBmp)" />
+        <?endif ?>
 
         <Media Id='1' Cabinet='product.cab' EmbedCab='yes' CompressionLevel="high" />
 
