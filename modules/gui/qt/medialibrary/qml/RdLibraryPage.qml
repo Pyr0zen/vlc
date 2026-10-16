@@ -260,7 +260,19 @@ FocusScope {
     // the model of the page's items: VLC's paged models (rows load on demand, sorting and search
     // run in the media library)
     readonly property var dataModel: modelLoader.item
+
+    // a folder, an album / artist / genre or a playlist without a valid id lists nothing: VLC's
+    // models with no parent list the whole library
+    readonly property bool _hasParent: {
+        if (["folder", "collection", "playlist"].indexOf(location.page) < 0)
+            return true
+        const id = location.id
+        return !!id && typeof id.isValid === "function" && id.isValid()
+    }
+
     readonly property string modelKind: {
+        if (!_hasParent)
+            return ""
         switch (location.page) {
         case "videos":
         case "songs": return "subfolder"
@@ -308,7 +320,7 @@ FocusScope {
     Loader {
         id: subfolderLoader
 
-        active: page.location.page === "folder"
+        active: page.location.page === "folder" && page._hasParent
         sourceComponent: subfolderModelComponent
     }
     readonly property var subfolderModel: subfolderLoader.item
@@ -488,32 +500,35 @@ FocusScope {
 
     // one row of the page's model as a library item (see RdLibraryActions)
     function toItem(model, index) {
+        // held by value: a location, a menu or a dialog keeps it after the model reloads
+        const id = RdLibraryNav.detachedId(model.id)
         // a folder page: its subfolders first, then its media
         if (folderContentLoader.item) {
             if (model.rdFirst)
-                return { kind: "folder", index: model.rdSourceRow, id: model.id, title: model.title ?? "",
+                return { kind: "folder", index: model.rdSourceRow, id: id, title: model.title ?? "",
                          mrl: model.mrl ?? "", isRoot: false }
             index = model.rdSourceRow
         }
         switch (modelKind) {
         case "subfolder":
-            return { kind: "folder", index: index, id: model.id, title: model.title ?? "", mrl: model.mrl ?? "",
+            return { kind: "folder", index: index, id: id, title: model.title ?? "", mrl: model.mrl ?? "",
                      isRoot: location.page !== "folder" }
         case "album":
-            return { kind: "album", index: index, id: model.id, title: model.title ?? "",
+            // an album without a tag has no title
+            return { kind: "album", index: index, id: id, title: model.title || qsTr("Unknown Album"),
                      subtitle: model.main_artist ?? "", thumbnail: model.cover ?? "" }
         case "artist":
-            return { kind: "artist", index: index, id: model.id, title: model.name ?? "", thumbnail: model.cover ?? "" }
+            return { kind: "artist", index: index, id: id, title: model.name ?? "", thumbnail: model.cover ?? "" }
         case "genre":
-            return { kind: "genre", index: index, id: model.id, title: model.name ?? "" }
+            return { kind: "genre", index: index, id: id, title: model.name ?? "" }
         case "playlistList":
-            return { kind: "playlist", index: index, id: model.id, title: model.name ?? "",
+            return { kind: "playlist", index: index, id: id, title: model.name ?? "",
                      thumbnail: model.thumbnail ?? "" }
         case "url":
-            return { kind: "stream", index: index, id: model.id, title: model.url ?? "", mrl: model.url ?? "",
+            return { kind: "stream", index: index, id: id, title: model.url ?? "", mrl: model.url ?? "",
                      progress: -1, watched: false, isVideo: true }
         case "collection":
-            return { kind: model.kind, index: index, id: model.id, title: model.title, subtitle: model.subtitle,
+            return { kind: model.kind, index: index, id: id, title: model.title, subtitle: model.subtitle,
                      mrl: model.mrl, thumbnail: model.thumbnail, progress: model.progress, watched: model.watched,
                      isVideo: model.isVideo, isFavorite: model.isFavorite }
         case "network":
@@ -535,7 +550,7 @@ FocusScope {
             return {
                 kind: "media",
                 index: index,
-                id: model.id,
+                id: id,
                 // videos show their file name, as in the design ("The_Wand_S01E05.mp4")
                 title: (isVideo && model.fileName) ? model.fileName : (model.title ?? ""),
                 subtitle: model.main_artist ?? "",
@@ -624,7 +639,7 @@ FocusScope {
     readonly property real _gapY: (compact || listMode) ? VLCStyle.dp(10) : VLCStyle.dp(40)
     readonly property real _itemWidth: listMode ? VLCStyle.dp(406) : (wideCards ? VLCStyle.dp(316) : VLCStyle.dp(200))
     readonly property int _columns: {
-        const w = grid.width
+        const w = page.width
         if (compact)
             return listMode ? 1 : Math.max(1, Math.floor((w + _gapX) / (VLCStyle.dp(150) + _gapX)))
         return Math.max(1, Math.floor((w + _gapX) / (_itemWidth + _gapX)))
@@ -643,7 +658,13 @@ FocusScope {
     GridView {
         id: grid
 
-        anchors.fill: parent
+        anchors.left: parent.left
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        // full library: a cell is an item and the gap after it, so the view reaches one gap past
+        // the page: the last column's gap falls outside and every column that fits is shown
+        // (Figma Player-1..5 at 1920: 5 columns of cards, 4 of list rows; P5-17, P5-26)
+        width: page.compact ? page.width : page.width + page._gapX
         clip: true
         focus: true
 
@@ -662,7 +683,7 @@ FocusScope {
         keyNavigationEnabled: true
 
         header: Column {
-            width: grid.width
+            width: page.width
             spacing: VLCStyle.dp(10)
             // Figma Player-1: list rows start 30 below the divider in the full library
             topPadding: !page.compact && page.listMode ? VLCStyle.dp(10) : 0
