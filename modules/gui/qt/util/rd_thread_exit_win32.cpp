@@ -36,15 +36,33 @@
  * creates libstdc++'s key first, so its destructors run while the storage is still valid.
  * It is harmless where the toolchain works differently (native TLS, the C runtime's own
  * __cxa_thread_atexit_impl): the first registration just happens earlier.
+ *
+ * Known limits: libstdc++ now registers its process exit handler first, so at this DLL's
+ * detach the thread_local destructors of the thread that loaded the plugin run after the
+ * plugin's static destructors (expected to be only the no-op one: the interface runs on its
+ * own thread, the loading thread only opens and closes it). A thread_local first created by another thread_local's destructor still
+ * gets freed before its own destructor runs. Other plugins with C++ thread_locals are not
+ * covered (none known).
  */
+
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
+#include <cstddef> /* defines __GLIBCXX__ with libstdc++ */
 
 #if defined(_WIN32) && defined(__GLIBCXX__)
 
 #include <cxxabi.h>
 
+#ifndef _GLIBCXX_CDTOR_CALLABI
+# define _GLIBCXX_CDTOR_CALLABI
+#endif
+
 namespace {
 
-void noDestructor(void*)
+// the calling convention libstdc++ expects of destructors (__thiscall on 32-bit mingw)
+void _GLIBCXX_CDTOR_CALLABI noDestructor(void*)
 {
 }
 
