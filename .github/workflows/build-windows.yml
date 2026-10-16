@@ -99,6 +99,10 @@ jobs:
           # the public profile's own version (Decision 58): a vX.Y.Z tag sets it, otherwise 0.1.0
           BRAND_VERSION=""
           case "$GITHUB_REF" in refs/tags/v*) BRAND_VERSION="${GITHUB_REF_NAME#v}" ;; esac
+          if [ -n "$BRAND_VERSION" ] && ! echo "$BRAND_VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::warning::tag $GITHUB_REF_NAME is not vX.Y.Z: the build uses the default version"
+            BRAND_VERSION=""
+          fi
           docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/build" -w /build -e HOME=/tmp \
             -e VLC_PREBUILT_CONTRIBS_URL="${{ steps.sha.outputs.url }}" \
             -e VLC_BRAND="$VLC_BRAND" \
