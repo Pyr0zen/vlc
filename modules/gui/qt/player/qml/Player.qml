@@ -2201,9 +2201,11 @@ FocusScope {
         anchors.bottomMargin: VLCStyle.dp(24, VLCStyle.scale)
         z: 2
 
-        maxWidth: Math.min(VLCStyle.dp(552, VLCStyle.scale), rootPlayer._toastRoom)
+        // it hugs its sentence (Figma) and wraps it when the room is narrower
+        maxWidth: rootPlayer._toastRoom
 
-        // a window too narrow for both: the toast waits hidden until the panel closes
+        // a room narrower than the buttons (a panel open in a narrow window, or a very long
+        // button translation in the minimum window): the toast waits hidden until the room grows
         opacity: rootPlayer._toastRoom >= minimumWidth ? 1 : 0
         enabled: visible && opacity > 0
 
