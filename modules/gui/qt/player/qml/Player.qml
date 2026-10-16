@@ -852,18 +852,19 @@ FocusScope {
                             // no wider than the pane it sits in (a narrow window, lyrics)
                             Layout.preferredHeight: Math.min(rootPlayer.height / sizeConstant,
                                                              parent.parent.width - 2 * VLCStyle.margin_large)
-                            // the placeholder is square
-                            Layout.preferredWidth: coverShown ? cover.paintedWidth : Layout.preferredHeight
+                            // the placeholder is square, also when a short window limits its height
+                            Layout.preferredWidth: coverShown ? cover.paintedWidth
+                                                              : Math.min(Layout.preferredHeight, Layout.maximumHeight)
                             Layout.maximumHeight: centerContent.height
                             Layout.alignment: Qt.AlignHCenter
 
                             // redesign: Figma "Player - Music": the cover is 737 high in a 1080 high window
                             readonly property real sizeConstant: 1080 / 737
 
-                            // the artwork is shown (also while the next one loads); else the placeholder
-                            readonly property bool coverShown: cover.source.toString() !== ""
-                                                               && cover.status !== Image.Error
-                                                               && cover.status !== Image.Null
+                            // an artwork is painted (also the previous one while the next one loads);
+                            // else the placeholder
+                            readonly property bool coverShown: cover.status === Image.Ready
+                                                               || (cover.status === Image.Loading && cover.paintedWidth > 0)
 
                             // the texture of the cover and of the blurred background, and the cover
                             // size; shown through roundedCover below (falls back to itself where
@@ -871,7 +872,7 @@ FocusScope {
                             Image {
                                 id: cover
 
-                                visible: roundedCover.effectiveRadius <= 0
+                                visible: coverItem.coverShown && roundedCover.effectiveRadius <= 0
 
                                 //source aspect ratio
                                 readonly property real sar: paintedHeight > 0 ? paintedWidth / paintedHeight : 1
@@ -900,8 +901,12 @@ FocusScope {
                                     cover.source = targetSource
                                 }
 
+                                // redesign: re-blur from the new source even before its texture is valid:
+                                // the blur hidden during a placeholder still holds the texture of the
+                                // cover before it (the texture change re-blurs again once it is ready)
                                 onSourceChanged: {
-                                    liveTimer.transientTurnOnLive()
+                                    blurredBackground.live = true
+                                    liveTimer.restart()
                                 }
 
                                 onStatusChanged: {
@@ -967,9 +972,11 @@ FocusScope {
 
                                 Widgets.RdIcon {
                                     anchors.centerIn: parent
-                                    name: "music"
-                                    // a quarter of the cover (184 px in the 1080 high Figma frame)
-                                    size: Math.round(parent.height / 4)
+                                    // the audio view also shows a video played in its own window
+                                    name: Player.hasVideoOutput ? "video" : "music"
+                                    // a quarter of the cover (184 px in the 1080 high Figma frame), in steps
+                                    // of 8 px so a window resize does not render the SVG again on every pixel
+                                    size: Math.max(VLCStyle.dp(8), Math.round(parent.height / 32) * 8)
                                     color: VLCStyle.darkPalette.rdFgA2
                                 }
 
