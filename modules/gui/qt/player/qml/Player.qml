@@ -1332,6 +1332,17 @@ FocusScope {
             acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
 
             property string _panel: ""
+            // the press became a drag (a library row dragged into the queue): not a click
+            // outside, the panel stays
+            property bool _dragged: false
+
+            onPointChanged: {
+                if (active && !_dragged) {
+                    const dx = point.scenePosition.x - point.scenePressPosition.x
+                    const dy = point.scenePosition.y - point.scenePressPosition.y
+                    _dragged = Math.max(Math.abs(dx), Math.abs(dy)) >= Qt.styleHints.startDragDistance
+                }
+            }
 
             function _inside(item, scenePoint) {
                 if (!item || !item.visible)
@@ -1347,9 +1358,12 @@ FocusScope {
                                 : RdPanels.settingsOpen ? settingsPanelLoader
                                 : RdPanels.queueOpen ? queuePanelLoader : null
                     _panel = _inside(panel, p) ? "" : RdPanels.current
+                    _dragged = false
                 } else if (_panel !== "") {
                     const panel = _panel
                     _panel = ""
+                    if (_dragged)
+                        return
                     Qt.callLater(() => {
                         if (RdPanels.current === panel)
                             RdPanels.close()
