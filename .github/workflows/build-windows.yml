@@ -122,3 +122,22 @@ jobs:
           name: ${{ env.VLC_BRAND == 'public' && 'vlc-redesign-win64-public' || 'vlc-redesign-win64' }}
           path: dist/
           retention-days: 14
+
+      # brand layer: Cone's NSIS installer, to test installing it next to an installed VLC
+      # (redesign/CONE_RELEASE_NOTES.md); not a release, and a failure here keeps the build green
+      - name: Cone installer (test only)
+        if: env.VLC_BRAND == 'public'
+        continue-on-error: true
+        run: |
+          docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/build" -w /build -e HOME=/tmp \
+            "$VLC_IMAGE" bash -ec '
+              cd win64
+              make package-win32-exe'
+          ls -la win64/*.exe
+
+      - uses: actions/upload-artifact@v4
+        if: env.VLC_BRAND == 'public' && hashFiles('win64/cone-*-win64.exe') != ''
+        with:
+          name: cone-installer-win64
+          path: win64/cone-*-win64.exe
+          retention-days: 14
