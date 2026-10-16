@@ -762,3 +762,9 @@ From the verification of build 38727073546 (seen again on 38800817536): P6-04 / 
 - LOW (seen in passing): the resume toast elides its text ("You already watched t... 00:00:14") at 1600 px.
 - Paused once by itself? The 1080p MKV run showed the play button (paused) at 00:00:26 and the log has one pause; nothing was clicked. Watch for it in the next window.
 - Reclassified: window 2's "Continue Watching shows the file name" matches the design (Figma's Home node and the video both label those cards with file names; RdLibraryItems::fromMedia does it on purpose): not a bug, no change.
+
+## 2026-10-16 verification sweep, window 3 finished: waveform (build 38829058873, public)
+- Pass: MP3 / AAC / FLAC full scans ready in 152 / 493 / 700 ms with the same shape for the same signal; the no-audio MP4 keeps the plain bar; the AVI with a broken index asks once ("Play as is" plays, no second question; unknown length, so no waveform, expected); the player stays responsive. Earlier part of this window: 1080p MKV 4.8 s and 4K MKV 2.6 s pass, bar look matches Figma.
+- FAIL (HIGH, fix on wip/sweep-fix-waveform in progress): 249 MiB MP4 ready after ~14 s (target 2 s).
+- LOW: VLC's stock dialogs (AVI index question) blur the whole window behind them and use VLC's look and wording (wording: fix list, Cone release branch).
+- To investigate (MED): after one quit, a Cone.exe process stayed alive with no window and one thread (responding, idle); Stop-Process / taskkill /F cannot end it (Windows: no running instance, stuck in termination: likely a driver wait, audio or GPU). Watch for it in the next windows; check the shutdown path (audio output, waveform worker, D3D) if it repeats.
