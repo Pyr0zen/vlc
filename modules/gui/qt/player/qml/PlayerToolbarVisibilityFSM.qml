@@ -169,7 +169,23 @@ FSM {
                     guard: () => fsm.lockCount > 1,
                     action: () => { fsm.lockCount--; }
                 }],
-
+                // redesign: the bars stay while locked, but the last input still sets the
+                // timeout they get once unlocked: a mouse move while a menu, panel, the resume
+                // toast or the hovered bar holds them ends the keyboard mode, so they hide
+                // hideDelay (3 s in a window, Decision 30) after the unlock instead of the
+                // keyboard's longer timeout of a key pressed before the lock
+                mouseMove: {
+                    guard: () => !Player.isInteractive,
+                    action: () => {
+                        fsm.timeoutDuration = fsm.hideDelay; fsm.keyboardShown = false
+                    }
+                },
+                keyboardMove: {
+                    guard: () => !Player.isInteractive,
+                    action: () => {
+                        fsm.timeoutDuration = fsm.hideDelay * 2; fsm.keyboardShown = true
+                    }
+                },
             })
         }
     }
