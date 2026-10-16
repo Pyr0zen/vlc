@@ -23,9 +23,10 @@
 // at the bottom of the window where the control bar is, the edited bar with dashed outlines;
 // at the top, where the top bar is, the edited top bar (W8.1b, CustomizeTopBar). Controls are
 // dragged from the box into either bar, around in them, from one bar to the other, and back into
-// the box to remove them. VLC's three player layouts (video, audio, mini player) are in the
-// footer, since the design has no place for them; the profiles are in the main menu (W8.2,
-// Figma "Profiles"), the title row is Figma's (title and X).
+// the box to remove them. VLC's three player layouts (video, audio, mini player) stay
+// customizable: the Figma segmented control centered in the footer between Cancel and Save
+// (Decision 62), since the design has no place for them; the profiles are in the main menu
+// (W8.2, Figma "Profiles"), the title row is Figma's (title and X).
 // Opens and closes instantly (Decision 32). Save keeps the changes, Cancel / X / Escape restore
 // the saved layouts (VLC's toolbar editor semantics); the live bars follow every change.
 import QtQuick
@@ -230,9 +231,12 @@ T.Popup {
             height: Math.min(_maxHeight, header.height + body.implicitHeight + footer.height)
 
             x: Math.round((content.width - width) / 2)
-            // centered in the space above the bar (Figma: 189.5 above, 181.5 below), under the
-            // top bar
-            y: Math.max(topBar.height, Math.round((content.height - bar.height - height) / 2))
+            // centered in the space above a one-row bar (Figma: 189.5 above, 181.5 below), under
+            // the top bar; a two-row bar does not move it (Figma "Player - customize-6": same
+            // place) unless it would reach the bar
+            y: Math.max(topBar.height,
+                        Math.min(Math.round((content.height - VLCStyle.rd_controlBarHeight - height) / 2),
+                                 content.height - bar.height - VLCStyle.margin_large - height))
 
             radius: VLCStyle.rd_radius_large
             // opaque over the native video (Figma's BG/B1 95 % assumes a background blur)
@@ -303,7 +307,7 @@ T.Popup {
                         iconName: "close"
                         Accessible.name: qsTr("Close")
 
-                        KeyNavigation.tab: playerTabs.firstTab
+                        KeyNavigation.tab: playerTabs
                         KeyNavigation.backtab: saveButton.enabled ? saveButton : cancelButton
 
                         onClicked: root.close()
@@ -402,30 +406,71 @@ T.Popup {
                     text: qsTr("Cancel")
 
                     KeyNavigation.tab: saveButton.enabled ? saveButton : closeButton
-                    KeyNavigation.backtab: playerTabs.lastTab
+                    KeyNavigation.backtab: playerTabs
 
                     onClicked: root.close()
                 }
 
-                // VLC's player layouts (not in the design, Decision 21): the Figma segmented
-                // control ("Values"), button height
-                PlayerTabs {
+                // VLC's player layouts (not in the design, Decision 62): the Figma segmented
+                // control (component "Values" 999:4556: padding 2, gap 2, radius 6 / 4, Inter
+                // 14) at the size of the settings sidebar's Flip switcher (6114:13499: 360 x 44,
+                // three 117.33 x 40 segments), centered between Cancel and Save. One Tab stop,
+                // Left / Right switch the layout.
+                Widgets.RdSegmented {
                     id: playerTabs
 
-                    identifier: root.identifier
-                    editor: content
-                    nextItem: cancelButton
-                    previousItem: closeButton
+                    readonly property var layouts: PlayerListModel.model
+                    readonly property real _room: saveButton.x - (cancelButton.x + cancelButton.width)
 
-                    onSelected: (identifier) => {
+                    function select(index) {
+                        if (index < 0 || index >= layouts.length)
+                            return
+                        const identifier = layouts[index].identifier
+                        if (identifier === root.identifier)
+                            return
                         root.identifier = identifier
                         // a click refits the box; during a drag it keeps its size
                         if (!content.dragActive)
                             body.fitContent()
                     }
 
-                    anchors.centerIn: parent
-                    width: Math.min(implicitWidth, saveButton.x - cancelButton.x - cancelButton.width - 2 * VLCStyle.dp(20))
+                    implicitWidth: VLCStyle.dp(360)
+                    implicitHeight: VLCStyle.dp(44)
+                    width: Math.max(0, Math.min(implicitWidth, _room - 2 * VLCStyle.dp(20)))
+                    x: Math.round(cancelButton.x + cancelButton.width + (_room - width) / 2)
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    model: layouts.map((layout) => layout.name)
+                    currentIndex: layouts.findIndex((layout) => layout.identifier === root.identifier)
+                    Accessible.name: qsTr("Player layout")
+
+                    KeyNavigation.tab: cancelButton
+                    KeyNavigation.backtab: closeButton
+
+                    onActivated: (index) => select(index)
+
+                    // a palette item dragged over a segment selects it (not a control of the bar:
+                    // its zone would go away under the drag)
+                    DropArea {
+                        anchors.fill: parent
+
+                        // RdSegmented: 2 px around and between the segments
+                        function _indexAt(x) {
+                            const count = playerTabs.layouts.length
+                            const inset = VLCStyle.dp(2)
+                            const pitch = (width - 2 * inset + inset) / Math.max(1, count)
+                            return Math.max(0, Math.min(count - 1, Math.floor((x - inset) / pitch)))
+                        }
+
+                        onEntered: (drag) => {
+                            if (!content.paletteDragActive) {
+                                drag.accepted = false
+                                return
+                            }
+                            playerTabs.select(_indexAt(drag.x))
+                        }
+                        onPositionChanged: (drag) => playerTabs.select(_indexAt(drag.x))
+                    }
                 }
 
                 Widgets.RdButton {
@@ -517,117 +562,6 @@ T.Popup {
                 anchors.centerIn: parent
                 name: headerButton.iconName
                 color: VLCStyle.palette.rdFgA2
-            }
-        }
-    }
-
-    // the player layouts as a segmented control (Figma "Values": BG/B2 frame, BG/A4 segments,
-    // the selected one BG/Accent Bright with Accent/Main text); a palette item dragged over a
-    // segment selects it (not a control of the bar: its zone would go away under the drag)
-    component PlayerTabs: Rectangle {
-        id: tabs
-
-        property int identifier: -1
-        property Item editor: null
-        property Item nextItem: null
-        property Item previousItem: null
-
-        signal selected(int identifier)
-
-        readonly property Item firstTab: tabRepeater.count > 0 ? tabRepeater.itemAt(0) : null
-        readonly property Item lastTab: tabRepeater.count > 0 ? tabRepeater.itemAt(tabRepeater.count - 1) : null
-
-        readonly property real segmentWidth: Math.min(VLCStyle.dp(120), (width - VLCStyle.dp(2) * (tabRepeater.count + 1)) / Math.max(1, tabRepeater.count))
-
-        implicitWidth: tabRepeater.count * (VLCStyle.dp(120) + VLCStyle.dp(2)) + VLCStyle.dp(2)
-        implicitHeight: VLCStyle.dp(32)
-        height: implicitHeight
-
-        radius: VLCStyle.rd_radius_normal
-        color: VLCStyle.palette.rdBgB2
-
-        Row {
-            id: tabRow
-
-            anchors.fill: parent
-            anchors.margins: VLCStyle.dp(2)
-            spacing: VLCStyle.dp(2)
-
-            Repeater {
-                id: tabRepeater
-
-                model: PlayerListModel.model
-
-                delegate: T.Button {
-                    id: tab
-
-                    // the pointing hand over the clickable controls
-                    HoverHandler {
-                        cursorShape: Qt.PointingHandCursor
-                    }
-
-                    required property int index
-                    required property var modelData
-
-                    readonly property bool current: tabs.identifier === modelData.identifier
-
-                    width: tabs.segmentWidth
-                    height: tabRow.height
-
-                    focusPolicy: Qt.StrongFocus
-
-                    Accessible.role: Accessible.PageTab
-                    Accessible.name: modelData.name
-                    Accessible.checked: current
-
-                    KeyNavigation.tab: (index + 1 < tabRepeater.count) ? tabRepeater.itemAt(index + 1) : tabs.nextItem
-                    KeyNavigation.backtab: (index > 0) ? tabRepeater.itemAt(index - 1) : tabs.previousItem
-                    Keys.onLeftPressed: {
-                        if (index > 0)
-                            tabRepeater.itemAt(index - 1).forceActiveFocus(Qt.TabFocusReason)
-                    }
-                    Keys.onRightPressed: {
-                        if (index + 1 < tabRepeater.count)
-                            tabRepeater.itemAt(index + 1).forceActiveFocus(Qt.TabFocusReason)
-                    }
-
-                    onClicked: tabs.selected(modelData.identifier)
-
-                    background: Rectangle {
-                        radius: VLCStyle.rd_radius_small
-                        // as RdSegmented: the light theme selects with a solid accent fill
-                        color: tab.current ? (VLCStyle.palette.isDark ? VLCStyle.palette.rdBgAccentBright
-                                                                      : VLCStyle.palette.rdAccentMain)
-                                           : (tab.hovered ? VLCStyle.palette.rdBgA2 : VLCStyle.palette.rdBgA4)
-                        border.width: tab.visualFocus ? VLCStyle.dp(1) : 0
-                        border.color: VLCStyle.palette.rdFgA3
-                    }
-
-                    contentItem: Text {
-                        id: tabText
-
-                        text: tab.modelData.name
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                        elide: Text.ElideRight
-                        font.family: VLCStyle.rd_fontFamily
-                        font.pixelSize: VLCStyle.rd_fontSize_label
-                        color: tab.current ? (VLCStyle.palette.isDark ? VLCStyle.palette.rdAccentMain
-                                                                      : VLCStyle.palette.rdBgA1)
-                                           : VLCStyle.palette.rdFgA2
-                    }
-
-                    DropArea {
-                        anchors.fill: parent
-                        onEntered: (drag) => {
-                            if (!tabs.editor || !tabs.editor.paletteDragActive) {
-                                drag.accepted = false
-                                return
-                            }
-                            tabs.selected(tab.modelData.identifier)
-                        }
-                    }
-                }
             }
         }
     }
