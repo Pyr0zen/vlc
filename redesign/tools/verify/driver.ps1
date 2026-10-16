@@ -34,6 +34,7 @@ public static class RdVerifyWin2 {
   [DllImport("user32.dll")] public static extern bool MoveWindow(IntPtr h, int x, int y, int w, int ht, bool repaint);
   [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr h, int cmd);
   [DllImport("user32.dll")] public static extern bool IsZoomed(IntPtr h);
+  [DllImport("user32.dll")] public static extern bool IsIconic(IntPtr h);
   [DllImport("user32.dll")] public static extern bool SetCursorPos(int x, int y);
   [DllImport("user32.dll")] public static extern bool GetCursorPos(out POINT p);
   [DllImport("user32.dll")] public static extern IntPtr WindowFromPoint(POINT p);
@@ -458,6 +459,16 @@ function Start-Player([string]$exe, [string[]]$playerArgs, [switch]$Minimized, [
         $psi.Arguments = $playerArgs -join ' '; $psi.WorkingDirectory = (Split-Path $exe)
         $psi.UseShellExecute = $true; $psi.WindowStyle = 'Minimized'
         $p = [System.Diagnostics.Process]::Start($psi)
+        $null = $p.Handle; [void]$script:StartedProcs.Add($p); Update-Started
+        # restore the minimized window without activating it (SW_SHOWNOACTIVATE)
+        $end = (Get-Date).AddSeconds(30)
+        while ((Get-Date) -lt $end) {
+            $w = @(Get-PlayerWindows | Where-Object { $_.Title -like '*Cone*' -or $_.Title -like '*VLC media player*' }) | Select-Object -First 1
+            if ($w) { if ([RdVerifyWin2]::IsIconic($w.Handle)) { [RdVerifyWin2]::ShowWindow($w.Handle, 4) | Out-Null }; break }
+            Start-Sleep -Milliseconds 250
+        }
+        $m = Get-MainWindow 30
+        return $m
     } else {
         $p = Start-Process -FilePath $exe -ArgumentList $playerArgs -WorkingDirectory (Split-Path $exe) -PassThru
     }

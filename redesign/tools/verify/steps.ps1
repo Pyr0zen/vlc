@@ -29,7 +29,7 @@ function Get-StepProp($step, [string]$name, $default) {
 function Format-Step($step) { ($step | ConvertTo-Json -Compress -Depth 6) }
 
 function Find-StepElement($step) {
-    $el = Find-UiaElement ([string]$step.uia) ([string](Get-StepProp $step 'role' '')) ([int](Get-StepProp $step 'timeout' 3000)) ([string](Get-StepProp $step 'match' 'exact'))
+    $el = Find-UiaElement ([string]$step.uia) ([string](Get-StepProp $step 'role' '')) ([int](Get-StepProp $step 'timeout' $(if ($script:NoInput) { 8000 } else { 3000 }))) ([string](Get-StepProp $step 'match' 'exact'))
     return $el
 }
 
@@ -39,7 +39,9 @@ function Invoke-Step($step, $ctx) {
     if ($script:NoInput) {
         # UIA lanes: pointer moves only serve the look of a manual shot, Escape only closes what is
         # open; both are left out (noted), every other input step fails (manual lane only)
-        if ($names -contains 'wiggle' -or $names -contains 'hover' -or ($names -contains 'keys' -and [string]$step.keys -eq '{ESC}') -or $names -contains 'wait' -and $false) {
+        $skip = ($names -contains 'wiggle') -or ($names -contains 'hover') -or (($names -contains 'keys') -and ([string]$step.keys -eq '{ESC}'))
+        if ($skip) {
+            if ($names -contains 'keys') { $ctx | Add-Member -NotePropertyName EscSkipped -NotePropertyValue $true -Force }
             [void]$ctx.Notes.Add("lane: skipped $(Format-Step $step)"); return
         }
         if ($names -contains 'volume') { [void]$ctx.Notes.Add("lane: volume left as in the profile"); return }
@@ -130,6 +132,10 @@ function Save-ScenarioShot($step, $ctx) {
 function Test-Expectation($step, $ctx) {
     $e = $step.expect
     $desc = [string](Get-StepProp $step 'check' (Format-Step $e))
+    # a UIA lane cannot press Escape: checks that something closed after it are not made there
+    if ($script:NoInput -and $ctx.PSObject.Properties['EscSkipped'] -and (($e.PSObject.Properties['present'] -and -not $e.present) -or ($e.PSObject.Properties['visible'] -and -not $e.visible))) {
+        [void]$ctx.Notes.Add("lane: check '$desc' not made (needs Escape)"); return
+    }
     $el = Find-UiaElement ([string]$e.uia) ([string](Get-StepProp $e 'role' '')) ([int](Get-StepProp $e 'timeout' 1500)) ([string](Get-StepProp $e 'match' 'exact'))
     $ok = $true; $why = ''
     $visible = $false
