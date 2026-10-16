@@ -42,7 +42,7 @@ struct vlc_preparser_req;
  * (VIDEO_INDEX row 139, line 853; redesign/SIDEBAR_MUSTHAVES_NOTES.md).
  *
  * capture() takes one still frame of the playing file at the current playback time, with
- * VLC's thumbnailer (its own input, software decode, two decoder threads, precise seek), so the
+ * VLC's thumbnailer (its own input, software decode, two decoder threads, fast seek: the keyframe at or before that time), so the
  * playback is never touched. preview(values) gives the URL of that frame with the filter
  * values applied (RdFilterMath, VLC's filter math in software) once it is ready, an empty URL
  * before: the filters run on this object's single worker thread at the lowest priority, the

@@ -384,8 +384,10 @@ void RdFilterPreview::capture()
     struct vlc_thumbnailer_arg arg{};
     arg.seek.type = vlc_thumbnailer_arg::seek::VLC_THUMBNAILER_SEEK_TIME;
     arg.seek.time = std::min<vlc_tick_t>(time, std::max<vlc_tick_t>(0, m_length - VLC_TICK_FROM_MS(500)));
-    // the exact frame on screen, not the keyframe before it: one capture per list opening
-    arg.seek.speed = vlc_thumbnailer_arg::seek::VLC_THUMBNAILER_SEEK_PRECISE;
+    // the keyframe at or before the time, like the seek preview: a precise seek decodes every
+    // frame from that keyframe on in software, seconds of CPU next to the playback on a 4K or
+    // long-GOP file; a small preview does not need the exact frame
+    arg.seek.speed = vlc_thumbnailer_arg::seek::VLC_THUMBNAILER_SEEK_FAST;
     arg.hw_dec = false;
 
     static const struct vlc_thumbnailer_cbs cbs = { &RdFilterPreview::onThumbnailEnded };
