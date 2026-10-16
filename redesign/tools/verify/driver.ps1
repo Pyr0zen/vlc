@@ -53,6 +53,8 @@ public static class RdVerifyWin2 {
   [DllImport("user32.dll")] public static extern bool PrintWindow(IntPtr h, IntPtr hdc, uint flags);
   [DllImport("user32.dll")] public static extern bool PostMessage(IntPtr h, uint msg, IntPtr w, IntPtr l);
   [DllImport("user32.dll")] public static extern bool IsWindowVisible(IntPtr h);
+  [DllImport("user32.dll", EntryPoint = "GetWindowLongPtrW")] public static extern IntPtr GetWindowLongPtr(IntPtr h, int i);
+  [DllImport("user32.dll", EntryPoint = "SetWindowLongPtrW")] public static extern IntPtr SetWindowLongPtr(IntPtr h, int i, IntPtr v);
   [DllImport("user32.dll", CharSet = CharSet.Unicode)] public static extern int GetWindowText(IntPtr h, StringBuilder s, int n);
   [DllImport("user32.dll", CharSet = CharSet.Unicode)] public static extern int GetClassName(IntPtr h, StringBuilder s, int n);
   public delegate bool EnumProc(IntPtr h, IntPtr p);
@@ -70,6 +72,10 @@ $script:StartedProcs = New-Object System.Collections.ArrayList   # process objec
 $script:StartedPids = New-Object System.Collections.Generic.List[int]   # ids of the live ones
 $script:StuckPids = @()
 $script:GuardRetrySec = 60
+# UIA lanes (verify.ps1 -Worker): no keyboard or mouse input at all; controls are driven through
+# UI Automation patterns, the window sits off screen, captures are PrintWindow only
+$script:NoInput = $false
+$script:Lane = 0
 $script:LastInjectTick = 0
 $script:UserIdleMs = 1500
 $script:Log = { param($m) Write-Host $m }
@@ -213,6 +219,7 @@ function Invoke-FocusPlayer([IntPtr]$h) {
 # idle) until a window of a started player is in front; throws without sending anything after
 # GuardRetrySec
 function Assert-Guard([switch]$NoFocus) {
+    if ($script:NoInput) { throw "NOINPUT: this step needs keyboard or mouse input; it belongs in the manual lane" }
     $end = (Get-Date).AddSeconds($script:GuardRetrySec); $warned = $false
     while ($true) {
         if (Test-PlayerForeground) { return }
@@ -335,6 +342,15 @@ function Find-UiaElement([string]$name, [string]$role, [int]$timeoutMs = 3000, [
 # clicks the element's centre with the mouse (keeps hover / press behaviour real); falls back to
 # the Invoke pattern when the element has no on-screen rectangle
 function Invoke-UiaElement($el, [string]$button = 'left') {
+    if ($script:NoInput) {
+        if ($button -ne 'left') { throw "NOINPUT: a right click needs the mouse" }
+        $p = $null
+        if ($el.TryGetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern, [ref]$p)) { $p.Invoke(); return 'invoke' }
+        if ($el.TryGetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern, [ref]$p)) { $p.Select(); return 'select' }
+        if ($el.TryGetCurrentPattern([System.Windows.Automation.TogglePattern]::Pattern, [ref]$p)) { $p.Toggle(); return 'toggle' }
+        if ($el.TryGetCurrentPattern([System.Windows.Automation.ExpandCollapsePattern]::Pattern, [ref]$p)) { $p.Expand(); return 'expand' }
+        throw "element '$($el.Current.Name)' has no Invoke / SelectionItem / Toggle / ExpandCollapse pattern"
+    }
     $r = $el.Current.BoundingRectangle
     if (-not $r.IsEmpty -and $r.Width -gt 0 -and -not $el.Current.IsOffscreen) {
         Send-Click ($r.X + $r.Width / 2) ($r.Y + $r.Height / 2) $button 1 -Screen
@@ -347,7 +363,7 @@ function Invoke-UiaElement($el, [string]$button = 'left') {
 }
 # sets a slider (RangeValue pattern) or a text field (Value pattern) directly on the element
 function Set-UiaValue($el, $value) {
-    Assert-Guard
+    if (-not $script:NoInput) { Assert-Guard }
     $p = $null
     if ($el.TryGetCurrentPattern([System.Windows.Automation.RangeValuePattern]::Pattern, [ref]$p)) {
         $min = $p.Current.Minimum; $max = $p.Current.Maximum
@@ -412,6 +428,7 @@ function Save-WindowShot([IntPtr]$h, [string]$out, [switch]$Client) {
     $method = 'printwindow'
     if (-not $ok -or (Test-BlankBitmap $crop)) {
         $crop.Dispose()
+        if ($script:NoInput) { throw "capture failed: PrintWindow returned an empty image (UIA lane: no screen copy)" }
         Assert-Guard -NoFocus
         for ($y = $r.Top; $y -lt $r.Bottom; $y += 24) { for ($x = $r.Left; $x -lt $r.Right; $x += 24) {
             if (-not (Test-PlayerAt $x $y)) { throw "capture refused: PrintWindow failed and $x,$y of the player area shows another window" } } }
@@ -433,9 +450,17 @@ function Test-BlankBitmap($bmp) {
 # --- launch and quit -----------------------------------------------------------------------
 # Start-Player creates <build>\portable when it is missing (portable mode: the player keeps its
 # settings there instead of the user's real profile)
-function Start-Player([string]$exe, [string[]]$playerArgs) {
+function Start-Player([string]$exe, [string[]]$playerArgs, [switch]$Minimized) {
     New-Item -ItemType Directory -Force (Join-Path (Split-Path $exe) 'portable') | Out-Null
-    $p = Start-Process -FilePath $exe -ArgumentList $playerArgs -WorkingDirectory (Split-Path $exe) -PassThru
+    if ($Minimized) {
+        # UIA lanes: started minimized, so the new player never takes the foreground from the user
+        $psi = New-Object System.Diagnostics.ProcessStartInfo $exe
+        $psi.Arguments = $playerArgs -join ' '; $psi.WorkingDirectory = (Split-Path $exe)
+        $psi.UseShellExecute = $true; $psi.WindowStyle = 'Minimized'
+        $p = [System.Diagnostics.Process]::Start($psi)
+    } else {
+        $p = Start-Process -FilePath $exe -ArgumentList $playerArgs -WorkingDirectory (Split-Path $exe) -PassThru
+    }
     $null = $p.Handle   # keeps the process handle open: its id cannot be reused while we track it
     [void]$script:StartedProcs.Add($p)
     Update-Started
@@ -462,8 +487,31 @@ function Start-Player([string]$exe, [string[]]$playerArgs) {
 # top-left corner at the top-left of the monitor's work area (the 1 px window frame goes just off
 # it); refuses when the client would not fit the work area (taskbar or other windows could then
 # sit over the targets)
-function Set-PlayerSize([double]$w, [double]$h) {
+function Set-PlayerSize([double]$w, [double]$h, [int]$Offscreen = 0) {
     $m = Get-MainWindow
+    if ($Offscreen -gt 0) {
+        # a UIA lane: off every monitor, one place per lane, so lanes never cover each other or
+        # the manual lane's player
+        $vs = [System.Windows.Forms.SystemInformation]::VirtualScreen
+        $s = Get-Scale $m.Handle
+        $pw = [int][math]::Round($w * $s); $ph = [int][math]::Round($h * $s)
+        $wr = New-Object RdVerifyWin2+RECT; [RdVerifyWin2]::GetWindowRect($m.Handle, [ref]$wr) | Out-Null
+        $c = Get-ClientRect $m.Handle
+        $bl = $c.Left - $wr.Left; $bt = $c.Top - $wr.Top
+        $br = $wr.Right - ($c.Left + $c.Width); $bb = $wr.Bottom - ($c.Top + $c.Height)
+        $x = $vs.Right + 200 + ($Offscreen - 1) * ($pw + 200)
+        # no taskbar button / Alt+Tab entry: nobody can close a lane player by accident
+        $ex = [int64][RdVerifyWin2]::GetWindowLongPtr($m.Handle, -20)
+        $ex = ($ex -bor 0x80) -band (-bnot 0x40000)   # WS_EX_TOOLWINDOW on, WS_EX_APPWINDOW off
+        [RdVerifyWin2]::ShowWindow($m.Handle, 0) | Out-Null
+        [RdVerifyWin2]::SetWindowLongPtr($m.Handle, -20, [IntPtr]$ex) | Out-Null
+        [RdVerifyWin2]::ShowWindow($m.Handle, 4) | Out-Null   # SW_SHOWNOACTIVATE
+        [RdVerifyWin2]::MoveWindow($m.Handle, $x - $bl, $vs.Top - $bt, $pw + $bl + $br, $ph + $bt + $bb, $true) | Out-Null
+        Start-Sleep -Milliseconds 400
+        $c = Get-ClientRect $m.Handle
+        if ($c.Width -ne $pw -or $c.Height -ne $ph) { throw "the lane window could not be sized to $w x $h (client $($c.Width) x $($c.Height))" }
+        return (Get-MainWindow)
+    }
     if ([RdVerifyWin2]::IsZoomed($m.Handle)) { [RdVerifyWin2]::ShowWindow($m.Handle, 9) | Out-Null; Start-Sleep -Milliseconds 300 }
     $mi = New-Object RdVerifyWin2+MONITORINFO; $mi.cbSize = 40
     [RdVerifyWin2]::GetMonitorInfo([RdVerifyWin2]::MonitorFromWindow($m.Handle, 2), [ref]$mi) | Out-Null
@@ -486,6 +534,7 @@ function Set-PlayerSize([double]$w, [double]$h) {
 # graceful quit: Escape x2 + Ctrl+Q while the player is in front, then WM_CLOSE to its windows;
 # a started process still alive after that is ended (only processes this run started)
 function Stop-Players([int]$waitSec = 10, [switch]$NoKeys) {
+    if ($script:NoInput) { $NoKeys = $true }
     $alive = { Update-Started; @($script:StartedPids) }
     if (@(& $alive).Count -eq 0) { $script:StartedProcs.Clear(); return 'none running' }
     if (-not $NoKeys) {
@@ -499,9 +548,11 @@ function Stop-Players([int]$waitSec = 10, [switch]$NoKeys) {
             }
         } catch {}
     }
-    $end = (Get-Date).AddSeconds($waitSec)
-    while (@(& $alive).Count -gt 0 -and (Get-Date) -lt $end) { Start-Sleep -Milliseconds 300 }
     $how = 'ctrl+q'
+    if (-not $NoKeys) {
+        $end = (Get-Date).AddSeconds($waitSec)
+        while (@(& $alive).Count -gt 0 -and (Get-Date) -lt $end) { Start-Sleep -Milliseconds 300 }
+    }
     if (@(& $alive).Count -gt 0) {
         foreach ($w in (Get-PlayerWindows)) { [RdVerifyWin2]::PostMessage($w.Handle, 0x0010, [IntPtr]::Zero, [IntPtr]::Zero) | Out-Null }
         $end = (Get-Date).AddSeconds($waitSec)

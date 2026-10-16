@@ -2,15 +2,24 @@
 # player window, then compare.py diffs the shots against the Figma frames and writes the report.
 #
 #   powershell -NoProfile -ExecutionPolicy Bypass -File verify.ps1 [options]
-#     -Build public|vlc        which fixed test folder to run (default public: builds\current-public\Cone.exe)
+#     -Build public|vlc        which build of the config to run (builds.public / builds.vlc)
 #     -Only P2-03,IB-08,...    only scenarios covering these VIDEO_INDEX row IDs (or scenario ids)
 #     -Area player             only scenario files whose "area" matches
+#     -Lanes 3                 run the sessions marked "lane": "uia" in up to 3 parallel UIA lanes
+#                              (own build copy and profile each, no keyboard / mouse input, window
+#                              off screen); the other sessions run meanwhile in the one manual lane
+#     -ExitRetest 10 -RetestSession sidebar
+#                              repeat one session N times (manual lane) and count stuck exits,
+#                              quitting half with Ctrl+Q and half with WM_CLOSE
 #     -DryRun                  print the plan and validate the Figma nodes; starts nothing, sends nothing
 #     -NoCompare               run and screenshot only (compare later: python compare.py <run dir>)
 #     -Label <text>            appended to the run folder name
-# See README.md for the scenario format and the safety rules.
+#   (internal) -Worker -Lane k -RunDir <dir> -Sessions <ids>: one UIA lane, started by the runner
+# See README.md for the scenario format, the lanes and the safety rules.
 param([string]$Build = 'public', [string]$Only = '', [string]$Area = '', [switch]$DryRun, [switch]$NoCompare,
-      [string]$Label = '', [string[]]$Files = @(), [int]$WaitForOthersMin = 30)
+      [string]$Label = '', [string[]]$Files = @(), [int]$WaitForOthersMin = 30, [int]$Lanes = 0,
+      [switch]$Worker, [int]$Lane = 0, [string]$RunDir = '', [string]$Sessions = '',
+      [int]$ExitRetest = 0, [string]$RetestSession = '')
 $ErrorActionPreference = 'Stop'
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 . (Join-Path $here 'driver.ps1')
@@ -22,23 +31,30 @@ $t0 = Get-Date
 # --- scenario table ------------------------------------------------------------------------
 if (-not $Files -or $Files.Count -eq 0) { $Files = @(Get-ChildItem (Join-Path $here 'scenarios') -Filter *.json | Sort-Object Name | ForEach-Object FullName) }
 $onlySet = @($Only.Split(',') | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+$sessionSet = @($Sessions.Split(',') + @($RetestSession) | ForEach-Object { $_.Trim() } | Where-Object { $_ })
 $plan = New-Object System.Collections.ArrayList
 foreach ($f in $Files) {
     $data = Get-Content -Raw -Encoding UTF8 $f | ConvertFrom-Json
     if ($Area -and $data.area -ne $Area) { continue }
     foreach ($se in $data.sessions) {
+        if ($sessionSet.Count -and -not ($sessionSet -contains $se.id)) { continue }
         $sel = @($se.scenarios | Where-Object {
             $sc = $_
             (-not $onlySet) -or ($onlySet -contains $sc.id) -or (@($sc.rows | Where-Object { $onlySet -contains $_ }).Count -gt 0) -or
             (@($sc.compare | ForEach-Object { $_.rows } | Where-Object { $_ -and ($onlySet -contains $_) }).Count -gt 0) })
-        if ($sel.Count -gt 0) { [void]$plan.Add([pscustomobject]@{ File = (Split-Path $f -Leaf); Area = $data.area; Session = $se; Scenarios = $sel }) }
+        if ($sel.Count -gt 0) {
+            $isUia = ($se.PSObject.Properties['lane'] -and $se.lane -eq 'uia')
+            [void]$plan.Add([pscustomobject]@{ File = (Split-Path $f -Leaf); Area = $data.area; Session = $se; Scenarios = $sel; Uia = $isUia })
+        }
     }
 }
 $nScen = ($plan | ForEach-Object { $_.Scenarios.Count } | Measure-Object -Sum).Sum
-"plan: $($plan.Count) session(s), $nScen scenario(s), build '$Build'"
+if (-not $Worker) { "plan: $($plan.Count) session(s), $nScen scenario(s), build '$Build'" + $(if ($Lanes) { ", $(@($plan | Where-Object Uia).Count) session(s) for $Lanes UIA lane(s)" } else { '' }) }
 
 $exePath = [string]$cfg.builds.$Build
 $exe = if ([IO.Path]::IsPathRooted($exePath)) { $exePath } else { Join-Path $cfg.testMediaDir $exePath }
+# a UIA lane runs its own copy of the build (path handed over by the runner)
+if ($Worker -and $env:VERIFY_LANE_EXE) { $exe = $env:VERIFY_LANE_EXE }
 $script:PublicBuild = ($Build -eq 'public')
 # demo state: values the Figma screens show (subtitle delay -4 s, toggles, colours), set per
 # session in a run-specific copy of the test profile (vlcrc) or through the UI (per-media values)
@@ -54,14 +70,13 @@ if ($Build -eq 'vlc') { $baseArgs += '--no-qt-updates-notif' }
 if ($DryRun) {
     foreach ($p in $plan) {
         $se = $p.Session
-        "session $($se.id) [$($p.File)]: media $(@($se.media) -join ', '); args $(@($se.args) -join ' '); size $(@($se.size) -join 'x')"
+        "session $($se.id) [$($p.File)]$(if ($p.Uia) { ' (UIA lane)' }): media $(@($se.media) -join ', '); args $(@($se.args) -join ' ')"
         $ctx = New-StepContext '' 'dry' -DryRun
         foreach ($s in @($se.setup)) { if ($s) { Invoke-Step $s $ctx } }
         foreach ($sc in $p.Scenarios) {
             "  scenario $($sc.id) rows $(@($sc.rows) -join ','): $($sc.title)"
             foreach ($s in @($se.reset) + @($sc.steps)) { if ($s) { Invoke-Step $s $ctx } }
             foreach ($c in @($sc.compare)) { if ($c) { "    compare $($c.id): shot $($c.shot) node $($c.node) ref $($c.ref) anchor $($c.anchor)" } }
-            foreach ($h in @($sc.human)) { if ($h) { "    human: $h" } }
         }
     }
     if (-not (Test-Path -LiteralPath $exe)) { "WARNING: player not found: $exe" }
@@ -72,154 +87,283 @@ if ($DryRun) {
     exit $valid
 }
 
-# --- run -----------------------------------------------------------------------------------
+# --- run folder, log ---------------------------------------------------------------------------
 if (-not (Test-Path -LiteralPath $exe)) { throw "player not found: $exe" }
-$runName = (Get-Date -Format 'yyyyMMdd-HHmmss') + $(if ($Label) { "-$Label" } else { '' })
-$runDir = Join-Path $cfg.outRoot $runName
-New-Item -ItemType Directory -Force $runDir | Out-Null
-$logFile = Join-Path $runDir 'run.log'
+if ($Worker) {
+    $runName = Split-Path $RunDir -Leaf
+    $logFile = Join-Path $RunDir "lane$Lane.log"
+    $script:NoInput = $true; $script:Lane = $Lane
+} else {
+    $runName = (Get-Date -Format 'yyyyMMdd-HHmmss') + $(if ($Label) { "-$Label" } else { '' })
+    $RunDir = Join-Path $cfg.outRoot $runName
+    New-Item -ItemType Directory -Force $RunDir | Out-Null
+    $logFile = Join-Path $RunDir 'run.log'
+}
 $script:Log = { param($m) Write-Host $m; Add-Content -LiteralPath $logFile -Value $m -Encoding utf8 }
 $buildId = ''
 $br = Join-Path (Split-Path $exe) 'build-run.txt'; if (Test-Path $br) { $buildId = (Get-Content $br -Raw).Trim() }
-if ($exe -match '\\builds\\(\d{6,})\\') { $buildId = "run $($Matches[1])" + $(if ($buildId) { " ($buildId)" } else { '' }) }
-Write-VLog "run $runName, build '$Build' ($buildId), $nScen scenario(s)"
+$buildNum = if ($exe -match '\\builds\\(\d{6,})\\') { $Matches[1] } else { '' }
+if ($buildNum) { $buildId = "run $buildNum" + $(if ($buildId) { " ($buildId)" } else { '' }) }
+if (-not $Worker) { Write-VLog "run $runName, build '$Build' ($buildId), $nScen scenario(s)" }
 
-# another test player (the main session's manual test) must not be running: wait for it before
-# every session
+# another test player (the main session's manual test) must not be running: only the manual lane
+# waits for it (UIA lanes take no input and sit off screen)
 $ignore = @($cfg.ignorePids | ForEach-Object { [int]$_ })
+$laneDirs = @()
 function Wait-ForOtherPlayers {
     $waitEnd = (Get-Date).AddMinutes($WaitForOthersMin)
     while ($true) {
-        $foreign = Get-ForeignTestPlayers (Join-Path $cfg.testMediaDir 'builds') $ignore
+        $foreign = @(Get-ForeignTestPlayers (Join-Path $cfg.testMediaDir 'builds') $ignore | Where-Object {
+            $pp = $null; try { $pp = $_.Path } catch {}
+            -not ($laneDirs | Where-Object { $pp -and $pp.StartsWith($_ + [char]92, [StringComparison]::OrdinalIgnoreCase) }) })
         if (-not $foreign) { return }
         if ((Get-Date) -gt $waitEnd) { throw "another test player is still running (pid $($foreign.Id -join ', ')); not started" }
         Write-VLog "  waiting: another test player is running (pid $($foreign.Id -join ', '))"
         Start-Sleep -Seconds 15
     }
 }
-Wait-ForOtherPlayers
 
+# --- profiles ----------------------------------------------------------------------------------
 # run-specific profile: a snapshot of the profile source (never edited in place), mirrored into the
-# build's portable folder before every session and then given the session's demo values
+# player's portable folder before every session and then given the overrides and demo values
 $profileSource = if ($cfg.PSObject.Properties['profileSource'] -and $cfg.profileSource) {
     if ([IO.Path]::IsPathRooted([string]$cfg.profileSource)) { [string]$cfg.profileSource } else { Join-Path $cfg.testMediaDir ([string]$cfg.profileSource) } } else { $null }
-$profileTarget = Join-Path (Split-Path $exe) 'portable'
-$profileBase = $null
-if ($profileSource) {
-    if ($profileTarget -like (Join-Path $cfg.testMediaDir 'builds\current*')) { throw "refusing to overwrite the profile of a fixed test folder: $profileTarget" }
-    if ([string]::Equals($profileTarget.TrimEnd([char]92), $profileSource.TrimEnd([char]92), [StringComparison]::OrdinalIgnoreCase)) { throw "profileSource and the build's portable folder are the same" }
-    $profileBase = Join-Path $runDir 'profile-base'
+$profileBase = if ($profileSource) { Join-Path $RunDir 'profile-base' } else { $null }
+function Assert-ProfileTarget([string]$target) {
+    if ($target -like (Join-Path $cfg.testMediaDir 'builds\current*')) { throw "refusing to overwrite the profile of a fixed test folder: $target" }
+    if ($profileSource -and [string]::Equals($target.TrimEnd([char]92), $profileSource.TrimEnd([char]92), [StringComparison]::OrdinalIgnoreCase)) { throw "profileSource and the player's portable folder are the same" }
+}
+if ($profileSource -and -not $Worker) {
     robocopy $profileSource $profileBase /E /R:1 /W:1 /NFL /NDL /NJH /NJS /NP | Out-Null
     if ($LASTEXITCODE -ge 8) { throw "copying the profile source failed ($LASTEXITCODE)" }
     Write-VLog "profile: snapshot of the profile source in profile-base; each session starts from it"
 }
-function Initialize-Profile($se) {
+function Set-VlcrcLine([string]$text, [string]$key, [string]$value) {
+    $k = [regex]::Escape($key); $line = "$key=$value"
+    if ($text -match "(?m)^#?$k=.*$") { return [regex]::Replace($text, "(?m)^#?$k=.*$", $line.Replace('$', '$$'), 1) }
+    return $text + "`n$line`n"
+}
+function Initialize-Profile($se, [string]$target) {
     $applied = @()
     if (-not $profileBase) { return $applied }
-    robocopy $profileBase $profileTarget /MIR /R:1 /W:1 /NFL /NDL /NJH /NJS /NP | Out-Null
+    Assert-ProfileTarget $target
+    robocopy $profileBase $target /MIR /R:1 /W:1 /NFL /NDL /NJH /NJS /NP | Out-Null
     if ($LASTEXITCODE -ge 8) { throw "preparing the run profile failed ($LASTEXITCODE)" }
-    $vlcrc = Join-Path $profileTarget 'vlcrc'
+    $vlcrc = Join-Path $target 'vlcrc'
     if (-not (Test-Path $vlcrc)) { return $applied }
     $text = [IO.File]::ReadAllText($vlcrc)
-    # harness overrides (config "profileOverrides"), e.g. qt-cast-discovery=0: no cast discovery,
-    # so no listening socket and no Windows Firewall prompt over the player for a new build path
-    if ($cfg.PSObject.Properties['profileOverrides'] -and $cfg.profileOverrides) {
-        foreach ($p in $cfg.profileOverrides.PSObject.Properties) {
-            $key = [regex]::Escape($p.Name); $line = "$($p.Name)=$($p.Value)"
-            if ($text -match "(?m)^#?$key=.*$") { $text = [regex]::Replace($text, "(?m)^#?$key=.*$", $line.Replace('$', '$$'), 1) } else { $text += "`n$line`n" }
-            $applied += "harness: $line"
-        }
-    }
-    if (-not $script:Demo -or -not $se.PSObject.Properties['demo']) { [IO.File]::WriteAllText($vlcrc, $text, (New-Object System.Text.UTF8Encoding $false)); return $applied }
-    foreach ($sid in @($se.demo)) {
-        $scr = $script:Demo.screens.$sid
-        if (-not $scr) { continue }
-        foreach ($v in @($scr.values)) {
-            if ($v.how -ne 'vlcrc' -or -not $v.option) { continue }
-            $pairs = @(, @([string]$v.option, [string]$v.value))
-            if ($v.PSObject.Properties['extra']) { foreach ($x in @($v.extra)) { $pairs += ,@([string]$x.option, [string]$x.value) } }
-            $lines = @()
-            foreach ($pv in $pairs) {
-                $key = [regex]::Escape($pv[0]); $line = "$($pv[0])=$($pv[1])"; $lines += $line
-                if ($text -match "(?m)^#?$key=.*$") { $text = [regex]::Replace($text, "(?m)^#?$key=.*$", $line.Replace('$', '$$'), 1) }
-                else { $text += "`n$line`n" }
+    # harness overrides (config "profileOverrides"): qt-cast-discovery=0, so no listening socket and
+    # no Windows Firewall prompt for a new build path; UIA lanes add "laneOverrides"
+    # (qt-pin-controls=1: the bars stay up without mouse movement, so their buttons can be invoked)
+    $ov = @()
+    if ($cfg.PSObject.Properties['profileOverrides'] -and $cfg.profileOverrides) { $ov += @($cfg.profileOverrides.PSObject.Properties) }
+    if ($script:NoInput -and $cfg.PSObject.Properties['laneOverrides'] -and $cfg.laneOverrides) { $ov += @($cfg.laneOverrides.PSObject.Properties) }
+    foreach ($p in $ov) { $text = Set-VlcrcLine $text $p.Name ([string]$p.Value); $applied += "harness: $($p.Name)=$($p.Value)" }
+    if ($script:Demo -and $se.PSObject.Properties['demo']) {
+        foreach ($sid in @($se.demo)) {
+            $scr = $script:Demo.screens.$sid
+            if (-not $scr) { continue }
+            foreach ($v in @($scr.values)) {
+                if ($v.how -ne 'vlcrc' -or -not $v.option) { continue }
+                $pairs = @(, @([string]$v.option, [string]$v.value))
+                if ($v.PSObject.Properties['extra']) { foreach ($x in @($v.extra)) { $pairs += ,@([string]$x.option, [string]$x.value) } }
+                foreach ($pv in $pairs) { $text = Set-VlcrcLine $text $pv[0] $pv[1] }
+                $applied += "${sid}: $($v.label) = $($v.figma) (vlcrc $(($pairs | ForEach-Object { "$($_[0])=$($_[1])" }) -join ', '))"
             }
-            $applied += "${sid}: $($v.label) = $($v.figma) (vlcrc $($lines -join ', '))"
         }
     }
     [IO.File]::WriteAllText($vlcrc, $text, (New-Object System.Text.UTF8Encoding $false))
     return $applied
 }
-$demoLog = [ordered]@{}
 
-$results = New-Object System.Collections.ArrayList
-$cleanup = @()
-$aborted = $null
-try {
-    foreach ($p in $plan) {
-        if ($aborted) { break }
-        $se = $p.Session
-        $sw = [Diagnostics.Stopwatch]::StartNew()
-        Write-VLog "session $($se.id)"
-        # "{media}" in an argument stands for the verify media folder (e.g. --sub-file={media}\Videos\x.srt)
-        $a = @($baseArgs) + @($se.args | Where-Object { $_ } | ForEach-Object { $x = ([string]$_).Replace('{media}', $mediaRoot); if ($x -match '^(--[^=]+=)(.* .*)$') { $Matches[1] + '"' + $Matches[2] + '"' } else { $x } })
-        foreach ($m in @($se.media)) { if ($m) { $a += ('"{0}"' -f (Join-Path $mediaRoot $m)) } }
-        $sessionError = $null
-        $setupChecks = @()
+# --- one session ---------------------------------------------------------------------------
+# returns @{ results; cleanup; demo; seconds; lost; aborted }. lost = the player disappeared or
+# lost its window during the session (e.g. closed by hand): the caller discards it and retries
+function Invoke-Session($p, [string]$sessionExe, [string]$profileTarget, [string]$quit = 'keys') {
+    $se = $p.Session
+    $out = @{ results = New-Object System.Collections.ArrayList; cleanup = ''; demo = @(); seconds = 0; lost = $null; aborted = $null; stuck = $false }
+    $sw = [Diagnostics.Stopwatch]::StartNew()
+    Write-VLog "session $($se.id)$(if ($script:NoInput) { " (lane $script:Lane)" })"
+    $a = @($baseArgs) + @($se.args | Where-Object { $_ } | ForEach-Object { $x = ([string]$_).Replace('{media}', $mediaRoot); if ($x -match '^(--[^=]+=)(.* .*)$') { $Matches[1] + '"' + $Matches[2] + '"' } else { $x } })
+    foreach ($m in @($se.media)) { if ($m) { $a += ('"{0}"' -f (Join-Path $mediaRoot $m)) } }
+    $sessionError = $null; $setupChecks = @()
+    $proc = $null
+    try {
+        if (-not $script:NoInput) { Wait-ForOtherPlayers }
+        $out.demo = @(Initialize-Profile $se $profileTarget)
+        foreach ($x in $out.demo) { Write-VLog "  demo: $x" }
+        Start-Player $sessionExe $a -Minimized:$script:NoInput | Out-Null
+        $proc = $script:StartedProcs[$script:StartedProcs.Count - 1]
+        $size = if ($se.size) { $se.size } else { @(1920, 1080) }
+        Set-PlayerSize ([double]$size[0]) ([double]$size[1]) -Offscreen $script:Lane | Out-Null
+        Start-Sleep -Milliseconds 800
+        if (-not $script:NoInput) { $m0 = Get-MainWindow; Invoke-FocusPlayer $m0.Handle | Out-Null }
+        # Qt builds its accessibility tree on the first UI Automation request: wait until the
+        # player's interface is visible to UIA before the first step looks for one
+        if (-not (Find-UiaElement 'Main interface' '' 15000)) { Write-VLog '  note: UI Automation did not show the player interface within 15 s' }
+        $ctx = New-StepContext $RunDir "$($se.id)-setup"
+        try { foreach ($s in @($se.setup)) { if ($s) { Invoke-Step $s $ctx } } }
+        finally { $setupChecks = @($ctx.Checks | ForEach-Object { $x = [ordered]@{}; foreach ($k in $_.Keys) { $x[$k] = $_[$k] }; $x.check = "setup: " + $x.check; $x }) }
+    } catch {
+        $sessionError = "session setup failed: $($_.Exception.Message)"; Write-VLog "  $sessionError"
+        if ($sessionError -like '*GUARD:*') { $out.aborted = "aborted: $($_.Exception.Message)" }
+    }
+    foreach ($sc in $p.Scenarios) {
+        $r = [ordered]@{ id = $sc.id; title = $sc.title; rows = @($sc.rows); compare = @($sc.compare | Where-Object { $_ }); human = @($sc.human | Where-Object { $_ })
+            status = 'ok'; error = $null; shots = @(); checks = @(); notes = @(); seconds = 0; session = $se.id; lane = $(if ($script:NoInput) { "uia$script:Lane" } else { 'manual' }) }
+        $ssw = [Diagnostics.Stopwatch]::StartNew()
+        if ($sessionError -or $out.aborted -or $out.lost) { $r.status = 'error'; $r.error = @($out.lost, $out.aborted, $sessionError) | Where-Object { $_ } | Select-Object -First 1; [void]$out.results.Add($r); continue }
+        Write-VLog "  scenario $($sc.id): $($sc.title)"
+        $ctx = New-StepContext $RunDir $sc.id
         try {
-            Wait-ForOtherPlayers
-            $applied = @(Initialize-Profile $se)
-            if ($applied.Count) { $demoLog[$se.id] = $applied; foreach ($x in $applied) { Write-VLog "  demo: $x" } }
-            Start-Player $exe $a | Out-Null
-            $size = if ($se.size) { $se.size } else { @(1920, 1080) }
-            Set-PlayerSize ([double]$size[0]) ([double]$size[1]) | Out-Null
-            Start-Sleep -Milliseconds 800
-            $m0 = Get-MainWindow; Invoke-FocusPlayer $m0.Handle | Out-Null
-            # Qt builds its accessibility tree on the first UI Automation request: wait until the
-            # player's interface is visible to UIA before the first step looks for one
-            if (-not (Find-UiaElement 'Main interface' '' 15000)) { Write-VLog '  note: UI Automation did not show the player interface within 15 s' }
-            $ctx = New-StepContext $runDir "$($se.id)-setup"
-            try { foreach ($s in @($se.setup)) { if ($s) { Invoke-Step $s $ctx } } }
-            finally { $setupChecks = @($ctx.Checks | ForEach-Object { $x = [ordered]@{}; foreach ($k in $_.Keys) { $x[$k] = $_[$k] }; $x.check = "setup: " + $x.check; $x }) }
+            foreach ($s in @($se.reset) + @($sc.steps)) { if ($s) { Invoke-Step $s $ctx } }
         } catch {
-            $sessionError = "session setup failed: $($_.Exception.Message)"; Write-VLog "  $sessionError"
-            if ($sessionError -like '*GUARD:*') { $aborted = "aborted: $($_.Exception.Message)" }
+            $r.status = 'error'; $r.error = $_.Exception.Message
+            Write-VLog "    ERROR: $($r.error)"
+            if ($r.error -like 'GUARD:*') { $out.aborted = "aborted: $($r.error)" }
         }
-        foreach ($sc in $p.Scenarios) {
-            $r = [ordered]@{ id = $sc.id; title = $sc.title; rows = @($sc.rows); compare = @($sc.compare | Where-Object { $_ }); human = @($sc.human | Where-Object { $_ })
-                status = 'ok'; error = $null; shots = @(); checks = @(); notes = @(); seconds = 0 }
-            $ssw = [Diagnostics.Stopwatch]::StartNew()
-            if ($sessionError -or $aborted) { $r.status = 'error'; $r.error = $(if ($aborted) { $aborted } else { $sessionError }); [void]$results.Add($r); continue }
-            Write-VLog "  scenario $($sc.id): $($sc.title)"
-            $ctx = New-StepContext $runDir $sc.id
-            try {
-                foreach ($s in @($se.reset) + @($sc.steps)) { if ($s) { Invoke-Step $s $ctx } }
-            } catch {
-                $r.status = 'error'; $r.error = $_.Exception.Message
-                Write-VLog "    ERROR: $($r.error)"
-                if ($r.error -like 'GUARD:*') { $aborted = "aborted: $($r.error)" }
-                try { if (-not (Get-MainWindow 3)) { throw 'gone' } } catch { $sessionError = 'the player window is gone (crash?)'; Write-VLog "    $sessionError" }
-            }
-            # the session's setup checks (e.g. the seek position) belong to every scenario of it
-            $r.shots = @($ctx.Shots); $r.checks = @($setupChecks) + @($ctx.Checks); $r.notes = @($ctx.Notes)
-            $r.seconds = [math]::Round($ssw.Elapsed.TotalSeconds, 1)
-            [void]$results.Add($r)
+        # the player must still be there with its window, or the results come from a dead player
+        $alive = $false
+        try { $alive = (-not $proc.HasExited) -and [bool](Get-MainWindow 2) } catch {}
+        if (-not $alive) { $out.lost = 'aborted (window closed)'; Write-VLog "    the player or its window is gone: session aborted (window closed)" }
+        $r.shots = @($ctx.Shots); $r.checks = @($setupChecks) + @($ctx.Checks); $r.notes = @($ctx.Notes)
+        $r.seconds = [math]::Round($ssw.Elapsed.TotalSeconds, 1)
+        [void]$out.results.Add($r)
+    }
+    if (-not $out.aborted -and -not $out.lost -and -not $script:NoInput -and $quit -eq 'keys') {
+        try { Invoke-FocusPlayer (Get-MainWindow 3).Handle | Out-Null; Send-Keys '{ESC}'; Restore-PlayerVolume } catch { Write-VLog "  volume not restored: $($_.Exception.Message)" }
+    }
+    $q = Stop-Players -NoKeys:([bool]$out.aborted -or [bool]$out.lost -or $quit -eq 'close')
+    $out.cleanup = "$($se.id)$(if ($script:NoInput) { "@lane$script:Lane" }): $q"
+    $out.stuck = ($q -like 'STUCK*')
+    $out.seconds = [math]::Round($sw.Elapsed.TotalSeconds, 1)
+    Write-VLog "  quit: $q ($($out.seconds) s)"
+    if ($q -like 'STILL RUNNING*') { $out.aborted = "aborted: a player did not close ($q)" }
+    return $out
+}
+# a session, retried once when its player went away mid-session
+function Invoke-SessionWithRetry($p, [string]$sessionExe, [string]$profileTarget) {
+    $o = Invoke-Session $p $sessionExe $profileTarget
+    if ($o.lost -and -not $o.aborted) {
+        Write-VLog "  retrying session $($p.Session.id) once (the first try is discarded)"
+        $first = $o.cleanup
+        $o = Invoke-Session $p $sessionExe $profileTarget
+        $o.cleanup = "first try aborted (window closed): $first; retry: $($o.cleanup)"
+    }
+    return $o
+}
+
+# --- UIA lane worker -----------------------------------------------------------------------------
+if ($Worker) {
+    $res = New-Object System.Collections.ArrayList; $clean = @(); $demo = [ordered]@{}; $times = [ordered]@{}
+    $laneExe = $exe; $laneProfile = Join-Path (Split-Path $exe) 'portable'
+    $lw = [Diagnostics.Stopwatch]::StartNew()
+    try {
+        foreach ($p in $plan) {
+            $o = Invoke-SessionWithRetry $p $laneExe $laneProfile
+            foreach ($r in $o.results) { [void]$res.Add($r) }
+            $clean += $o.cleanup; $demo[$p.Session.id] = $o.demo; $times[$p.Session.id] = $o.seconds
+            if ($o.aborted) { break }
         }
-        if (-not $aborted) { try { Invoke-FocusPlayer (Get-MainWindow 3).Handle | Out-Null; Send-Keys '{ESC}'; Restore-PlayerVolume } catch { Write-VLog "  volume not restored: $($_.Exception.Message)" } }
-        $q = Stop-Players -NoKeys:([bool]$aborted)
-        $cleanup += "$($se.id): $q"
-        Write-VLog "  quit: $q ($([math]::Round($sw.Elapsed.TotalSeconds, 1)) s)"
-        if ($q -like 'STILL RUNNING*') { $aborted = "aborted: a player did not close ($q)"; break }
+    } finally {
+        $final = Stop-Players -NoKeys
+        $clean += "lane$Lane final: $final" + $(if ($script:StuckPids.Count) { "; stuck in termination: $($script:StuckPids -join ', ')" } else { '' })
+        $lo = [ordered]@{ lane = $Lane; seconds = [math]::Round($lw.Elapsed.TotalSeconds, 1); sessions = $times; cleanup = $clean; demo = $demo; stuck = @($script:StuckPids); scenarios = @($res) }
+        $lo | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath (Join-Path $RunDir "lane$Lane.json") -Encoding utf8
+    }
+    exit 0
+}
+
+# --- exit retest: one session N times, counting stuck exits --------------------------------------
+if ($ExitRetest -gt 0) {
+    if (-not $plan.Count) { throw "no session '$RetestSession'" }
+    $p = $plan[0]; $tally = @()
+    for ($i = 1; $i -le $ExitRetest; $i++) {
+        $how = if ($i % 2) { 'keys' } else { 'close' }
+        $before = @($script:StuckPids)
+        $o = Invoke-Session $p $exe (Join-Path (Split-Path $exe) 'portable') $how
+        $tally += [ordered]@{ try = $i; quit = $(if ($how -eq 'keys') { 'Ctrl+Q' } else { 'WM_CLOSE' }); stuck = $o.stuck; cleanup = $o.cleanup; lost = $o.lost; aborted = $o.aborted }
+        Write-VLog ("retest {0}/{1}: quit {2}: {3}" -f $i, $ExitRetest, $tally[-1].quit, $(if ($o.stuck) { 'STUCK' } else { 'clean' }))
+        if ($o.aborted) { break }
+    }
+    $sum = [ordered]@{ run = $runName; build = "$Build $buildId"; session = $p.Session.id; tries = $tally.Count
+        stuck_ctrl_q = @($tally | Where-Object { $_.stuck -and $_.quit -eq 'Ctrl+Q' }).Count; stuck_wm_close = @($tally | Where-Object { $_.stuck -and $_.quit -eq 'WM_CLOSE' }).Count
+        stuck_pids = @($script:StuckPids); tries_detail = $tally }
+    $sum | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $RunDir 'exit-retest.json') -Encoding utf8
+    Write-VLog "exit retest: $($sum.stuck_ctrl_q) stuck after Ctrl+Q, $($sum.stuck_wm_close) after WM_CLOSE, of $($sum.tries) tries"
+    "run folder: $RunDir"
+    exit 0
+}
+
+# --- main run: UIA lanes in parallel + the manual lane -------------------------------------------
+$results = New-Object System.Collections.ArrayList
+$cleanup = @(); $demoLog = [ordered]@{}; $laneInfo = [ordered]@{}; $aborted = $null
+$workers = @()
+$manualPlan = @($plan | Where-Object { -not ($Lanes -gt 0 -and $_.Uia) })
+$uiaPlan = @($plan | Where-Object { $Lanes -gt 0 -and $_.Uia })
+if ($uiaPlan.Count) {
+    # lane copies of the build: <builds>\<run number>-lane<k>, made and refreshed by the harness
+    # (never the fixed test folders); their portable folders get the run profile per session
+    $n = [math]::Min($Lanes, $uiaPlan.Count)
+    $buckets = @(); for ($k = 0; $k -lt $n; $k++) { $buckets += , (New-Object System.Collections.ArrayList) }
+    $loads = @(0) * $n
+    foreach ($p in ($uiaPlan | Sort-Object { - $_.Scenarios.Count })) {
+        $k = [array]::IndexOf($loads, ($loads | Measure-Object -Minimum).Minimum); [void]$buckets[$k].Add($p); $loads[$k] += $p.Scenarios.Count
+    }
+    $srcDir = Split-Path $exe
+    for ($k = 1; $k -le $n; $k++) {
+        $ld = Join-Path (Join-Path $cfg.testMediaDir 'builds') ("{0}-lane{1}" -f $(if ($buildNum) { $buildNum } else { 'build' }), $k)
+        if ($ld -like (Join-Path $cfg.testMediaDir 'builds\current*')) { throw "bad lane folder $ld" }
+        $lsw = [Diagnostics.Stopwatch]::StartNew()
+        robocopy $srcDir $ld /MIR /XD (Join-Path $srcDir 'portable') (Join-Path $ld 'portable') /R:1 /W:1 /NFL /NDL /NJH /NJS /NP | Out-Null
+        if ($LASTEXITCODE -ge 8) { throw "copying the build to $ld failed ($LASTEXITCODE)" }
+        $laneDirs += $ld
+        $ids = ($buckets[$k - 1] | ForEach-Object { $_.Session.id }) -join ','
+        $laneExe = Join-Path $ld (Split-Path $exe -Leaf)
+        $laneCfg = @{ lane = $k; exe = $laneExe }
+        $argList = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', "`"$(Join-Path $here 'verify.ps1')`"", '-Worker', '-Lane', $k, '-RunDir', "`"$RunDir`"",
+                     '-Sessions', $ids, '-Build', $Build, '-WaitForOthersMin', $WaitForOthersMin)
+        if ($Area) { $argList += @('-Area', $Area) }
+        if ($Only) { $argList += @('-Only', "`"$Only`"") }
+        $env:VERIFY_LANE_EXE = $laneExe
+        $wp = Start-Process powershell -ArgumentList $argList -WindowStyle Hidden -PassThru
+        $null = $wp.Handle
+        $workers += [pscustomobject]@{ Lane = $k; Proc = $wp; Sessions = $ids; Dir = $ld; CopySec = [math]::Round($lsw.Elapsed.TotalSeconds, 1) }
+        Write-VLog "lane ${k}: sessions $ids (build copy $([math]::Round($lsw.Elapsed.TotalSeconds, 1)) s)"
+    }
+    Remove-Item Env:\VERIFY_LANE_EXE -ErrorAction SilentlyContinue
+}
+$msw = [Diagnostics.Stopwatch]::StartNew()
+try {
+    foreach ($p in $manualPlan) {
+        if ($aborted) { break }
+        $o = Invoke-SessionWithRetry $p $exe (Join-Path (Split-Path $exe) 'portable')
+        foreach ($r in $o.results) { [void]$results.Add($r) }
+        $cleanup += $o.cleanup; if ($o.demo) { $demoLog[$p.Session.id] = $o.demo }
+        $laneInfo["manual:$($p.Session.id)"] = $o.seconds
+        if ($o.aborted) { $aborted = $o.aborted }
     }
 } finally {
     $final = Stop-Players -NoKeys:([bool]$aborted)
     Update-Started
-    $left = @($script:StartedPids)
-    $cleanup += "final: $final; started players left: $($left.Count)" + $(if ($script:StuckPids.Count) { "; stuck in termination (no window, cannot be ended): $($script:StuckPids -join ', ')" } else { '' })
+    $cleanup += "manual final: $final; started players left: $(@($script:StartedPids).Count)" + $(if ($script:StuckPids.Count) { "; stuck in termination (no window, never ended): $($script:StuckPids -join ', ')" } else { '' })
     Write-VLog "cleanup: $($cleanup[-1])"
+    $manualSec = [math]::Round($msw.Elapsed.TotalSeconds, 1)
+    foreach ($w in $workers) {
+        if (-not $w.Proc.WaitForExit(30 * 60 * 1000)) { Write-VLog "lane $($w.Lane): worker still running after 30 min"; continue }
+        $lj = Join-Path $RunDir "lane$($w.Lane).json"
+        if (Test-Path $lj) {
+            $lo = Get-Content -Raw -Encoding UTF8 $lj | ConvertFrom-Json
+            foreach ($r in @($lo.scenarios)) { [void]$results.Add($r) }
+            $cleanup += @($lo.cleanup)
+            foreach ($pr in $lo.demo.PSObject.Properties) { $demoLog["$($pr.Name)@lane$($w.Lane)"] = @($pr.Value) }
+            $laneInfo["lane$($w.Lane)"] = [ordered]@{ seconds = $lo.seconds; copy_seconds = $w.CopySec; sessions = $lo.sessions; stuck = @($lo.stuck) }
+        } else { $cleanup += "lane$($w.Lane): no result file (worker failed; see lane$($w.Lane).log)" }
+    }
+    $laneInfo['manual'] = [ordered]@{ seconds = $manualSec; sessions = @($manualPlan | ForEach-Object { $_.Session.id }) }
     $run = [ordered]@{ run = $runName; build = "$Build $buildId"; started = $t0.ToString('o'); seconds = [math]::Round(((Get-Date) - $t0).TotalSeconds, 1)
-        aborted = $aborted; cleanup = ($cleanup -join ' | '); demo = $demoLog; scenarios = @($results) }
-    $run | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath (Join-Path $runDir 'run.json') -Encoding utf8
+        lanes = $laneInfo; aborted = $aborted; cleanup = ($cleanup -join ' | '); demo = $demoLog; scenarios = @($results) }
+    $run | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath (Join-Path $RunDir 'run.json') -Encoding utf8
 }
-if (-not $NoCompare) { & python (Join-Path $here 'compare.py') $runDir }
-"run folder: $runDir"
+if (-not $NoCompare) { & python (Join-Path $here 'compare.py') $RunDir }
+"run folder: $RunDir"

@@ -1211,7 +1211,8 @@
     "tracks-audio",
     "tracks-video",
     "sidebar-video"
-   ]
+   ],
+   "lane": "uia"
   },
   {
    "id": "sidebar",
@@ -1637,6 +1638,76 @@
      ]
     },
     {
+     "id": "sidebar-close",
+     "title": "Gear again closes the sidebar",
+     "rows": [
+      "F-06"
+     ],
+     "steps": [
+      {
+       "uia": "Playback Settings",
+       "role": "Button",
+       "after": 900
+      },
+      {
+       "expect": {
+        "uia": "Playback",
+        "role": "TabItem",
+        "present": false,
+        "timeout": 600
+       },
+       "check": "a second click on the gear closes the sidebar"
+      }
+     ]
+    }
+   ],
+   "demo": [
+    "sidebar-playback",
+    "sidebar-video",
+    "sidebar-audio"
+   ],
+   "lane": "uia"
+  },
+  {
+   "id": "sidebar-subs",
+   "about": "Settings sidebar, Subtitles tab (manual lane: the -4 s delay is typed into its value box).",
+   "media": [
+    "Videos\\Verify Clip.mkv"
+   ],
+   "args": [
+    "--qt-continue=0",
+    "--start-paused"
+   ],
+   "setup": [
+    {
+     "wait": 1200
+    },
+    {
+     "wiggle": [
+      960,
+      540
+     ]
+    },
+    {
+     "uia": "Playback Settings",
+     "role": "Button",
+     "after": 900
+    }
+   ],
+   "reset": [
+    {
+     "wiggle": [
+      960,
+      540
+     ],
+     "after": 500
+    }
+   ],
+   "demo": [
+    "sidebar-subtitles"
+   ],
+   "scenarios": [
+    {
      "id": "sidebar-subtitles",
      "title": "Settings sidebar, Subtitles tab",
      "rows": [
@@ -1754,36 +1825,7 @@
        "demo": "sidebar-subtitles"
       }
      ]
-    },
-    {
-     "id": "sidebar-close",
-     "title": "Gear again closes the sidebar",
-     "rows": [
-      "F-06"
-     ],
-     "steps": [
-      {
-       "uia": "Playback Settings",
-       "role": "Button",
-       "after": 900
-      },
-      {
-       "expect": {
-        "uia": "Playback",
-        "role": "TabItem",
-        "present": false,
-        "timeout": 600
-       },
-       "check": "a second click on the gear closes the sidebar"
-      }
-     ]
     }
-   ],
-   "demo": [
-    "sidebar-playback",
-    "sidebar-video",
-    "sidebar-audio",
-    "sidebar-subtitles"
    ]
   },
   {
@@ -2117,11 +2159,12 @@
       }
      ]
     }
-   ]
+   ],
+   "lane": "uia"
   },
   {
-   "id": "menus",
-   "about": "Main menu, right-click menu, Hide UI.",
+   "id": "menu",
+   "about": "Main menu (UIA lane).",
    "media": [
     "Videos\\Verify Clip.mkv"
    ],
@@ -2153,6 +2196,7 @@
      "after": 500
     }
    ],
+   "lane": "uia",
    "scenarios": [
     {
      "id": "main-menu",
@@ -2264,7 +2308,44 @@
      "human": [
       "Every item opens its own dialog (P6-12): Settings, Keyboard Shortcuts, Open Network Stream, Customize Player."
      ]
+    }
+   ]
+  },
+  {
+   "id": "menus",
+   "about": "Main menu, right-click menu, Hide UI.",
+   "media": [
+    "Videos\\Verify Clip.mkv"
+   ],
+   "args": [
+    "--qt-continue=0",
+    "--start-paused"
+   ],
+   "setup": [
+    {
+     "wait": 1200
     },
+    {
+     "wiggle": [
+      960,
+      540
+     ]
+    }
+   ],
+   "reset": [
+    {
+     "keys": "{ESC}",
+     "after": 300
+    },
+    {
+     "wiggle": [
+      960,
+      540
+     ],
+     "after": 500
+    }
+   ],
+   "scenarios": [
     {
      "id": "right-click-menu",
      "title": "Right-click on the video opens the context menu at the pointer",

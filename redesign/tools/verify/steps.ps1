@@ -36,6 +36,14 @@ function Find-StepElement($step) {
 function Invoke-Step($step, $ctx) {
     if ($ctx.DryRun) { Write-VLog ("    [dry] " + (Format-Step $step)); return }
     $names = @($step.PSObject.Properties.Name)
+    if ($script:NoInput) {
+        # UIA lanes: pointer moves only serve the look of a manual shot, Escape only closes what is
+        # open; both are left out (noted), every other input step fails (manual lane only)
+        if ($names -contains 'wiggle' -or $names -contains 'hover' -or ($names -contains 'keys' -and [string]$step.keys -eq '{ESC}') -or $names -contains 'wait' -and $false) {
+            [void]$ctx.Notes.Add("lane: skipped $(Format-Step $step)"); return
+        }
+        if ($names -contains 'volume') { [void]$ctx.Notes.Add("lane: volume left as in the profile"); return }
+    }
     if ($names -contains 'wait') { Start-Sleep -Milliseconds ([int]$step.wait); return }
     if ($names -contains 'keys') { Send-Keys ([string]$step.keys); Start-Sleep -Milliseconds ([int](Get-StepProp $step 'after' 300)); return }
     if ($names -contains 'click') {

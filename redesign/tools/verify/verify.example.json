@@ -10,5 +10,8 @@
   "profileSource": "builds\\current-public\\portable",
   "profileOverrides": {
     "qt-cast-discovery": "0"
+  },
+  "laneOverrides": {
+    "qt-pin-controls": "1"
   }
 }

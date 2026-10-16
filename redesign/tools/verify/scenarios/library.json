@@ -198,7 +198,8 @@
       "Open / close animation: Figma smart animate 'slow' 208 ms (motion check)."
      ]
     }
-   ]
+   ],
+   "lane": "uia"
   }
  ]
 }
