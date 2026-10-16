@@ -14,8 +14,11 @@ Everything below applies to the **public** brand profile only. The **vlc** profi
 | 3c | Installer look and wording | Cone images and texts, see section 2. The Cone uninstaller also removes the Blu-ray autoplay handler (VLC's uninstaller forgets it). | `extras/package/win32/brand/public/*.bmp`, `installer-art.js`, `NSIS/brand-languages.sh`, `vlc.win32.nsi.in`, `package.mak`, `NSIS/meson.build`, MSI files | 03580142e9 |
 | 4 | Preferences file associations | The old preferences' association list and its Default Programs button used VLC's ProgIDs and install key (would have pointed file types at an installed VLC). Now Cone's. | `util/brand.hpp`, `dialogs/preferences/simple_preferences.cpp` | 146d6f00c7 |
 | 5 | CI | A public build also builds `cone-<version>-win64.exe` and uploads it as the artifact **cone-installer-win64** (test only; this step cannot fail the build). | `.github/workflows/build-windows.yml` | 2ca74d52d6 |
+| 6 | Audio session (Decision 57) | Own audio session GUID (own volume mixer entry and own saved session volume when "volume-save" is on) and the session name "Cone" (the user-agent name; the HTTP user agent is unchanged). | `modules/audio_output/mmdevice.c`, `winstore.c`, `bin/winvlc.c` | f2580bbf40 |
+| 7 | Single instance (Decision 57) | Own mutex and IPC window name "Cone ipc <version>", so "Allow only one instance" never hands files to a running VLC. | `src/win32/specific.c` (core), `modules/control/win_msg.c` | b1d5a41ca4 |
+| 8 | File associations next to VLC (Decision 56) | NSIS: on a first install, if VLC is installed (its install key, uninstall key or App Paths entry, 64-bit or 32-bit; only read) every file association starts unticked; without VLC they start ticked. A reinstall or upgrade keeps the user's saved choice. MSI: the association features are not installed by default next to VLC (still selectable). | `NSIS/vlc.win32.nsi.in`, `msi/product.wxs` | 82f3ba9ec1 |
 
-Core change: `src/win32/dirs.c` (one `#define` for the folder name). Per the build rounds rule it should go in its own build.
+Core changes (all inside `#ifdef VLC_BRAND_PUBLIC`, the vlc profile compiles the same tokens as before): `src/win32/dirs.c` (the folder name), `src/win32/specific.c` (single-instance name), `modules/audio_output/mmdevice.c` and `winstore.c` (audio session GUID), `modules/control/win_msg.c` (IPC window name). Per the build rounds rule they go in their own build.
 
 "Local app data equivalent": VLC itself keeps nothing in `%LOCALAPPDATA%`. The only thing there is Qt's own cache, which Qt names after the exe: `%LOCALAPPDATA%\Cone` for Cone.exe, `%LOCALAPPDATA%\vlc` for vlc.exe. So it is already separate and needed no change.
 
@@ -75,17 +78,18 @@ The MSI pages could not be rendered here (no WiX toolset), only its two bitmaps 
 7. Check: `C:\Program Files\Cone` exists and `C:\Program Files\VideoLAN\VLC` is untouched; Start menu has a "Sticky" folder with Cone's shortcuts and VLC's "VideoLAN" folder is still there; Settings, Apps lists both "VLC media player" and "Cone"; Default apps lists both.
 8. Start Cone, change a setting, close it. Start VLC: VLC still has its own setting from step 4 and not Cone's. Start Cone again: it still has its own.
 9. Check the folders: `%APPDATA%\vlc` (VLC's) and `%APPDATA%\Cone` (Cone's) both exist; the media library and art cache of each stay in its own folder. In `regedit`: `HKCU\Software\VideoLAN\VLC` (VLC's language) and `HKCU\Software\Cone` (Cone's) are separate.
-10. Right click an `.mp4`: there are separate "Play with VLC media player" and "Play with Cone" entries (if VLC's context menus were installed). Note: like VLC's installer, Cone's takes the file associations ticked on the components page. Windows 10 and 11 keep your own default app choice anyway.
+10. Right click an `.mp4`: there are separate "Play with VLC media player" and "Play with Cone" entries (if VLC's context menus were installed). On the components page (step 6) the file associations were unticked, because VLC is installed (Decision 56); `.mp4` still opens with VLC. Windows 10 and 11 keep your own default app choice anyway.
+10b. Volume mixer (Decision 57): play something in Cone and in VLC at the same time; Windows' volume mixer shows two entries, and changing Cone's volume leaves VLC's alone. Turn on Tools, Preferences, "Allow only one instance" in both; opening a file with Cone never adds it to the running VLC.
 11. Check for updates: Cone has no update menu entry and never shows an update notice.
 
 **Uninstall Cone**
 12. Settings, Apps, Cone, Uninstall (optionally tick "Delete preferences and cache").
 13. Check: VLC still starts with its settings, `%APPDATA%\vlc` is untouched, `C:\Program Files\VideoLAN\VLC` is untouched, `.mp4` opens with VLC again (if it did before), VLC's context menu entries and its Default apps entry are still there, and nothing named Cone is left in `C:\Program Files`, the Start menu, Settings, Apps, or `HKLM\Software\Cone`.
 
-**Your portable test folder** (`<TEST_MEDIA_DIR>\builds\current`): a public build now keeps the Qt interface settings in `portable\Cone\vlc-qt-interface.ini` instead of `portable\vlc\vlc-qt-interface.ini` (vlcrc and the rest stay in `portable`). To keep the old interface settings, copy that one file over once, with the test VLC closed:
+**Your portable test folder** (`<TEST_MEDIA_DIR>\builds\current-public`): a public build now keeps the Qt interface settings in `portable\Cone\vlc-qt-interface.ini` instead of `portable\vlc\vlc-qt-interface.ini` (vlcrc and the rest stay in `portable`). Done on 2026-10-16 for `builds\current-public` (copied, the old file kept). For another public test folder, copy that one file over once, with the test VLC closed:
 
 ```powershell
-$p = "<TEST_MEDIA_DIR>\builds\current\portable"; New-Item -ItemType Directory -Force "$p\Cone" | Out-Null; Copy-Item "$p\vlc\vlc-qt-interface.ini" "$p\Cone\vlc-qt-interface.ini"
+$p = "<TEST_MEDIA_DIR>\builds\current-public\portable"; New-Item -ItemType Directory -Force "$p\Cone" | Out-Null; Copy-Item "$p\vlc\vlc-qt-interface.ini" "$p\Cone\vlc-qt-interface.ini"
 ```
 
 ## 4. Checks done here (not verification)
@@ -100,9 +104,8 @@ $p = "<TEST_MEDIA_DIR>\builds\current\portable"; New-Item -ItemType Directory -F
 
 ## 5. Left as is, or not done
 
-**Clashes in engine code (not changed: player code is out of scope for this task)**
-- Shared audio session: `modules/audio_output/mmdevice.c` and `winstore.c` use one fixed audio session GUID (`GUID_VLC_AUD_OUT`) when "volume-save" is on, so Windows treats Cone and VLC as one session: same entry in the volume mixer, and the saved session volume is shared. Fix: a Cone GUID under `VLC_BRAND_PUBLIC` (two lines).
-- Single instance: `src/win32/specific.c` and `modules/control/win_msg.c` use the mutex / window name "VLC ipc <version>". With "Allow only one instance" on, Cone could hand files to a running VLC **of the same version string**. An installed VLC 3.x has a different version, so this only matters next to a VLC 4 nightly of the same version. Fix: brand that name (two files).
+**Engine code**
+- Shared audio session and single instance: fixed by Decision 57 (rows 6 and 7 above).
 - Crash reporter: `bin/breakpad.cpp` reports as product "VLC" (only built with breakpad; CI does not).
 - `libvlc_set_app_id("org.VideoLAN.VLC")` in `bin/winvlc.c` was kept on purpose by the brand layer.
 
@@ -117,5 +120,6 @@ $p = "<TEST_MEDIA_DIR>\builds\current\portable"; New-Item -ItemType Directory -F
 - The MSI is not built by CI, and its pages were not rendered (no WiX here).
 - The meson packaging path (`-Dbrand=public`) was updated but not run.
 
-**Your decision**
-- Should Cone's installer leave the file associations unticked by default when VLC is installed? Today it behaves like VLC's installer (ticked by default, VLC's previous choice backed up and restored on uninstall).
+**Decided**
+- Decision 56: the file associations start unticked when VLC is installed, ticked when it is not (row 8). VLC from the Microsoft Store is not detected (it has no registry install key), so next to it they start ticked.
+- Decision 57: own volume mixer entry, own saved volume, own single-instance identity (rows 6 and 7).
