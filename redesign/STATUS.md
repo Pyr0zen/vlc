@@ -28,6 +28,8 @@ The todo rows split into: context only (old VLC shots, jokes, sponsor, surveys, 
 | **Total** | **69** | **212** | **12** | **5** | **63** | **361** |
 | Cone release | tracked in redesign/CONE_RELEASE_NOTES.md (no VIDEO_INDEX rows) | | | | | |
 
+- Fix list (found by the toast fix review): RdProfileNotice has the same 552 px cap and elide the resume toast had: make it fit or wrap the same way.
+
 ## Verification sweep (build 38829058873)
 - Window 1 done (2026-10-16): Customize Player and profiles. Verified: row 308 (profiles in the main menu, submenu, switching). Bugs: MED Customize preview loses the seek bar and time labels after a drop; LOW profile switch drops one frame (23 ms); LOW footer tabs not in Figma (to decide). Details in BUILD_NOTES and PERF.
 - Count (all VIDEO_INDEX rows): verified 62, coded but not verified 177, todo 122.
