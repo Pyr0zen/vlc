@@ -68,6 +68,18 @@ FSM {
     property int lockCount: 0 // Track the number of locks
     property int timeoutDuration: hideDelay
 
+    // redesign: what the last input sets, in every state that takes it (also while locked): the
+    // time the bars stay after it and whether the keyboard mode shows both bars
+    function _mouseInput() {
+        fsm.timeoutDuration = fsm.hideDelay
+        fsm.keyboardShown = false
+    }
+
+    function _keyboardInput() {
+        fsm.timeoutDuration = fsm.hideDelay * 2
+        fsm.keyboardShown = true
+    }
+
     initialState: ((Player.isInteractive && MainCtx.hasEmbededVideo))
                   ? fsmHidden : fsmVisible
  
@@ -138,16 +150,12 @@ FSM {
                     },
                     mouseMove: {
                         guard: () => !Player.isInteractive,
-                        action: () => { 
-                            fsm.timeoutDuration = fsm.hideDelay; fsm.keyboardShown = false;
-                        },
+                        action: () => fsm._mouseInput(),
                         target: fsmVideoMode
                     },
                     keyboardMove: {
                         guard: () => !Player.isInteractive,
-                        action: () => { 
-                            fsm.timeoutDuration = fsm.hideDelay * 2; fsm.keyboardShown = true
-                        },
+                        action: () => fsm._keyboardInput(),
                         target: fsmVideoMode
                     }
                 })
@@ -176,15 +184,11 @@ FSM {
                 // keyboard's longer timeout of a key pressed before the lock
                 mouseMove: {
                     guard: () => !Player.isInteractive,
-                    action: () => {
-                        fsm.timeoutDuration = fsm.hideDelay; fsm.keyboardShown = false
-                    }
+                    action: () => fsm._mouseInput()
                 },
                 keyboardMove: {
                     guard: () => !Player.isInteractive,
-                    action: () => {
-                        fsm.timeoutDuration = fsm.hideDelay * 2; fsm.keyboardShown = true
-                    }
+                    action: () => fsm._keyboardInput()
                 },
             })
         }
@@ -201,16 +205,12 @@ FSM {
         transitions: ({
             mouseMove: {
                 guard: () => !Player.isInteractive,
-                action: () => {
-                    fsm.timeoutDuration = fsm.hideDelay; fsm.keyboardShown = false
-                },
+                action: () => fsm._mouseInput(),
                 target: fsmVisible
             },
             keyboardMove: {
                 guard: () => !Player.isInteractive,
-                action: () => {
-                    fsm.timeoutDuration = fsm.hideDelay * 2; fsm.keyboardShown = true
-                },
+                action: () => fsm._keyboardInput(),
                 target: fsmVisible
             },
             askShow: {
