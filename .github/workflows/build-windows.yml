@@ -1,6 +1,7 @@
 # Windows 64-bit build of the redesign branch.
 # Mirrors VideoLAN's own "win64" job (extras/ci/gitlab-ci.yml): same Docker image,
 # same build script (extras/package/win32/build.sh) and the same prebuilt contribs.
+# The release workflow (release.yml) calls it for the "public" profile (redesign/CI_RELEASE_NOTES.md).
 name: build-windows
 
 on:
@@ -23,17 +24,37 @@ on:
         type: choice
         options: [vlc, public]
         default: public
+  workflow_call:
+    inputs:
+      brand:
+        type: string
+        default: public
+      release:
+        # release build: the installer must succeed, both packages are handed to the caller as the
+        # cone-release-files artifact, and the compiler cache is read but not saved (a tag's cache
+        # can not be restored by any later run)
+        type: boolean
+        default: false
+      cache-branch:
+        # the branch whose compiler cache the build starts from (a tag run has no branch)
+        type: string
+        default: ''
 
 concurrency:
-  # one queue per branch and brand profile: a vlc and a public build of the same branch run side by side
-  group: build-windows-${{ github.ref }}-${{ inputs.brand || 'public' }}
+  # one queue per branch and brand profile: a vlc and a public build of the same branch run side by
+  # side; github.workflow is the caller's name when release.yml calls this, so a release never
+  # cancels a normal build
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ inputs.brand || 'public' }}
   cancel-in-progress: true
 
 env:
   # Keep in sync with VLC_WIN64_IMAGE in extras/ci/gitlab-ci.yml
   VLC_IMAGE: registry.videolan.org/vlc-debian-win64-posix:20260611225331
-  # brand profile: the workflow_dispatch input, "public" for pushes (Decision 50)
+  # brand profile: the workflow_dispatch / workflow_call input, "public" for pushes (Decision 50)
   VLC_BRAND: ${{ inputs.brand || 'public' }}
+  # ccache used when the build image has none: pinned release and its SHA-256
+  CCACHE_VERSION: 4.10.2
+  CCACHE_SHA256: 80cab87bd510eca796467aee8e663c398239e0df1c4800a0b5dff11dca0b4f18
 
 jobs:
   win64:
@@ -80,14 +101,68 @@ jobs:
             contrib/tarballs
           key: contrib-win64-${{ steps.sha.outputs.sha }}
 
-      - name: Cache tools and compiler cache
+      - name: Cache extra tools
         uses: actions/cache@v4
         with:
-          path: |
-            extras/tools/build
-            .ccache
-          key: tools-ccache-${{ steps.sha.outputs.sha }}-${{ github.sha }}
-          restore-keys: tools-ccache-${{ steps.sha.outputs.sha }}-
+          path: extras/tools/build
+          key: tools-win64-${{ steps.sha.outputs.sha }}
+
+      # Compiler cache, one per branch and brand profile. Keys are "ccache-win64-<brand>:<branch>:<commit>"
+      # (":" can not appear in a branch name, so one branch's prefix never matches another's). A run
+      # restores, in order: its own branch and brand, its own branch with the other brand, then the
+      # redesign branch (same brand first). Other branches can read redesign's caches because it is
+      # the default branch; they can never read each other's.
+      - name: Compiler cache keys
+        id: cachekey
+        env:
+          CACHE_BRANCH: ${{ inputs.cache-branch || github.ref_name }}
+        run: |
+          OTHER=$([ "$VLC_BRAND" = public ] && echo vlc || echo public)
+          {
+            echo "key=ccache-win64-$VLC_BRAND:$CACHE_BRANCH:$GITHUB_SHA"
+            echo "restore<<EOF"
+            echo "ccache-win64-$VLC_BRAND:$CACHE_BRANCH:"
+            echo "ccache-win64-$OTHER:$CACHE_BRANCH:"
+            echo "ccache-win64-$VLC_BRAND:redesign:"
+            echo "ccache-win64-$OTHER:redesign:"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+          echo "Compiler cache for branch '$CACHE_BRANCH', brand '$VLC_BRAND'"
+
+      - name: Restore compiler cache
+        id: ccache
+        uses: actions/cache/restore@v4
+        with:
+          path: .ccache
+          key: ${{ steps.cachekey.outputs.key }}
+          restore-keys: ${{ steps.cachekey.outputs.restore }}
+
+      - name: Compiler cache restored
+        env:
+          MATCHED: ${{ steps.ccache.outputs.cache-matched-key }}
+          WANTED: ${{ steps.cachekey.outputs.key }}
+        run: |
+          if [ -z "$MATCHED" ]; then
+            MSG="no compiler cache found: cold build, every file is compiled"
+          elif [ "$MATCHED" = "$WANTED" ]; then
+            MSG="compiler cache of this exact commit: $MATCHED"
+          else
+            MSG="compiler cache restored from $MATCHED"
+          fi
+          echo "$MSG"
+          echo "Compiler cache: $MSG" >> "$GITHUB_STEP_SUMMARY"
+          du -sh .ccache 2>/dev/null || true
+
+      # without it (download failed) the build still runs, only without the compiler cache
+      - name: ccache for the build image
+        continue-on-error: true
+        run: |
+          # the image's own ccache is used when it has one (win64-build.sh); this one otherwise
+          mkdir -p .ccache-tool
+          curl -sSLf -o /tmp/ccache.tar.xz \
+            "https://github.com/ccache/ccache/releases/download/v$CCACHE_VERSION/ccache-$CCACHE_VERSION-linux-x86_64.tar.xz"
+          echo "$CCACHE_SHA256  /tmp/ccache.tar.xz" | sha256sum -c -
+          tar -xJf /tmp/ccache.tar.xz -C .ccache-tool --strip-components=1 "ccache-$CCACHE_VERSION-linux-x86_64/ccache"
 
       - name: Pull build image
         run: docker pull "$VLC_IMAGE"
@@ -99,16 +174,24 @@ jobs:
           docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/build" -w /build -e HOME=/tmp \
             -e VLC_PREBUILT_CONTRIBS_URL="${{ steps.sha.outputs.url }}" \
             -e VLC_BRAND="$VLC_BRAND" \
-            -e CCACHE_DIR=/build/.ccache \
-            "$VLC_IMAGE" bash -ec '
-              git config --global --add safe.directory /build
-              if command -v ccache >/dev/null; then echo "ccache available"; ccache -s || true; fi
-              P=""
-              if [ -n "$VLC_PREBUILT_CONTRIBS_URL" ]; then P="-p"; else unset VLC_PREBUILT_CONTRIBS_URL; fi
-              extras/package/win32/build.sh -r -a x86_64 $P -B "$VLC_BRAND"
-              cd win64
-              make package-win32-zip'
+            "$VLC_IMAGE" .github/scripts/win64-build.sh build
           df -h /
+
+      - name: Compiler cache result
+        if: ${{ !cancelled() }}
+        run: |
+          SUMMARY=$(cat .ccache-summary.txt 2>/dev/null || echo "ccache: no statistics (the build did not reach ccache)")
+          echo "$SUMMARY"
+          echo "$SUMMARY" >> "$GITHUB_STEP_SUMMARY"
+          du -sh .ccache 2>/dev/null || true
+
+      # saved even when the build failed, so the next run starts from what was compiled
+      - name: Save compiler cache
+        if: ${{ !cancelled() && !inputs.release && steps.ccache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@v4
+        with:
+          path: .ccache
+          key: ${{ steps.cachekey.outputs.key }}
 
       - name: Unpack zip so the artifact is a single zip
         run: |
