@@ -97,6 +97,9 @@ Decided by Sticky on 2026-10-12. General rule for anything not listed: her final
 56. (2026-10-16, Cone release) The Cone installer's file associations are unticked by default when VLC is already installed, ticked when it is not.
 57. (2026-10-16, Cone release) In the public profile Cone gets its own volume mixer entry and its own saved volume, and Cone never hands files to a running VLC through "allow only one instance".
 58. (2026-10-16, Cone release) Cone has its own version number: About and the installer show "Cone 0.1.0" with "based on VLC 4.0.0-dev" underneath, the Windows Apps list shows Cone 0.1.0, and the release workflow's version tag sets it. The public name is StickyGonzales wherever people see the owner's name.
+59. (2026-10-16) Mouse wheel follow-ups to Decision 54: the speaker button changes the volume with the wheel (like the cone); the playback speed button ignores the wheel.
+60. (2026-10-16) Stereo mode core fix approved: once the PC confirms that the chosen stereo mode snaps back on an audio output restart (aout_PrepareStereoMode, src/audio_output/output.c), fix it minimal and isolated, in its own build (Decision 27, core changes).
+61. (2026-10-16) Cone's first release ships the portable zip only; the installer follows after a side-by-side test in a VM (no Windows Sandbox on this PC, and never on Sticky's real Windows).
 ## Decisions (Claude)
 Extra decisions made during the build, one line each (date, row IDs, decision, reason).
 - 2026-10-13 P1-05 / W2.1: dark palette mapping to VLC color sets: View bg BG/A3, secondary BG/B2, main text FG/A1, secondary text FG/A3, borders Divider/Bright, separators Divider/Dim, icon buttons FG/A2 with #FFFFFF 6% hover, accent buttons solid accent + FG/B1 text, standard buttons BG/A3 + FG/A2 (Figma Cancel). Reason: Figma uses FG/A1-FG/A3 grays for almost all text, brighter FG/2-FG/1 only for hover/selected.
