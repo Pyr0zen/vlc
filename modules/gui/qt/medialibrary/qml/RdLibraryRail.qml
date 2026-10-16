@@ -189,11 +189,12 @@ Rectangle {
     property string _folderToPin: ""
 
     function _pinFolder() {
-        const url = RdLibraryStore.pickFolder(qsTr("Pin a Folder"), "", "video")
-        if (url.toString() === "")
-            return
-        _folderToPin = url.toString()
-        RdLibraryStore.addFolder("video", url)
+        RdLibraryStore.pickFolder(qsTr("Pin a Folder"), "", "video", (url) => {
+            if (url.toString() === "")
+                return
+            rail._folderToPin = url.toString()
+            RdLibraryStore.addFolder("video", url)
+        })
     }
 
     Connections {
