@@ -430,8 +430,15 @@ void RdFilterPreview::onCaptureEnded(vlc_preparser_req* req, int generation, int
         m_inflight = nullptr;
     vlc_preparser_req_Release(req);
 
-    if (generation != m_generation || status == -EINTR)
+    if (status == -EINTR)
         return;
+    if (generation != m_generation)
+    {
+        // the preview size changed while the frame was taken: take it again at the new size
+        if (m_frame.isNull())
+            capture();
+        return;
+    }
     if (image.isNull())
     {
         // the frame on hand (if any) stays; the next capture tries again
