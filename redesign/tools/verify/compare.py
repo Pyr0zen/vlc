@@ -762,6 +762,8 @@ def run_compare(run_dir):
                 weak.append("only weak element suggestions (frame fallback or 4+ suggested rows)")
             if not el_ok and not reg_ok:
                 weak.append("behaviour checks only")
+            if len(el_ok) == 1 and not reg_ok:
+                weak.append("a single supporting element (check that it belongs to this row)")
         row_out.append({"row": row, "num": info.get("num"), "item": info.get("item", "?"), "indexStatus": info.get("status", "?"),
                         "status": status, "compares": f"{len(comps) - len(failed)}/{len(comps)}",
                         "checks": f"{len(e['checks']) - len(failed_checks)}/{len(e['checks'])}",

@@ -18,14 +18,6 @@
     "IB-16",
     "IA-13"
    ]
-  },
-  {
-   "text": "bars do not auto-hide while playing (fix: wip/sweep-fix-bar)",
-   "rows": [
-    "P2-08",
-    "IA-15",
-    "P3-11"
-   ]
   }
  ]
 }

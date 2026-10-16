@@ -436,6 +436,8 @@ if ($uiaPlan.Count) {
         if ($Area) { $argList += @('-Area', $Area) }
         if ($Only) { $argList += @('-Only', "`"$Only`"") }
         $env:VERIFY_LANE_EXE = $laneExe
+        # staggered starts: several players starting in the same seconds came up without a window
+        if ($k -gt 1) { Start-Sleep -Seconds 20 }
         $wp = Start-Process powershell -ArgumentList $argList -WindowStyle Hidden -PassThru
         $null = $wp.Handle
         $workers += [pscustomobject]@{ Lane = $k; Proc = $wp; Sessions = $ids; Dir = $ld; CopySec = [math]::Round($lsw.Elapsed.TotalSeconds, 1) }
@@ -443,6 +445,7 @@ if ($uiaPlan.Count) {
     }
     Remove-Item Env:\VERIFY_LANE_EXE -ErrorAction SilentlyContinue
 }
+if ($workers.Count) { Start-Sleep -Seconds 20 }
 $msw = [Diagnostics.Stopwatch]::StartNew()
 try {
     foreach ($p in $manualPlan) {

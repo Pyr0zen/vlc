@@ -8,7 +8,7 @@
     "Videos\\Verify Clip.mkv"
    ],
    "args": [
-    "--qt-continue=0",
+    "--restore-playback-pos=0",
     "--start-paused"
    ],
    "demo": [
@@ -78,7 +78,7 @@
     "Videos\\Verify Tracks.mkv"
    ],
    "args": [
-    "--qt-continue=0",
+    "--restore-playback-pos=0",
     "--start-paused",
     "--sub-file={media}\\Videos\\The_Wand_S01_EN.srt"
    ],
@@ -143,7 +143,7 @@
     "..\\waveform\\wave_3min.flac"
    ],
    "args": [
-    "--qt-continue=0",
+    "--restore-playback-pos=0",
     "--loop"
    ],
    "vlcrc": {
@@ -184,7 +184,7 @@
     "..\\waveform\\wave_3min.flac"
    ],
    "args": [
-    "--qt-continue=0",
+    "--restore-playback-pos=0",
     "--loop"
    ],
    "vlcrc": {
@@ -212,7 +212,7 @@
     "Videos\\Verify Clip.mkv"
    ],
    "args": [
-    "--qt-continue=0"
+    "--restore-playback-pos=0"
    ],
    "setup": [
     {

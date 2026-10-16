@@ -120,7 +120,7 @@ Compare metrics (defaults in `compare.py`, per compare item `"tolerance"` overri
 ```json
 { "area": "player",
   "sessions": [ {
-    "id": "bar", "media": ["Videos\\Verify Clip.mkv"], "args": ["--qt-continue=0", "--start-paused"],
+    "id": "bar", "media": ["Videos\\Verify Clip.mkv"], "args": ["--restore-playback-pos=0", "--start-paused"],
     "size": [1920, 1080],
     "setup": [ <steps run once after the start> ],
     "reset": [ <steps run before every scenario> ],
