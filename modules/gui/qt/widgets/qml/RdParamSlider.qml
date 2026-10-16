@@ -51,7 +51,7 @@ ColumnLayout {
     property alias limitFrom: slider.limitFrom
     property alias limitTo: slider.limitTo
     property alias scrollSpeed: slider.scrollSpeed
-    // one mouse wheel notch over the slider (Decision 51); stepSize by default
+    // one mouse wheel notch over the slider (Decision 54); stepSize by default
     property alias wheelStep: slider.wheelStep
     property alias bipolar: slider.bipolar
     property alias zeroValue: slider.zeroValue

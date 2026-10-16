@@ -18,7 +18,7 @@
 
 // redesign: takes the mouse wheel that nothing inside an overlay (card, panel, sidebar) used, so it
 // never reaches what lies behind it: the player turns the wheel into volume or seek, a library list
-// would scroll (Decision 51). It fills the overlay under its content, so the overlay's lists and
+// would scroll (Decision 54). It fills the overlay under its content, so the overlay's lists and
 // sliders still get the wheel first. Takes no clicks and no hover.
 import QtQuick
 

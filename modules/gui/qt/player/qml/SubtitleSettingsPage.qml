@@ -302,7 +302,7 @@ RdSidePanelPage {
             limitFrom: 10
             limitTo: 500
             stepSize: 25
-            // the wheel fine-tunes in 5 % steps (Decision 51)
+            // the wheel fine-tunes in 5 % steps (Decision 54)
             wheelStep: 5
             value: RdEffects.values.subtitleTextScale
             onMoved: (v) => RdEffects.setSubtitleTextScale(v)

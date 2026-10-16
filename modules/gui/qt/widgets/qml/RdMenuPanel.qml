@@ -52,7 +52,7 @@ T.Popup {
     focus: true
     closePolicy: T.Popup.CloseOnEscape | T.Popup.CloseOnPressOutsideParent
     // while the menu is open the wheel outside it does nothing, as with RdCascadeMenu: it never
-    // reaches the player or a list behind (Decision 51); a click outside still goes through. The
+    // reaches the player or a list behind (Decision 54); a click outside still goes through. The
     // "dim" layer is only that wheel catcher, it draws nothing
     dim: true
     T.Overlay.modeless: RdWheelSink { }

@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
-// redesign: mouse wheel fine-tuning of a slider (Decision 51). Over its area (the slider's bar and
+// redesign: mouse wheel fine-tuning of a slider (Decision 54). Over its area (the slider's bar and
 // label row) one wheel notch is one step: `stepped(steps)`, positive to increase (wheel up or
 // right; on a mirrored horizontal slider right decreases, like the arrow keys). Takes no clicks.
 // The slider moves its value as for a drag or a key step (RdSliderCommit paces what reaches

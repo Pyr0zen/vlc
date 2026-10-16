@@ -65,7 +65,7 @@ SettingsRow {
     property real limitFrom: from
     property real limitTo: to
     property real scrollSpeed: (to - from) * VLCStyle.rd_sliderScrollRate
-    // slider: one mouse wheel notch over the slider (Decision 51)
+    // slider: one mouse wheel notch over the slider (Decision 54)
     property real wheelStep: step
     // slider filled from 0 (delays)
     property bool bipolar: false

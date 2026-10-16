@@ -68,7 +68,7 @@ T.Slider {
     // VLC's lowest value)
     property real labelMin: -Infinity
     property real labelMax: Infinity
-    // the mouse wheel over the bar and the label row (Decision 51): one notch moves by stepSize,
+    // the mouse wheel over the bar and the label row (Decision 54): one notch moves by stepSize,
     // as an arrow key; with customWheel the notches go to wheelStepped instead (RdEndlessSlider)
     property bool customWheel: false
 

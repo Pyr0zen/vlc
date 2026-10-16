@@ -28,7 +28,7 @@
 //   it slides back to the normal view.
 // - Arrow keys step by `step` past the range; a value set from outside (typed, VLC) scrolls the
 //   window to show it.
-// - The mouse wheel over the bar or the labels steps by `wheelStep` (Decision 51), past the range
+// - The mouse wheel over the bar or the labels steps by `wheelStep` (Decision 54), past the range
 //   like the keys.
 // The window always starts on a step (rangeFrom + n steps), so ticks, labels and arrow-key steps
 // land on the same values as in the normal view (a drag is not snapped, as in RdSlider).
@@ -56,7 +56,7 @@ RdSlider {
     property real current: 0
     // value units per second while the pointer is held past an end
     property real scrollSpeed: (rangeTo - rangeFrom) * VLCStyle.rd_sliderScrollRate
-    // one mouse wheel notch (Decision 51): the step unless the slider sets a finer one
+    // one mouse wheel notch (Decision 54): the step unless the slider sets a finer one
     property real wheelStep: step
 
     readonly property bool endless: limitFrom < rangeFrom || limitTo > rangeTo

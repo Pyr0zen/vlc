@@ -171,7 +171,7 @@ Item {
                 }
 
                 // nor does the wheel over the picture reach the video, which would change the
-                // volume (Decision 51)
+                // volume (Decision 54)
                 Widgets.RdWheelSink {
                     anchors.fill: parent
                 }
