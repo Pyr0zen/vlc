@@ -21,7 +21,11 @@
 
 #include <QAbstractListModel>
 
+#include <memory>
+
 #include "qt.hpp"
+
+class RdStereoTest;
 
 extern "C" {
     typedef struct vlc_player_aout_listener_id vlc_player_aout_listener_id;
@@ -63,6 +67,10 @@ public:
     // redesign: switches the output to the device `id` (one of devices())
     Q_INVOKABLE void select(const QString &id);
 
+    // redesign: plays the test sound of the settings sidebar's Stereo Mode "Test" button
+    // (RdStereoTest) on the device in use, with the playing file's stereo mode
+    Q_INVOKABLE void playStereoTest();
+
     QString current() const { return m_current; }
 
 signals:
@@ -76,6 +84,7 @@ private:
     vlc_player_aout_listener_id* m_player_aout_listener = nullptr;
     audio_output_t* m_aout = nullptr;
     vlc_player_t *m_player;
+    std::unique_ptr<RdStereoTest> m_stereoTest;
 };
 
 #endif // AUDIO_DEVICE_MODEL_HPP

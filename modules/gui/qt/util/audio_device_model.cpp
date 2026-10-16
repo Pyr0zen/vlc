@@ -18,6 +18,7 @@
 
 #include "audio_device_model.hpp"
 #include "player/player_controller.hpp"
+#include "util/rd_stereo_test.hpp"
 #include <vlc_player.h>
 #include <vlc_aout.h>
 
@@ -62,6 +63,9 @@ AudioDeviceModel::AudioDeviceModel(vlc_player_t *player, QObject *parent)
 
 AudioDeviceModel::~AudioDeviceModel()
 {
+    // the test player is created under the main player: gone before the output is released
+    m_stereoTest.reset();
+
     for (int i=0; i<m_inputs; i++)
     {
         free(m_ids[i]);
@@ -187,6 +191,18 @@ void AudioDeviceModel::select(const QString &id)
 {
     if (m_aout)
         aout_DeviceSet(m_aout, qtu(id));
+}
+
+void AudioDeviceModel::playStereoTest()
+{
+    if (!m_aout)
+        return;
+    if (!m_stereoTest)
+        m_stereoTest = std::make_unique<RdStereoTest>(vlc_object_parent(m_aout));
+
+    char *device = aout_DeviceGet(m_aout);
+    m_stereoTest->play(static_cast<int>(var_GetInteger(m_aout, "stereo-mode")), device);
+    free(device);
 }
 
 QHash<int, QByteArray> AudioDeviceModel::roleNames() const
