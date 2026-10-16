@@ -725,7 +725,7 @@ SPrefsPanel::SPrefsPanel( qt_intf_t *_p_intf, QWidget *_parent,
 
 //            ui.defaultLabel->setFont( italicFont );
             ui.skinsLabel->setText(
-                    qtr( "This is VLC's skinnable interface. You can download other skins at" )
+                    qtr( BRAND_SKINS_TEXT )
                     + QString( " <a href=\"https://www.videolan.org/vlc/skins.php\">" )
                     + qtr( "VLC skins website" ) + QString( "</a>." ) );
             ui.skinsLabel->setFont( italicFont );
@@ -776,6 +776,25 @@ SPrefsPanel::SPrefsPanel( qt_intf_t *_p_intf, QWidget *_parent,
 
             connect( ui.stylesCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
                      this, &SPrefsPanel::changeStyle );
+
+#ifdef VLC_BRAND_PUBLIC
+            /* brand layer: the .ui tooltips name VLC */
+            {
+                const QString skinTip = qtr( "Cone will use custom skin." );
+                const QString modernTip = qtr( "Cone will use a modern layout with\n"
+                                               "no menubar or pinned controls but\n"
+                                               "with client-side decoration." );
+                const QString classicTip = qtr( "Cone will use a classic layout with\n"
+                                                "a menubar and pinned controls but\n"
+                                                "with no client-side decoration." );
+                ui.skins->setToolTip( skinTip );
+                ui.skinImage->setToolTip( skinTip );
+                ui.modernButton->setToolTip( modernTip );
+                ui.modernImage->setToolTip( modernTip );
+                ui.classicButton->setToolTip( classicTip );
+                ui.classicImage->setToolTip( classicTip );
+            }
+#endif
 
             radioGroup = new QButtonGroup(this);
             radioGroup->addButton( ui.modernButton, 0 );

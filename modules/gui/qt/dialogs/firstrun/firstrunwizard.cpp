@@ -17,6 +17,7 @@
  *****************************************************************************/
 
 #include "firstrunwizard.hpp"
+#include "util/brand.hpp"
 #include "util/color_scheme_model.hpp"
 #include "maininterface/mainctx.hpp"
 #include "dialogs/toolbar/controlbar_profile_model.hpp"
@@ -48,20 +49,14 @@ FirstRunWizard::FirstRunWizard( qt_intf_t *_p_intf, QWidget *parent)
     ui.setupUi( this );
 
     /* Set the privacy and network policy */
-    ui.policy->setHtml( qtr( "<p>In order to protect your privacy, <i>VLC media player</i> "
-        "does <b>not</b> collect personal data or transmit them, "
-        "not even in anonymized form, to anyone."
-        "</p>\n"
-        "<p>Nevertheless, <i>VLC</i> is able to automatically retrieve "
-        "information about the media in your play queue from third party "
-        "Internet-based services. This includes cover art, track names, "
-        "artist names and other meta-data."
-        "</p>\n"
-        "<p>Consequently, this may entail identifying some of your media files to third party "
-        "entities. Therefore the <i>VLC</i> developers require your express "
-        "consent for the media player to access the Internet automatically."
-        "</p>\n" ) );
+    ui.policy->setHtml( qtr( BRAND_PRIVACY_POLICY ) );
     ui.policy->setReadOnly( true );
+
+#ifdef VLC_BRAND_PUBLIC
+    /* brand layer: the .ui texts of the default choices name VLC */
+    ui.explainerLabel->setText( qtr( BRAND_FIRSTRUN_COLOR_SYSTEM ) );
+    ui.layoutExplainer->setText( qtr( BRAND_FIRSTRUN_LAYOUT_MODERN ) );
+#endif
 
     /* Set up the button group for colour schemes. */
     /* Creating in Qt Designer has unstable ordering when calling buttons() */
@@ -202,13 +197,13 @@ void FirstRunWizard::updateColorLabel( QAbstractButton* btn )
     switch ( colorSchemeGroup->id(btn) )
     {
         case ColorSchemeModel::System:
-            ui.explainerLabel->setText( qtr( "<i>VLC will automatically switch to dark mode accordingly with system settings</i>" ) );
+            ui.explainerLabel->setText( qtr( BRAND_FIRSTRUN_COLOR_SYSTEM ) );
             break;
         case ColorSchemeModel::Day:
-            ui.explainerLabel->setText( qtr( "<i>VLC will automatically use light mode</i>" ) );
+            ui.explainerLabel->setText( qtr( BRAND_FIRSTRUN_COLOR_LIGHT ) );
             break;
         case ColorSchemeModel::Night:
-            ui.explainerLabel->setText( qtr( "<i>VLC will automatically use dark mode</i>" ) );
+            ui.explainerLabel->setText( qtr( BRAND_FIRSTRUN_COLOR_DARK ) );
             break;
     }
 }
@@ -222,10 +217,10 @@ void FirstRunWizard::updateLayoutLabel( QAbstractButton* btn )
     switch ( ui.layoutGroup->id( btn ) )
     {
         case MODERN:
-            ui.layoutExplainer->setText( qtr( "<i>VLC will use a modern layout with no menubar or pinned controls but with client-side decoration</i>" ) );
+            ui.layoutExplainer->setText( qtr( BRAND_FIRSTRUN_LAYOUT_MODERN ) );
             break;
         case CLASSIC:
-            ui.layoutExplainer->setText( qtr( "<i>VLC will use a classic layout with a menubar and pinned controls but with no client-side decoration</i>" ) );
+            ui.layoutExplainer->setText( qtr( BRAND_FIRSTRUN_LAYOUT_CLASSIC ) );
             break;
     }
 }

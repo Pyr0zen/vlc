@@ -35,6 +35,7 @@
 #include "widgets/native/searchlineedit.hpp"
 #include "widgets/native/qvlcframe.hpp"
 #include "maininterface/mainctx.hpp"
+#include "util/brand.hpp"
 
 #include <QHBoxLayout>
 #include <QGroupBox>
@@ -381,7 +382,7 @@ void PrefsDialog::save()
         int restart = QMessageBox::question(
                           this,
                           qtr( "Restart Required" ),
-                          qtr( "VLC needs to be restarted for the reset to take full effect.\n\nRestart now?" ),
+                          qtr( BRAND_PREFS_RESTART_TEXT ),
                           QMessageBox::Yes | QMessageBox::No,
                           QMessageBox::Yes);
         
@@ -418,7 +419,7 @@ void PrefsDialog::reset()
     int ret = QMessageBox::question(
                  this,
                  qtr( "Reset Preferences" ),
-                 qtr( "Are you sure you want to reset your VLC media player preferences?" ),
+                 qtr( BRAND_PREFS_RESET_TEXT ),
                  QMessageBox::Ok | QMessageBox::Cancel,
                  QMessageBox::Ok);
 

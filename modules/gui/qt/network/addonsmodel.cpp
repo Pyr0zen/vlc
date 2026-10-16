@@ -18,6 +18,7 @@
 
 #include "addonsmodel.hpp"
 
+#include "util/brand.hpp"
 #include "util/locallistbasemodel.hpp"
 
 #include "medialibrary/mlhelper.hpp"
@@ -327,7 +328,7 @@ QVariant AddonsModel::data( const QModelIndex& index, int role ) const
             vlc_mutex_locker locker{&item->entry->lock};
             if ( !( item->entry->e_flags & ADDON_MANAGEABLE ) )
             {
-                return qtr("This addon has been installed manually. VLC can't manage it by itself.");
+                return qtr(BRAND_ADDON_MANUAL);
             }
             return QVariant{};
         }
