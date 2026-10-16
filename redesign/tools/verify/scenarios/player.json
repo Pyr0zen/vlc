@@ -11,7 +11,7 @@
     "Videos\\Verify Tracks.mkv"
    ],
    "args": [
-    "--qt-continue=0",
+    "--restore-playback-pos=0",
     "--start-paused"
    ],
    "setup": [
@@ -768,7 +768,7 @@
     "Videos\\Verify Tracks.mkv"
    ],
    "args": [
-    "--qt-continue=0",
+    "--restore-playback-pos=0",
     "--start-paused",
     "--sub-file={media}\\Videos\\The_Wand_S01_EN.srt"
    ],
@@ -1221,7 +1221,7 @@
     "Videos\\Verify Clip.mkv"
    ],
    "args": [
-    "--qt-continue=0",
+    "--restore-playback-pos=0",
     "--start-paused"
    ],
    "setup": [
@@ -1675,7 +1675,7 @@
     "Videos\\Verify Clip.mkv"
    ],
    "args": [
-    "--qt-continue=0",
+    "--restore-playback-pos=0",
     "--start-paused"
    ],
    "setup": [
@@ -1837,7 +1837,7 @@
     "Videos\\Verify Tracks.mkv"
    ],
    "args": [
-    "--qt-continue=0",
+    "--restore-playback-pos=0",
     "--start-paused"
    ],
    "setup": [
@@ -2169,7 +2169,7 @@
     "Videos\\Verify Clip.mkv"
    ],
    "args": [
-    "--qt-continue=0",
+    "--restore-playback-pos=0",
     "--start-paused"
    ],
    "setup": [
@@ -2318,7 +2318,7 @@
     "Videos\\Verify Clip.mkv"
    ],
    "args": [
-    "--qt-continue=0",
+    "--restore-playback-pos=0",
     "--start-paused"
    ],
    "setup": [
@@ -2550,7 +2550,7 @@
     "Videos\\Verify Tracks.mkv"
    ],
    "args": [
-    "--qt-continue=0",
+    "--restore-playback-pos=0",
     "--start-paused"
    ],
    "setup": [

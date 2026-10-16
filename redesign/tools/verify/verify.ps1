@@ -140,7 +140,11 @@ function Assert-ProfileTarget([string]$target) {
 if ($profileSource -and -not $Worker) {
     robocopy $profileSource $profileBase /E /R:1 /W:1 /NFL /NDL /NJH /NJS /NP | Out-Null
     if ($LASTEXITCODE -ge 8) { throw "copying the profile source failed ($LASTEXITCODE)" }
-    Write-VLog "profile: snapshot of the profile source in profile-base; each session starts from it"
+    # no media library in the run profile: its saved playback positions bring up the resume
+    # toast (which keeps the bars up) and its lists are the owner's library
+    $mlDir = Join-Path $profileBase 'ml'
+    if (Test-Path -LiteralPath $mlDir) { Remove-Item -LiteralPath $mlDir -Recurse -Force }
+    Write-VLog "profile: snapshot of the profile source in profile-base (without the media library); each session starts from it"
 }
 function Set-VlcrcLine([string]$text, [string]$key, [string]$value) {
     $k = [regex]::Escape($key); $line = "$key=$value"
@@ -377,6 +381,25 @@ if ($ExitRetest -gt 0) {
 }
 
 # --- main run: UIA lanes in parallel + the manual lane -------------------------------------------
+# fixed lane folders <builds>\verify-lane0 (manual lane) and verify-lane1..3 (UIA lanes): the build
+# under test is mirrored into them (their portable folder is kept out of the mirror and gets the run
+# profile per session), so Windows Firewall asks once per folder ever; the network discovery plugins
+# (UPnP, mDNS, SAP) are left out, so no player opens a listening socket
+function Sync-LaneFolder([string]$src, [string]$dst) {
+    if ($dst -like (Join-Path $cfg.testMediaDir 'builds\current*') -or (Split-Path $dst -Leaf) -notlike 'verify-lane*') { throw "bad lane folder $dst" }
+    robocopy $src $dst /MIR /XD (Join-Path $src 'portable') (Join-Path $dst 'portable') /R:1 /W:1 /NFL /NDL /NJH /NJS /NP | Out-Null
+    if ($LASTEXITCODE -ge 8) { throw "copying the build to $dst failed ($LASTEXITCODE)" }
+    foreach ($nd in 'libupnp_plugin.dll', 'libmicrodns_plugin.dll', 'libsap_plugin.dll') {
+        $nf = Join-Path $dst "plugins\services_discovery\$nd"; if (Test-Path -LiteralPath $nf) { Remove-Item -LiteralPath $nf }
+    }
+}
+$buildExe = $exe
+if ($true) {
+    $l0 = Join-Path $cfg.testMediaDir 'builds\verify-lane0'
+    $busy0 = @(Get-Process Cone, vlc -ErrorAction SilentlyContinue | Where-Object { $pp = $null; try { $pp = $_.Path } catch {}; $pp -and $pp.StartsWith($l0 + [char]92, [StringComparison]::OrdinalIgnoreCase) })
+    if ($busy0) { throw "the manual lane folder has a player that never ended (pid $($busy0.Id -join ', '))" }
+    if (-not $LanesOnly) { Sync-LaneFolder (Split-Path $buildExe) $l0; $exe = Join-Path $l0 (Split-Path $buildExe -Leaf); Write-VLog "manual lane: build mirrored into verify-lane0" }
+}
 $results = New-Object System.Collections.ArrayList
 $cleanup = @(); $demoLog = [ordered]@{}; $laneInfo = [ordered]@{}; $aborted = $null
 $workers = @()
@@ -392,28 +415,21 @@ if ($uiaPlan.Count) {
         $k = 0; for ($j = 1; $j -lt $n; $j++) { if ($loads[$j] -lt $loads[$k]) { $k = $j } }
         [void]$buckets[$k].Add($p); $loads[$k] += $p.Scenarios.Count
     }
-    $srcDir = Split-Path $exe
-    $slot = 0
+    $srcDir = Split-Path $buildExe
     for ($k = 1; $k -le $n; $k++) {
-        # a lane folder whose player is stuck in termination keeps its files locked: use the next one
-        do {
-            $slot++
-            $ld = Join-Path (Join-Path $cfg.testMediaDir 'builds') ("{0}-lane{1}" -f $(if ($buildNum) { $buildNum } else { 'build' }), $slot)
-            $busy = @(Get-Process Cone, vlc -ErrorAction SilentlyContinue | Where-Object { $pp = $null; try { $pp = $_.Path } catch {}; $pp -and $pp.StartsWith($ld + [char]92, [StringComparison]::OrdinalIgnoreCase) })
-            if ($busy) { Write-VLog "lane folder $(Split-Path $ld -Leaf) is busy (pid $($busy.Id -join ', ')): skipped" }
-        } while ($busy -and $slot -lt 12)
-        if ($ld -like (Join-Path $cfg.testMediaDir 'builds\current*')) { throw "bad lane folder $ld" }
+        $ld = Join-Path $cfg.testMediaDir "builds\verify-lane$k"
+        $busy = @(Get-Process Cone, vlc -ErrorAction SilentlyContinue | Where-Object { $pp = $null; try { $pp = $_.Path } catch {}; $pp -and $pp.StartsWith($ld + [char]92, [StringComparison]::OrdinalIgnoreCase) })
+        if ($busy) {
+            Write-VLog "lane $k skipped: its folder has a player that never ended (pid $($busy.Id -join ', ')); its sessions go to the manual lane"
+            $manualPlan += @($buckets[$k - 1]); continue
+        }
         $lsw = [Diagnostics.Stopwatch]::StartNew()
         # the network discovery plugins (UPnP, mDNS, SAP) are left out of lane copies: they open
         # listening sockets, and every new exe path would raise a Windows Firewall prompt
-        robocopy $srcDir $ld /MIR /XD (Join-Path $srcDir 'portable') (Join-Path $ld 'portable') /XF libupnp_plugin.dll libmicrodns_plugin.dll libsap_plugin.dll /R:1 /W:1 /NFL /NDL /NJH /NJS /NP | Out-Null
-        if ($LASTEXITCODE -ge 8) { throw "copying the build to $ld failed ($LASTEXITCODE)" }
-        foreach ($nd in 'libupnp_plugin.dll', 'libmicrodns_plugin.dll', 'libsap_plugin.dll') {
-            $nf = Join-Path $ld "plugins\services_discovery\$nd"; if (Test-Path -LiteralPath $nf) { Remove-Item -LiteralPath $nf }
-        }
+        Sync-LaneFolder $srcDir $ld
         $laneDirs += $ld
         $ids = ($buckets[$k - 1] | ForEach-Object { $_.Session.id }) -join ','
-        $laneExe = Join-Path $ld (Split-Path $exe -Leaf)
+        $laneExe = Join-Path $ld (Split-Path $buildExe -Leaf)
         $laneCfg = @{ lane = $k; exe = $laneExe }
         $argList = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', "`"$(Join-Path $here 'verify.ps1')`"", '-Worker', '-LaneNo', $k, '-RunDir', "`"$RunDir`"",
                      '-Sessions', $ids, '-Build', $Build, '-WaitForOthersMin', $WaitForOthersMin)

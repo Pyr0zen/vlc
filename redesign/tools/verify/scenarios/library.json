@@ -8,7 +8,7 @@
     "Videos\\Verify Clip.mkv"
    ],
    "args": [
-    "--qt-continue=0",
+    "--restore-playback-pos=0",
     "--start-paused"
    ],
    "setup": [
