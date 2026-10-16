@@ -136,11 +136,15 @@ function Initialize-Profile($se) {
         if (-not $scr) { continue }
         foreach ($v in @($scr.values)) {
             if ($v.how -ne 'vlcrc' -or -not $v.option) { continue }
-            $key = [regex]::Escape([string]$v.option)
-            $line = "$($v.option)=$($v.value)"
-            if ($text -match "(?m)^#?$key=.*$") { $text = [regex]::Replace($text, "(?m)^#?$key=.*$", $line.Replace('$', '$$'), 1) }
-            else { $text += "`n$line`n" }
-            $applied += "${sid}: $($v.label) = $($v.figma) (vlcrc $line)"
+            $pairs = @(@([string]$v.option, [string]$v.value))
+            if ($v.PSObject.Properties['extra']) { foreach ($x in @($v.extra)) { $pairs += ,@([string]$x.option, [string]$x.value) } }
+            $lines = @()
+            foreach ($pv in $pairs) {
+                $key = [regex]::Escape($pv[0]); $line = "$($pv[0])=$($pv[1])"; $lines += $line
+                if ($text -match "(?m)^#?$key=.*$") { $text = [regex]::Replace($text, "(?m)^#?$key=.*$", $line.Replace('$', '$$'), 1) }
+                else { $text += "`n$line`n" }
+            }
+            $applied += "${sid}: $($v.label) = $($v.figma) (vlcrc $($lines -join ', '))"
         }
     }
     [IO.File]::WriteAllText($vlcrc, $text, (New-Object System.Text.UTF8Encoding $false))

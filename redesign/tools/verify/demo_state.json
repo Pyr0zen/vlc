@@ -1,0 +1,2075 @@
+{
+ "about": "Demo state per verification screen: what to set so the player shows the values of the Figma design. how: \"vlcrc\" = write option=value into the portable profile's vlcrc while the player is closed (VLC rewrites the file on exit); VLC finds options by name and skips [section] lines when it loads (src/config/file.c:190), \"section\" is the [module] VLC itself writes it under; booleans 0/1, colours decimal, floats with 6 decimals, an empty value means unset. \"ui\" = per-media / per-session state set in the running player (uia = the UI Automation name / role from the QML Accessible.name). \"default\" = a fresh profile already shows the Figma value. \"mask\" = cannot be set (or should not be): leave out of the pixel diff; \"bounds\" (Figma units, relative to the spec frame) is given where Figma has no text to mask by; \"alt\" is a way to set it anyway. \"qml_differs\" = the build shows another text or control whatever the state: a real difference, not a demo-state problem. \"side_effect\": apply that vlcrc state for its screen only. \"below_fold\": under the sidebar footer, visible only after scrolling. src = file:line in this repo.",
+ "notes": [
+  "Per-screen vlcrc states conflict, so each screen needs its own vlcrc: sub-language (sidebar-subtitles \"English\" / settings-subtitles masked), freetype-font (\"Inter\" / empty), freetype-color (12105912 / default), freetype-outline-color (789516 / default).",
+  "audio-track=0 and sub-track=0 are wanted by both sidebar-audio / sidebar-subtitles and settings-playback (consistent).",
+  "sub-track=0 and sub-language=English turn subtitles on at every file open; make_media.py keeps them off so no subtitle text covers the bars: do not use these states for the player screens.",
+  "tracks-subtitles / tracks-audio / tracks-video and sidebar-video / sidebar-audio need \"Verify Tracks.mkv\" playing (track list, Stereo Mode, Zoom)."
+ ],
+ "screens": {
+  "sidebar-playback": {
+   "figma": "5187:24308",
+   "qml": "modules/gui/qt/player/qml/PlaybackSettingsPage.qml",
+   "qml_differs": [
+    "QML has no \"Show Subtitle Timeline on Seekbar\" row and no \"Reverse\" row (Figma rows 1 and 3)",
+    "QML adds \"Show Waveform on Seekbar\" (qt-seek-waveform, default OFF, :72-81) and \"Show Metadata\" (RdPanels.metadataShown, default OFF, :83-92) before Show Statistics, so the rows below sit at other heights than in Figma"
+   ],
+   "values": [
+    {
+     "label": "Show Subtitle Timeline on Seekbar",
+     "figma": "OFF",
+     "how": "mask",
+     "reason": "row not built: PlaybackSettingsPage has no such row (only its header comment lists it)",
+     "src": "modules/gui/qt/player/qml/PlaybackSettingsPage.qml:19-23"
+    },
+    {
+     "label": "Show Statistics",
+     "figma": "OFF",
+     "how": "default",
+     "detail": "RdPanels.statisticsShown starts false",
+     "src": "modules/gui/qt/player/qml/PlaybackSettingsPage.qml:94-103",
+     "uia": {
+      "name": "Show Statistics",
+      "role": "CheckBox"
+     }
+    },
+    {
+     "label": "Reverse",
+     "figma": "OFF",
+     "how": "mask",
+     "reason": "row not built (reverse playback postponed, Decision 29)",
+     "src": "modules/gui/qt/player/qml/PlaybackSettingsPage.qml:23"
+    },
+    {
+     "label": "Sleep Timer",
+     "figma": "Off",
+     "how": "default",
+     "detail": "RdSleepTimer.choice 0 (no timer running)",
+     "src": "modules/gui/qt/player/qml/PlaybackSettingsPage.qml:108-125",
+     "uia": {
+      "name": "Sleep Timer",
+      "role": "ComboBox"
+     }
+    },
+    {
+     "label": "Audio Visualizer",
+     "figma": "Disabled",
+     "how": "default",
+     "detail": "audio-visual default \"none\": VLC's \"Disable\" is shown as \"Disabled\"",
+     "src": "modules/gui/qt/player/qml/PlaybackSettingsPage.qml:128-139",
+     "uia": {
+      "name": "Audio Visualizer",
+      "role": "ComboBox"
+     }
+    },
+    {
+     "label": "Speed",
+     "figma": "1x",
+     "how": "default",
+     "detail": "Player.rate 1.0 (per media; core option rate defaults to 1.0); the slider thumb sits on the \"1\" label",
+     "src": "modules/gui/qt/player/qml/PlaybackSettingsPage.qml:145-174",
+     "uia": {
+      "name": "Speed",
+      "role": "Edit"
+     }
+    },
+    {
+     "label": "Setting Preset",
+     "figma": "Default Preset",
+     "how": "default",
+     "detail": "no preset of the user yet: a fresh profile has no rd-presets.json in the user data folder (rd_presets.cpp:253-260), so \"Default Preset\" shows",
+     "src": "modules/gui/qt/player/rd_presets.cpp:393-405"
+    },
+    {
+     "label": "Footer button",
+     "figma": "Open Advanced Settings",
+     "how": "default",
+     "detail": "static text",
+     "src": "modules/gui/qt/player/qml/SettingsSidebar.qml:83"
+    }
+   ]
+  },
+  "sidebar-video": {
+   "figma": "498:2965",
+   "qml": "modules/gui/qt/player/qml/VideoSettingsPage.qml",
+   "needs": "a video playing (Zoom / Aspect Ratio / Crop choices come from the video output)",
+   "values": [
+    {
+     "label": "Flip",
+     "figma": "None",
+     "how": "default",
+     "detail": "\"transform\" video filter off",
+     "src": "modules/gui/qt/player/qml/VideoSettingsPage.qml:70-94",
+     "uia": {
+      "name": "Flip"
+     }
+    },
+    {
+     "label": "Rotate",
+     "figma": "0 deg",
+     "how": "default",
+     "detail": "\"rotate\" video filter off: the box shows \"0 deg\"",
+     "src": "modules/gui/qt/player/qml/VideoSettingsPage.qml:97-113",
+     "uia": {
+      "name": "Rotate",
+      "role": "Edit"
+     }
+    },
+    {
+     "label": "Zoom",
+     "figma": "1:1 Original",
+     "how": "default",
+     "detail": "vout \"zoom\" 1 = \"1:1 Original\" (src/video_output/vout_intf.c:104)",
+     "src": "modules/gui/qt/player/qml/VideoSettingsPage.qml:115-123",
+     "uia": {
+      "name": "Zoom",
+      "role": "ComboBox"
+     }
+    },
+    {
+     "label": "HDR",
+     "figma": "Auto",
+     "how": "default",
+     "detail": "d3d11-hdr-mode default \"auto\" ([direct3d11]); the row hides when the option has no choices",
+     "src": "modules/gui/qt/player/qml/VideoSettingsPage.qml:125-138",
+     "uia": {
+      "name": "HDR",
+      "role": "ComboBox"
+     }
+    },
+    {
+     "label": "Resolution",
+     "figma": "Best Available",
+     "how": "default",
+     "detail": "preferred-resolution -1 \"Best available\", renamed \"Best Available\" by displayNames",
+     "src": "modules/gui/qt/player/qml/VideoSettingsPage.qml:140-149",
+     "uia": {
+      "name": "Resolution",
+      "role": "ComboBox"
+     }
+    },
+    {
+     "label": "Aspect Ratio",
+     "figma": "Default",
+     "how": "default",
+     "detail": "Player.aspectRatio \"\" = \"Default\" (src/video_output/vout_intf.c:113)",
+     "src": "modules/gui/qt/player/qml/VideoSettingsPage.qml:151-159",
+     "uia": {
+      "name": "Aspect Ratio",
+      "role": "ComboBox"
+     }
+    },
+    {
+     "label": "Crop",
+     "figma": "Default",
+     "how": "default",
+     "detail": "Player.crop \"\" = \"Default\" (src/video_output/vout_intf.c:131)",
+     "src": "modules/gui/qt/player/qml/VideoSettingsPage.qml:161-169",
+     "uia": {
+      "name": "Crop",
+      "role": "ComboBox"
+     }
+    },
+    {
+     "label": "Render",
+     "figma": "Local",
+     "how": "default",
+     "detail": "no renderer in use",
+     "src": "modules/gui/qt/player/qml/VideoSettingsPage.qml:171-212",
+     "uia": {
+      "name": "Render",
+      "role": "ComboBox"
+     }
+    },
+    {
+     "label": "Filter cards (Essential, Crop, Colors, Geometry, Overlay, Advanced)",
+     "figma": "Expand Settings",
+     "how": "default",
+     "detail": "all cards collapsed (below the fold from y 694: only the \"Filters\" label and the top of Essential show above the footer)",
+     "src": "modules/gui/qt/player/qml/VideoSettingsPage.qml:369-423",
+     "below_fold": true
+    },
+    {
+     "label": "Setting Preset",
+     "figma": "Default Preset",
+     "how": "default",
+     "detail": "no preset of the user yet: a fresh profile has no rd-presets.json in the user data folder (rd_presets.cpp:253-260), so \"Default Preset\" shows",
+     "src": "modules/gui/qt/player/rd_presets.cpp:393-405"
+    },
+    {
+     "label": "Footer button",
+     "figma": "Open Advanced Settings",
+     "how": "default",
+     "detail": "static text",
+     "src": "modules/gui/qt/player/qml/SettingsSidebar.qml:83"
+    }
+   ]
+  },
+  "sidebar-audio": {
+   "figma": "536:1087",
+   "qml": "modules/gui/qt/player/qml/AudioSettingsPage.qml",
+   "needs": "a 2-channel audio track playing for Stereo Mode (Verify Tracks.mkv track 1 is stereo, track 2 mono: a mono track has no stereo modes)",
+   "qml_differs": [
+    "QML adds the note \"Track and language apply from the next file\" under \"Defaults\" (:101); Figma has none",
+    "Audio Track Delay labels: Figma \"-10 s / 0 s / -10 s\" (typo on the right), QML \"-10 s / 0 s / +10 s\" (secondsText, :181)"
+   ],
+   "values": [
+    {
+     "label": "Audio Track",
+     "figma": "1",
+     "how": "vlcrc",
+     "option": "audio-track",
+     "value": "0",
+     "section": "core",
+     "src": "modules/gui/qt/player/qml/AudioSettingsPage.qml:103-116",
+     "detail": "a vlcrc option, not per media: the box shows track + 1, \"Auto\" for the default -1",
+     "side_effect": "every file opens on its first audio track"
+    },
+    {
+     "label": "Audio Language",
+     "figma": "English",
+     "how": "vlcrc",
+     "option": "audio-language",
+     "value": "English",
+     "section": "core",
+     "src": "modules/gui/qt/player/qml/AudioSettingsPage.qml:118-128",
+     "detail": "the box shows the raw option text (\"Auto\" when empty); VLC also matches the English name against track languages"
+    },
+    {
+     "label": "Stereo Mode",
+     "figma": "Mono",
+     "how": "vlcrc",
+     "option": "stereo-mode",
+     "value": "7",
+     "section": "core",
+     "src": "modules/gui/qt/player/qml/AudioSettingsPage.qml:132-151",
+     "detail": "AOUT_VAR_CHAN_MONO = 7 (include/vlc_aout.h:104); the aout var inherits the option (src/audio_output/output.c:391) and offers Mono only for 2-channel input (output.c:478-484)",
+     "alt": {
+      "how": "ui",
+      "detail": "pick \"Mono\" in the Stereo Mode dropdown while the stereo track plays",
+      "uia": {
+       "name": "Stereo Mode",
+       "role": "ComboBox"
+      }
+     },
+     "side_effect": "all stereo audio is mixed to mono"
+    },
+    {
+     "label": "Test button",
+     "figma": "Test",
+     "how": "default",
+     "detail": "static",
+     "src": "modules/gui/qt/player/qml/AudioSettingsPage.qml:138-142"
+    },
+    {
+     "label": "Audio Track Delay",
+     "figma": "0.000 s",
+     "how": "default",
+     "detail": "per media: Player.audioDelayMS 0 (audio-desync default 0); thumb in the middle",
+     "src": "modules/gui/qt/player/qml/AudioSettingsPage.qml:159-189",
+     "uia": {
+      "name": "Audio Track Delay",
+      "role": "Edit"
+     }
+    },
+    {
+     "label": "Equalizer",
+     "figma": "None",
+     "how": "default",
+     "detail": "equalizer not in audio-filter (RdEffects equalizerPreset -1)",
+     "src": "modules/gui/qt/player/qml/AudioSettingsPage.qml:209-219",
+     "uia": {
+      "name": "Equalizer",
+      "role": "ComboBox"
+     }
+    },
+    {
+     "label": "Equalizer card",
+     "figma": "Expand Settings",
+     "how": "default",
+     "detail": "collapsed",
+     "src": "modules/gui/qt/player/qml/AudioSettingsPage.qml:221-310"
+    },
+    {
+     "label": "2 Pass",
+     "figma": "OFF",
+     "how": "default",
+     "detail": "equalizer-2pass default 0 ([equalizer])",
+     "src": "modules/gui/qt/player/qml/AudioSettingsPage.qml:311-318",
+     "uia": {
+      "name": "2 Pass",
+      "role": "CheckBox"
+     }
+    },
+    {
+     "label": "Compressor",
+     "figma": "OFF",
+     "how": "default",
+     "detail": "compressor not in audio-filter (row at y 815, under the footer: below the fold)",
+     "src": "modules/gui/qt/player/qml/AudioSettingsPage.qml:322-334",
+     "below_fold": true
+    },
+    {
+     "label": "Spatializer",
+     "figma": "OFF",
+     "how": "default",
+     "detail": "spatializer not in audio-filter (below the fold)",
+     "src": "modules/gui/qt/player/qml/AudioSettingsPage.qml:336-346",
+     "below_fold": true
+    },
+    {
+     "label": "Stereo Widener",
+     "figma": "OFF",
+     "how": "default",
+     "detail": "stereo_widen not in audio-filter (below the fold)",
+     "src": "modules/gui/qt/player/qml/AudioSettingsPage.qml:348-357",
+     "below_fold": true
+    },
+    {
+     "label": "Adjust Pitch",
+     "figma": "4.0 semitones",
+     "how": "vlcrc",
+     "option": "pitch-shift",
+     "value": "4.000000",
+     "section": "scaletempo_pitch",
+     "src": "modules/gui/qt/player/qml/AudioSettingsPage.qml:359-400",
+     "detail": "the row shows the shift only while the scaletempo_pitch filter is on (:363-364), so audio-filter must list it too",
+     "extra": [
+      {
+       "option": "audio-filter",
+       "value": "scaletempo_pitch",
+       "section": "core"
+      }
+     ],
+     "below_fold": true,
+     "side_effect": "audio pitch-shifted by 4 semitones (the verify clips are silent)"
+    },
+    {
+     "label": "Setting Preset",
+     "figma": "Default Preset",
+     "how": "default",
+     "detail": "no preset of the user yet: a fresh profile has no rd-presets.json in the user data folder (rd_presets.cpp:253-260), so \"Default Preset\" shows",
+     "src": "modules/gui/qt/player/rd_presets.cpp:393-405"
+    },
+    {
+     "label": "Footer button",
+     "figma": "Open Advanced Settings",
+     "how": "default",
+     "detail": "static text",
+     "src": "modules/gui/qt/player/qml/SettingsSidebar.qml:83"
+    }
+   ]
+  },
+  "sidebar-subtitles": {
+   "figma": "763:1986",
+   "qml": "modules/gui/qt/player/qml/SubtitleSettingsPage.qml",
+   "qml_differs": [
+    "QML has no \"Size Values\" (Relative / Pixels) row in the sidebar (pixel sizes need a core change; :291-293)",
+    "QML adds the notes \"Applies from the next file\" under \"Defaults\" (:113) and \"Font, colors, outline and background apply from the next file\" under \"Appearance\" (:217); Figma has none"
+   ],
+   "values": [
+    {
+     "label": "Subtitle Track",
+     "figma": "1",
+     "how": "vlcrc",
+     "option": "sub-track",
+     "value": "0",
+     "section": "core",
+     "src": "modules/gui/qt/player/qml/SubtitleSettingsPage.qml:117-130",
+     "detail": "a vlcrc option: the box shows track + 1, \"Auto\" for the default -1",
+     "side_effect": "every file opens with its first subtitle track on: subtitle text over the video in other screens"
+    },
+    {
+     "label": "Subtitle Language",
+     "figma": "English",
+     "how": "vlcrc",
+     "option": "sub-language",
+     "value": "English",
+     "section": "core",
+     "src": "modules/gui/qt/player/qml/SubtitleSettingsPage.qml:132-142",
+     "detail": "the box shows the raw option text (\"Auto\" when empty)",
+     "side_effect": "VLC selects the English subtitle track at every file open"
+    },
+    {
+     "label": "Subtitle Track Delay",
+     "figma": "-4.000 s",
+     "how": "ui",
+     "src": "modules/gui/qt/player/qml/SubtitleSettingsPage.qml:148-171",
+     "detail": "per media (Player.subtitleDelayMS): with the file open, click the value box (focus selects its text), type -4, press Enter -> -4000 ms; the slider thumb follows. Set it after the file is open: \"Default Preset\" puts a file's delays back to 0 when the file changes (rd_presets.hpp:116). Hotkeys G / H step 50 ms only.",
+     "uia": {
+      "name": "Subtitle Track Delay",
+      "role": "Edit"
+     },
+     "note": "the slider next to it has the same name with role Slider (RdParamSlider.qml:127,163)"
+    },
+    {
+     "label": "Subtitle Speed",
+     "figma": "1.000 fps",
+     "how": "default",
+     "detail": "per media Player.subtitleFPS (sub-fps 0 shows as 1.000); thumb at the left end",
+     "src": "modules/gui/qt/player/qml/SubtitleSettingsPage.qml:176-193",
+     "uia": {
+      "name": "Subtitle Speed",
+      "role": "Edit"
+     }
+    },
+    {
+     "label": "Subtitle Duration Factor",
+     "figma": "0.000",
+     "how": "default",
+     "detail": "subsdelay filter off; thumb at the left end",
+     "src": "modules/gui/qt/player/qml/SubtitleSettingsPage.qml:195-212",
+     "uia": {
+      "name": "Subtitle Duration Factor",
+      "role": "Edit"
+     }
+    },
+    {
+     "label": "Embedded Sub Format",
+     "figma": "OFF",
+     "how": "vlcrc",
+     "option": "subsdec-formatted",
+     "value": "0",
+     "section": "subsusf",
+     "src": "modules/gui/qt/player/qml/SubtitleSettingsPage.qml:221-229",
+     "detail": "default 1 (modules/codec/subsusf.c:54) shows ON"
+    },
+    {
+     "label": "Subtitle Font",
+     "figma": "Inter",
+     "how": "vlcrc",
+     "option": "freetype-font",
+     "value": "Inter",
+     "section": "freetype",
+     "src": "modules/gui/qt/player/qml/SubtitleSettingsPage.qml:231-239",
+     "detail": "the box shows the raw option; the Windows default is \"Arial\" (text_renderer/freetype/platform_fonts.h:76)"
+    },
+    {
+     "label": "Text Color",
+     "figma": "#B8B8B8",
+     "how": "vlcrc",
+     "option": "freetype-color",
+     "value": "12105912",
+     "section": "freetype",
+     "src": "modules/gui/qt/player/qml/SubtitleSettingsPage.qml:241-257",
+     "detail": "0xB8B8B8; default 16777215 (#FFFFFF)"
+    },
+    {
+     "label": "Outline Color",
+     "figma": "#0C0C0C",
+     "how": "vlcrc",
+     "option": "freetype-outline-color",
+     "value": "789516",
+     "section": "freetype",
+     "src": "modules/gui/qt/player/qml/SubtitleSettingsPage.qml:259-275",
+     "detail": "0x0C0C0C; default 0 (#000000)"
+    },
+    {
+     "label": "Subtitle Offset",
+     "figma": "0px",
+     "how": "default",
+     "detail": "sub-margin 0 (RdEffects video value)",
+     "src": "modules/gui/qt/player/qml/SubtitleSettingsPage.qml:277-289",
+     "uia": {
+      "name": "Subtitle Offset",
+      "role": "Edit"
+     }
+    },
+    {
+     "label": "Size Values",
+     "figma": "Relative / Pixels (Relative selected)",
+     "how": "mask",
+     "reason": "row not built in the sidebar",
+     "src": "modules/gui/qt/player/qml/SubtitleSettingsPage.qml:291-293",
+     "below_fold": true
+    },
+    {
+     "label": "Font Size",
+     "figma": "Auto",
+     "how": "default",
+     "detail": "sub-text-scale 100 shows \"Auto\" (below the fold). Figma draws the thumb at ~60 % of the track; QML puts 100 % at 27 % of 25..300",
+     "src": "modules/gui/qt/player/qml/SubtitleSettingsPage.qml:294-309",
+     "below_fold": true
+    },
+    {
+     "label": "Outline Thickness",
+     "figma": "Normal",
+     "how": "default",
+     "detail": "freetype-outline-thickness 4 (below the fold)",
+     "src": "modules/gui/qt/player/qml/SubtitleSettingsPage.qml:311-325",
+     "below_fold": true
+    },
+    {
+     "label": "Background Opacity",
+     "figma": "0 %",
+     "how": "default",
+     "detail": "freetype-background-opacity 0 (below the fold)",
+     "src": "modules/gui/qt/player/qml/SubtitleSettingsPage.qml:327-340",
+     "below_fold": true
+    },
+    {
+     "label": "Setting Preset",
+     "figma": "Default Preset",
+     "how": "default",
+     "detail": "no preset of the user yet: a fresh profile has no rd-presets.json in the user data folder (rd_presets.cpp:253-260), so \"Default Preset\" shows",
+     "src": "modules/gui/qt/player/rd_presets.cpp:393-405"
+    },
+    {
+     "label": "Footer button",
+     "figma": "Open Advanced Settings",
+     "how": "default",
+     "detail": "static text",
+     "src": "modules/gui/qt/player/qml/SettingsSidebar.qml:83"
+    }
+   ]
+  },
+  "tracks-subtitles": {
+   "figma": "491:2243",
+   "qml": "modules/gui/qt/player/qml/TracksPopup.qml",
+   "media": "Verify Tracks.mkv (subtitle tracks eng, jpn; The_Wand_S01_EN.srt next to it), from make_media.py",
+   "qml_differs": [
+    "External Tracks has no list in QML: an external .srt loaded with the file (sub-autodetect-file, on by default) shows as one more row of the Embedded Tracks list (Player.subtitleTracks)"
+   ],
+   "values": [
+    {
+     "label": "Embedded track row 2 (first subtitle track)",
+     "figma": "English (checked)",
+     "how": "ui",
+     "src": "modules/gui/qt/player/qml/TracksPopup.qml:513-527",
+     "detail": "subtitles are off by default in the verify clips: open the popup with the subtitle button (Subtitles tab), click the second row of Embedded Tracks (the first track, language eng); or press V once before opening it",
+     "uia": {
+      "role": "RadioButton",
+      "name_contains": "English",
+      "index_in_list": 1
+     }
+    },
+    {
+     "label": "Embedded track row 1",
+     "figma": "None (unchecked)",
+     "how": "ui",
+     "src": "modules/gui/qt/player/qml/TracksPopup.qml:496-510",
+     "detail": "follows from selecting a track",
+     "uia": {
+      "role": "RadioButton",
+      "name": "None"
+     }
+    },
+    {
+     "label": "Embedded track names",
+     "figma": "English / Japanese",
+     "how": "mask",
+     "reason": "sample names: QML shows VLC's track name with \" - [x]\" turned into \" - x\" (e.g. \"Track 1 - English\")",
+     "src": "modules/gui/qt/player/qml/TracksPopup.qml:524"
+    },
+    {
+     "label": "External track row",
+     "figma": "The_Wand_S01_EN.srt (unchecked)",
+     "how": "mask",
+     "reason": "no list under External Tracks in QML; the auto-loaded file appears in the Embedded list instead",
+     "src": "modules/gui/qt/player/qml/TracksPopup.qml:261-270"
+    },
+    {
+     "label": "Footer button",
+     "figma": "Show Preferences",
+     "how": "default",
+     "detail": "static",
+     "src": "modules/gui/qt/player/qml/TracksPopup.qml:315"
+    }
+   ]
+  },
+  "tracks-audio": {
+   "figma": "496:2523",
+   "qml": "modules/gui/qt/player/qml/TracksPopup.qml",
+   "media": "Verify Tracks.mkv (audio tracks: 1 eng stereo, 2 jpn mono)",
+   "values": [
+    {
+     "label": "Embedded track row 3 (second audio track)",
+     "figma": "Japanese (checked)",
+     "how": "ui",
+     "src": "modules/gui/qt/player/qml/TracksPopup.qml:513-527",
+     "detail": "open the popup with the audio button (Audio tab), click the third row of Embedded Tracks (the second track, language jpn); or press B (cycle audio track) once from track 1",
+     "uia": {
+      "role": "RadioButton",
+      "name_contains": "Japanese",
+      "index_in_list": 2
+     }
+    },
+    {
+     "label": "Embedded track rows 1-2",
+     "figma": "None, English (unchecked)",
+     "how": "ui",
+     "src": "modules/gui/qt/player/qml/TracksPopup.qml:496-527",
+     "detail": "follows from selecting track 2"
+    },
+    {
+     "label": "Embedded track names",
+     "figma": "English / Japanese",
+     "how": "mask",
+     "reason": "sample names: QML shows VLC's track names (e.g. \"Track 2 - Japanese\")",
+     "src": "modules/gui/qt/player/qml/TracksPopup.qml:524"
+    },
+    {
+     "label": "Output Device rows",
+     "figma": "Speakers / Headphones (Headphones checked)",
+     "how": "mask",
+     "reason": "the PC's audio devices (Player.audioDevices): names, count and the selected one depend on the PC",
+     "src": "modules/gui/qt/player/qml/TracksPopup.qml:278-291"
+    },
+    {
+     "label": "Footer button",
+     "figma": "Show Preferences",
+     "how": "default",
+     "detail": "static",
+     "src": "modules/gui/qt/player/qml/TracksPopup.qml:315"
+    }
+   ]
+  },
+  "tracks-video": {
+   "figma": "498:2702",
+   "qml": "modules/gui/qt/player/qml/TracksPopup.qml",
+   "values": [
+    {
+     "label": "Embedded track row 2",
+     "figma": "Track 1 (checked)",
+     "how": "default",
+     "detail": "the only video track is selected at open; label assumed to be VLC's \"Track 1\" for an untitled video track without language (unsure: mask the text if it differs)",
+     "src": "modules/gui/qt/player/qml/TracksPopup.qml:513-527",
+     "uia": {
+      "role": "RadioButton",
+      "index_in_list": 1
+     }
+    },
+    {
+     "label": "Embedded track row 1",
+     "figma": "None (unchecked)",
+     "how": "default",
+     "detail": "follows",
+     "src": "modules/gui/qt/player/qml/TracksPopup.qml:496-510"
+    },
+    {
+     "label": "Footer button",
+     "figma": "Show Preferences",
+     "how": "default",
+     "detail": "static",
+     "src": "modules/gui/qt/player/qml/TracksPopup.qml:315"
+    }
+   ]
+  },
+  "settings-general": {
+   "figma": "spec/settings-global.json",
+   "qml": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsGeneralPage.qml",
+   "values": [
+    {
+     "label": "Interface language",
+     "figma": "English",
+     "how": "mask",
+     "reason": "kept in the Windows registry (HKCU Software\\VideoLAN\\VLC Lang), not vlcrc, and depends on the PC; QML shows \"System language\" for auto and \"American English\" for en",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsGeneralPage.qml:39-69; modules/gui/qt/dialogs/redesign/settings/settings_catalog.cpp:651-696",
+     "bounds": [
+      704,
+      114,
+      320,
+      36
+     ]
+    },
+    {
+     "label": "Theme",
+     "figma": "Dark",
+     "how": "default",
+     "detail": "Qt interface .ini MainWindow/color-scheme-index defaults to 2 (Night) in the redesign",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsGeneralPage.qml:73-91; modules/gui/qt/maininterface/mainctx.cpp:570-572",
+     "uia": {
+      "name": "Theme"
+     }
+    },
+    {
+     "label": "Accent color",
+     "figma": "first swatch (#D37918) selected",
+     "how": "default",
+     "detail": "qt-accent-color default \"default\" = index 0 (orange)",
+     "src": "modules/gui/qt/dialogs/redesign/settings/SettingsAccentPicker.qml:32-45; modules/gui/qt/qt.cpp:573"
+    },
+    {
+     "label": "Show confirmation and error dialogs",
+     "figma": "OFF",
+     "how": "vlcrc",
+     "option": "interact",
+     "value": "0",
+     "section": "core",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsGeneralPage.qml:104-107",
+     "detail": "default 1 (src/libvlc-module.c:2252)",
+     "side_effect": "VLC's interaction dialogs (errors, logins) are not shown"
+    },
+    {
+     "label": "Check for updates automatically",
+     "figma": "OFF",
+     "how": "vlcrc",
+     "option": "qt-updates-notif",
+     "value": "0",
+     "section": "qt",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsGeneralPage.qml:109-114",
+     "detail": "default 1 (qt.cpp:472)"
+    },
+    {
+     "label": "Developer mode",
+     "figma": "OFF",
+     "how": "default",
+     "detail": "qt-verbose default 0",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsGeneralPage.qml:120-124"
+    },
+    {
+     "label": "Save a log",
+     "figma": "ON",
+     "how": "vlcrc",
+     "option": "file-logging",
+     "value": "1",
+     "section": "file_logger",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsGeneralPage.qml:126-130",
+     "detail": "default 0 (modules/logger/file.c:239)",
+     "side_effect": "with logfile empty, VLC writes vlc-log.txt into its working directory at start (logger/file.c:170-186): start the player with the working directory inside the build folder"
+    },
+    {
+     "label": "Log file",
+     "figma": "(empty field) + Browse",
+     "how": "default",
+     "detail": "logfile empty; the row is enabled while file-logging is on",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsGeneralPage.qml:132-139"
+    },
+    {
+     "label": "Log details",
+     "figma": "Errors only",
+     "how": "vlcrc",
+     "option": "log-verbose",
+     "value": "0",
+     "section": "file_logger",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsGeneralPage.qml:141-154",
+     "detail": "default -1 (\"Same as VLC's messages\")",
+     "qml_differs": "QML text \"Errors\" (Figma \"Errors only\")"
+    },
+    {
+     "label": "Advanced Options",
+     "figma": "collapsed",
+     "how": "default",
+     "detail": "the page opens collapsed",
+     "src": "modules/gui/qt/dialogs/redesign/settings/SettingsAdvancedBar.qml:15-27"
+    }
+   ]
+  },
+  "settings-interface": {
+   "figma": "spec/settings-interface.json",
+   "qml": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsInterfacePage.qml",
+   "values": [
+    {
+     "label": "Use a custom skin",
+     "figma": "ON",
+     "how": "mask",
+     "reason": "intf=skins2 would replace this interface with the skins one at the next start; the row shows only in builds with skins2",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsInterfacePage.qml:41-50",
+     "bounds": [
+      956,
+      114,
+      68,
+      32
+     ]
+    },
+    {
+     "label": "Skin file",
+     "figma": "(empty field) + Browse",
+     "how": "mask",
+     "reason": "dimmed while the skin is off (available: _skin); depends on the row above",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsInterfacePage.qml:52-57",
+     "bounds": [
+      704,
+      156,
+      320,
+      36
+     ]
+    },
+    {
+     "label": "Play video inside main window",
+     "figma": "ON",
+     "how": "default",
+     "detail": "embedded-video default 1",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsInterfacePage.qml:63-67"
+    },
+    {
+     "label": "Resize window to fit video",
+     "figma": "Never",
+     "how": "vlcrc",
+     "option": "qt-video-autoresize",
+     "value": "0",
+     "section": "qt",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsInterfacePage.qml:69-76",
+     "detail": "default 1 = \"When a video starts\" (qt.cpp:452)"
+    },
+    {
+     "label": "Remember window size and position",
+     "figma": "ON",
+     "how": "default",
+     "detail": "qt-remember-window default 1",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsInterfacePage.qml:79-82"
+    },
+    {
+     "label": "Keep window above other windows",
+     "figma": "OFF",
+     "how": "default",
+     "detail": "video-on-top default 0",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsInterfacePage.qml:84-87"
+    },
+    {
+     "label": "Show window decorations",
+     "figma": "ON",
+     "how": "vlcrc",
+     "option": "qt-titlebar",
+     "value": "1",
+     "section": "qt",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsInterfacePage.qml:89-93",
+     "detail": "Windows default 0 (client-side decorations, qt.cpp:490-496)",
+     "side_effect": "the main window gets the system title bar: every other screen's window changes; use for this screen only"
+    },
+    {
+     "label": "Show the file name in the title bar",
+     "figma": "ON",
+     "how": "default",
+     "detail": "qt-name-in-title default 1",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsInterfacePage.qml:95-98"
+    },
+    {
+     "label": "Open fullscreen on",
+     "figma": "Current screen",
+     "how": "default",
+     "detail": "qt-fullscreen-screennumber default -1",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsInterfacePage.qml:100-113"
+    },
+    {
+     "label": "Start in compact mode",
+     "figma": "OFF",
+     "how": "default",
+     "detail": "qt-minimal-view default 0",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsInterfacePage.qml:119-122"
+    },
+    {
+     "label": "Auto-hide the controls",
+     "figma": "In fullscreen only",
+     "how": "vlcrc",
+     "option": "qt-pin-controls",
+     "value": "1",
+     "section": "qt",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsInterfacePage.qml:126-133",
+     "detail": "default 0 = \"Always\"",
+     "side_effect": "both bars stay pinned in a window: player screens change"
+    },
+    {
+     "label": "Hide after",
+     "figma": "0.5 s (thumb at 5 % of the 0-10 s track)",
+     "how": "vlcrc",
+     "option": "mouse-hide-timeout",
+     "value": "500",
+     "section": "core",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsInterfacePage.qml:137-150",
+     "detail": "milliseconds, default 1000 (1 s, thumb at 10 %); read from the Figma thumb position (unsure)",
+     "side_effect": "the cursor and the bars hide after 0.5 s in the player",
+     "qml_differs": "slider labels: Figma \"0 s / 5 s / 10s\", QML \"0 s / 5 s / 10 s\""
+    },
+    {
+     "label": "Show controls in fullscreen",
+     "figma": "ON",
+     "how": "default",
+     "detail": "qt-fs-controller default 1",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsInterfacePage.qml:152-157"
+    }
+   ]
+  },
+  "settings-privacy": {
+   "figma": "spec/settings-privacy.json",
+   "qml": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsPrivacyPage.qml",
+   "qml_differs": [
+    "QML adds \"Ask about internet access when <brand> starts\" (qt-privacy-ask, default ON) between \"Fetch titles...\" and \"Submit played tracks to last.fm\" (:96-99): the rows below are one row lower than in Figma",
+    "Figma has \"Last.fm username\" twice (typo); QML's second one is \"Last.fm password\" (Decision 17)"
+   ],
+   "values": [
+    {
+     "label": "Save recently played items",
+     "figma": "ON",
+     "how": "default",
+     "detail": "save-recentplay default 1",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsPrivacyPage.qml:38-41"
+    },
+    {
+     "label": "Remember the playback position",
+     "figma": "ON",
+     "how": "default",
+     "detail": "restore-playback-pos default 1 (Ask): any non-zero value shows ON; 2 (settings-playback state) also shows ON",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsPrivacyPage.qml:45-55"
+    },
+    {
+     "label": "Never remember items matching",
+     "figma": "(empty field)",
+     "how": "default",
+     "detail": "qt-history-filter default \"\"",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsPrivacyPage.qml:59-69"
+    },
+    {
+     "label": "Clear history now",
+     "figma": "Clear",
+     "how": "default",
+     "detail": "button, enabled while the media library runs",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsPrivacyPage.qml:71-85"
+    },
+    {
+     "label": "Fetch titles and cover art from the internet",
+     "figma": "OFF",
+     "how": "default",
+     "detail": "metadata-network-access default 0",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsPrivacyPage.qml:91-94"
+    },
+    {
+     "label": "Submit played tracks to last.fm",
+     "figma": "OFF",
+     "how": "default",
+     "detail": "audioscrobbler not in the extra interfaces",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsPrivacyPage.qml:101-108"
+    },
+    {
+     "label": "Last.fm username",
+     "figma": "(empty field)",
+     "how": "default",
+     "detail": "lastfm-username default \"\"; dimmed while last.fm is off",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsPrivacyPage.qml:110-114"
+    },
+    {
+     "label": "Last.fm username (second, QML \"Last.fm password\")",
+     "figma": "(empty field)",
+     "how": "default",
+     "detail": "lastfm-password default \"\"",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsPrivacyPage.qml:116-121"
+    },
+    {
+     "label": "Last.fm submission URL",
+     "figma": "(empty field)",
+     "how": "vlcrc",
+     "option": "scrobbler-url",
+     "value": "",
+     "section": "audioscrobbler",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsPrivacyPage.qml:123-127",
+     "detail": "default \"post.audioscrobbler.com\" (modules/misc/audioscrobbler.c:138) fills the field; an empty value loads as NULL (src/config/core.c:132) and the field shows nothing"
+    }
+   ]
+  },
+  "settings-playback": {
+   "figma": "spec/settings-playback.json",
+   "qml": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsPlaybackPage.qml",
+   "values": [
+    {
+     "label": "Continue where you left off",
+     "figma": "Always",
+     "how": "vlcrc",
+     "option": "restore-playback-pos",
+     "value": "2",
+     "section": "core",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsPlaybackPage.qml:55-63",
+     "detail": "default 1 = \"Ask\"",
+     "side_effect": "files resume at their saved position without asking"
+    },
+    {
+     "label": "Start playing as soon as a file opens",
+     "figma": "ON",
+     "how": "default",
+     "detail": "playlist-autostart default 1",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsPlaybackPage.qml:65-68"
+    },
+    {
+     "label": "Default playback speed",
+     "figma": "slider at 1 (0.25 ... 2)",
+     "how": "default",
+     "detail": "rate default 1.0",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsPlaybackPage.qml:73-89"
+    },
+    {
+     "label": "Pause when another app uses audio",
+     "figma": "ON",
+     "how": "default",
+     "detail": "playlist-cork default 1",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsPlaybackPage.qml:91-94"
+    },
+    {
+     "label": "Preferred video quality",
+     "figma": "Best available",
+     "how": "default",
+     "detail": "preferred-resolution default -1",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsPlaybackPage.qml:100-103"
+    },
+    {
+     "label": "Preferred menu language",
+     "figma": "English",
+     "how": "mask",
+     "reason": "depends on the PC locale: QML lists the PC's own language only as \"System language (<name>)\", so \"en\" shows \"English\" only on a non-English Windows locale; default \"\" shows \"Automatic\"",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsPlaybackPage.qml:105-108; modules/gui/qt/dialogs/redesign/settings/SettingsLanguageOption.qml:31,78-83",
+     "alt": {
+      "how": "vlcrc",
+      "option": "menu-language",
+      "value": "en",
+      "section": "core"
+     },
+     "bounds": [
+      704,
+      416,
+      320,
+      36
+     ]
+    },
+    {
+     "label": "Default audio track",
+     "figma": "1",
+     "how": "vlcrc",
+     "option": "audio-track",
+     "value": "0",
+     "section": "core",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsPlaybackPage.qml:110-114",
+     "qml_differs": "QML is a dropdown showing \"Track 1\" (Figma a value box \"1\")",
+     "side_effect": "every file opens on its first audio track"
+    },
+    {
+     "label": "Default subtitle track",
+     "figma": "1",
+     "how": "vlcrc",
+     "option": "sub-track",
+     "value": "0",
+     "section": "core",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsPlaybackPage.qml:116-120",
+     "qml_differs": "QML is a dropdown showing \"Track 1\" (Figma a value box \"1\")",
+     "side_effect": "every file opens with its first subtitle track on"
+    },
+    {
+     "label": "Repeat",
+     "figma": "Off",
+     "how": "default",
+     "detail": "loop 0 and repeat 0",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsPlaybackPage.qml:127-143"
+    },
+    {
+     "label": "Shuffle",
+     "figma": "ON",
+     "how": "vlcrc",
+     "option": "random",
+     "value": "1",
+     "section": "core",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsPlaybackPage.qml:145-148",
+     "detail": "default 0",
+     "side_effect": "the queue plays shuffled (the shuffle state shows in the player)"
+    },
+    {
+     "label": "Stop after each item",
+     "figma": "ON",
+     "how": "vlcrc",
+     "option": "play-and-stop",
+     "value": "1",
+     "section": "core",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsPlaybackPage.qml:150-153",
+     "detail": "default 0"
+    },
+    {
+     "label": "When playback finishes",
+     "figma": "Stop",
+     "how": "default",
+     "detail": "play-and-pause 0 and play-and-exit 0",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsPlaybackPage.qml:155-171"
+    },
+    {
+     "label": "Seek precisely",
+     "figma": "ON",
+     "how": "default",
+     "detail": "input-fast-seek default 0 (the toggle shows the inverse)",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsPlaybackPage.qml:177-184"
+    }
+   ]
+  },
+  "settings-video": {
+   "figma": "spec/settings-video.json",
+   "qml": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsVideoPage.qml",
+   "values": [
+    {
+     "label": "Enable video",
+     "figma": "ON",
+     "how": "default",
+     "detail": "video default 1",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsVideoPage.qml:50-53"
+    },
+    {
+     "label": "Start videos in fullscreen",
+     "figma": "OFF",
+     "how": "default",
+     "detail": "fullscreen default 0",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsVideoPage.qml:55-58"
+    },
+    {
+     "label": "Stop the screensaver during playback",
+     "figma": "ON",
+     "how": "default",
+     "detail": "disable-screensaver default 1",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsVideoPage.qml:61-72"
+    },
+    {
+     "label": "Play video as desktop wallpaper",
+     "figma": "OFF",
+     "how": "default",
+     "detail": "video-wallpaper default 0",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsVideoPage.qml:74-77"
+    },
+    {
+     "label": "Hue",
+     "figma": "thumb at 50 %",
+     "how": "default",
+     "detail": "adjust \"hue\" default 0 of -180..180",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsVideoPage.qml:83-117"
+    },
+    {
+     "label": "Brightness",
+     "figma": "thumb at 50 %",
+     "how": "default",
+     "detail": "adjust \"brightness\" default 1 of 0..2",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsVideoPage.qml:83-117"
+    },
+    {
+     "label": "Contrast",
+     "figma": "thumb at 50 %",
+     "how": "default",
+     "detail": "adjust \"contrast\" default 1 of 0..2",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsVideoPage.qml:83-117"
+    },
+    {
+     "label": "Saturation",
+     "figma": "thumb at 33 %",
+     "how": "default",
+     "detail": "adjust \"saturation\" default 1 of 0..3",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsVideoPage.qml:83-117"
+    },
+    {
+     "label": "Gamma",
+     "figma": "thumb at 9 %",
+     "how": "default",
+     "detail": "adjust \"gamma\" default 1 of 0.01..10 (10 %)",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsVideoPage.qml:83-117"
+    },
+    {
+     "label": "Reset picture",
+     "figma": "Reset",
+     "how": "default",
+     "detail": "button",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsVideoPage.qml:120-137"
+    },
+    {
+     "label": "Deinterlacing",
+     "figma": "Automatic",
+     "how": "default",
+     "detail": "deinterlace default -1 \"Automatic\"",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsVideoPage.qml:143-146"
+    },
+    {
+     "label": "Method",
+     "figma": "Automatic",
+     "how": "default",
+     "detail": "deinterlace-mode default \"auto\"",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsVideoPage.qml:148-152",
+     "qml_differs": "QML shows VLC's choice text \"Auto\" (src/libvlc-module.c:386), Figma \"Automatic\""
+    },
+    {
+     "label": "Aspect ratio",
+     "figma": "Automatic",
+     "how": "default",
+     "detail": "aspect-ratio default \"\"",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsVideoPage.qml:158-164"
+    },
+    {
+     "label": "Crop",
+     "figma": "None",
+     "how": "default",
+     "detail": "crop default \"\"",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsVideoPage.qml:166-172"
+    }
+   ]
+  },
+  "settings-audio": {
+   "figma": "spec/settings-audio.json",
+   "qml": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsAudioPage.qml",
+   "values": [
+    {
+     "label": "Enable audio",
+     "figma": "ON",
+     "how": "default",
+     "detail": "audio default 1",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsAudioPage.qml:138-141"
+    },
+    {
+     "label": "Output device",
+     "figma": "System default",
+     "how": "default",
+     "detail": "first entry, shown while the output uses the default device (mmdevice-audio-device empty). Unsure: if the output reports the default endpoint's own id as current, the dropdown shows that device's name: mask the field then",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsAudioPage.qml:147-206",
+     "bounds": [
+      704,
+      156,
+      320,
+      36
+     ]
+    },
+    {
+     "label": "Speaker setup",
+     "figma": "Automatic",
+     "how": "default",
+     "detail": "mix-mode default unset, its first choice renamed \"Automatic\"",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsAudioPage.qml:208-212"
+    },
+    {
+     "label": "Maximum volume",
+     "figma": "200% (thumb in the middle of 100-300 %)",
+     "how": "default",
+     "detail": "qt-max-volume default 200",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsAudioPage.qml:218-228"
+    },
+    {
+     "label": "Startup volume",
+     "figma": "Remember last volume (selected)",
+     "how": "default",
+     "detail": "volume-save default 1",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsAudioPage.qml:231-253"
+    },
+    {
+     "label": "Startup volume: Always starts at",
+     "figma": "200%",
+     "how": "mask",
+     "reason": "with \"Remember last volume\" on, mmdevice-volume is the volume playback starts at: 2.0 would start every file at 200 %. QML shows round(mmdevice-volume * 100) % (default 1.0 = \"100%\")",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsAudioPage.qml:255-285",
+     "alt": {
+      "how": "vlcrc",
+      "option": "mmdevice-volume",
+      "value": "2.000000",
+      "section": "mmdevice"
+     },
+     "bounds": [
+      838,
+      421,
+      182,
+      32
+     ]
+    },
+    {
+     "label": "Volume step",
+     "figma": "1",
+     "how": "vlcrc",
+     "option": "volume-step",
+     "value": "2.560000",
+     "section": "core",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsAudioPage.qml:291-298",
+     "detail": "VLC's 0-256 scale: 2.56 = 1 %; default 12.8 shows \"5 %\"",
+     "qml_differs": "QML shows \"1 %\" (unit), Figma \"1\"",
+     "side_effect": "volume keys and wheel step 1 %"
+    },
+    {
+     "label": "Normalize loudness",
+     "figma": "OFF",
+     "how": "default",
+     "detail": "normvol not in audio-filter",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsAudioPage.qml:304-308"
+    },
+    {
+     "label": "Target level",
+     "figma": "1",
+     "how": "vlcrc",
+     "option": "norm-max-level",
+     "value": "1.000000",
+     "section": "normvol",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsAudioPage.qml:310-316",
+     "detail": "default 2.0",
+     "qml_differs": "QML shows \"1.0\" (one decimal), dimmed while normvol is off"
+    },
+    {
+     "label": "Night mode",
+     "figma": "OFF",
+     "how": "default",
+     "detail": "compressor off",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsAudioPage.qml:319-330"
+    },
+    {
+     "label": "Replay gain",
+     "figma": "Off",
+     "how": "default",
+     "detail": "audio-replay-gain-mode default \"none\"",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsAudioPage.qml:332-340"
+    },
+    {
+     "label": "Replay gain preamp",
+     "figma": "0.0",
+     "how": "default",
+     "detail": "audio-replay-gain-preamp default 0.0",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsAudioPage.qml:342-349",
+     "qml_differs": "QML shows \"0.0 dB\" (unit), dimmed while replay gain is off"
+    },
+    {
+     "label": "Effects (first row, at the bottom edge)",
+     "figma": "OFF",
+     "how": "default",
+     "detail": "equalizer off",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsAudioPage.qml:352-357"
+    }
+   ]
+  },
+  "settings-subtitles": {
+   "figma": "spec/settings-subtitles.json",
+   "qml": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsSubtitlesPage.qml",
+   "qml_differs": [
+    "QML inserts the OpenSubtitles account section (SettingsOpenSubtitlesSection) between \"Loading Subtitles\" and \"Appearance\" (:103-104): the Appearance rows sit lower than in Figma"
+   ],
+   "values": [
+    {
+     "label": "Enable subtitles",
+     "figma": "ON",
+     "how": "default",
+     "detail": "spu default 1",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsSubtitlesPage.qml:61-64"
+    },
+    {
+     "label": "Preferred language",
+     "figma": "System language",
+     "how": "mask",
+     "reason": "depends on the PC locale: QML shows \"Automatic\" for \"\" and \"System language (<name>)\" for the PC's own code; the plain text \"System language\" only when the locale is not in its list",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsSubtitlesPage.qml:66-69; modules/gui/qt/dialogs/redesign/settings/SettingsLanguageOption.qml:78-83",
+     "alt": {
+      "how": "vlcrc",
+      "option": "sub-language",
+      "value": "<ISO 639-1 code of the Windows locale>",
+      "section": "core"
+     },
+     "bounds": [
+      704,
+      156,
+      320,
+      36
+     ]
+    },
+    {
+     "label": "Text encoding",
+     "figma": "Automatic",
+     "how": "default",
+     "detail": "subsdec-encoding default \"\"",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsSubtitlesPage.qml:71-74",
+     "qml_differs": "QML shows VLC's choice text \"Default (Windows-1252)\" (modules/codec/subsdec.c:99), Figma \"Automatic\""
+    },
+    {
+     "label": "Load subtitle files automatically",
+     "figma": "ON",
+     "how": "default",
+     "detail": "sub-autodetect-file default 1",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsSubtitlesPage.qml:80-83"
+    },
+    {
+     "label": "File name matching",
+     "figma": "Title with extra characters",
+     "how": "default",
+     "detail": "sub-autodetect-fuzzy default 3",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsSubtitlesPage.qml:87-100"
+    },
+    {
+     "label": "Font",
+     "figma": "System, sans-serif",
+     "how": "vlcrc",
+     "option": "freetype-font",
+     "value": "",
+     "section": "freetype",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsSubtitlesPage.qml:109-114",
+     "detail": "\"System, sans-serif\" is the placeholder of an empty field; the Windows default \"Arial\" (platform_fonts.h:76) fills it. An empty value loads as NULL and freetype falls back to its default family (freetype.c:728-734)"
+    },
+    {
+     "label": "Size values",
+     "figma": "Relative (selected) / Pixels",
+     "how": "default",
+     "detail": "Relative while sub-text-scale is one of the named sizes",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsSubtitlesPage.qml:117-138",
+     "qml_differs": "QML segments are \"Relative / Precise\" (Figma \"Relative / Pixels\")"
+    },
+    {
+     "label": "Font size",
+     "figma": "Automatic",
+     "how": "default",
+     "detail": "sub-text-scale default 100",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsSubtitlesPage.qml:140-179"
+    },
+    {
+     "label": "Bold",
+     "figma": "OFF",
+     "how": "default",
+     "detail": "freetype-bold default 0",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsSubtitlesPage.qml:181-184"
+    },
+    {
+     "label": "Text color",
+     "figma": "#FFFFFF",
+     "how": "default",
+     "detail": "freetype-color default 16777215",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsSubtitlesPage.qml:186-189"
+    },
+    {
+     "label": "Text opacity",
+     "figma": "50% (thumb in the middle)",
+     "how": "vlcrc",
+     "option": "freetype-opacity",
+     "value": "128",
+     "section": "freetype",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsSubtitlesPage.qml:191-202",
+     "detail": "0-255 shown as 0-100 %: 128 = 50.2 %; default 255 (100 %)",
+     "side_effect": "subtitles drawn half transparent"
+    },
+    {
+     "label": "Outline thickness",
+     "figma": "Normal",
+     "how": "default",
+     "detail": "freetype-outline-thickness default 4",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsSubtitlesPage.qml:204-207"
+    },
+    {
+     "label": "Outline color",
+     "figma": "#000000",
+     "how": "default",
+     "detail": "freetype-outline-color default 0",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsSubtitlesPage.qml:209-212"
+    },
+    {
+     "label": "Shadow",
+     "figma": "ON",
+     "how": "default",
+     "detail": "freetype-shadow-opacity default 128 (> 0 shows ON)",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsSubtitlesPage.qml:214-225"
+    }
+   ]
+  },
+  "settings-controls": {
+   "figma": "spec/settings-controls.json",
+   "qml": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsControlsPage.qml",
+   "values": [
+    {
+     "label": "Defaults",
+     "figma": "Edit Keyboard Shortcuts",
+     "how": "default",
+     "detail": "button",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsControlsPage.qml:54-67"
+    },
+    {
+     "label": "Reset all shortcuts",
+     "figma": "Reset",
+     "how": "default",
+     "detail": "button",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsControlsPage.qml:69-89"
+    },
+    {
+     "label": "Very short skip",
+     "figma": "3 s",
+     "how": "default",
+     "detail": "extrashort-jump-size default 3",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsControlsPage.qml:95-100"
+    },
+    {
+     "label": "Short skip",
+     "figma": "10 s",
+     "how": "default",
+     "detail": "short-jump-size default 10",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsControlsPage.qml:102-107"
+    },
+    {
+     "label": "Medium skip",
+     "figma": "60 s",
+     "how": "default",
+     "detail": "medium-jump-size default 60",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsControlsPage.qml:109-114"
+    },
+    {
+     "label": "Long skip",
+     "figma": "300 s",
+     "how": "default",
+     "detail": "long-jump-size default 300",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsControlsPage.qml:116-121"
+    },
+    {
+     "label": "Single click on the video",
+     "figma": "Play / Pause",
+     "how": "default",
+     "detail": "mouse-pause-policy default \"auto\"",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsControlsPage.qml:128-137"
+    },
+    {
+     "label": "Double click on the video",
+     "figma": "Toggle fullscreen",
+     "how": "default",
+     "detail": "qt-video-double-click default 0",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsControlsPage.qml:140-148"
+    },
+    {
+     "label": "Scroll wheel",
+     "figma": "Volume",
+     "how": "default",
+     "detail": "hotkeys-y-wheel-mode default 0",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsControlsPage.qml:150-154"
+    },
+    {
+     "label": "Horizontal scroll",
+     "figma": "Seek",
+     "how": "default",
+     "detail": "hotkeys-x-wheel-mode default 2",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsControlsPage.qml:156-160"
+    },
+    {
+     "label": "Reverse scroll direction",
+     "figma": "OFF",
+     "how": "default",
+     "detail": "no wheel in mode 3",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsControlsPage.qml:163-180"
+    },
+    {
+     "label": "Web remote control",
+     "figma": "OFF",
+     "how": "default",
+     "detail": "http not in the extra interfaces",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsControlsPage.qml:187-194"
+    },
+    {
+     "label": "Port",
+     "figma": "(empty field)",
+     "how": "mask",
+     "reason": "http-port is an integer (default 8080): QML shows \"8080\" (dimmed while the web remote is off); it cannot be empty",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsControlsPage.qml:196-201",
+     "bounds": [
+      704,
+      836,
+      320,
+      36
+     ]
+    }
+   ]
+  },
+  "settings-library": {
+   "figma": "spec/settings-library.json",
+   "qml": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsLibraryPage.qml",
+   "values": [
+    {
+     "label": "Only allow one VLC window",
+     "figma": "OFF",
+     "how": "default",
+     "detail": "one-instance default 0",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsLibraryPage.qml:37-40",
+     "qml_differs": "the label uses Brand.shortName (\"Cone\" on the public build)"
+    },
+    {
+     "label": "Apply to files opened from the file manager",
+     "figma": "OFF",
+     "how": "vlcrc",
+     "option": "one-instance-when-started-from-file",
+     "value": "0",
+     "section": "core",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsLibraryPage.qml:42-46",
+     "detail": "default 1 (src/libvlc-module.c:2171); dimmed while one-instance is off"
+    },
+    {
+     "label": "Add to the playlist instead of replacing it",
+     "figma": "OFF",
+     "how": "default",
+     "detail": "playlist-enqueue default 0",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsLibraryPage.qml:48-52"
+    },
+    {
+     "label": "When opening a folder",
+     "figma": "Include subfolders",
+     "how": "vlcrc",
+     "option": "recursive",
+     "value": "expand",
+     "section": "core",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsLibraryPage.qml:54-62",
+     "detail": "default \"collapse\" = \"Show subfolders as folders\""
+    },
+    {
+     "label": "Show hidden files",
+     "figma": "OFF",
+     "how": "default",
+     "detail": "show-hiddenfiles default 0",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsLibraryPage.qml:64-67"
+    },
+    {
+     "label": "Fetch titles and artwork",
+     "figma": "From the file only",
+     "how": "default",
+     "detail": "metadata-network-access default 0",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsLibraryPage.qml:73-80"
+    },
+    {
+     "label": "Use the media library",
+     "figma": "ON",
+     "how": "default",
+     "detail": "MainCtx.mediaLibraryAvailable (vlc.exe starts with the media library)",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsLibraryPage.qml:85-100",
+     "qml_differs": "the toggle is disabled (enabled: false), so it is drawn dimmed"
+    },
+    {
+     "label": "Advanced Options",
+     "figma": "collapsed",
+     "how": "default",
+     "detail": "the page opens collapsed",
+     "src": "modules/gui/qt/dialogs/redesign/settings/SettingsAdvancedBar.qml:15-27"
+    }
+   ]
+  },
+  "settings-network": {
+   "figma": "spec/settings-network.json",
+   "qml": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsNetworkPage.qml",
+   "values": [
+    {
+     "label": "Buffering",
+     "figma": "Normal",
+     "how": "default",
+     "detail": "file 1000, disc 300, network 1000, live 300 ms = the \"Normal\" preset (all VLC defaults)",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsNetworkPage.qml:48-66"
+    },
+    {
+     "label": "Local files",
+     "figma": "(empty field)",
+     "how": "mask",
+     "reason": "file-caching is an integer: QML shows \"1000 ms\" (dimmed while not Custom)",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsNetworkPage.qml:68-74",
+     "bounds": [
+      704,
+      161,
+      320,
+      36
+     ]
+    },
+    {
+     "label": "Discs",
+     "figma": "(empty field)",
+     "how": "mask",
+     "reason": "disc-caching: QML shows \"300 ms\"",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsNetworkPage.qml:76-82",
+     "bounds": [
+      704,
+      209,
+      320,
+      36
+     ]
+    },
+    {
+     "label": "Network streams",
+     "figma": "(empty field)",
+     "how": "mask",
+     "reason": "network-caching: QML shows \"1000 ms\"",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsNetworkPage.qml:84-90",
+     "bounds": [
+      704,
+      257,
+      320,
+      36
+     ]
+    },
+    {
+     "label": "Live capture",
+     "figma": "(empty field)",
+     "how": "mask",
+     "reason": "live-caching: QML shows \"300 ms\"",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsNetworkPage.qml:92-98",
+     "bounds": [
+      704,
+      305,
+      320,
+      36
+     ]
+    },
+    {
+     "label": "HTTP proxy",
+     "figma": "System proxy",
+     "how": "default",
+     "detail": "http-proxy empty: the placeholder shows",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsNetworkPage.qml:104-109"
+    },
+    {
+     "label": "HTTP proxy password",
+     "figma": "(empty field)",
+     "how": "default",
+     "detail": "http-proxy-pwd empty",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsNetworkPage.qml:111-115"
+    },
+    {
+     "label": "Verify certificates against the system trust store",
+     "figma": "ON",
+     "how": "default",
+     "detail": "gnutls-system-trust default 1",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsNetworkPage.qml:121-124"
+    },
+    {
+     "label": "Cipher preference",
+     "figma": "Balanced",
+     "how": "default",
+     "detail": "gnutls-priorities default \"NORMAL\"",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsNetworkPage.qml:126-135"
+    },
+    {
+     "label": "Advanced Options",
+     "figma": "collapsed",
+     "how": "default",
+     "detail": "the page opens collapsed",
+     "src": "modules/gui/qt/dialogs/redesign/settings/SettingsAdvancedBar.qml:15-27"
+    }
+   ]
+  },
+  "settings-performance": {
+   "figma": "spec/settings-performance.json",
+   "qml": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsPerformancePage.qml",
+   "values": [
+    {
+     "label": "Hardware-accelerated decoding",
+     "figma": "Automatic",
+     "how": "default",
+     "detail": "hw-dec 1, dec-dev \"any\"",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsPerformancePage.qml:61-98"
+    },
+    {
+     "label": "Video post-processing",
+     "figma": "Off",
+     "how": "default",
+     "detail": "postproc filter off",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsPerformancePage.qml:102-133"
+    },
+    {
+     "label": "Skip the H.264 loop filter",
+     "figma": "Never",
+     "how": "default",
+     "detail": "avcodec-skiploopfilter default 0",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsPerformancePage.qml:135-145"
+    },
+    {
+     "label": "Decoding threads",
+     "figma": "0",
+     "how": "default",
+     "detail": "avcodec-threads default 0",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsPerformancePage.qml:147-153"
+    },
+    {
+     "label": "Drop frames when the system can't keep up",
+     "figma": "ON",
+     "how": "default",
+     "detail": "drop-late-frames default 1",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsPerformancePage.qml:159-162"
+    },
+    {
+     "label": "Give VLC real-time priority",
+     "figma": "OFF",
+     "how": "default",
+     "detail": "high-priority default 0",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsPerformancePage.qml:166-176",
+     "qml_differs": "QML label \"Give <brand> high priority\""
+    },
+    {
+     "label": "Process priority",
+     "figma": "0",
+     "how": "default",
+     "detail": "qt-process-priority default 0",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsPerformancePage.qml:180-208",
+     "qml_differs": "QML is a dropdown showing \"Normal\" (Figma a value box \"0\")"
+    },
+    {
+     "label": "Rescan plugins",
+     "figma": "Rescan",
+     "how": "default",
+     "detail": "button",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsPerformancePage.qml:212-240"
+    },
+    {
+     "label": "Advanced Options",
+     "figma": "expanded (chevron down, Developer section shown)",
+     "how": "ui",
+     "src": "modules/gui/qt/dialogs/redesign/settings/SettingsAdvancedBar.qml:15-27",
+     "detail": "after opening the page, click the \"Advanced Options\" bar once",
+     "uia": {
+      "name": "Advanced Options",
+      "role": "Button"
+     }
+    },
+    {
+     "label": "Encoder",
+     "figma": "Automatic",
+     "how": "default",
+     "detail": "sout-transcode-venc default \"none\"",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsPerformancePage.qml:276-291"
+    },
+    {
+     "label": "Decoder",
+     "figma": "Automatic",
+     "how": "default",
+     "detail": "codec default \"any\"",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsPerformancePage.qml:293-297"
+    },
+    {
+     "label": "Clock synchronisation",
+     "figma": "Default",
+     "how": "default",
+     "detail": "clock-synchro default -1 \"Default\"",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsPerformancePage.qml:299-302"
+    },
+    {
+     "label": "Clock jitter",
+     "figma": "5000 ms",
+     "how": "default",
+     "detail": "clock-jitter default 5000",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsPerformancePage.qml:304-309"
+    },
+    {
+     "label": "Clock reference averaging",
+     "figma": "40",
+     "how": "default",
+     "detail": "cr-average default 40",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsPerformancePage.qml:311-315"
+    }
+   ]
+  },
+  "settings-recording": {
+   "figma": "spec/settings-recording.json",
+   "qml": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsRecordingPage.qml",
+   "values": [
+    {
+     "label": "Save recordings to",
+     "figma": "~/Videos",
+     "how": "mask",
+     "reason": "the spec marks it sample content; a PC path. Empty shows the placeholder \"Videos or Music folder\"",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsRecordingPage.qml:50-56",
+     "alt": {
+      "how": "vlcrc",
+      "option": "input-record-path",
+      "value": "~/Videos",
+      "section": "core",
+      "note": "shows the text exactly; recordings would go to a literal \"~/Videos\" folder"
+     },
+     "bounds": [
+      704,
+      115,
+      210,
+      36
+     ]
+    },
+    {
+     "label": "Record without re-encoding when possible",
+     "figma": "ON",
+     "how": "default",
+     "detail": "input-record-native default 1",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsRecordingPage.qml:58-61"
+    },
+    {
+     "label": "Discover cast devices",
+     "figma": "ON",
+     "how": "default",
+     "detail": "qt-cast-discovery default 1",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsRecordingPage.qml:69-72"
+    },
+    {
+     "label": "Cast quality",
+     "figma": "Automatic",
+     "how": "default",
+     "detail": "sout-chromecast-conversion-quality default 1 (CONVERSION_QUALITY_DEFAULT medium, stream_out/renderer_common.hpp:45)",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsRecordingPage.qml:74-83",
+     "qml_differs": "QML has no \"Automatic\" choice: it shows \"Medium\""
+    },
+    {
+     "label": "Play locally while streaming",
+     "figma": "ON",
+     "how": "vlcrc",
+     "option": "sout-display",
+     "value": "1",
+     "section": "core",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsRecordingPage.qml:89-92",
+     "detail": "default 0"
+    },
+    {
+     "label": "Include audio",
+     "figma": "ON",
+     "how": "default",
+     "detail": "sout-audio default 1",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsRecordingPage.qml:94-97"
+    },
+    {
+     "label": "Include video",
+     "figma": "ON",
+     "how": "default",
+     "detail": "sout-video default 1",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsRecordingPage.qml:99-102"
+    },
+    {
+     "label": "include subtitles",
+     "figma": "ON",
+     "how": "default",
+     "detail": "sout-spu default 1",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsRecordingPage.qml:104-107",
+     "qml_differs": "QML \"Include subtitles\" (capital I, Decision 17)"
+    },
+    {
+     "label": "Encoding preset",
+     "figma": "Medium",
+     "how": "default",
+     "detail": "sout-x264-preset empty = x264's \"medium\"",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsRecordingPage.qml:109-123"
+    },
+    {
+     "label": "Tuning",
+     "figma": "None",
+     "how": "default",
+     "detail": "sout-x264-tune empty",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsRecordingPage.qml:125-139"
+    },
+    {
+     "label": "Advanced Options",
+     "figma": "collapsed",
+     "how": "default",
+     "detail": "the page opens collapsed",
+     "src": "modules/gui/qt/dialogs/redesign/settings/SettingsAdvancedBar.qml:15-27"
+    }
+   ]
+  },
+  "settings-extensions": {
+   "figma": "spec/settings-extensions.json",
+   "qml": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsExtensionsPage.qml",
+   "values": [
+    {
+     "label": "Section title",
+     "figma": "Add-ons",
+     "how": "default",
+     "detail": "static",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsExtensionsPage.qml:251-252",
+     "qml_differs": "QML \"Extensions\" (the video's wording, Decision 11)"
+    },
+    {
+     "label": "Add-on list",
+     "figma": "(empty box)",
+     "how": "mask",
+     "reason": "build-dependent: QML lists the installed add-ons (bundled Lua extensions) or the text \"No add-ons installed. ...\"",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsExtensionsPage.qml:70-82",
+     "bounds": [
+      240,
+      109,
+      784,
+      194
+     ]
+    },
+    {
+     "label": "Search field",
+     "figma": "Search",
+     "how": "default",
+     "detail": "placeholder",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsExtensionsPage.qml:429"
+    },
+    {
+     "label": "Buttons",
+     "figma": "Find more extensions / Add / Remove",
+     "how": "default",
+     "detail": "static; Add and Remove are disabled with nothing selected (drawn dimmed)",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsExtensionsPage.qml:441-483"
+    },
+    {
+     "label": "Load add-ons on startup",
+     "figma": "ON",
+     "how": "default",
+     "detail": "qt-autoload-extensions default 1",
+     "src": "modules/gui/qt/dialogs/redesign/settings/pages/SettingsExtensionsPage.qml:497-499",
+     "qml_differs": "QML label \"Load extensions on startup\""
+    },
+    {
+     "label": "Advanced Options",
+     "figma": "collapsed",
+     "how": "default",
+     "detail": "the page opens collapsed",
+     "src": "modules/gui/qt/dialogs/redesign/settings/SettingsAdvancedBar.qml:15-27"
+    }
+   ]
+  }
+ },
+ "counts": {
+  "sidebar-playback": {
+   "default": 6,
+   "mask": 2
+  },
+  "sidebar-video": {
+   "default": 11
+  },
+  "sidebar-audio": {
+   "default": 10,
+   "vlcrc": 4
+  },
+  "sidebar-subtitles": {
+   "default": 8,
+   "mask": 1,
+   "ui": 1,
+   "vlcrc": 6
+  },
+  "tracks-subtitles": {
+   "default": 1,
+   "mask": 2,
+   "ui": 2
+  },
+  "tracks-audio": {
+   "default": 1,
+   "mask": 2,
+   "ui": 2
+  },
+  "tracks-video": {
+   "default": 3
+  },
+  "settings-general": {
+   "default": 5,
+   "mask": 1,
+   "vlcrc": 4
+  },
+  "settings-interface": {
+   "default": 7,
+   "mask": 2,
+   "vlcrc": 4
+  },
+  "settings-privacy": {
+   "default": 8,
+   "vlcrc": 1
+  },
+  "settings-playback": {
+   "default": 7,
+   "mask": 1,
+   "vlcrc": 5
+  },
+  "settings-video": {
+   "default": 14
+  },
+  "settings-audio": {
+   "default": 10,
+   "mask": 1,
+   "vlcrc": 2
+  },
+  "settings-subtitles": {
+   "default": 11,
+   "mask": 1,
+   "vlcrc": 2
+  },
+  "settings-controls": {
+   "default": 12,
+   "mask": 1
+  },
+  "settings-library": {
+   "default": 6,
+   "vlcrc": 2
+  },
+  "settings-network": {
+   "default": 6,
+   "mask": 4
+  },
+  "settings-performance": {
+   "default": 13,
+   "ui": 1
+  },
+  "settings-recording": {
+   "default": 9,
+   "mask": 1,
+   "vlcrc": 1
+  },
+  "settings-extensions": {
+   "default": 5,
+   "mask": 1
+  }
+ }
+}

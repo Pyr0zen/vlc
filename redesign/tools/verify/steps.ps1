@@ -202,20 +202,24 @@ function Set-DemoState([string]$screen, $ctx) {
     if (-not $scr) { return }
     foreach ($v in @($scr.values)) {
         if ($v.how -ne 'ui' -or -not $v.uia) { continue }
+        # rows that only follow from another selection (e.g. "None" unchecked) are not clicked
+        if ([string]$v.detail -like 'follows*') { continue }
         $role = if ($v.uia.PSObject.Properties['role']) { [string]$v.uia.role } else { '' }
-        $match = if ($v.uia.PSObject.Properties['match']) { [string]$v.uia.match } else { 'exact' }
-        $el = Find-UiaElement ([string]$v.uia.name) $role 2000 $match
-        if (-not $el) { [void]$ctx.Notes.Add("demo ${screen}: '$($v.label)' not set (control '$($v.uia.name)' not found)"); continue }
+        if ($v.uia.PSObject.Properties['name_contains']) { $uname = [string]$v.uia.name_contains; $match = 'contains' }
+        else { $uname = [string]$v.uia.name; $match = if ($v.uia.PSObject.Properties['match']) { [string]$v.uia.match } else { 'exact' } }
+        $el = Find-UiaElement $uname $role 2000 $match
+        if (-not $el) { [void]$ctx.Notes.Add("demo ${screen}: '$($v.label)' not set (control '$uname' not found)"); continue }
         try {
             if ($role -eq 'Edit' -or $v.PSObject.Properties['input']) {
-                $text = if ($v.PSObject.Properties['input']) { [string]$v.input } else { [string]$v.figma }
+                $text = if ($v.PSObject.Properties['input']) { [string]$v.input }
+                        elseif ([string]$v.figma -match '^[-+]?\d+(\.\d+)?') { $Matches[0] } else { [string]$v.figma }
                 Invoke-UiaElement $el | Out-Null; Start-Sleep -Milliseconds 250
                 Send-Keys '^a'; Send-Keys ($text.Replace('+', '{+}').Replace('%', '{%}').Replace('^', '{^}')); Send-Keys '{ENTER}'
                 Start-Sleep -Milliseconds 400
-                [void]$ctx.Notes.Add("demo ${screen}: $($v.label) = $($v.figma) (typed '$text' into '$($v.uia.name)')")
+                [void]$ctx.Notes.Add("demo ${screen}: $($v.label) = $($v.figma) (typed '$text' into '$uname')")
             } else {
                 Invoke-UiaElement $el | Out-Null; Start-Sleep -Milliseconds 400
-                [void]$ctx.Notes.Add("demo ${screen}: $($v.label) = $($v.figma) (clicked '$($v.uia.name)')")
+                [void]$ctx.Notes.Add("demo ${screen}: $($v.label) = $($v.figma) (clicked '$uname')")
             }
         } catch { [void]$ctx.Notes.Add("demo ${screen}: '$($v.label)' not set: $($_.Exception.Message)") }
     }
