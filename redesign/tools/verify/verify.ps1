@@ -136,7 +136,7 @@ function Initialize-Profile($se) {
         if (-not $scr) { continue }
         foreach ($v in @($scr.values)) {
             if ($v.how -ne 'vlcrc' -or -not $v.option) { continue }
-            $pairs = @(@([string]$v.option, [string]$v.value))
+            $pairs = @(, @([string]$v.option, [string]$v.value))
             if ($v.PSObject.Properties['extra']) { foreach ($x in @($v.extra)) { $pairs += ,@([string]$x.option, [string]$x.value) } }
             $lines = @()
             foreach ($pv in $pairs) {
