@@ -53,8 +53,10 @@
 
 namespace {
 
-// previews kept: a preset list of a dozen rows twice over
-constexpr int kCacheSize = 32;
+// previews kept for one frame (each new frame empties the cache). It must hold every preview
+// shown at once: when one is evicted, the rows ask for it again, and its return evicts another,
+// a loop that never ends. 256 previews of a preset row are about 4 MB.
+constexpr int kCacheSize = 256;
 // a stuck capture (slow disk, broken file) gives up after this long
 constexpr vlc_tick_t kTimeout = VLC_TICK_FROM_SEC(3);
 // a capture at about the same time as the last one reuses the frame (seconds)
