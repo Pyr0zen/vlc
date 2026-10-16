@@ -36,7 +36,7 @@
 
 namespace {
 
-// sampled scan: the audio measured after each seek, and a bound on the packets demuxed to
+// sampled scan: the audio measured in each slice, and a bound on the packets demuxed to
 // reach it (a video packet comes between audio packets; a broken file must not read forever)
 constexpr double kSampleSeconds = 0.25;
 constexpr int kSampleMaxPackets = 4000;
@@ -52,6 +52,8 @@ constexpr double kWarmupSeconds = 0.2;
 // sampled scan: a stretch whose audio ends at most this far past the next stretch's start was
 // measured where it lies, so the next stretch is read on from there instead of seeked to
 constexpr double kOnTimeSeconds = 0.05;
+// sampled scan: how long an audio packet without a length may be, for the drop above
+constexpr double kUnknownLengthSeconds = 1.0;
 // a file that has shown no audio track after this many packets has none (a video-only file
 // is not read to its end for nothing)
 constexpr int kNoAudioPackets = 2000;
@@ -758,9 +760,12 @@ bool RdWaveformScanner::Scan::keepPacket(block_t* block)
     if (ts != VLC_TICK_INVALID)
     {
         const double begin = secf_from_vlc_tick(ts - VLC_TICK_0);
-        const double end = begin + secf_from_vlc_tick(block->i_length);
         const double early = sampleStart - begin;
-        readEnd = end;
+        // a packet without a length (MKV SimpleBlock, PES, AVI chunk) may be long: it is
+        // dropped only when it starts kUnknownLengthSeconds earlier
+        const double end = begin + (block->i_length > 0 ? secf_from_vlc_tick(block->i_length)
+                                                        : kUnknownLengthSeconds);
+        readEnd = begin + secf_from_vlc_tick(std::max<vlc_tick_t>(block->i_length, 0));
         readKnown = true;
         if (leadPending)
         {
@@ -779,10 +784,11 @@ bool RdWaveformScanner::Scan::keepPacket(block_t* block)
         ++droppedPackets;
         return false;
     }
-    // the decoder and a bytestream packetizer start over after the gap (as after a seek)
+    // the packetizer and the decoder start over after the gap, as after a seek (the block is
+    // still ours here: it reaches the packetizer only after this)
     if (dropped)
     {
-        block->i_flags |= BLOCK_FLAG_DISCONTINUITY;
+        flush(audio);
         dropped = false;
     }
     return true;
@@ -970,8 +976,8 @@ QByteArray RdWaveformScanner::run()
                 : levels.isEmpty() ? "no waveform" : "levels",
                 static_cast<long long>(MS_FROM_VLC_TICK(vlc_tick_now() - start)));
         if (scan.sampled)
-            msg_Dbg(m_parent, "waveform sampling: %d seeks, %d of %d audio packets dropped "
-                    "before the decoder", scan.seeks, scan.droppedPackets, scan.audioPackets);
+            msg_Dbg(m_parent, "waveform sampling: seeks %d, audio packets dropped before the "
+                    "decoder %d of %d", scan.seeks, scan.droppedPackets, scan.audioPackets);
     }
 
     if (m_interrupt)
