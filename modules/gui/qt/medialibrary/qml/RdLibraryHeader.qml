@@ -117,6 +117,8 @@ Item {
         }
 
         RdBreadcrumb {
+            id: breadcrumb
+
             anchors.left: navButtons.right
             anchors.leftMargin: VLCStyle.dp(10)
             anchors.right: root.compact ? pageActions.left : fullTools.left
@@ -154,9 +156,36 @@ Item {
             }
         }
 
-        // full library: everything on one row
+        // full library: everything on one row (Figma Player-5 "Frame 26": count, sort, view,
+        // search 325 x 34, "...", 20 apart). It never runs into back / forward: when the row is
+        // short the count elides, then hides, then the search field shrinks to its minimum, then
+        // the address line gives way (it folds and elides its parts); in a very small window the
+        // search field hides last (Ctrl+F then has nothing to focus)
         Row {
             id: fullTools
+
+            readonly property real searchMaxWidth: VLCStyle.dp(325)
+            readonly property real searchMinWidth: VLCStyle.dp(120)
+            readonly property real countMinWidth: VLCStyle.dp(40)
+            // what the address line keeps while the count and the search field give way
+            readonly property real crumbsMinWidth: VLCStyle.dp(100)
+
+            // room for this row once back / forward, the address line's minimum and the gaps
+            // are taken
+            readonly property real _room: firstRow.width - navButtons.width - breadcrumb.anchors.leftMargin
+                                          - breadcrumb.anchors.rightMargin - crumbsMinWidth
+            // the parts that always show, with the gaps around the search field
+            readonly property real _fixedWidth: fullPageTools.width + fullMore.width + 2 * spacing
+            readonly property real searchWidth: {
+                const room = _room - _fixedWidth
+                if (room >= searchMinWidth)
+                    return Math.min(searchMaxWidth, room)
+                return room + crumbsMinWidth >= searchMinWidth ? searchMinWidth : 0
+            }
+            readonly property real countWidth: {
+                const room = _room - _fixedWidth - searchWidth - spacing
+                return room >= countMinWidth ? Math.min(fullCount.implicitWidth, room) : 0
+            }
 
             visible: !root.compact
             anchors.right: parent.right
@@ -164,11 +193,17 @@ Item {
             spacing: VLCStyle.dp(20)
 
             CountText {
+                id: fullCount
+
                 anchors.verticalCenter: parent.verticalCenter
+                visible: fullTools.countWidth > 0
+                width: fullTools.countWidth
                 text: root._countText()
             }
 
             PageTools {
+                id: fullPageTools
+
                 anchors.verticalCenter: parent.verticalCenter
                 header: root
                 menu: toolMenu
@@ -181,7 +216,8 @@ Item {
                 id: fullSearch
 
                 anchors.verticalCenter: parent.verticalCenter
-                width: VLCStyle.dp(325)
+                visible: fullTools.searchWidth > 0
+                width: fullTools.searchWidth
                 height: VLCStyle.dp(34)
                 page: root.page
             }
@@ -210,6 +246,9 @@ Item {
         CountText {
             visible: !root.searchOpen
             anchors.left: parent.left
+            // elided before the tools ("3007 items - Indexing 45%")
+            anchors.right: compactTools.left
+            anchors.rightMargin: VLCStyle.dp(12)
             anchors.verticalCenter: parent.verticalCenter
             text: root._countText()
         }
@@ -253,6 +292,7 @@ Item {
     }
 
     component CountText: Text {
+        elide: Text.ElideRight
         font.family: VLCStyle.rd_fontFamily
         font.pixelSize: VLCStyle.rd_fontSize_label
         color: VLCStyle.palette.rdFgA3
