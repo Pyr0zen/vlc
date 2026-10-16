@@ -1125,6 +1125,8 @@ qml_modules += {
         'widgets/qml/RdSegmented.qml',
         'widgets/qml/RdSlider.qml',
         'widgets/qml/RdEndlessSlider.qml',
+        'widgets/qml/RdSliderWheel.qml',
+        'widgets/qml/RdWheelSink.qml',
         'widgets/qml/RdButton.qml',
         'widgets/qml/RdTextField.qml',
         'widgets/qml/RdOptionRow.qml',

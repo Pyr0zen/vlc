@@ -224,6 +224,14 @@ Rectangle {
                 radius: VLCStyle.rd_radius_small
                 color: slider.pressed ? VLCStyle.palette.rdAccentMain : VLCStyle.palette.rdAccentDim
             }
+
+            // the wheel over the bar: 0.1 dB a notch, up raises the gain (Decision 51)
+            Widgets.RdSliderWheel {
+                id: bandWheel
+
+                anchors.fill: parent
+                onStepped: (steps) => bandWheel.stepSlider(slider, steps)
+            }
         }
 
         Item {

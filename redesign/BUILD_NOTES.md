@@ -569,3 +569,54 @@ Decision 48 (two profiles) and Decision 49 (Cone logo approved, Q6). Branch work
 - Cause: `RdWaveformScanner::Scan::process()` (rd_waveform_scanner.cpp, the packetizer loop) released the input block after `pf_packetize()` and in its two error paths. A packetizer owns the block it is given: a bytestream packetizer (MPEG audio, also AAC, FLAC, A52 ...) pushes it into its queue and leaves `*pp_block` pointing at it, and the input core never releases it. So every MP3 block was freed while still queued: a use after free / double free that corrupts the packetizer's block chain; the next block of the same size reuses the freed memory, the chain loops on itself and the packetizer spins forever inside `pf_packetize()`, where the scan's cancel and stop checks are never reached. The scan never ended (no log line, no bars), and `~RdWaveform` waited for it with an unbounded `QThreadPool::waitForDone()` on the GUI thread: the hang on quit. The PC tests of the branch used WAV and PCM-in-MOV only, whose copy packetizer clears `*pp_block`, so they never hit it.
 - Fix: `process()` never releases the block it hands the packetizer (as the core's decoder loop) and always lets the packetizer finish the block; once the scan stops (cancel, failure, time budget), packets are dropped instead of decoded. A hard time budget of 60 s per scan (`RdWaveformScanner::kTimeBudgetSeconds`, checked at every packet and decoded frame; over it the file gets no waveform, cached like an unusable file). `~RdWaveform` waits at most 500 ms (`kQuitWaitMs`) for a cancelled scan, then leaves the pool to the process's end with a warning instead of hanging; the scan's VLC objects now hang from the libvlc instance, which outlives the interface. New log line `waveform: job started for the playing file` when the job starts, so a test shows whether the option reached the scanner.
 - Checked by reading: the option turned on mid-playback starts the job at once (acquire() -> startScan(), the length is already known), but only for a thick seek bar (control bar time text Inline); the scan runs on the pool thread only; cancel sets the flag and kills the scan's VLC interrupt. Checks: qmlcheck `errors: 1 files: 371 crashed: 0` (the known HighResolutionTimeWidget stub), buildlists `0 problem(s)`, privacycheck `0 problem(s)`. Not compiled yet (CI). Retest on the PC: WAVEFORM_NOTES sections 8 and 9 with the generated MP3 / AAC / FLAC files, option switched on during playback, then Ctrl+Q.
+
+## 2026-10-16 mouse wheel on sliders, wheel never through overlays (Decision 51; worktree, not built yet)
+- Asked by Sticky: the wheel over a slider's bar or tick-label row fine-tunes it in small exact steps, and the wheel over any popup, panel, sidebar, menu or dialog must never reach the player's wheel handler (volume / seek).
+- The player's wheel: `VideoSurface::wheelEvent` (maininterface/videosurface.cpp) accepts every wheel event and sends it through `WheelToVLCConverter` to the vout as a key press, where VLC's hotkeys apply the wheel modes (hotkeys-y-wheel-mode / hotkeys-x-wheel-mode: volume, seek); the audio-only view does the same in Player.qml (`centerContent` MouseArea -> MainCtx.sendVLCHotkey); Ctrl+wheel is the window-level interface zoom (InterfaceWindowHandler). Qt Quick hands the wheel to every item under the pointer, top first, until one accepts it; plain Items and Rectangles ignore it, so any card without a wheel-taking item let it fall through to the video. Bug (MED): mini player, compact library while it slides in over the video, resume toast; outside an open RdMenuPanel the wheel also reached the player. Player.qml, TopBar.qml and MainInterface.qml are unchanged.
+- Sliders: new widgets/qml/RdSliderWheel.qml (a MouseArea that takes no buttons and no hover) fills every RdSlider (its item is exactly the bar plus the label row; the name row of RdParamSlider is outside it, so the wheel there scrolls the page). Wheel notches of 120 angle units; high-resolution wheels and touchpads add up their fractions (angleDelta, or pixelDelta at 24 px per step when only that is sent; the remainder is dropped after 400 ms without wheel or on a change of direction); natural scrolling (`inverted`) is turned back to the finger direction; up or right increases, right decreases on a mirrored slider like the arrow keys. Every wheel event over a slider is taken, also at its ends (it never scrolls the list or reaches the player), except while a list holding it is scrolling (an ancestor's `moving`) and for the rest of that wheel gesture (events less than 400 ms apart): then it passes to the list, so scrolling the sidebar does not stop on the first slider under the pointer.
+- RdEndlessSlider (every RdParamSlider and SettingsOption slider): `wheelStep` (default `step`) and `_wheelMove`: the value moves on the multiples of the wheel step from rangeFrom (a value between two goes to the next one in that direction first, rounded to 1e-9 so no float residue), past the normal range up to VLC's limits like the arrow keys, through `_show` (the scale scrolls, slides home back in range) and `valueMoved`, the same signal as a drag or key step. Plain RdSlider: T.Slider increase() / decrease() by stepSize (as its arrow keys; the value binding stays) and moved(). The Settings dialog equalizer bands (T.Slider) use the same RdSliderWheel.
+- Pacing: the wheel is not a press, so RdSliderCommit treats each notch as a key step: committed `keyDelay` ms after the last notch (subtitle delay 150 ms, audio delay 300 ms, subtitle speed 400 ms, duration factor 150 ms, pitch 150 ms, non-live video filter parameters 300 ms); sliders that apply a drag at once (Speed, Font Size, equalizer, audio filters, live video filters, Settings dialog options) apply each notch at once, exactly as a drag step. Nothing reaches VLC faster than a drag does.
+
+| Slider (where) | Wheel step per notch |
+|---|---|
+| Subtitle Track Delay (sidebar Subtitles) | 0.05 s, endless to +-600 s |
+| Subtitle Speed (sidebar Subtitles) | 0.2 fps |
+| Subtitle Duration Factor (sidebar Subtitles) | 0.2 |
+| Font Size (sidebar Subtitles) | 5 % (wheelStep; drag / key step 25), endless 10..500 % |
+| Outline Thickness (sidebar Subtitles) | 1 stop (None / Thin / Normal / Thick) |
+| Background Opacity (sidebar Subtitles) | 5 % (255 / 20) |
+| Audio Track Delay (sidebar Audio) | 0.05 s, endless to +-600 s |
+| Preamp and the 10 bands (sidebar Audio) | 0.1 dB |
+| Adjust Pitch (sidebar Audio) | 0.25 semitone |
+| Compressor, Spatializer, Stereo Widener parameters (sidebar Audio) | each parameter's step |
+| Video filter parameters (sidebar Video) | 1, or 10^-decimals of the parameter |
+| Speed (sidebar Playback) | 0.05x (wheelStep; drag / key step 0.25), endless 1/32..31.25 |
+| Maximum volume (Settings Audio) | 25 % |
+| 10 equalizer bands (Settings Audio, vertical) | 0.1 dB, up raises |
+| Default playback speed (Settings Playback) | 0.05x (wheelStep), endless 1/32..31.25 |
+| Text opacity, Background opacity (Settings Subtitles) | 1 % |
+| Subtitle delay (Settings Subtitles) | 0.1 s (VLC stores tenths), endless to +-600 s |
+| Show filename for (Settings Subtitles) | 0.5 s, endless to 60 s |
+| Hide after, Popup duration (Settings Interface) | 0.5 s (Hide after endless to 60 s) |
+| Window opacity, Fullscreen controls opacity (Settings Interface) | 5 % |
+| Fullscreen controls sensitivity (Settings Interface) | 1 stop (Low / Medium / High) |
+| Hue, Brightness, Contrast, Saturation, Gamma (Settings Video) | hue 1 degree, the others 1/100 of the range |
+| Control bar volume, seek bar, stock speed popup | unchanged: their own wheel (volume, seek, rate) |
+
+| Overlay | Before | Now |
+|---|---|---|
+| Settings sidebar, Queue / Bookmarks / Chapters sidebar (RdSidePanel) | RdPanel's MouseArea took the leftover wheel | unchanged; sliders inside fine-tune |
+| Tracks popup (RdPanel fills it) | taken | unchanged |
+| Info panels Metadata / Statistics (RdInfoPanel) | taken | unchanged |
+| Right-click menu, main "..." menu (RdCascadeMenu) | taken over and outside the menu | unchanged |
+| RdMenuPanel menus (sidebar preset "..." menu, library sort / item / Add to Playlist menus, Customize Player and Keyboard Shortcuts menus) | Qt's Popup took it over the menu; outside it went to the player | also taken outside while open (the popup's `dim` layer is an RdWheelSink that draws nothing and takes no clicks: a click outside still closes it and goes through) |
+| Settings dialog, Add Subtitles (and its dropdown / choice popup), Customize Player (and name prompt), Keyboard Shortcuts, Open Network Stream, Onboarding, preset popup, RdDropdown lists, library dialogs | modal popups: Qt blocks the wheel everywhere | unchanged; sliders inside fine-tune |
+| Tooltips, folder info popup | non-modal popups: taken over themselves | unchanged |
+| Mini player | leaked: the library list behind it scrolled; over its picture the VideoSurface changed the volume | RdWheelSink on the card (its queue list scrolls as before) and over the picture |
+| Compact library (RdLibrarySidebar) | leaked over the video while sliding in, and over its empty parts | RdWheelSink under its content |
+| Resume toast | leaked to the video (volume) | RdWheelSink |
+| Top bar, control bar | not overlays: empty parts pass the wheel to the video, as in stock VLC | unchanged |
+
+- Checks: qmlcheck `errors: 1 files: 373 crashed: 0` (the known HighResolutionTimeWidget stub), buildlists `0 problem(s)`, privacycheck `0 problem(s)`. Not compiled (CI only), not seen on a build.
+- Known limits (LOW): a plain RdSlider (the two in Settings Interface / Video) steps from its current value, so a dragged value between steps stays between steps; the gesture latch is time based (400 ms), so a very slow scroll that pauses over a slider for more than 400 ms hands the next notch to the slider.
+- To test on the build: wheel and touchpad over each slider in the table (bar and label row; the name row and the gaps scroll the page), steps exact in the value boxes, up / right increases, at an end nothing scrolls; Subtitle and Audio Track Delay past +-10 s (scale scrolls, back in range slides home), the video never stalls while wheeling the delays, Speed past 2x; scrolling the sidebar list over sliders does not stop on them; the wheel over every overlay in the table never changes the volume or seeks (mouse wheel set to Volume, then to Seek, in Settings Controls) and the lists inside still scroll; with the preset "..." menu open the wheel over the video does nothing and a click outside still closes it; mini player picture, card and queue; compact library while it slides in; resume toast.

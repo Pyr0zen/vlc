@@ -65,6 +65,8 @@ SettingsRow {
     property real limitFrom: from
     property real limitTo: to
     property real scrollSpeed: (to - from) * VLCStyle.rd_sliderScrollRate
+    // slider: one mouse wheel notch over the slider (Decision 51)
+    property real wheelStep: step
     // slider filled from 0 (delays)
     property bool bipolar: false
     // slider: the value the fill starts from (bipolar) and the edge label points to
@@ -257,6 +259,7 @@ SettingsRow {
             limitTo: root.limitTo
             step: root.step
             scrollSpeed: root.scrollSpeed
+            wheelStep: root.wheelStep
             labels: root.labels
             labelStep: root.labelStep
             labelAnchor: root.labelAnchor

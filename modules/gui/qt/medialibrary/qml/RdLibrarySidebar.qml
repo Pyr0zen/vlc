@@ -29,6 +29,7 @@ import QtQuick
 import VLC.MainInterface
 import VLC.Style
 import VLC.MediaLibrary
+import VLC.Widgets as Widgets
 
 FocusScope {
     id: root
@@ -60,6 +61,12 @@ FocusScope {
     // Ctrl+F
     function focusSearch() {
         header.focusSearch()
+    }
+
+    // the wheel over the sidebar's empty parts does not reach the player behind it (volume, seek;
+    // Decision 51): over the video while the sidebar slides in
+    Widgets.RdWheelSink {
+        anchors.fill: parent
     }
 
     RdLibraryRail {
