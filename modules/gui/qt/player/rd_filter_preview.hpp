@@ -111,6 +111,8 @@ private:
     vlc_preparser_req* m_inflight = nullptr;
     // VLC's thumbnailer could not be created: no previews for the rest of the session
     bool m_unavailable = false;
+    // the preview size changed during the capture in flight: capture again when it ends
+    bool m_retake = false;
 
     std::shared_ptr<Cache> m_cache;
     QThreadPool m_pool;

@@ -40,6 +40,7 @@
 #include <cerrno>
 #include <cmath>
 #include <cstring>
+#include <utility>
 
 #include <vlc_common.h>
 #include <vlc_image.h>
@@ -268,7 +269,8 @@ void RdFilterPreview::setFrameSize(const QSize& size)
     if (size == m_frameSize)
         return;
     m_frameSize = size;
-    // a frame of the old size is taken again on the next capture
+    // a capture in flight is for the old size: take the frame again when it ends
+    m_retake = m_inflight != nullptr;
     resetFrame();
     emit frameSizeChanged();
 }
@@ -299,6 +301,7 @@ void RdFilterPreview::onInputChanged()
     if (uri != m_uri)
     {
         cancelCapture();
+        m_retake = false;
         m_item = SharedInputItem();
         m_uri = uri;
         resetFrame();
@@ -439,7 +442,8 @@ void RdFilterPreview::onCaptureEnded(vlc_preparser_req* req, int generation, int
     if (generation != m_generation)
     {
         // the preview size changed while the frame was taken: take it again at the new size
-        if (m_frame.isNull())
+        // (a frame of the previous media that ended before its cancel is only dropped)
+        if (std::exchange(m_retake, false) && m_frame.isNull())
             capture();
         return;
     }
