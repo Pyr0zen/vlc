@@ -40,10 +40,18 @@ namespace {
 // reach it (a video packet comes between audio packets; a broken file must not read forever)
 constexpr double kSampleSeconds = 0.25;
 constexpr int kSampleMaxPackets = 4000;
-// sampled scan: decoded audio this far before the slice comes from a seek that landed early
-// (MP4 aligns every track to the video keyframe before the time) and is skipped; audio further
-// away has timestamps that do not follow the duration (MPEG-TS) and is taken as it comes
+// sampled scan: audio this far before the slice comes from a seek that landed early (MP4 aligns
+// every track to the video keyframe before the time, about 4 s on average with x264's default
+// keyframe interval) and is skipped; audio further away has timestamps that do not follow the
+// duration (MPEG-TS) and is taken as it comes
 constexpr double kMaxPrerollSeconds = 30.0;
+// sampled scan: the audio decoded before a stretch so the decoder's output is settled when the
+// stretch starts (AAC overlap and priming, the MP3 bit reservoir, Opus pre-roll); an audio packet
+// that ends earlier than this before the stretch is dropped before the packetizer, undecoded
+constexpr double kWarmupSeconds = 0.2;
+// sampled scan: a stretch whose audio ends at most this far past the next stretch's start was
+// measured where it lies, so the next stretch is read on from there instead of seeked to
+constexpr double kOnTimeSeconds = 0.05;
 // a file that has shown no audio track after this many packets has none (a video-only file
 // is not read to its end for nothing)
 constexpr int kNoAudioPackets = 2000;
@@ -67,6 +75,12 @@ struct RdWaveformScanner::Scan
     // false: it stopped for the sampled scan (a video track in a file over kFullScanMaxBytes)
     bool scanFull(demux_t* demux, bool smallFile);
     void scanSampled(demux_t* demux);
+
+    // sampled scan
+    double stretchStart(int bin) const;
+    void beginStretch(int bin, bool readOnTo);
+    bool readOn() const;
+    bool keepPacket(block_t* block);
 
     // es_out
     es_out_id_t* addTrack(const es_format_t* fmt);
@@ -121,12 +135,33 @@ struct RdWaveformScanner::Scan
     // how the file was read, for the log
     const char* mode = "not opened";
 
-    // sampled scan: the slice being sampled (-1: none), where its stretch starts (seconds) and
-    // the audio still wanted for it
+    // sampled scan: the slice length and the stretch measured in each slice (seconds)
     bool sampled = false;
+    double slice = 0;
+    double sampleSeconds = 0;
+    // the slice being sampled (-1 or kBins: none), where its stretch starts (seconds), the audio
+    // still wanted for it, whether the audio decoded now is measured for it (false: the scan
+    // seeks to it first) and whether part of it was taken as it came (not where it lies)
     int targetBin = -1;
     double sampleStart = 0;
     double sampleLeft = 0;
+    bool armed = false;
+    bool stretchAsItComes = false;
+    // the packets before the packetizer: the last timestamped one was dropped (the ones without
+    // a timestamp after it follow it), some were dropped since the last one decoded
+    bool dropping = false;
+    bool dropped = false;
+    // where the demuxer's audio is (the end of its last timestamped packet, seconds)
+    bool readKnown = false;
+    double readEnd = 0;
+    // how far before its target the audio starts after a seek, on average (seconds)
+    bool leadPending = false;
+    double leadSum = 0;
+    int leadCount = 0;
+    // for the log
+    int seeks = 0;
+    int audioPackets = 0;
+    int droppedPackets = 0;
 };
 
 namespace {
@@ -314,7 +349,9 @@ es_out_id_t* RdWaveformScanner::Scan::addTrack(const es_format_t* fmt)
 
 void RdWaveformScanner::Scan::sendBlock(Track* track, block_t* block)
 {
-    if (track == audio && !stopped())
+    // a packet the sampled scan does not decode never reaches the packetizer, so it is still
+    // ours to release
+    if (track == audio && !stopped() && (!sampled || keepPacket(block)))
         process(track, block);
     else
         block_Release(block);
@@ -524,23 +561,42 @@ void RdWaveformScanner::Scan::consume(const audio_format_t& fmt, const block_t* 
 
     if (sampled)
     {
-        if (targetBin < 0 || sampleLeft <= 0)
-            return;
-        // the audio before the stretch is not the slice's (a seek that landed on an earlier
-        // keyframe): skipped, so neighbouring slices do not measure the same audio
-        size_t skip = 0;
-        if (frame->i_pts != VLC_TICK_INVALID)
+        // the time of the frame's next sample; a frame without a timestamp is taken as it comes
+        const bool timed = frame->i_pts != VLC_TICK_INVALID;
+        double time = timed ? secf_from_vlc_tick(frame->i_pts - VLC_TICK_0) : 0;
+        size_t done = 0;
+        while (armed && done < frames)
         {
-            const double early = sampleStart - secf_from_vlc_tick(frame->i_pts - VLC_TICK_0);
-            if (early > 0 && early <= kMaxPrerollSeconds)
-                skip = std::min(frames, static_cast<size_t>(early * rate));
+            // the audio before the stretch is not the slice's (a seek that landed on an earlier
+            // keyframe, the decoder's warm-up): skipped, so neighbouring slices do not measure
+            // the same audio
+            if (!timed || sampleStart - time > kMaxPrerollSeconds)
+                stretchAsItComes = true;
+            else if (sampleStart > time)
+            {
+                const size_t skip = std::min(frames - done,
+                                             static_cast<size_t>((sampleStart - time) * rate));
+                done += skip;
+                time += static_cast<double>(skip) / rate;
+                if (done >= frames)
+                    return;
+            }
+
+            const size_t used = std::min(frames - done,
+                                         static_cast<size_t>(std::ceil(sampleLeft * rate)));
+            accumulate(targetBin, fmt, frame->p_buffer + done * bytesPerFrame, used);
+            sampleLeft -= static_cast<double>(used) / rate;
+            done += used;
+            time += static_cast<double>(used) / rate;
+            if (sampleLeft > 0)
+                return;
+
+            // the stretch is complete. When it was measured where it lies and the next one
+            // starts no earlier than where it ends, the next one follows from the audio decoded
+            // from here on (the rest of this frame included); else the scan seeks to it
+            const int next = targetBin + 1;
+            beginStretch(next, !stretchAsItComes && time <= stretchStart(next) + kOnTimeSeconds);
         }
-        if (skip >= frames)
-            return;
-        const size_t used = std::min(frames - skip,
-                                     static_cast<size_t>(std::ceil(sampleLeft * rate)));
-        accumulate(targetBin, fmt, frame->p_buffer + skip * bytesPerFrame, used);
-        sampleLeft -= static_cast<double>(used) / rate;
         return;
     }
 
@@ -658,36 +714,123 @@ bool RdWaveformScanner::Scan::scanFull(demux_t* demux, bool smallFile)
     return true;
 }
 
+// a stretch centered in its slice
+double RdWaveformScanner::Scan::stretchStart(int bin) const
+{
+    return std::max(0.0, (bin + 0.5) * slice - sampleSeconds / 2);
+}
+
+// `readOnTo`: the audio decoded from here on is measured for `bin` (its stretch follows the one
+// just measured); false: the scan seeks to it first, and the audio until then is dropped
+void RdWaveformScanner::Scan::beginStretch(int bin, bool readOnTo)
+{
+    targetBin = bin;
+    armed = readOnTo && bin < kBins;
+    sampleStart = stretchStart(bin);
+    sampleLeft = sampleSeconds;
+    stretchAsItComes = false;
+}
+
+// whether the next stretch is reached by reading on rather than by a seek: the demuxer's audio
+// is no further before it than a seek would land before it (about half a keyframe interval for
+// MP4, as far as the audio read last for MKV without audio cues), or than the warm-up
+bool RdWaveformScanner::Scan::readOn() const
+{
+    if (!armed || !readKnown)
+        return false;
+    const double lead = leadCount > 0 ? leadSum / leadCount : 0.0;
+    return sampleStart - readEnd <= std::max(kWarmupSeconds, lead);
+}
+
+// sampled scan: whether an audio packet goes to the packetizer. Dropped undecoded: a packet
+// that ends more than kWarmupSeconds before the stretch (the audio from the keyframe an MP4 seek
+// lands on, or between two stretches read on), and every packet while the scan is about to seek.
+// Audio further before the stretch than kMaxPrerollSeconds is decoded and taken as it comes, as
+// consume() does.
+bool RdWaveformScanner::Scan::keepPacket(block_t* block)
+{
+    ++audioPackets;
+    const vlc_tick_t ts = block->i_pts != VLC_TICK_INVALID ? block->i_pts : block->i_dts;
+    if (ts != VLC_TICK_INVALID)
+    {
+        const double begin = secf_from_vlc_tick(ts - VLC_TICK_0);
+        const double end = begin + secf_from_vlc_tick(block->i_length);
+        const double early = sampleStart - begin;
+        readEnd = end;
+        readKnown = true;
+        if (leadPending)
+        {
+            leadPending = false;
+            if (early <= kMaxPrerollSeconds)
+            {
+                leadSum += std::max(0.0, early);
+                ++leadCount;
+            }
+        }
+        dropping = early <= kMaxPrerollSeconds && end < sampleStart - kWarmupSeconds;
+    }
+    if (!armed || dropping)
+    {
+        dropped = true;
+        ++droppedPackets;
+        return false;
+    }
+    // the decoder and a bytestream packetizer start over after the gap (as after a seek)
+    if (dropped)
+    {
+        block->i_flags |= BLOCK_FLAG_DISCONTINUITY;
+        dropped = false;
+    }
+    return true;
+}
+
 void RdWaveformScanner::Scan::scanSampled(demux_t* demux)
 {
     // never more audio per slice than the slice holds: a short file of a high bitrate (a 30 s
     // 4K clip) decodes at most its own audio, not 0.25 s per 1/1000 of it
-    const double slice = lengthSeconds / kBins;
-    const double sampleSeconds = std::min(kSampleSeconds, slice);
-    for (int bin = 0; bin < kBins && !stopped(); ++bin)
+    slice = lengthSeconds / kBins;
+    sampleSeconds = std::min(kSampleSeconds, slice);
+    // the stretches are measured in order; consume() moves on to the next one when a stretch
+    // is complete, and the loop seeks only when reading on would cost more (readOn()). A file
+    // up to kBins * kSampleSeconds long (stretches that touch) is read once from its start.
+    beginStretch(0, false);
+    while (targetBin < kBins && !stopped())
     {
-        // a stretch centered in the slice; by time, else by position (demuxers without an
-        // index, such as an MPEG-TS recording, seek better by position)
-        const double start = std::max(0.0, (bin + 0.5) * slice - sampleSeconds / 2);
-        if (demux_SetTime(demux, vlc_tick_from_sec(start), false) != VLC_SUCCESS
-            && demux_SetPosition(demux, start / lengthSeconds, false) != VLC_SUCCESS)
-            continue;
-        if (audio)
-            flush(audio);
-        targetBin = bin;
-        sampleStart = start;
-        sampleLeft = sampleSeconds;
-        for (int packet = 0; packet < kSampleMaxPackets && sampleLeft > 0 && !stopped(); ++packet)
+        const int bin = targetBin;
+        if (!readOn())
+        {
+            // by time, else by position (demuxers without an index, such as an MPEG-TS
+            // recording, seek better by position)
+            if (demux_SetTime(demux, vlc_tick_from_sec(sampleStart), false) != VLC_SUCCESS
+                && demux_SetPosition(demux, sampleStart / lengthSeconds, false) != VLC_SUCCESS)
+            {
+                beginStretch(bin + 1, false);
+                continue;
+            }
+            ++seeks;
+            if (audio)
+                flush(audio);
+            armed = true;
+            dropping = false;
+            dropped = false;
+            readKnown = false;
+            leadPending = true;
+        }
+        for (int packet = 0; packet < kSampleMaxPackets && targetBin == bin && !stopped(); ++packet)
         {
             if (demux_Demux(demux) != VLC_DEMUXER_SUCCESS)
                 break;
             if (!audio && packet >= kNoAudioPackets)
                 break;
         }
-        targetBin = -1;
         if (!audio)
             break;
+        // the stretch was not reached (end of the file, a read error, the packet bound)
+        if (targetBin == bin)
+            beginStretch(bin + 1, false);
     }
+    targetBin = -1;
+    armed = false;
 }
 
 QByteArray RdWaveformScanner::Scan::execute()
@@ -821,6 +964,9 @@ QByteArray RdWaveformScanner::run()
                 : scan.overBudget ? "no waveform, over the time budget"
                 : levels.isEmpty() ? "no waveform" : "levels",
                 static_cast<long long>(MS_FROM_VLC_TICK(vlc_tick_now() - start)));
+        if (scan.sampled)
+            msg_Dbg(m_parent, "waveform sampling: %d seeks, %d of %d audio packets dropped "
+                    "before the decoder", scan.seeks, scan.droppedPackets, scan.audioPackets);
     }
 
     if (m_interrupt)
