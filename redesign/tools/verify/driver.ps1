@@ -450,7 +450,7 @@ function Test-BlankBitmap($bmp) {
 # --- launch and quit -----------------------------------------------------------------------
 # Start-Player creates <build>\portable when it is missing (portable mode: the player keeps its
 # settings there instead of the user's real profile)
-function Start-Player([string]$exe, [string[]]$playerArgs, [switch]$Minimized) {
+function Start-Player([string]$exe, [string[]]$playerArgs, [switch]$Minimized, [switch]$Quick) {
     New-Item -ItemType Directory -Force (Join-Path (Split-Path $exe) 'portable') | Out-Null
     if ($Minimized) {
         # UIA lanes: started minimized, so the new player never takes the foreground from the user
@@ -465,6 +465,7 @@ function Start-Player([string]$exe, [string[]]$playerArgs, [switch]$Minimized) {
     [void]$script:StartedProcs.Add($p)
     Update-Started
     $m = Get-MainWindow 30
+    if ($Quick) { return $m }
     # VLC's "closed abruptly" prompt (after an earlier forced close) asks to restore the old
     # playlist: answer "No" through UI Automation (Invoke goes to that button only, no
     # keyboard or mouse input)

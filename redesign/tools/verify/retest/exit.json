@@ -1,0 +1,240 @@
+{
+ "area": "retest",
+ "about": "Exit retest sessions (verify.ps1 -ExitRetest N -RetestSession <id> -Files retest/exit.json): the steps that preceded stuck exits, then one quit per try.",
+ "sessions": [
+  {
+   "id": "retest-sidebar",
+   "media": [
+    "Videos\\Verify Clip.mkv"
+   ],
+   "args": [
+    "--qt-continue=0",
+    "--start-paused"
+   ],
+   "demo": [
+    "sidebar-playback",
+    "sidebar-video",
+    "sidebar-audio",
+    "sidebar-subtitles"
+   ],
+   "setup": [
+    {
+     "wait": 1200
+    },
+    {
+     "wiggle": [
+      960,
+      540
+     ]
+    }
+   ],
+   "reset": [],
+   "scenarios": [
+    {
+     "id": "retest-sidebar-steps",
+     "title": "gear, Playback / Video / Audio / Subtitles tabs, gear",
+     "rows": [],
+     "steps": [
+      {
+       "uia": "Playback Settings",
+       "role": "Button",
+       "after": 900
+      },
+      {
+       "uia": "Playback",
+       "role": "TabItem",
+       "after": 600
+      },
+      {
+       "uia": "Video",
+       "role": "TabItem",
+       "after": 600
+      },
+      {
+       "uia": "Audio",
+       "role": "TabItem",
+       "after": 600
+      },
+      {
+       "uia": "Subtitles",
+       "role": "TabItem",
+       "after": 700
+      },
+      {
+       "shot": "subs"
+      },
+      {
+       "uia": "Playback Settings",
+       "role": "Button",
+       "after": 800
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "retest-tracks",
+   "media": [
+    "Videos\\Verify Tracks.mkv"
+   ],
+   "args": [
+    "--qt-continue=0",
+    "--start-paused",
+    "--sub-file={media}\\Videos\\The_Wand_S01_EN.srt"
+   ],
+   "setup": [
+    {
+     "wait": 1200
+    },
+    {
+     "wiggle": [
+      960,
+      540
+     ]
+    }
+   ],
+   "reset": [],
+   "scenarios": [
+    {
+     "id": "retest-tracks-steps",
+     "title": "subtitle popup, English, Audio, Video, Show Preferences, Escape",
+     "rows": [],
+     "steps": [
+      {
+       "uia": "Subtitles",
+       "role": "Button",
+       "after": 800
+      },
+      {
+       "uia": "English",
+       "role": "RadioButton",
+       "match": "contains",
+       "after": 700
+      },
+      {
+       "uia": "Audio",
+       "role": "TabItem",
+       "after": 700
+      },
+      {
+       "uia": "Video",
+       "role": "TabItem",
+       "after": 700
+      },
+      {
+       "shot": "popup"
+      },
+      {
+       "uia": "Show Preferences",
+       "role": "Button",
+       "after": 900
+      },
+      {
+       "keys": "{ESC}",
+       "after": 400
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "retest-flac",
+   "media": [
+    "..\\waveform\\wave_3min.flac"
+   ],
+   "args": [
+    "--qt-continue=0",
+    "--loop"
+   ],
+   "vlcrc": {
+    "qt-seek-waveform": "1"
+   },
+   "setup": [
+    {
+     "wait": 1000
+    }
+   ],
+   "reset": [],
+   "scenarios": [
+    {
+     "id": "retest-flac-steps",
+     "title": "FLAC playing with the waveform on the seek bar",
+     "rows": [],
+     "steps": [
+      {
+       "wait": 6000
+      },
+      {
+       "wiggle": [
+        960,
+        540
+       ],
+       "after": 600
+      },
+      {
+       "shot": "wave"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "retest-flac-early",
+   "media": [
+    "..\\waveform\\wave_3min.flac"
+   ],
+   "args": [
+    "--qt-continue=0",
+    "--loop"
+   ],
+   "vlcrc": {
+    "qt-seek-waveform": "1"
+   },
+   "quick": true,
+   "setup": [],
+   "reset": [],
+   "scenarios": [
+    {
+     "id": "retest-flac-early-steps",
+     "title": "FLAC, quit within 1 s of start",
+     "rows": [],
+     "steps": [
+      {
+       "wait": 300
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "retest-control",
+   "media": [
+    "Videos\\Verify Clip.mkv"
+   ],
+   "args": [
+    "--qt-continue=0"
+   ],
+   "setup": [
+    {
+     "wait": 1000
+    }
+   ],
+   "reset": [],
+   "scenarios": [
+    {
+     "id": "retest-control-steps",
+     "title": "video without audio, playing",
+     "rows": [],
+     "steps": [
+      {
+       "wait": 3000
+      },
+      {
+       "shot": "play"
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

@@ -19,7 +19,7 @@
 param([string]$Build = 'public', [string]$Only = '', [string]$Area = '', [switch]$DryRun, [switch]$NoCompare,
       [string]$Label = '', [string[]]$Files = @(), [int]$WaitForOthersMin = 30, [int]$Lanes = 0,
       [switch]$Worker, [int]$Lane = 0, [string]$RunDir = '', [string]$Sessions = '',
-      [int]$ExitRetest = 0, [string]$RetestSession = '')
+      [int]$ExitRetest = 0, [string]$RetestSession = '', [string]$ExePath = '')
 $ErrorActionPreference = 'Stop'
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 . (Join-Path $here 'driver.ps1')
@@ -53,6 +53,7 @@ if (-not $Worker) { "plan: $($plan.Count) session(s), $nScen scenario(s), build 
 
 $exePath = [string]$cfg.builds.$Build
 $exe = if ([IO.Path]::IsPathRooted($exePath)) { $exePath } else { Join-Path $cfg.testMediaDir $exePath }
+if ($ExePath) { $exe = $ExePath }
 # a UIA lane runs its own copy of the build (path handed over by the runner)
 if ($Worker -and $env:VERIFY_LANE_EXE) { $exe = $env:VERIFY_LANE_EXE }
 $script:PublicBuild = ($Build -eq 'public')
@@ -159,6 +160,9 @@ function Initialize-Profile($se, [string]$target) {
     if ($cfg.PSObject.Properties['profileOverrides'] -and $cfg.profileOverrides) { $ov += @($cfg.profileOverrides.PSObject.Properties) }
     if ($script:NoInput -and $cfg.PSObject.Properties['laneOverrides'] -and $cfg.laneOverrides) { $ov += @($cfg.laneOverrides.PSObject.Properties) }
     foreach ($p in $ov) { $text = Set-VlcrcLine $text $p.Name ([string]$p.Value); $applied += "harness: $($p.Name)=$($p.Value)" }
+    if ($se.PSObject.Properties['vlcrc'] -and $se.vlcrc) {
+        foreach ($p in $se.vlcrc.PSObject.Properties) { $text = Set-VlcrcLine $text $p.Name ([string]$p.Value); $applied += "session: $($p.Name)=$($p.Value)" }
+    }
     if ($script:Demo -and $se.PSObject.Properties['demo']) {
         foreach ($sid in @($se.demo)) {
             $scr = $script:Demo.screens.$sid
@@ -192,8 +196,10 @@ function Invoke-Session($p, [string]$sessionExe, [string]$profileTarget, [string
         if (-not $script:NoInput) { Wait-ForOtherPlayers }
         $out.demo = @(Initialize-Profile $se $profileTarget)
         foreach ($x in $out.demo) { Write-VLog "  demo: $x" }
-        Start-Player $sessionExe $a -Minimized:$script:NoInput | Out-Null
+        $quick = [bool]($se.PSObject.Properties['quick'] -and $se.quick)
+        Start-Player $sessionExe $a -Minimized:$script:NoInput -Quick:$quick | Out-Null
         $proc = $script:StartedProcs[$script:StartedProcs.Count - 1]
+        if ($quick) { throw 'QUICK' }
         $size = if ($se.size) { $se.size } else { @(1920, 1080) }
         Set-PlayerSize ([double]$size[0]) ([double]$size[1]) -Offscreen $script:Lane | Out-Null
         Start-Sleep -Milliseconds 800
@@ -205,8 +211,11 @@ function Invoke-Session($p, [string]$sessionExe, [string]$profileTarget, [string
         try { foreach ($s in @($se.setup)) { if ($s) { Invoke-Step $s $ctx } } }
         finally { $setupChecks = @($ctx.Checks | ForEach-Object { $x = [ordered]@{}; foreach ($k in $_.Keys) { $x[$k] = $_[$k] }; $x.check = "setup: " + $x.check; $x }) }
     } catch {
+      if ($_.Exception.Message -eq 'QUICK') { $sessionError = $null }  # quick session: no sizing, no warm-up
+      else {
         $sessionError = "session setup failed: $($_.Exception.Message)"; Write-VLog "  $sessionError"
         if ($sessionError -like '*GUARD:*') { $out.aborted = "aborted: $($_.Exception.Message)" }
+      }
     }
     foreach ($sc in $p.Scenarios) {
         $r = [ordered]@{ id = $sc.id; title = $sc.title; rows = @($sc.rows); compare = @($sc.compare | Where-Object { $_ }); human = @($sc.human | Where-Object { $_ })
@@ -233,6 +242,7 @@ function Invoke-Session($p, [string]$sessionExe, [string]$profileTarget, [string
     if (-not $out.aborted -and -not $out.lost -and -not $script:NoInput -and $quit -eq 'keys') {
         try { Invoke-FocusPlayer (Get-MainWindow 3).Handle | Out-Null; Send-Keys '{ESC}'; Restore-PlayerVolume } catch { Write-VLog "  volume not restored: $($_.Exception.Message)" }
     }
+    if ($quit -eq 'none') { $out.proc = $proc; $out.seconds = [math]::Round($sw.Elapsed.TotalSeconds, 1); return $out }
     $q = Stop-Players -NoKeys:([bool]$out.aborted -or [bool]$out.lost -or $quit -eq 'close')
     $out.cleanup = "$($se.id)$(if ($script:NoInput) { "@lane$script:Lane" }): $q"
     $out.stuck = ($q -like 'STUCK*')
@@ -275,22 +285,54 @@ if ($Worker) {
 }
 
 # --- exit retest: one session N times, counting stuck exits --------------------------------------
+# each try: the session's steps, then one quit (odd tries Escape x2 + Ctrl+Q, even tries WM_CLOSE to
+# the main window), 5 s later the process is checked: gone = clean; still listed with one thread and
+# no window = stuck (left untouched, pid noted); still with a window = hung (then closed normally)
 if ($ExitRetest -gt 0) {
     if (-not $plan.Count) { throw "no session '$RetestSession'" }
-    $p = $plan[0]; $tally = @()
+    $p = $plan[0]; $tally = @(); $rt0 = Get-Date
+    $profileTarget = Join-Path (Split-Path $exe) 'portable'
     for ($i = 1; $i -le $ExitRetest; $i++) {
-        $how = if ($i % 2) { 'keys' } else { 'close' }
-        $before = @($script:StuckPids)
-        $o = Invoke-Session $p $exe (Join-Path (Split-Path $exe) 'portable') $how
-        $tally += [ordered]@{ try = $i; quit = $(if ($how -eq 'keys') { 'Ctrl+Q' } else { 'WM_CLOSE' }); stuck = $o.stuck; cleanup = $o.cleanup; lost = $o.lost; aborted = $o.aborted }
-        Write-VLog ("retest {0}/{1}: quit {2}: {3}" -f $i, $ExitRetest, $tally[-1].quit, $(if ($o.stuck) { 'STUCK' } else { 'clean' }))
+        $how = if ($i % 2) { 'Ctrl+Q' } else { 'WM_CLOSE' }
+        $o = Invoke-Session $p $exe $profileTarget 'none'
+        $proc = $o.proc; $state = 'no player'; $threads = $null
+        if ($proc -and -not $o.lost) {
+            try {
+                $m = Get-MainWindow 3
+                if ($how -eq 'Ctrl+Q') {
+                    if (Invoke-FocusPlayer $m.Handle) { foreach ($k in '{ESC}', '{ESC}', '^q') { if (Test-PlayerForeground) { [System.Windows.Forms.SendKeys]::SendWait($k); Set-Injected; Start-Sleep -Milliseconds 250 } } }
+                    else { $how = 'WM_CLOSE (no foreground for Ctrl+Q)'; [RdVerifyWin2]::PostMessage($m.Handle, 0x0010, [IntPtr]::Zero, [IntPtr]::Zero) | Out-Null }
+                } else { [RdVerifyWin2]::PostMessage($m.Handle, 0x0010, [IntPtr]::Zero, [IntPtr]::Zero) | Out-Null }
+            } catch { $how += " (window lookup failed: $($_.Exception.Message))" }
+            Start-Sleep -Seconds 5
+            $q = Get-Process -Id $proc.Id -ErrorAction SilentlyContinue
+            if (-not $q -or $q.StartTime -ne $proc.StartTime) { $state = 'clean' }
+            else {
+                $threads = $q.Threads.Count
+                $state = if (Test-NoWindow $proc.Id) { 'stuck' } else { 'hung with a window' }
+            }
+            if ($state -eq 'stuck') { $script:StuckPids += $proc.Id; [void]$script:StartedProcs.Remove($proc) }
+            elseif ($state -ne 'clean') { Write-VLog "  $(Stop-Players)" }
+        }
+        $script:StartedProcs.Clear(); Update-Started
+        $tally += [ordered]@{ try = $i; quit = $how; state = $state; pid = $(if ($proc) { $proc.Id } else { $null }); threads = $threads; seconds = $o.seconds; lost = $o.lost; error = (@($o.results | Where-Object { $_.error } | ForEach-Object { $_.error }) -join '; ') }
+        Write-VLog ("retest {0}/{1} {2}: quit {3}: {4}{5}" -f $i, $ExitRetest, $p.Session.id, $how, $state, $(if ($state -eq 'stuck') { " (pid $($proc.Id), $threads thread(s))" } else { '' }))
         if ($o.aborted) { break }
     }
-    $sum = [ordered]@{ run = $runName; build = "$Build $buildId"; session = $p.Session.id; tries = $tally.Count
-        stuck_ctrl_q = @($tally | Where-Object { $_.stuck -and $_.quit -eq 'Ctrl+Q' }).Count; stuck_wm_close = @($tally | Where-Object { $_.stuck -and $_.quit -eq 'WM_CLOSE' }).Count
-        stuck_pids = @($script:StuckPids); tries_detail = $tally }
-    $sum | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $RunDir 'exit-retest.json') -Encoding utf8
-    Write-VLog "exit retest: $($sum.stuck_ctrl_q) stuck after Ctrl+Q, $($sum.stuck_wm_close) after WM_CLOSE, of $($sum.tries) tries"
+    # Windows' own crash records for the player in the retest's time window (read only)
+    $events = @()
+    try {
+        $events = @(Get-WinEvent -FilterHashtable @{ LogName = 'Application'; StartTime = $rt0 } -ErrorAction SilentlyContinue |
+            Where-Object { ($_.ProviderName -in 'Application Error', 'Windows Error Reporting', 'Application Hang') -and $_.Message -match 'Cone\.exe' } |
+            ForEach-Object { [ordered]@{ time = $_.TimeCreated.ToString('o'); provider = $_.ProviderName; id = $_.Id; message = ($_.Message -split "`n" | Select-Object -First 6) -join ' ' } })
+    } catch {}
+    $sum = [ordered]@{ run = $runName; build = "$Build $buildId"; exe = (Split-Path $exe -Leaf); session = $p.Session.id; tries = $tally.Count
+        stuck_ctrl_q = @($tally | Where-Object { $_.state -eq 'stuck' -and $_.quit -like 'Ctrl+Q*' }).Count
+        stuck_wm_close = @($tally | Where-Object { $_.state -eq 'stuck' -and $_.quit -like 'WM_CLOSE*' }).Count
+        hung = @($tally | Where-Object { $_.state -like 'hung*' }).Count
+        stuck_pids = @($tally | Where-Object { $_.state -eq 'stuck' } | ForEach-Object { $_.pid }); events = $events; tries_detail = $tally }
+    $sum | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $RunDir "exit-retest-$($p.Session.id).json") -Encoding utf8
+    Write-VLog "exit retest $($p.Session.id): $($sum.stuck_ctrl_q) stuck after Ctrl+Q, $($sum.stuck_wm_close) after WM_CLOSE, $($sum.hung) hung, of $($sum.tries) tries; $($events.Count) crash / WER event(s)"
     "run folder: $RunDir"
     exit 0
 }
@@ -308,7 +350,8 @@ if ($uiaPlan.Count) {
     $buckets = @(); for ($k = 0; $k -lt $n; $k++) { $buckets += , (New-Object System.Collections.ArrayList) }
     $loads = @(0) * $n
     foreach ($p in ($uiaPlan | Sort-Object { - $_.Scenarios.Count })) {
-        $k = [array]::IndexOf($loads, ($loads | Measure-Object -Minimum).Minimum); [void]$buckets[$k].Add($p); $loads[$k] += $p.Scenarios.Count
+        $k = 0; for ($j = 1; $j -lt $n; $j++) { if ($loads[$j] -lt $loads[$k]) { $k = $j } }
+        [void]$buckets[$k].Add($p); $loads[$k] += $p.Scenarios.Count
     }
     $srcDir = Split-Path $exe
     for ($k = 1; $k -le $n; $k++) {
