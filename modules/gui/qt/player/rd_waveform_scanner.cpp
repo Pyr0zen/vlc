@@ -592,10 +592,14 @@ void RdWaveformScanner::Scan::consume(const audio_format_t& fmt, const block_t* 
                 return;
 
             // the stretch is complete. When it was measured where it lies and the next one
-            // starts no earlier than where it ends, the next one follows from the audio decoded
-            // from here on (the rest of this frame included); else the scan seeks to it
+            // starts no earlier than where it ends and within kMaxPrerollSeconds of it (audio
+            // further away would be taken as it comes: slices over 30 s, files over about 8 h),
+            // the next one follows from the audio decoded from here on (the rest of this frame
+            // included); else the scan seeks to it
             const int next = targetBin + 1;
-            beginStretch(next, !stretchAsItComes && time <= stretchStart(next) + kOnTimeSeconds);
+            const double gap = stretchStart(next) - time;
+            beginStretch(next, !stretchAsItComes && gap >= -kOnTimeSeconds
+                                   && gap <= kMaxPrerollSeconds);
         }
         return;
     }
@@ -810,7 +814,8 @@ void RdWaveformScanner::Scan::scanSampled(demux_t* demux)
             ++seeks;
             if (audio)
                 flush(audio);
-            armed = true;
+            // the stretch is measured from the seek on, whatever audio came before it
+            beginStretch(bin, true);
             dropping = false;
             dropped = false;
             readKnown = false;
