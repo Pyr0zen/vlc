@@ -1332,12 +1332,18 @@ FocusScope {
             acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
 
             property string _panel: ""
-            // the press became a drag (a library row dragged into the queue): not a click
-            // outside, the panel stays
+            // a drag from outside that ends over the open panel (a library row dropped into the
+            // queue) is not a click outside: the panel stays. Other drags (seek bar, volume)
+            // still close it once released
+            property Item _panelItem: null
             property bool _dragged: false
+            property point _lastPosition
 
             onPointChanged: {
-                if (active && !_dragged) {
+                if (!active)
+                    return
+                _lastPosition = point.scenePosition
+                if (!_dragged) {
                     const dx = point.scenePosition.x - point.scenePressPosition.x
                     const dy = point.scenePosition.y - point.scenePressPosition.y
                     _dragged = Math.max(Math.abs(dx), Math.abs(dy)) >= Qt.styleHints.startDragDistance
@@ -1358,11 +1364,15 @@ FocusScope {
                                 : RdPanels.settingsOpen ? settingsPanelLoader
                                 : RdPanels.queueOpen ? queuePanelLoader : null
                     _panel = _inside(panel, p) ? "" : RdPanels.current
+                    _panelItem = panel
                     _dragged = false
+                    _lastPosition = p
                 } else if (_panel !== "") {
                     const panel = _panel
                     _panel = ""
-                    if (_dragged)
+                    const droppedInto = _dragged && _inside(_panelItem, _lastPosition)
+                    _panelItem = null
+                    if (droppedInto)
                         return
                     Qt.callLater(() => {
                         if (RdPanels.current === panel)
