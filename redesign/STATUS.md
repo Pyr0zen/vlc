@@ -31,6 +31,7 @@ The todo rows split into: context only (old VLC shots, jokes, sponsor, surveys, 
 ## Verification sweep (build 38829058873)
 - Window 1 done (2026-10-16): Customize Player and profiles. Verified: row 308 (profiles in the main menu, submenu, switching). Bugs: MED Customize preview loses the seek bar and time labels after a drop; LOW profile switch drops one frame (23 ms); LOW footer tabs not in Figma (to decide). Details in BUILD_NOTES and PERF.
 - Count (all VIDEO_INDEX rows): verified 62, coded but not verified 177, todo 122.
+- Window 7 partly done (2026-10-16): Add Folder picker cancel x5 without a crash (pass); folder contents after a scan, grid, Unknown Album and pin highlight still untested: needs the Test Show folder added once through Videos > + Add (Sticky, one click) because the picker's Select Folder cannot be reached by guarded test input.
 - Window 6 done (2026-10-16): presets switching between shows: rows 105-110 verified.
 - Window 4 done (2026-10-16): Ctrl+B and bookmarks: row 247 verified (title names, notification, duplicate skip); LOW stock notification look.
 - Window 3 done (2026-10-16): waveform: audio formats, no-audio file and the AVI pass; 249 MiB MP4 fails (HIGH, fix running); a Cone process stuck in termination after one quit (MED, investigate). No rows marked verified (the waveform rows wait for the MP4 fix).
