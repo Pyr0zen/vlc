@@ -483,8 +483,8 @@ def _iou(a, b):
 
 def measure_item(fig, item, shot, run_dir, out_dir, scen_id):
     """element by element against the spec state the item names ({"png", "props", "node"}):
-    - geometry: the UI Automation rectangle that overlaps the element best (IoU >= 0.6; texts:
-      the label with the same text) against its bounds: +-1 logical px (texts: the centre +-3 px,
+    - geometry: the UI Automation rectangle that overlaps the element best (IoU >= 0.6 and an
+      area within 0.8-1.25x; texts: the label with the same text) against its bounds: +-1 logical px (texts: the centre +-3 px,
       Figma text boxes are not Qt label boxes)
     - colour: the dark token fill sampled on a 5 x 5 grid inside the element (children left out),
       tolerance 8 levels, translucent ones 24; texts: the text colour must appear in the text box
@@ -536,6 +536,12 @@ def measure_item(fig, item, shot, run_dir, out_dir, scen_id):
                 v = max(v, 0.61)
             if v > best_iou:
                 best, best_iou = u, v
+        # the same thing only when the sizes agree too (a button's hit box around a 24 px icon is
+        # the Figma Icon Wrapper, not the icon)
+        if best is not None and not is_text:
+            ratio = (best["w"] * best["h"]) / max(1.0, bw * bh)
+            if not 0.8 <= ratio <= 1.25:
+                best = None
         if best is not None and best_iou >= 0.6:
             if is_text:
                 dx = (best["x"] + best["w"] / 2) - (cx + bw / 2)
