@@ -9,8 +9,12 @@
 - wip/cone-release (PR #7) = Cone release gaps: REVIEWED and pushed (6a328a87a72): privacy clean; Decisions 56 / 57 / 58 and StickyGonzales in the code; core changes all public-profile-only (src/win32/dirs.c settings folder, src/win32/specific.c + modules/control/win_msg.c single-instance name, modules/audio_output/mmdevice.c + winstore.c audio session GUID); portable interface settings copied into builds\current-public\portable\Cone. Not built yet (next: its own manual build after the reset). Then its own manual build; installer side-by-side test BLOCKED: Windows Sandbox is not available (Windows 10 Home): Sticky decides (VM / other PC / Windows Pro), never install on his real Windows.
 - wip/ci-release (PR #8, on top of cone-release): privacy check + safe tests after the reset: two manual build-windows runs with brand public (compare build times, cache hit rate), and one release-workflow run that must refuse. Merge order: cone-release, then ci-release, each only after it passes.
 
+## Fix list additions (Sticky, 2026-10-16)
+- The resume toast text must never be cut off ("You already watched t... 00:00:14" seen on 38829058873): it fits or wraps at every window size.
+- VLC's built-in dialogs in the Cone build must say "Cone" (e.g. the AVI "Broken or missing Index" question still says "VLC won't repair..."): public profile only; core-side dialog texts are core changes (Cone release branch, own build).
+
 ## Row count (VIDEO_INDEX, updated after every testing window)
-Raw statuses: verified 62, coded but not verified 179, todo 120 (of 361). The verified rows include earlier test rounds: 59 from the round on build 38727073546 (before this sweep) and 3 from this sweep on 38829058873.
+Raw statuses: verified 63, coded but not verified 178, todo 120 (of 361). The verified rows include earlier test rounds: 59 from the round on build 38727073546 (before this sweep) and 4 from this sweep on 38829058873.
 The todo rows split into: context only (old VLC shots, jokes, sponsor, surveys, montage: nothing to build), built but never moved off todo (counted as coded here, they wait for verification), still to build: must-have (part of what she shows and planned) and optional (postponed reverse playback, montage-only seek segments, polish motion).
 
 | Area | Verified | Coded, not verified | To build: must-have | To build: optional | Context (nothing to build) | Rows |
@@ -19,18 +23,15 @@ The todo rows split into: context only (old VLC shots, jokes, sponsor, surveys, 
 | Sidebars, menus and panels | 6 | 72 | 3 | 3 | 13 | 97 |
 | Library and music | 20 | 24 | 0 | 0 | 6 | 50 |
 | Settings and dialogs | 25 | 9 | 0 | 0 | 2 | 36 |
-| Step 2 features | 3 | 37 | 9 | 1 | 0 | 50 |
+| Step 2 features | 4 | 36 | 9 | 1 | 0 | 50 |
 | Customize and profiles | 6 | 12 | 0 | 0 | 1 | 19 |
-| **Total** | **62** | **219** | **12** | **5** | **63** | **361** |
+| **Total** | **63** | **218** | **12** | **5** | **63** | **361** |
 | Cone release | tracked in redesign/CONE_RELEASE_NOTES.md (no VIDEO_INDEX rows) | | | | | |
-
-## Fix list additions (Sticky, 2026-10-16)
-- The resume toast text must never be cut off ("You already watched t... 00:00:14" seen on 38829058873): it fits or wraps at every window size.
-- VLC's built-in dialogs in the Cone build must say "Cone" (e.g. the AVI "Broken or missing Index" question still says "VLC won't repair..."): public profile only; core-side dialog texts are core changes (Cone release branch, own build).
 
 ## Verification sweep (build 38829058873)
 - Window 1 done (2026-10-16): Customize Player and profiles. Verified: row 308 (profiles in the main menu, submenu, switching). Bugs: MED Customize preview loses the seek bar and time labels after a drop; LOW profile switch drops one frame (23 ms); LOW footer tabs not in Figma (to decide). Details in BUILD_NOTES and PERF.
 - Count (all VIDEO_INDEX rows): verified 62, coded but not verified 177, todo 122.
+- Window 4 done (2026-10-16): Ctrl+B and bookmarks: row 247 verified (title names, notification, duplicate skip); LOW stock notification look.
 - Window 3 done (2026-10-16): waveform: audio formats, no-audio file and the AVI pass; 249 MiB MP4 fails (HIGH, fix running); a Cone process stuck in termination after one quit (MED, investigate). No rows marked verified (the waveform rows wait for the MP4 fix).
 - Window 2 done (2026-10-16): library part 1: New Playlist (P6-16, IB-30) verified, narrow header fixed; LOW Continue Watching shows the file name. Library part 2 (needs folders in the Cone library: Add Folder cancel, folder contents after a scan, grid, Unknown Album, pin highlight) still open.
 - Window 3 (waveform) partly done (2026-10-16): HIGH the 250 MiB MP4 takes 13.5-14.9 s (target 2 s; cause found: MP4 seeks land on the video keyframe and the scanner decodes the audio before each stretch; fix: drop those packets undecoded); MKV 4.8 s and 4K MKV 2.6 s pass; log lines exist but the log file is buffered; AVI index dialog shows once, MED quit with that dialog open took 8.8 s. Left: AVI second ask + result, no-audio MP4, MP3 / M4A / FLAC, responsiveness. Continue Watching file names reclassified: matches Figma and the video (no change). Details in BUILD_NOTES.

@@ -768,3 +768,8 @@ From the verification of build 38727073546 (seen again on 38800817536): P6-04 / 
 - FAIL (HIGH, fix on wip/sweep-fix-waveform in progress): 249 MiB MP4 ready after ~14 s (target 2 s).
 - LOW: VLC's stock dialogs (AVI index question) blur the whole window behind them and use VLC's look and wording (wording: fix list, Cone release branch).
 - To investigate (MED): after one quit, a Cone.exe process stayed alive with no window and one thread (responding, idle); Stop-Process / taskkill /F cannot end it (Windows: no running instance, stuck in termination: likely a driver wait, audio or GPU). Watch for it in the next windows; check the shutdown path (audio output, waveform worker, D3D) if it repeats.
+
+## 2026-10-16 verification sweep, window 4: Ctrl+B and bookmarks (build 38829058873, public)
+- Verified: Ctrl+B (row 247) creates "Test Show S01E02 1", then "... 2" at another time (media title, not the file name); the notification "Bookmark added: Test Show S01E02 2" shows above the control bar; a second Ctrl+B or "+" at the same time adds nothing; the Bookmarks tab lists them.
+- LOW: the notification is VLC's stock pill (W7.3 OSD restyle); the seek preview card can cover it while the pointer is on the seek bar. LOW suggestion: a repeated Ctrl+B at an already bookmarked time could say so.
+- Seen again: the resume toast text is cut off ("Do you want to restart the playb..."): fix list, fix in progress.
