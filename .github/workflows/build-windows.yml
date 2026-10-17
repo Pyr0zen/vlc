@@ -214,13 +214,20 @@ jobs:
           path: dist/
           retention-days: 14
 
-      # release.yml: both packages exactly as built, for the release job of the same run only
+      # brand layer: Cone's NSIS installer, built so its screens and texts can be checked
+      # (redesign/CONE_RELEASE_NOTES.md); not published with the beta (Decision 61: portable zip
+      # first); a failure here keeps the build green
+      - name: Cone installer
+        if: env.VLC_BRAND == 'public'
+        continue-on-error: true
+        run: |
+          docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/build" -w /build -e HOME=/tmp \
+            "$VLC_IMAGE" .github/scripts/win64-build.sh installer
+          ls -la win64/*.exe
+
       - uses: actions/upload-artifact@v4
-        if: inputs.release
+        if: env.VLC_BRAND == 'public' && hashFiles('win64/cone-*-win64.exe') != ''
         with:
-          name: cone-release-files
-          path: |
-            win64/vlc-*-win64.zip
-            win64/cone-*-win64.exe
-          if-no-files-found: error
-          retention-days: 1
+          name: cone-installer-win64
+          path: win64/cone-*-win64.exe
+          retention-days: 14
