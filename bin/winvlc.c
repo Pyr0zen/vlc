@@ -42,6 +42,25 @@
 
 #include "../lib/libvlc_internal.h"
 
+/* redesign (brand layer, public profile): Cone reads its interface language from its own key
+ * and writes crash dumps in its own folder, never an installed VLC's
+ * (modules/gui/qt/util/brand.hpp BRAND_REGISTRY_KEY, src/win32/dirs.c APP_DIR_NAME); its audio
+ * session (volume mixer entry, modules/audio_output/mmdevice.c) carries its own name, and so
+ * does the message box shown when it cannot start */
+#ifdef VLC_BRAND_PUBLIC
+# define LANG_REGISTRY_KEY "Software\\Cone\\"
+# define CRASHDUMP_DIR L"\\Cone\\crashdump"
+# define USER_AGENT_NAME "Cone"
+# define START_ERROR_TEXT "Cone could not start.\n"
+# define START_ERROR_TITLE "Cone"
+#else
+# define LANG_REGISTRY_KEY "Software\\VideoLAN\\VLC\\"
+# define CRASHDUMP_DIR L"\\vlc\\crashdump"
+# define USER_AGENT_NAME "VLC media player"
+# define START_ERROR_TEXT "VLC media player could not start.\n"
+# define START_ERROR_TITLE "VLC media player"
+#endif
+
 #ifdef HAVE_BREAKPAD
 void CheckCrashDump( const wchar_t* crashdump_path );
 void* InstallCrashHandler( const wchar_t* crashdump_path );
@@ -168,11 +187,11 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
         else
         {
             const size_t pathlen = wcslen( copath );
-            wchar_t *path = malloc( ( pathlen + wcslen(L"\\vlc\\crashdump") + 1 ) * sizeof(*path) );
+            wchar_t *path = malloc( ( pathlen + wcslen(CRASHDUMP_DIR) + 1 ) * sizeof(*path) );
             if ( path != NULL)
             {
                 memcpy( path, copath, pathlen * sizeof(*path) );
-                memcpy( &path[pathlen], L"\\vlc\\crashdump", (wcslen(L"\\vlc\\crashdump") + 1)  * sizeof(*path) );
+                memcpy( &path[pathlen], CRASHDUMP_DIR, (wcslen(CRASHDUMP_DIR) + 1)  * sizeof(*path) );
                 CheckCrashDump( path );
                 eh = InstallCrashHandler( path );
                 free( path );
@@ -190,7 +209,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
     if (!lang)
     {
         HKEY h_key;
-        if( RegOpenKeyEx( HKEY_CURRENT_USER, TEXT("Software\\VideoLAN\\VLC\\"), 0, KEY_READ, &h_key )
+        if( RegOpenKeyEx( HKEY_CURRENT_USER, TEXT(LANG_REGISTRY_KEY), 0, KEY_READ, &h_key )
                 == ERROR_SUCCESS )
         {
             WCHAR szData[256];
@@ -218,7 +237,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
         libvlc_SetExitHandler(vlc->p_libvlc_int, vlc_kill, &sem);
         libvlc_set_app_id (vlc, "org.VideoLAN.VLC", PACKAGE_VERSION,
                            PACKAGE_NAME);
-        libvlc_set_user_agent (vlc, "VLC media player", "VLC/"PACKAGE_VERSION);
+        libvlc_set_user_agent (vlc, USER_AGENT_NAME, "VLC/"PACKAGE_VERSION);
         libvlc_InternalAddIntf (vlc->p_libvlc_int, NULL);
         libvlc_InternalPlay (vlc->p_libvlc_int);
 
@@ -228,9 +247,9 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
         libvlc_release (vlc);
     }
     else
-        MessageBox (NULL, TEXT("VLC media player could not start.\n"
+        MessageBox (NULL, TEXT(START_ERROR_TEXT
                     "Either the command line options were invalid or no plugins were found.\n"),
-                    TEXT("VLC media player"),
+                    TEXT(START_ERROR_TITLE),
                     MB_OK|MB_ICONERROR);
 
 

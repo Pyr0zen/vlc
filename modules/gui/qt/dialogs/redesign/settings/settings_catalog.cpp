@@ -686,7 +686,7 @@ QString SettingsCatalog::language() const
 {
 #ifdef _WIN32
     QVLCRegistry registry(HKEY_CURRENT_USER);
-    char* lang = registry.ReadRegistry("Software\\VideoLAN\\VLC\\", "Lang", "auto");
+    char* lang = registry.ReadRegistry(BRAND_REGISTRY_KEY, "Lang", "auto");
     const QString result = lang ? qfu(lang) : QString();
     free(lang);
     return result.isEmpty() ? QStringLiteral("auto") : result;
@@ -854,13 +854,15 @@ void SettingsCatalog::setLanguage(const QString& iso)
     QVLCRegistry registry(HKEY_CURRENT_USER);
     if (iso.isEmpty() || iso == QLatin1String("auto"))
     {
-        registry.DeleteValue("Software\\VideoLAN\\VLC\\", "Lang");
+        registry.DeleteValue(BRAND_REGISTRY_KEY, "Lang");
+#ifndef VLC_BRAND_PUBLIC
         registry.DeleteKey("Software\\VideoLAN\\", "VLC");
         registry.DeleteKey("Software\\", "VideoLAN");
+#endif
     }
     else
     {
-        registry.WriteRegistry("Software\\VideoLAN\\VLC\\", "Lang", qtu(iso));
+        registry.WriteRegistry(BRAND_REGISTRY_KEY, "Lang", qtu(iso));
     }
 #else
     Q_UNUSED(iso);
