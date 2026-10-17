@@ -171,9 +171,17 @@ jobs:
         run: |
           # run as the runner's user so the checkout, caches and build output have one owner
           mkdir -p .ccache
+          # the public profile's own version (Decision 58): a vX.Y.Z tag sets it, otherwise 0.1.0
+          BRAND_VERSION=""
+          case "$GITHUB_REF" in refs/tags/v*) BRAND_VERSION="${GITHUB_REF_NAME#v}" ;; esac
+          if [ -n "$BRAND_VERSION" ] && ! echo "$BRAND_VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::warning::tag $GITHUB_REF_NAME is not vX.Y.Z: the build uses the default version"
+            BRAND_VERSION=""
+          fi
           docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/build" -w /build -e HOME=/tmp \
             -e VLC_PREBUILT_CONTRIBS_URL="${{ steps.sha.outputs.url }}" \
             -e VLC_BRAND="$VLC_BRAND" \
+            -e BRAND_VERSION="$BRAND_VERSION" \
             "$VLC_IMAGE" .github/scripts/win64-build.sh build
           df -h /
 
@@ -205,3 +213,14 @@ jobs:
           name: ${{ env.VLC_BRAND == 'public' && 'vlc-redesign-win64-public' || 'vlc-redesign-win64' }}
           path: dist/
           retention-days: 14
+
+      # release.yml: both packages exactly as built, for the release job of the same run only
+      - uses: actions/upload-artifact@v4
+        if: inputs.release
+        with:
+          name: cone-release-files
+          path: |
+            win64/vlc-*-win64.zip
+            win64/cone-*-win64.exe
+          if-no-files-found: error
+          retention-days: 1
