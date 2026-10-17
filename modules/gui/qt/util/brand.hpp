@@ -137,6 +137,11 @@ QIcon trayMenuIcon();
 QPixmap aboutLogo(qt_intf_t* intf);
 /* extension without an icon of its own (dialogs/plugins) */
 QPixmap extensionFallbackIcon();
+/* a text of the engine (option, choice, plugin and hotkey texts, already translated) as the
+ * redesign's Settings show it: in the public profile the app's name replaces VLC's ("VLC media
+ * player" and "VLC", but not "VLC" before a version number such as "VLC 3.0"), so the text keeps
+ * its translation; the vlc profile returns the text unchanged */
+QString engineText(const QString& text);
 }
 
 /**
