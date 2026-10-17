@@ -565,7 +565,7 @@ Decision 48 (two profiles) and Decision 49 (Cone logo approved, Q6). Branch work
 | package.mak / extras/package/win32/meson.build | icon file next to the exe | vlc.ico | cone.ico |
 | NSIS/vlc.win32.nsi.in | PRODUCT_NAME (installer title, shortcuts, uninstall entry, Default Programs name) | VLC media player | Cone |
 | NSIS/vlc.win32.nsi.in | PRODUCT_GROUP / PRODUCT_PUBLISHER (Start menu folder, publisher) | VideoLAN | Sticky |
-| NSIS/vlc.win32.nsi.in | PRODUCT_WEB_SITE, finish page link | https://www.videolan.org/, https://www.videolan.org/vlc/ | https://github.com/Pyr0zen/vlc-redesign-juxtopposed (both) |
+| NSIS/vlc.win32.nsi.in | PRODUCT_WEB_SITE, finish page link | https://www.videolan.org/, https://www.videolan.org/vlc/ | https://github.com/StickyGonzales/vlc-redesign-juxtopposed (both) |
 | NSIS/vlc.win32.nsi.in | PRODUCT_DIR_REGKEY, install folder, PRODUCT_ID | Software\VideoLAN\VLC, Program Files\VideoLAN\VLC, {ea92ef52-afe4-4212-bacb-dfe9fca94cd6} | Software\Cone, Program Files\Cone, {f00e45bf-087b-49ef-90e7-4cd5e2e4bd72} (own install folder and uninstall entry) |
 | NSIS/vlc.win32.nsi.in | installer / uninstaller icon | vlc.ico | cone.ico |
 | NSIS/vlc.win32.nsi.in | welcome / finish bitmap (VLC's cone) | NSIS/vlc_branding.bmp | none (NSIS's default) |
