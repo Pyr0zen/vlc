@@ -12,7 +12,7 @@ The Figma design is used under the Creative Commons Attribution 4.0 Internationa
 
 ## Cone
 
-Cone is built by **StickyGonzales** (GitHub: Pyr0zen) on top of VLC media player.
+Cone is built by **[StickyGonzales](https://github.com/StickyGonzales)** on top of VLC media player.
 
 ## VLC
 
