@@ -92,6 +92,15 @@ exit /b 0
 rem finds the downloaded player: sets VLCDIR, EXE and CURRENT (the fixed folder for that exe)
 :find
 set "VLCDIR="
+rem public builds since the beta branding: the zip's top folder is Cone-<version>[-suffix]
+for /d %%D in ("%DEST%\vlc-redesign-win64-public\Cone-*") do (
+    if exist "%%D\Cone.exe" (
+        set "VLCDIR=%%D"
+        set "EXE=Cone.exe"
+        set "CURRENT=%BUILDS%\current-public"
+        exit /b 0
+    )
+)
 if exist "%DEST%\vlc-redesign-win64-public\vlc-4.0.0-dev\Cone.exe" (
     set "VLCDIR=%DEST%\vlc-redesign-win64-public\vlc-4.0.0-dev"
     set "EXE=Cone.exe"

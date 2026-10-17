@@ -24,6 +24,12 @@ on:
         type: choice
         options: [vlc, public]
         default: public
+      package-suffix:
+        # brand layer: appended to the public profile's package names only (e.g. "-beta":
+        # Cone-0.1.0-beta-win64.zip), never to the app's version
+        description: 'Package name suffix (public profile, e.g. -beta)'
+        type: string
+        default: ''
   workflow_call:
     inputs:
       brand:
@@ -168,20 +174,35 @@ jobs:
         run: docker pull "$VLC_IMAGE"
 
       - name: Build in VideoLAN's image
+        env:
+          PACKAGE_SUFFIX_INPUT: ${{ inputs.package-suffix }}
         run: |
           # run as the runner's user so the checkout, caches and build output have one owner
           mkdir -p .ccache
-          # the public profile's own version (Decision 58): a vX.Y.Z tag sets it, otherwise 0.1.0
+          # the public profile's own version (Decision 58): a vX.Y.Z tag sets it, otherwise 0.1.0;
+          # a vX.Y.Z-<label> tag (v0.1.0-beta) sets X.Y.Z and puts "-<label>" into the package
+          # names only (BRAND_PACKAGE_SUFFIX, extras/package/win32/package.mak), like the
+          # workflow_dispatch input package-suffix
           BRAND_VERSION=""
+          BRAND_PACKAGE_SUFFIX="$PACKAGE_SUFFIX_INPUT"
           case "$GITHUB_REF" in refs/tags/v*) BRAND_VERSION="${GITHUB_REF_NAME#v}" ;; esac
+          if echo "$BRAND_VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+-[A-Za-z0-9.]+$'; then
+            BRAND_PACKAGE_SUFFIX="-${BRAND_VERSION#*-}"
+            BRAND_VERSION="${BRAND_VERSION%%-*}"
+          fi
           if [ -n "$BRAND_VERSION" ] && ! echo "$BRAND_VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
             echo "::warning::tag $GITHUB_REF_NAME is not vX.Y.Z: the build uses the default version"
             BRAND_VERSION=""
+          fi
+          if [ -n "$BRAND_PACKAGE_SUFFIX" ] && ! echo "$BRAND_PACKAGE_SUFFIX" | grep -Eq '^-[A-Za-z0-9.]+$'; then
+            echo "::warning::package suffix '$BRAND_PACKAGE_SUFFIX' is not -<letters, digits, dots>: not used"
+            BRAND_PACKAGE_SUFFIX=""
           fi
           docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/build" -w /build -e HOME=/tmp \
             -e VLC_PREBUILT_CONTRIBS_URL="${{ steps.sha.outputs.url }}" \
             -e VLC_BRAND="$VLC_BRAND" \
             -e BRAND_VERSION="$BRAND_VERSION" \
+            -e BRAND_PACKAGE_SUFFIX="$BRAND_PACKAGE_SUFFIX" \
             "$VLC_IMAGE" .github/scripts/win64-build.sh build
           df -h /
 
@@ -205,7 +226,8 @@ jobs:
         run: |
           ls -la win64/*.zip
           mkdir dist
-          unzip -q win64/vlc-*-win64.zip -d dist
+          # vlc-<version>-win64.zip, or Cone-<version><suffix>-win64.zip in the public profile
+          unzip -q win64/*-win64.zip -d dist
           ls dist dist/*
 
       - uses: actions/upload-artifact@v4
