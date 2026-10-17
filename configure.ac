@@ -5300,8 +5300,8 @@ AS_CASE(["${with_brand}"],
     BRAND_ICON_SRC="extras/package/win32/brand/public/cone.ico"
     BRAND_ICON_RC="brand/public/cone.ico"
     BRAND_ICON_FILE="cone.ico"
-    BRAND_WEBSITE="https://github.com/Pyr0zen/vlc-redesign-juxtopposed"
-    BRAND_FINISH_LINK="https://github.com/Pyr0zen/vlc-redesign-juxtopposed"
+    BRAND_WEBSITE="https://github.com/StickyGonzales/vlc-redesign-juxtopposed"
+    BRAND_FINISH_LINK="https://github.com/StickyGonzales/vlc-redesign-juxtopposed"
     BRAND_REGKEY='Software\Cone'
     BRAND_INSTALL_DIR='Cone'
     BRAND_PRODUCT_ID="{f00e45bf-087b-49ef-90e7-4cd5e2e4bd72}"

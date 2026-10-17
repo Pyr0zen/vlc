@@ -8,7 +8,7 @@ rem where VLC runs from: one fixed vlc.exe path, so Windows Firewall asks only o
 rem portable settings folder (builds\current\portable) that every build keeps using.
 title Test VLC Redesign
 
-set "REPO=Pyr0zen/vlc-redesign-juxtopposed"
+set "REPO=StickyGonzales/vlc-redesign-juxtopposed"
 set "BRANCH=redesign"
 set "ARTIFACT=vlc-redesign-win64"
 rem the builds folder of this PC: set BUILDS in test-latest.local.cmd next to this script

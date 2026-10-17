@@ -81,7 +81,7 @@ corrected here (the Figma file repeats the dark values there).
 
 **Can I download it?**
 Not as a release yet. Every push builds a Windows 64-bit package on GitHub Actions: open the
-[build-windows workflow](https://github.com/Pyr0zen/vlc-redesign-juxtopposed/actions/workflows/build-windows.yml),
+[build-windows workflow](https://github.com/StickyGonzales/vlc-redesign-juxtopposed/actions/workflows/build-windows.yml),
 pick the latest green run and download the `vlc-redesign-win64` artifact (needs a GitHub login).
 It tracks VLC 4 development code, so treat it as experimental. An installer and a portable zip
 will come on the Releases page.
@@ -120,7 +120,7 @@ VLC itself is documented on the [VideoLAN wiki](https://wiki.videolan.org/Win32C
   ([video](https://youtu.be/ERFeOgqk324)), CC BY 4.0.
 - VLC media player by VideoLAN and its contributors, GPLv2 or later (libVLC LGPLv2 or later).
 - Fonts: Inter and DM Mono, SIL Open Font License.
-- Built by Pyr0zen (Sticky). Details in [CREDITS.md](CREDITS.md).
+- Built by [StickyGonzales](https://github.com/StickyGonzales). Details in [CREDITS.md](CREDITS.md).
 
 ---
 

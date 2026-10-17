@@ -6,8 +6,8 @@
 - The design is a mockup only. No code for it exists. Everything gets built by us on top of upstream VLC.
 - The playback engine, codecs and core stay as they are wherever possible. Most of her ideas are UI work on top of features VLC already has. Where a feature truly needs core changes, explain why and get Sticky's approval first.
 - Base: VLC master (VLC 4 development branch), which has the QML interface in `modules/gui/qt`. Do NOT use the 3.0.x branch, its UI is QtWidgets and cannot be restyled the same way.
-- This repo: Sticky's GitHub fork https://github.com/Pyr0zen/vlc-redesign-juxtopposed of the official mirror https://github.com/videolan/vlc (official upstream: https://code.videolan.org/videolan/vlc).
-- Owner: Sticky (GitHub: Pyr0zen). Windows 10 PC, PowerShell, a local Windows user.
+- This repo: Sticky's GitHub fork https://github.com/StickyGonzales/vlc-redesign-juxtopposed of the official mirror https://github.com/videolan/vlc (official upstream: https://code.videolan.org/videolan/vlc).
+- Owner: Sticky (GitHub: StickyGonzales; the account was called Pyr0zen until 2026-10-18, so older commits carry that name). Windows 10 PC, PowerShell, a local Windows user.
 
 ## How we work
 - You run on Sticky's PC (native Windows Claude Code) inside this local clone, so you have the designer's full video locally.
@@ -83,7 +83,7 @@ READY TO BUILD. Next session: read CLAUDE.md, VIDEO_INDEX.md, FIGMA_FLOWS.md and
 ## Privacy and copyright (Sticky, 2026-10-15, permanent)
 - The repo is public. Never commit anything personal or from Sticky's PC: no real names, Windows user name, PC paths, e-mail addresses (commits use the noreply identity), personal files or their names, his music, his test videos or screenshots of his screen. Committed files use neutral placeholders (<TEST_MEDIA_DIR>, <WORK_DIR>, <TEST_VIDEO>, ...); the real values live only in the gitignored CLAUDE.local.md and *.local.* settings files.
 - Never commit the designer's video content (frames, transcript, the video, quotes from it); her Figma file (CC BY 4.0) may be committed, with credit (CREDITS.md).
-- Committed files refer to the owner only as Sticky (studio tag; GitHub Pyr0zen), never by real name; the private word list catches the real name.
+- Committed files refer to the owner only as Sticky (studio tag; GitHub StickyGonzales), never by real name; the private word list catches the real name.
 - Before every commit and push run `python redesign/tools/privacycheck.py` (generic checks plus the private word list in the gitignored redesign/tools/privacy.local.txt); it must print `privacycheck: 0 problem(s)`. Public screenshots show only the VLC window with generated or public test media.
 
 ## Decision questions to Sticky (Sticky, 2026-10-15, permanent)
