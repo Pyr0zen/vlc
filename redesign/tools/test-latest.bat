@@ -9,7 +9,7 @@ rem   "public" builds (Cone.exe, the default since Decision 50) -> builds\curren
 rem   "vlc" builds (vlc.exe, started by hand with the vlc profile) -> builds\current
 title Test VLC Redesign
 
-set "REPO=Pyr0zen/vlc-redesign-juxtopposed"
+set "REPO=StickyGonzales/vlc-redesign-juxtopposed"
 set "BRANCH=redesign"
 rem the builds folder of this PC: set BUILDS in test-latest.local.cmd next to this script
 rem (gitignored, never committed); default: a folder in the user profile
