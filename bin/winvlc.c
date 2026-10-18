@@ -172,12 +172,14 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 #ifdef VLC_BRAND_PUBLIC
         /* Decision 63: Cone has no skins interface, so libVLC does not know the skins2
-         * options and would refuse to start on them (e.g. a VLC shortcut "-Iskins
-         * --skins2-last <file>"): they are dropped, with the value of the two that take one;
+         * options (skins2-*, skinned-playlist, skinned-video) and would refuse to start on
+         * them (e.g. a VLC shortcut "-Iskins --skins2-last <file>"): they are dropped, with
+         * the value of the two that take one;
          * the skins interface itself falls back to the default one (libvlc_InternalAddIntf
          * below) */
         if (!wcsncmp(wargv[i], L"--skins2-", 9) || !wcsncmp(wargv[i], L"--no-skins2-", 12)
-         || !wcsncmp(wargv[i], L"--noskins2-", 11))
+         || !wcsncmp(wargv[i], L"--noskins2-", 11) || !wcsncmp(wargv[i], L"--skinned-", 10)
+         || !wcsncmp(wargv[i], L"--no-skinned-", 13) || !wcsncmp(wargv[i], L"--noskinned-", 12))
         {
             if ((!wcscmp(wargv[i], L"--skins2-last") || !wcscmp(wargv[i], L"--skins2-config"))
              && i < argc - 1)
