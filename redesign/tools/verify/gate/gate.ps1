@@ -484,7 +484,7 @@ function Invoke-Quit {
         clean = @($tries | Where-Object { $_.state -eq 'clean' }).Count
         ctrl_q_clean = @($tries | Where-Object { $_.state -eq 'clean' -and $_.quit -eq 'Ctrl+Q' }).Count
         wm_close_clean = @($tries | Where-Object { $_.state -eq 'clean' -and $_.quit -eq 'WM_CLOSE' }).Count
-        exit_seconds_max = ($tries | Where-Object { $_.exit_seconds } | Measure-Object exit_seconds -Maximum).Maximum
+        exit_seconds_max = (@($tries | ForEach-Object { $_.exit_seconds } | Where-Object { $_ }) | Measure-Object -Maximum).Maximum
         players_left = @($left | ForEach-Object { "$($_.Id) ($($_.Threads.Count) threads)" }); crash_events = $events; detail = $tries
         rule = "$Quits quits over the matrix files, half Ctrl+Q, half WM_CLOSE: every one exits within 15 s, 0 Cone.exe left from the lane folder, 0 Application Error / WER / Application Hang events for the exe since the start (Get-WinEvent, read only)" }
     $res.verdict = if ($res.clean -eq $Quits -and $left.Count -eq 0 -and $events.Count -eq 0) { 'pass' } else { 'FAIL' }
