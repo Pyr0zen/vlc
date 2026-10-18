@@ -598,6 +598,12 @@ signals:
     // redesign (S2-03): the track-change popup near the system tray (VLCSystray), drawn by
     // TrayPopup.qml in `area` (the primary screen's free area) for `duration` ms
     void trackPopupRequested(const QString& name, const QUrl& artwork, const QRect& area, int duration);
+    // redesign: a mouse move without a pressed button over the interface window, in scene
+    // (window) coordinates, seen by InterfaceWindowHandler before Qt Quick delivers it; the
+    // player's bars wake up from it (Player.qml, Decision 30)
+    void intfMouseMoved(QPointF scenePos);
+    // redesign: the mouse left the interface window
+    void intfMouseLeft();
 
     void playerPlaylistWidthChanged(double);
     void interfaceAlwaysOnTopChanged(bool);

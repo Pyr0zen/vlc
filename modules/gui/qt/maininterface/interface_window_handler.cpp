@@ -24,6 +24,7 @@
 #include "dialogs/systray/systray.hpp"
 #include "widgets/native/qvlcframe.hpp"
 #include "dialogs/dialogs/dialogmodel.hpp"
+#include <QMouseEvent>
 #include <QScreen>
 #include <QQmlProperty>
 #include <cmath>
@@ -277,6 +278,21 @@ bool InterfaceWindowHandler::eventFilter(QObject*, QEvent* event)
     case QEvent::KeyRelease:
     {
         return applyKeyEvent(static_cast<QKeyEvent *> (event));
+    }
+    // redesign: every mouse move over the window reaches the player's cursor tracking, also
+    // where Qt Quick's hover delivery to the video surface missed it (large windows); only
+    // the video player uses it
+    case QEvent::MouseMove:
+    {
+        const auto mouseEvent = static_cast<QMouseEvent *>(event);
+        if (mouseEvent->buttons() == Qt::NoButton && m_mainCtx->hasEmbededVideo())
+            emit m_mainCtx->intfMouseMoved(mouseEvent->scenePosition());
+        break;
+    }
+    case QEvent::Leave:
+    {
+        emit m_mainCtx->intfMouseLeft();
+        break;
     }
     case QEvent::Wheel:
     {

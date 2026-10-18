@@ -188,6 +188,23 @@ FocusScope {
         }
     }
 
+    // the window's own mouse moves (InterfaceWindowHandler) feed the same tracking: in a large
+    // window (2400 x 1350 px at 125 %) the moves over the video did not reach the video surface,
+    // so the bars woke up only near the window edges. Several reports of one move count once
+    // (same position in the window). A modal redesign dialog over the player keeps its moves.
+    // Leaving the window ends the fullscreen bar zones also when no hover handler saw the cursor.
+    Connections {
+        target: MainCtx
+        enabled: MainCtx.hasEmbededVideo && RdPanels.modalCount === 0
+
+        function onIntfMouseMoved(scenePos) {
+            cursorTracker.track(scenePos.x, scenePos.y)
+        }
+        function onIntfMouseLeft() {
+            rootPlayer._cursorY = -1
+        }
+    }
+
     QtObject {
         id: cursorTracker
 
