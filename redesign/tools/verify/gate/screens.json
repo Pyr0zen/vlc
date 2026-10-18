@@ -1,0 +1,242 @@
+{
+ "about": "Beta gate screens (the bars state wakes the bars like a user, by moving the pointer over the video; every other state wakes them over the top bar title, so a bar problem fails only the bars state) . gate.ps1 -Part screens: the main screens of the player: each opens, does one basic action and closes (each close variant, e.g. its button and Escape). Steps use the harness step format (README.md 'Step reference'); positions are logical px in a 1280x720 client area. 'should' says what the screenshots must show: the reviewer checks it in review.json. 'source' names the code the screen comes from.",
+ "media": "mkv",
+ "size": [1280, 720],
+ "args": ["--start-paused", "--restore-playback-pos=0"],
+ "reset": [{"keys": "{ESC}", "after": 300}, {"wiggle": [640, 30], "after": 500}],
+ "states": [
+  {
+   "id": "bars",
+   "title": "Player with both bars",
+   "source": "player/qml/TopBar.qml, player/qml/ControlBar.qml",
+   "should": "top bar (menu, library, folder chip, title, window buttons) and control bar (previous, play, next, times, seek bar, volume, audio, subtitles, gear, queue) over the light grey video with the test pattern at the top left; accent colour on the play button and seek handle",
+   "open": [
+    {"wiggle": [640, 400], "after": 600},
+    {"expect": {"uia": "Player controls", "visible": true}, "check": "control bar shown"},
+    {"expect": {"uia": "Player topbar", "visible": true}, "check": "top bar shown"},
+    {"shot": "open"}
+   ],
+   "action": [
+    {"uia": "Play/Pause", "role": "Button", "after": 2500},
+    {"wiggle": [640, 30], "after": 400},
+    {"shot": "playing"},
+    {"uia": "Play/Pause", "role": "Button", "after": 600}
+   ],
+   "close": []
+  },
+  {
+   "id": "sidebar",
+   "title": "Settings sidebar: Playback, Video, Audio, Subtitles tabs",
+   "source": "player/qml/SettingsSidebar.qml, PlaybackSettingsPage.qml, VideoSettingsPage.qml, AudioSettingsPage.qml, SubtitleSettingsPage.qml",
+   "should": "the sidebar on the right with the four tabs, the named tab selected and its page (toggles, dropdowns, sliders) drawn opaque over the video",
+   "open": [
+    {"uia": "Playback Settings", "role": "Button", "after": 900},
+    {"expect": {"uia": "Open Advanced Settings", "present": true}, "check": "sidebar open"},
+    {"shot": "playback"}
+   ],
+   "action": [
+    {"uia": "Video", "role": "TabItem", "after": 700}, {"shot": "video"},
+    {"uia": "Audio", "role": "TabItem", "after": 700}, {"shot": "audio"},
+    {"uia": "Subtitles", "role": "TabItem", "after": 700}, {"shot": "subtitles"},
+    {"uia": "Playback", "role": "TabItem", "after": 500}
+   ],
+   "closed": {"uia": "Open Advanced Settings", "present": false},
+   "close": [
+    {"id": "button", "steps": [{"wiggle": [640, 30], "after": 300}, {"uia": "Playback Settings", "role": "Button", "after": 700}]},
+    {"id": "escape", "steps": [{"keys": "{ESC}", "after": 700}]}
+   ]
+  },
+  {
+   "id": "tracks",
+   "title": "Tracks popup: Subtitles, Audio, Video tabs",
+   "source": "player/qml/TracksPopup.qml, TracksPageSubtitle.qml, TracksPageAudio.qml",
+   "should": "the tracks popup above the subtitle / audio buttons, opaque; Subtitles tab lists None, English, German (German chosen after the action), Audio tab lists English and Japanese, Video tab its tracks",
+   "open": [
+    {"uia": "Subtitles", "role": "Button", "after": 900},
+    {"expect": {"uia": "Show Preferences", "present": true}, "check": "tracks popup open"},
+    {"shot": "subtitles"}
+   ],
+   "action": [
+    {"uia": "German", "role": "RadioButton", "match": "contains", "after": 700}, {"shot": "subtitle-german"},
+    {"uia": "Audio", "role": "TabItem", "after": 700}, {"shot": "audio"},
+    {"uia": "Video", "role": "TabItem", "after": 700}, {"shot": "video"},
+    {"uia": "Subtitles", "role": "TabItem", "after": 500}
+   ],
+   "closed": {"uia": "Show Preferences", "present": false},
+   "close": [
+    {"id": "button", "steps": [{"wiggle": [640, 30], "after": 300}, {"uia": "Subtitles", "role": "Button", "after": 700}]},
+    {"id": "escape", "steps": [{"keys": "{ESC}", "after": 700}]}
+   ]
+  },
+  {
+   "id": "queue",
+   "title": "Queue sidebar: Queue, Bookmarks, Chapters",
+   "source": "player/qml/QueueSidebar.qml",
+   "should": "the sidebar with Queue (the MKV listed), Bookmarks (one bookmark after the action) and Chapters (no chapters message) tabs",
+   "open": [
+    {"uia": "Queue", "role": "Button", "after": 900},
+    {"expect": {"uia": "Add files to the queue", "present": true}, "check": "queue open"},
+    {"shot": "queue"}
+   ],
+   "action": [
+    {"uia": "Bookmarks", "role": "TabItem", "after": 700},
+    {"uia": "Add a bookmark", "role": "Button", "match": "contains", "after": 900}, {"shot": "bookmarks"},
+    {"uia": "Chapters", "role": "TabItem", "after": 700}, {"shot": "chapters"},
+    {"uia": "Queue", "role": "TabItem", "after": 500}
+   ],
+   "closed": {"uia": "Bookmarks", "role": "TabItem", "present": false},
+   "close": [
+    {"id": "button", "steps": [{"wiggle": [640, 30], "after": 300}, {"uia": "Queue", "role": "Button", "after": 700}]},
+    {"id": "escape", "steps": [{"keys": "{ESC}", "after": 700}]}
+   ]
+  },
+  {
+   "id": "mainmenu",
+   "title": "Main menu and Profile submenu",
+   "source": "menus/qml/RdMainMenu.qml, menus/rd_menu_model.cpp",
+   "should": "the main menu under the ... button (Open entries, Profile, Keyboard Shortcuts, Customize Player, Settings, About Cone) and the Profile submenu beside it; Cone, never VLC",
+   "open": [
+    {"uia": "Menu", "role": "Button", "after": 800},
+    {"expect": {"uia": "Keyboard Shortcuts", "role": "MenuItem", "present": true}, "check": "main menu open"},
+    {"shot": "open"}
+   ],
+   "action": [
+    {"uia": "Profile (", "role": "MenuItem", "match": "contains", "action": "hover", "after": 900}, {"shot": "profile"}
+   ],
+   "closed": {"uia": "Keyboard Shortcuts", "role": "MenuItem", "present": false},
+   "close": [
+    {"id": "escape", "steps": [{"keys": "{ESC}", "after": 400}, {"keys": "{ESC}", "after": 500}]},
+    {"id": "click-outside", "steps": [{"click": [900, 600], "after": 700}]}
+   ]
+  },
+  {
+   "id": "rightclick",
+   "title": "Right-click menu and Playback submenu",
+   "source": "player/qml/RdPlayerMenu.qml, menus/rd_menu_model.cpp",
+   "should": "the player menu at the pointer (Play, Stop, ..., Hide UI, Playback / Video / Audio / Subtitle, More Settings, Playlist, Open Media, Quit Cone) and the Playback submenu",
+   "open": [
+    {"click": [500, 300], "button": "right", "after": 800},
+    {"expect": {"uia": "Hide UI", "role": "MenuItem", "present": true}, "check": "right-click menu open"},
+    {"shot": "open"}
+   ],
+   "action": [
+    {"uia": "Playback", "role": "MenuItem", "action": "hover", "after": 900}, {"shot": "playback"}
+   ],
+   "closed": {"uia": "Hide UI", "role": "MenuItem", "present": false},
+   "close": [
+    {"id": "escape", "steps": [{"keys": "{ESC}", "after": 400}, {"keys": "{ESC}", "after": 500}]},
+    {"id": "click-outside", "steps": [{"click": [1100, 150], "after": 700}]}
+   ]
+  },
+  {
+   "id": "library",
+   "title": "Library sidebar: Home, Videos, Music",
+   "source": "medialibrary/qml/RdLibrarySidebar.qml, RdLibraryRail.qml, RdLibraryHome.qml",
+   "should": "the compact library on the left (rail with Home, Videos, Music, Network, Playlists, Recent) with the named page; the player stays on the right",
+   "open": [
+    {"uia": "Library", "role": "Button", "after": 1200},
+    {"expect": {"uia": "Library", "role": "Pane", "present": true}, "check": "library open"},
+    {"shot": "home"}
+   ],
+   "action": [
+    {"uia": "Videos", "role": "Button", "after": 900}, {"shot": "videos"},
+    {"uia": "Music", "role": "Button", "after": 900}, {"shot": "music"},
+    {"uia": "Home", "role": "Button", "after": 500}
+   ],
+   "closed": {"uia": "Library", "role": "Pane", "present": false},
+   "close": [
+    {"id": "button", "steps": [{"wiggle": [900, 400], "after": 300}, {"uia": "Library", "role": "Button", "after": 900}]},
+    {"id": "escape", "steps": [{"keys": "{ESC}", "after": 900}]}
+   ]
+  },
+  {
+   "id": "fulllibrary",
+   "title": "Full library with the mini player",
+   "source": "medialibrary/qml/RdLibraryView.qml, player/qml/RdMiniPlayer.qml",
+   "should": "the full library window content (rail, Home page) with the mini player at the bottom right showing the MKV's picture, title and buttons; Music page after the action",
+   "open": [
+    {"uia": "Library", "role": "Button", "after": 1200},
+    {"uia": "Open the library in full", "role": "Button", "after": 1500},
+    {"expect": {"uia": "Open the player", "present": true}, "check": "mini player shown"},
+    {"shot": "home"}
+   ],
+   "action": [
+    {"uia": "Music", "role": "Button", "after": 1000}, {"shot": "music"}
+   ],
+   "closed": {"uia": "Player controls", "visible": true},
+   "close": [
+    {"id": "open-player", "steps": [{"uia": "Open the player", "after": 1200}, {"wiggle": [640, 30], "after": 600}]}
+   ]
+  },
+  {
+   "id": "settings",
+   "title": "Settings dialog: every page",
+   "source": "dialogs/redesign/settings/SettingsDialog.qml, settings/pages/*.qml",
+   "should": "the Settings dialog over the player, opaque, the named category selected on the left and its page on the right; texts say Cone, never VLC",
+   "open": [
+    {"keys": "^p", "after": 1500},
+    {"expect": {"uia": "Search settings", "present": true}, "check": "Settings open"},
+    {"shot": "general"}
+   ],
+   "action": [
+    {"uia": "Interface", "role": "TabItem", "after": 700}, {"shot": "interface"},
+    {"uia": "Privacy", "role": "TabItem", "after": 700}, {"shot": "privacy"},
+    {"uia": "Controls", "role": "TabItem", "after": 700}, {"shot": "controls"},
+    {"uia": "Playback", "role": "TabItem", "after": 700}, {"shot": "playback"},
+    {"uia": "Video", "role": "TabItem", "after": 700}, {"shot": "video"},
+    {"uia": "Audio", "role": "TabItem", "after": 700}, {"shot": "audio"},
+    {"uia": "Subtitles", "role": "TabItem", "after": 700}, {"shot": "subtitles"},
+    {"uia": "Library", "role": "TabItem", "after": 700}, {"shot": "library"},
+    {"uia": "Network", "role": "TabItem", "after": 700}, {"shot": "network"},
+    {"uia": "Performance", "role": "TabItem", "after": 700}, {"shot": "performance"},
+    {"uia": "Recording", "role": "TabItem", "after": 700}, {"shot": "recording"},
+    {"uia": "Extensions", "role": "TabItem", "after": 700}, {"shot": "extensions"},
+    {"uia": "General", "role": "TabItem", "after": 500}
+   ],
+   "closed": {"uia": "Search settings", "present": false},
+   "close": [
+    {"id": "button", "steps": [{"uia": "Close", "role": "Button", "after": 800}]},
+    {"id": "escape", "steps": [{"keys": "{ESC}", "after": 800}]}
+   ]
+  },
+  {
+   "id": "shortcuts",
+   "title": "Keyboard Shortcuts dialog",
+   "source": "dialogs/redesign/KeyboardShortcutsDialog.qml",
+   "should": "the Keyboard Shortcuts dialog with its search field and the Basic / Playback lists; filtered to 'pause' after the action",
+   "open": [
+    {"uia": "Menu", "role": "Button", "after": 800},
+    {"uia": "Keyboard Shortcuts", "role": "MenuItem", "after": 1500},
+    {"expect": {"uia": "Search Keyboard Shortcuts", "match": "contains", "present": true}, "check": "Keyboard Shortcuts open"},
+    {"shot": "open"}
+   ],
+   "action": [
+    {"uia": "Search Keyboard Shortcuts", "match": "contains", "after": 400}, {"keys": "pause", "after": 900}, {"shot": "search"}
+   ],
+   "closed": {"uia": "Search Keyboard Shortcuts", "match": "contains", "present": false},
+   "close": [
+    {"id": "button", "steps": [{"uia": "Close", "role": "Button", "after": 800}]},
+    {"id": "escape", "steps": [{"keys": "{ESC}", "after": 800}]}
+   ]
+  },
+  {
+   "id": "about",
+   "title": "About dialog",
+   "source": "dialogs/help/help.cpp (About), util/brand.hpp",
+   "should": "the About window: Cone name and logo, 'based on VLC media player by VideoLAN', design credit, Authors / License / Credits",
+   "open": [
+    {"uia": "Menu", "role": "Button", "after": 800},
+    {"uia": "About", "role": "MenuItem", "match": "contains", "after": 1500},
+    {"expect": {"uia": "Authors", "present": true}, "check": "About open"},
+    {"shot": "open", "windows": "all"}
+   ],
+   "action": [
+    {"uia": "License", "after": 900}, {"shot": "license", "windows": "all"}
+   ],
+   "closed": {"uia": "Authors", "present": false},
+   "close": [
+    {"id": "escape", "steps": [{"keys": "{ESC}", "after": 800}, {"keys": "{ESC}", "after": 500}]}
+   ]
+  }
+ ]
+}
