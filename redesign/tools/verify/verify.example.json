@@ -5,6 +5,7 @@
     "public": "builds\\current-public\\Cone.exe",
     "vlc": "builds\\current\\vlc.exe"
   },
+  "stockBuild": "<WORK_DIR>\\builds\\38315049322\\vlc-4.0.0-dev\\vlc.exe",
   "ignorePids": [],
   "guardRetrySec": 60,
   "profileSource": "builds\\current-public\\portable",

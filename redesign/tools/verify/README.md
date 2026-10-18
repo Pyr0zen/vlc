@@ -187,6 +187,76 @@ Positions are logical px inside the client area, from the corner `"from"` (tl de
 | `{"expect": {"uia": "Player controls", "visible": false, "present": true, "value": 0.08, "tol": 0.001, "name": "*x*"}, "check": "text"}` | automatic behaviour check (recorded, a failure makes the row "differs") |
 | `{"uiaDump": "name"}` / `{"note": "text"}` | write the UIA tree / a note into the run |
 
+## Beta gate (gate/)
+The release check for the public build (Cone), one command per part plus one for all of them.
+Each run writes `<outRoot>\gate-<yyyyMMdd-HHmmss>[-label]\`: `gate.log`, one folder per part
+(`result.json`, screenshots, player logs), `contact-<part>.png` sheets, `review.json` and
+`gate-report.md` / `.json`.
+
+| File | What it does |
+|---|---|
+| `gate/gate.ps1` | the parts below; `-Part all` runs them in order |
+| `gate/gatelib.ps1` | lane copies, the gate profile, crash events, process samples, the write guard |
+| `gate/make_beta_media.py` | generates the playback matrix into `<TEST_MEDIA_DIR>\builds\test-media\beta` |
+| `gate/screens.json` | the main screens: open, one action, close (each close variant) |
+| `gate/report.py` | report, contact sheets, review.json (re-run it after viewing the screenshots) |
+
+```
+python gate\make_beta_media.py                                        # once (ffmpeg); --force regenerates
+powershell -NoProfile -ExecutionPolicy Bypass -File gate\gate.ps1 -Part all -Build <build folder or Cone.exe> [-Zip <artifact zip>]
+powershell ... gate\gate.ps1 -Part smoke -Build <build>               # 1 minute, after every fix
+powershell ... gate\gate.ps1 -Part screens|playback|quit|perf|soak|footprint|branding -Build <build> [-Run <gate run folder>]
+python gate\report.py <gate run folder>                               # after filling in review.json
+```
+`-Run` adds a part to an existing run (one report for all parts). `-SoakMin` (default 20),
+`-Quits` (30), `-Accent` (`#8E42FF`), `-Stock` (default `stockBuild` in verify.local.json: the stock
+VLC 4 build of the performance rule, run 38315049322).
+
+`-Part all` order: footprint (before), screens, playback, quit, perf, branding, soak (last: 20
+minutes without input, can run unattended), footprint (after). About 45 minutes. Parts that need
+input stop at the input guard like the harness (no input while the player is not in front; the
+no-input parts still run).
+
+### What each part checks
+| Part | How | Pass |
+|---|---|---|
+| screens | `screens.json`: player with both bars (woken by moving the pointer over the video, like a user), settings sidebar tabs, tracks popup tabs (and a track choice), queue / bookmarks / chapters (one bookmark added), main menu + Profile submenu, right-click menu + Playback submenu, library sidebar (Home, Videos, Music), full library with the mini player, Settings dialog (every page), Keyboard Shortcuts (search), About. Dark theme with a non-default accent (`qt-accent-color`, vlcrc) with every close variant (button / Escape / click outside) checked through UI Automation; then a light pass (`color-scheme-index=1` in the Qt settings file) with the same screenshots only | every check passes **and** every screenshot viewed and matching (review.json) |
+| playback | the matrix files (below): plays (shown time advances 3 s), seeks (Ctrl+Right +60 s; the 60 s 4K file Right +10 s; read on the time label), switches the audio track (MKV: English -> Japanese) and the subtitle track (MKV: German; MP4 + external .srt: the external track) in the tracks popup, the chosen one selected afterwards; the AVI without index answers VLC's index dialog with "Play as is"; a player log per file | every file passes; screenshots viewed |
+| quit | 30 starts over the matrix files, quit after 4 s of playback, odd tries Ctrl+Q, even tries WM_CLOSE | all exit within 15 s, 0 players left in the lane folder, 0 Application Error / WER / Application Hang events for the exe (Get-WinEvent, read only) |
+| perf | stock VLC 4 then the build, back to back, no input (started minimized, shown without focus, 1600x900): launch -> first frame (the window centre turns to the test pattern, read from PrintWindow), CPU and private bytes over 20 s playing the MP4 and the 4K file | build <= stock + noise: startup max(150 ms, 15 %) (launch-to-launch spread in PERF.md rounds 1-3), CPU max(1 point, 2 x the per-second spread), RAM max(30 MB, 10 %) (RAM drift between runs in PERF.md); "invalid" when the PC is busy (> 30 % CPU) |
+| soak | a playlist of the matrix files on loop, window off screen, no input; private bytes, working set, handles, threads, CPU every 30 s; every minute the window must respond (Process.Responding, IsHungAppWindow) and the shown time must have moved; a screenshot every 5 minutes | no crash / crash event, no freeze, no stall; private bytes after the 5 minute warm-up grow < 50 MB and trend < 60 MB/h (a leak of 1 KB per frame at 30 fps is ~108 MB/h; allocator and cache settling stays well under 50 MB), handles < +500, threads < +20 |
+| footprint | read-only snapshot (path, size, time, SHA-1) of `%APPDATA%` and `%LOCALAPPDATA%` `vlc` and `Cone` (Cone's non-portable folder: src/win32/dirs.c `APP_DIR_NAME` on wip/cone-release), the installed VLC (`Program Files\VideoLAN\VLC`), the lane's build files outside `portable`, and HKCU `Software\VideoLAN`, `Software\Cone`, `Classes\Applications\Cone.exe` / `vlc.exe`, before and after the run | nothing added, changed or removed |
+| branding | the exe's version info, every folder / file name of the zip (`-Zip`) or of the extracted build folder, every window title and UI Automation name (texts, tooltips, menu entries) of every screenshot of the run | no "VLC" except "based on VLC media player" / "based on VLC 4.0.0-dev" / "VLC media player by VideoLAN"; libVLC's own DLL and plugin names count as internal; no update-check banner (the public build has no update checker) |
+| smoke | the MKV: plays, Space pauses, Ctrl+Right seeks 60 s, Ctrl+Down / Ctrl+Up change the volume (Volume slider), each sidebar tab, Settings open and Escape, Ctrl+Q exits | every step passes; a key that needed a second press is noted |
+
+Playback matrix (`make_beta_media.py`, every video ffmpeg's `testsrc2` filling the frame, sine audio):
+MP4 H.264 + AAC (1080p30, 3 min); MKV HEVC + 2 AAC tracks + 2 SubRip tracks (720p, 3 min); AVI
+MPEG-4 Part 2 + MP3 and the same AVI without its idx1 index; MP3; FLAC; AAC (.m4a); 4K 60 fps
+H.264 about 40 Mbit/s (60 s); MP4 + external `.srt` with the same name (VLC's autodetection).
+
+### Screenshots are the verification
+A UI part passes only after its screenshots were looked at: `review.json` lists every
+screenshot with what it should show; for each one write what it shows (`seen`), set `viewed`
+and `verdict` (`match` / `differs`), then run `report.py` again. Until then the report says
+"not verified" even when every measurement passed. Start with the contact sheets, open single
+shots where in doubt.
+
+### Gate safety rules (Sticky's PC, on top of the harness rules above)
+- Nothing is ever deleted: builds go into a new lane folder per build,
+  `<TEST_MEDIA_DIR>\builds\verify-lane-gate-<run number>` (stock: `verify-lane-stock-<run number>`),
+  copied with `robocopy /E` (never /MIR or /PURGE; a lane folder that holds another build is
+  refused), without the UPnP / mDNS / SAP plugins (listening sockets: Windows Firewall prompts).
+  The profile is reset by overwriting the gate's own files (`portable\vlcrc`,
+  `portable\<Cone|vlc>\vlc-qt-interface.ini`); the media library and preset files stay.
+- The gate writes only into `<outRoot>\gate-*`, `builds\verify-lane*` and
+  `builds\test-media\beta` (`Assert-GateTarget` refuses anything else).
+- Input only through the harness driver (guarded, started players only); the perf and soak parts
+  send no input at all. Every player the gate started is closed after each part; a player stuck
+  without a window is reported, never touched.
+- Windows Firewall or other security prompts are never answered by the gate: they are reported
+  for Sticky.
+- The profile never adds library folders (the onboarding is never finished), so no screenshot
+  shows the owner's files; the media are the generated ones only.
 ## Limits
 - Text is rendered by Qt (ClearType, hinting) and by Figma differently: glyph weight differences
   show up as near-match, not pass. Different strings (track names, file names) are masked or made

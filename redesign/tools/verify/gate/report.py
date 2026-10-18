@@ -73,6 +73,12 @@ def collect_shots(run):
             out.append({"rel": rel.replace("\\", "/"), "part": part, "pass": sub, "state": s.get("state", ""),
                         "should": s.get("should", ""),
                         "label": "%s%s" % (sub + " " if sub else "", os.path.splitext(os.path.basename(rel))[0])})
+            # the player's other windows of a "windows": "all" shot (dialogs such as About)
+            for e in as_list(s.get("extra")):
+                erel = os.path.dirname(rel).replace("\\", "/") + "/" + e["file"]
+                out.append({"rel": erel, "part": part, "pass": sub, "state": s.get("state", ""),
+                            "should": s.get("should", "") + " (window '%s')" % e.get("title", ""),
+                            "label": "%s%s" % (sub + " " if sub else "", os.path.splitext(e["file"])[0])})
     perf = os.path.join(run, "perf")
     if os.path.isdir(perf):
         for f in sorted(os.listdir(perf)):

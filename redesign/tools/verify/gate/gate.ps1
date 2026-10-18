@@ -63,6 +63,15 @@ function Invoke-GateSteps($steps, $ctx, [switch]$NoShots, [string]$prefix = '') 
             if (-not $NoShots) { Save-GateShot $ctx ($prefix + [string]$s.shot) ([string](Get-StepProp $s 'windows' 'main')) }
             continue
         }
+        # gate step: {"hoverAbove": "<UIA name>", "dy": 150}: the pointer goes dy logical px above
+        # that element's centre (the mini player's picture shows its buttons on hover)
+        if ($s.PSObject.Properties['hoverAbove']) {
+            $el = Find-UiaElement ([string]$s.hoverAbove) '' 3000
+            if (-not $el) { throw "UIA element '$($s.hoverAbove)' not found" }
+            $r = $el.Current.BoundingRectangle; $sc = Get-Scale (Get-MainWindow).Handle
+            Move-Mouse ($r.X + $r.Width / 2) ($r.Y + $r.Height / 2 - [double]$s.dy * $sc) -Screen | Out-Null
+            Start-Sleep -Milliseconds ([int](Get-StepProp $s 'after' 700)); continue
+        }
         Invoke-Step $s $ctx
     }
 }
@@ -74,9 +83,37 @@ function Start-GateSession([string]$exe, [string[]]$playerArgs, [double]$w = 128
     $m = Get-MainWindow
     Invoke-FocusPlayer $m.Handle | Out-Null
     if (-not (Find-UiaElement 'Main interface' '' 15000)) { Write-GLog '  note: UI Automation did not show the interface within 15 s' }
+    Test-UpdateDialog
     return $m
 }
-function Get-LogErrors([string]$logFile) {
+# the public build has no update checker: an update dialog / banner is a finding (screenshot of
+# that window, listed by the branding part); a dialog is closed so it does not cover the player
+$script:UpdateSeen = New-Object System.Collections.ArrayList
+function Test-UpdateDialog([int]$timeoutMs = 2500) {
+    $el = Find-UiaElement 'checking for updates' '' $timeoutMs 'contains'
+    if (-not $el) { return }
+    $text = [regex]::Replace([string]$el.Current.Name, '<[^>]+>', '')
+    $main = Get-MainWindow 3
+    # the dialog: another top-level window of the player (Qt widgets dialog); a banner inside the
+    # main window has none
+    $win = $null
+    foreach ($w in (Get-PlayerWindows)) { if ($w.Class -ne 'Static' -and $w.Handle -ne $main.Handle -and $w.Width -gt 100 -and $w.Height -gt 60) { $win = $w } }
+    $key = "$text|$(if ($win) { 'dialog' } else { 'banner' })"
+    if (-not ($script:UpdateSeen | Where-Object { $_.key -eq $key })) {
+        $dir = Join-Path $RunDir 'update-dialog'; New-Item -ItemType Directory -Force $dir | Out-Null
+        $f = Join-Path $dir ('update-{0:D2}.png' -f ($script:UpdateSeen.Count + 1))
+        try { if ($win) { Save-WindowShot $win.Handle $f | Out-Null } else { Save-WindowShot $main.Handle $f -Client | Out-Null } } catch {}
+        [void]$script:UpdateSeen.Add([ordered]@{ key = $key; text = $text; window = $(if ($win) { $win.Title } else { 'banner in the main window' }); shot = "update-dialog/$(Split-Path $f -Leaf)" })
+        Save-Json @($script:UpdateSeen) (Join-Path $dir 'seen.json')
+        Write-GLog "  FINDING: update check $(if ($win) { "dialog '$($win.Title)'" } else { 'banner' }): '$text' ($(Split-Path $f -Leaf))"
+    }
+    if ($win) {
+        $close = $null; $p = $null
+        try { $root = [System.Windows.Automation.AutomationElement]::FromHandle($win.Handle); $close = $root.FindFirst([System.Windows.Automation.TreeScope]::Descendants, (New-Object System.Windows.Automation.PropertyCondition([System.Windows.Automation.AutomationElement]::NameProperty, 'Close'))) } catch {}
+        if ($close -and $close.TryGetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern, [ref]$p)) { Assert-Guard; $p.Invoke(); Start-Sleep -Milliseconds 600 }
+        else { [RdVerifyWin2]::PostMessage($win.Handle, 0x0010, [IntPtr]::Zero, [IntPtr]::Zero) | Out-Null; Start-Sleep -Milliseconds 600 }
+    }
+}function Get-LogErrors([string]$logFile) {
     if (-not (Test-Path -LiteralPath $logFile)) { return @() }
     @(Select-String -LiteralPath $logFile -Pattern ' error: ' -SimpleMatch | Select-Object -First 30 | ForEach-Object { $_.Line.Trim() })
 }
@@ -190,7 +227,8 @@ function Invoke-Branding {
     # texts on screen: every shot of the screens / playback / smoke parts of this run
     $shotTexts = 0
     foreach ($rj in (Get-ChildItem -LiteralPath $RunDir -Recurse -Filter shots.json -ErrorAction SilentlyContinue)) {
-        foreach ($s in (Get-Content -Raw -LiteralPath $rj.FullName | ConvertFrom-Json)) {
+        $shotList = Get-Content -Raw -LiteralPath $rj.FullName | ConvertFrom-Json
+        foreach ($s in $shotList) {
             foreach ($t in @($s.texts)) {
                 $shotTexts++
                 if (Find-BrandHits $t) { $hits += [ordered]@{ where = 'screen'; what = $t; shot = $s.rel } }
@@ -199,6 +237,8 @@ function Invoke-Branding {
             }
         }
     }
+    $us = Join-Path $RunDir 'update-dialog\seen.json'
+    if (Test-Path -LiteralPath $us) { $seen = Get-Content -Raw -LiteralPath $us | ConvertFrom-Json; foreach ($x in $seen) { $hits += [ordered]@{ where = 'update check dialog at start'; what = $x.text; shot = $x.shot } } }
     $uniq = @($hits | Group-Object { "$($_.where)|$($_.what)" } | ForEach-Object { $x = $_.Group[0]; $x.count = $_.Count; $x.shots = @($_.Group | ForEach-Object { $_.shot } | Where-Object { $_ } | Select-Object -Unique -First 5); $x })
     $res = [ordered]@{ part = 'branding'; verdict = $(if ($uniq) { 'FAIL' } else { 'pass' })
         rule = "no user-visible 'VLC' where it should say Cone, and no update-check banner (the public build has no update checker); allowed: $($BrandAllow -join ' | '); libVLC's own DLL and plugin names are internal"
@@ -206,6 +246,23 @@ function Invoke-Branding {
         hits = $uniq; note = $(if ($shotTexts -eq 0) { 'no screen texts in this run yet: run -Part screens (or all) first' } else { '' }) }
     Save-PartResult 'branding' $res
 }
+
+# back to the plain player between screens: Escape, then the full library, the library sidebar
+# or Settings closed if one is still open (so one failing close does not fail the next screens)
+function Reset-PlayerView($table, $ctx) {
+    Test-UpdateDialog 200
+    Invoke-GateSteps $table.reset $ctx -NoShots
+    if (Find-UiaElement 'beta' 'Button' 300) {
+        Invoke-GateSteps @([pscustomobject]@{ hoverAbove = 'beta'; dy = 150 }) $ctx -NoShots
+        Invoke-Step ([pscustomobject]@{ uia = 'Open the player'; optional = $true; after = 1000 }) $ctx
+    }
+    if (Find-UiaElement 'Library' 'Pane' 300) {
+        Wiggle-Mouse 640 25; Start-Sleep -Milliseconds 400
+        Invoke-Step ([pscustomobject]@{ uia = 'Library'; role = 'Button'; optional = $true; after = 900 }) $ctx
+    }
+    if (Find-UiaElement 'Search settings' '' 300) { Send-Keys '{ESC}'; Start-Sleep -Milliseconds 600 }
+}
+
 
 # --- screens --------------------------------------------------------------------------------
 function Invoke-Screens {
@@ -227,13 +284,13 @@ function Invoke-Screens {
                 $ctx = New-StepContext $pdir $st.id
                 $it = [ordered]@{ pass = $ps.id; id = $st.id; title = $st.title; source = $st.source; should = $st.should; status = 'ok'; error = $null; checks = @(); shots = @() }
                 try {
-                    Invoke-GateSteps $table.reset $ctx -NoShots
+                    Reset-PlayerView $table $ctx
                     Invoke-GateSteps $st.open $ctx
                     Invoke-GateSteps $st.action $ctx
                     if ($ps.full) {
                         $vi = 0
                         foreach ($v in @($st.close)) {
-                            if ($vi -gt 0) { Invoke-GateSteps $table.reset $ctx -NoShots; Invoke-GateSteps $st.open $ctx -NoShots }
+                            if ($vi -gt 0) { Reset-PlayerView $table $ctx; Invoke-GateSteps $st.open $ctx -NoShots }
                             Invoke-GateSteps $v.steps $ctx -NoShots
                             if ($st.PSObject.Properties['closed']) { Invoke-Step ([pscustomobject]@{ expect = $st.closed; check = "closes ($($v.id))" }) $ctx }
                             $vi++
@@ -244,9 +301,9 @@ function Invoke-Screens {
                 } catch {
                     $it.status = 'error'; $it.error = $_.Exception.Message; Write-GLog "    ERROR $($st.id): $($it.error)"
                     if ($it.error -like 'GUARD:*') { throw }
-                    try { Invoke-GateSteps $table.reset $ctx -NoShots; if (Find-UiaElement 'Open the player' '' 500) { Invoke-Step ([pscustomobject]@{ uia = 'Open the player' }) $ctx } } catch {}
+                    try { Reset-PlayerView $table $ctx } catch {}
                 }
-                $it.checks = @($ctx.Checks); $it.shots = @($ctx.Shots | ForEach-Object { "$($ps.id)/$($_.file)" })
+                $it.checks = @($ctx.Checks); $it.shots = @($ctx.Shots | ForEach-Object { "$($ps.id)/$($_.file)"; foreach ($e in @($_.extra)) { if ($e) { "$($ps.id)/$($e.file)" } } })
                 if (@($ctx.Checks | Where-Object { -not $_.pass }).Count) { $it.status = 'check failed' }
                 foreach ($s in $ctx.Shots) { $s.pass = $ps.id; $s.state = $st.id; $s.should = $st.should; [void]$shots.Add($s) }
                 $items += $it
@@ -610,7 +667,8 @@ function Invoke-Smoke {
         Start-Sleep -Milliseconds 500; $v1 = Get-VolumeShown
         for ($k = 0; $k -lt 6; $k++) { Send-Keys '^{UP}'; Start-Sleep -Milliseconds 150 }
         Start-Sleep -Milliseconds 500; $v2 = Get-VolumeShown
-        $c.volume = [ordered]@{ pass = [bool]($null -ne $v0 -and $null -ne $v1 -and $v1 -lt $v0 - 0.1 -and [math]::Abs($v2 - $v0) -lt 0.03); detail = ("6x Ctrl+Down: {0:N2} -> {1:N2}, 6x Ctrl+Up: {2:N2}" -f $v0, $v1, $v2) }        Wiggle-Mouse 640 30; Invoke-Step ([pscustomobject]@{ uia = 'Playback Settings'; role = 'Button'; after = 900 }) $ctx
+        $c.volume = [ordered]@{ pass = [bool]($null -ne $v0 -and $null -ne $v1 -and $v1 -lt $v0 - 0.1 -and [math]::Abs($v2 - $v0) -lt 0.03); detail = ("6x Ctrl+Down: {0:N2} -> {1:N2}, 6x Ctrl+Up: {2:N2}" -f $v0, $v1, $v2) }
+        Wiggle-Mouse 640 30; Invoke-Step ([pscustomobject]@{ uia = 'Playback Settings'; role = 'Button'; after = 900 }) $ctx
         $tabs = @()
         foreach ($tab in 'Playback', 'Video', 'Audio', 'Subtitles') { Invoke-Step ([pscustomobject]@{ uia = $tab; role = 'TabItem'; after = 600 }) $ctx; Save-GateShot $ctx "sidebar-$($tab.ToLower())"; $tabs += $tab }
         Send-Keys '{ESC}'; Start-Sleep -Milliseconds 600
