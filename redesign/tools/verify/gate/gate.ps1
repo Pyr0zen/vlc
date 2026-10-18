@@ -10,10 +10,11 @@
 #     -SoakMin 20             soak length in minutes (dry run: 3)
 #     -Quits 30               quit test tries (half Ctrl+Q, half WM_CLOSE)
 #     -Accent '#8E42FF'       the non-default accent of the dark screens pass
+#     -Only mkv,srt           playback: only these matrix files (ids in make_beta_media.py)
 # README.md (next to verify.ps1) "Beta gate" has what each part checks and its pass rule.
 param([Parameter(Mandatory)][ValidateSet('footprint', 'branding', 'screens', 'playback', 'quit', 'perf', 'soak', 'smoke', 'all', 'report')][string]$Part,
       [string]$Build = 'public', [string]$Stock = '', [string]$Zip = '', [string]$Run = '', [string]$Label = '',
-      [int]$SoakMin = 20, [int]$Quits = 30, [string]$Accent = '#8E42FF', [string]$Phase = '')
+      [int]$SoakMin = 20, [int]$Quits = 30, [string]$Accent = '#8E42FF', [string]$Phase = '', [string]$Only = '')
 $ErrorActionPreference = 'Stop'
 . (Join-Path (Split-Path -Parent $MyInvocation.MyCommand.Path) 'gatelib.ps1')
 $cfg = $script:GateCfg
@@ -338,8 +339,12 @@ function Get-TrackState([string]$tab) {
     }
     return $out
 }
-function Invoke-TrackSwitch($ctx, [string]$button, [string]$tab, [string]$prefer) {
-    Wiggle-Mouse 640 30; Start-Sleep -Milliseconds 400
+# chooses another track in the tracks popup. The switch is read from the player log after the
+# player has quit (VLC writes its log file in blocks): a user's choice is logged as "ES track
+# selected (forced): 'audio/3'". The popup's radio buttons do not report their checked state to
+# UI Automation (noted in the detail).
+function Invoke-TrackSwitch($ctx, [string]$button, [string]$tab, [string]$prefer, [string]$logFile, [string]$esKind) {
+    Wiggle-Mouse 208 692; Start-Sleep -Milliseconds 400
     Invoke-Step ([pscustomobject]@{ uia = $button; role = 'Button'; after = 900 }) $ctx
     Invoke-Step ([pscustomobject]@{ uia = $tab; role = 'TabItem'; after = 700 }) $ctx
     $before = @(Get-TrackState $tab | Where-Object { $_.Name -and $_.Name -ne 'None' })
@@ -347,14 +352,27 @@ function Invoke-TrackSwitch($ctx, [string]$button, [string]$tab, [string]$prefer
     $target = @($before | Where-Object { -not $_.Selected -and (-not $prefer -or $_.Name -like "*$prefer*") }) | Select-Object -First 1
     if (-not $target) { $target = @($before | Where-Object { -not $_.Selected }) | Select-Object -First 1 }
     if (-not $target) { Send-Keys '{ESC}'; return [ordered]@{ pass = $false; detail = "no other $tab track to choose (tracks: $(@($before.Name) -join ', '))" } }
-    Invoke-UiaElement $target.El | Out-Null; Start-Sleep -Milliseconds 900
+    # subtitles: "None" first, so a track that is already on (an autodetected .srt) is chosen again
+    if ($tab -eq 'Subtitles') {
+        $none = @(Get-TrackState $tab | Where-Object { $_.Name -eq 'None' }) | Select-Object -First 1
+        if ($none) { Invoke-UiaElement $none.El | Out-Null; Start-Sleep -Milliseconds 800 }
+        $target = @(Get-TrackState $tab | Where-Object { $_.Name -eq $target.Name }) | Select-Object -First 1
+    }
+    Invoke-UiaElement $target.El | Out-Null; Start-Sleep -Milliseconds 1200
     Save-GateShot $ctx "$($tab.ToLower())-switched"
-    $after = @(Get-TrackState $tab | Where-Object { $_.Selected })
+    $sel = @(Get-TrackState $tab | Where-Object { $_.Selected })
     Send-Keys '{ESC}'; Start-Sleep -Milliseconds 500
-    $ok = [bool]($after | Where-Object { $_.Name -eq $target.Name })
-    return [ordered]@{ pass = $ok; detail = "$tab track: '$(if ($cur) { $cur.Name } else { 'none' })' -> '$($target.Name)', chosen now: '$(@($after.Name) -join ', ')'" }
+    $uiaNote = if ($sel) { "popup shows '$(@($sel.Name) -join ', ')' chosen" } else { 'the popup does not report the chosen track to UI Automation' }
+    return [ordered]@{ pass = $null; es = $esKind; detail = "$tab track -> '$($target.Name)'; $uiaNote" }
 }
-function Wait-ShownTime([int]$timeoutMs = 4000) {
+# after the quit: the log shows the user's track choice
+function Complete-TrackSwitch($r, [string]$logFile) {
+    if (-not $r -or $null -ne $r.pass) { return $r }
+    $hit = @(Select-String -LiteralPath $logFile -Pattern "ES track selected \(forced\): '([^']*/)?$($r.es)/" -ErrorAction SilentlyContinue)
+    $r.pass = ($hit.Count -gt 0)
+    $r.detail += "; player log: $(if ($hit) { ($hit[-1].Line -replace '^.*(ES track selected)', '$1') } else { 'no forced selection' })"
+    return $r
+}function Wait-ShownTime([int]$timeoutMs = 4000) {
     $end = (Get-Date).AddMilliseconds($timeoutMs)
     do { Wiggle-Mouse 640 30; $t = Get-ShownTime; if ($t) { return $t }; Start-Sleep -Milliseconds 300 } while ((Get-Date) -lt $end)
     return $null
@@ -364,12 +382,15 @@ function Invoke-Playback {
     $dir = New-PartDir 'playback'
     $exe = Sync-GateLane $exeSource
     $rows = @(); $shots = New-Object System.Collections.ArrayList
-    foreach ($id in 'mp4', 'mkv', 'avi', 'avi-noindex', 'mp3', 'flac', 'm4a', '4k60', 'srt') {
+    $ids = @('mp4', 'mkv', 'avi', 'avi-noindex', 'mp3', 'flac', 'm4a', '4k60', 'srt')
+    if ($Only) { $ids = @($ids | Where-Object { $Only.Split(',') -contains $_ }) }
+    foreach ($id in $ids) {
         $m = $Media[$id]
         New-GateProfile $exe 'dark' '' | Out-Null
         $logFile = Join-Path $dir "$id-log.txt"
         $a = Get-GateArgs $exe @('--restore-playback-pos=0') @($m.path) $logFile
         $ctx = New-StepContext $dir $id
+        $ra = $null; $rs = $null
         $row = [ordered]@{ id = $id; file = $m.file; about = $m.about; plays = $null; seeks = $null; audio_track = $null; subtitle_track = $null; dialog = $null; error = $null; log = (Split-Path $logFile -Leaf); log_errors = @(); checks = [ordered]@{} }
         Write-GLog "playback: $($m.file)"
         try {
@@ -398,16 +419,18 @@ function Invoke-Playback {
             $row.seeks = [bool]($null -ne $d -and $d -ge $jump - 3 -and $d -le $jump + 5)
             $row.checks.seeks = "$(if ($key -eq '^{RIGHT}') { 'Ctrl+Right' } else { 'Right' }) (+$jump s): $(if ($s1) { $s1.Text } else { '?' }) -> $(if ($s2) { $s2.Text } else { '?' })$note"
             Save-GateShot $ctx 'seeked'
-            if ($m.audio -ge 2) { $r = Invoke-TrackSwitch $ctx 'Audio' 'Audio' 'Japanese'; $row.audio_track = $r.pass; $row.checks.audio_track = $r.detail }
-            if ($m.subs -ge 1) { $r = Invoke-TrackSwitch $ctx 'Subtitles' 'Subtitles' $(if ($id -eq 'mkv') { 'German' } else { '' }); $row.subtitle_track = $r.pass; $row.checks.subtitle_track = $r.detail
+            if ($m.audio -ge 2) { $ra = Invoke-TrackSwitch $ctx 'Audio' 'Audio' 'Japanese' $logFile 'audio' }
+            if ($m.subs -ge 1) { $rs = Invoke-TrackSwitch $ctx 'Subtitles' 'Subtitles' $(if ($id -eq 'mkv') { 'German' } else { '' }) $logFile 'spu'
                 Start-Sleep -Seconds 4; Save-GateShot $ctx 'subtitle-shown' }
         } catch { $row.error = $_.Exception.Message; Write-GLog "    ERROR: $($row.error)"; if ($row.error -like 'GUARD:*') { Write-GLog "  quit: $(Stop-Players)"; throw } }
         finally { $row.quit = Stop-Players; Write-GLog "  quit: $($row.quit)" }
         $row.log_errors = @(Get-LogErrors $logFile)
+        if ($ra) { $ra = Complete-TrackSwitch $ra $logFile; $row.audio_track = $ra.pass; $row.checks.audio_track = $ra.detail }
+        if ($rs) { $rs = Complete-TrackSwitch $rs $logFile; $row.subtitle_track = $rs.pass; $row.checks.subtitle_track = $rs.detail }
         foreach ($s in $ctx.Shots) { $s.state = $id; $s.should = "playing $($m.file): picture (video) or the music view (audio), control bar with the current time; after a switch the chosen track"; [void]$shots.Add($s) }
         $row.shots = @($ctx.Shots | ForEach-Object { $_.file })
         $want = @($row.plays, $row.seeks) + $(if ($m.audio -ge 2) { @($row.audio_track) } else { @() }) + $(if ($m.subs -ge 1) { @($row.subtitle_track) } else { @() })
-        $row.verdict = if (-not $row.error -and -not ($want | Where-Object { $_ -ne $true })) { 'pass' } else { 'FAIL' }
+        $row.verdict = if (-not $row.error -and @($want | Where-Object { $_ -ne $true }).Count -eq 0) { 'pass' } else { 'FAIL' }
         Write-GLog "  ${id}: $($row.verdict) ($(($row.checks.Values) -join '; '))"
         $rows += $row
     }
