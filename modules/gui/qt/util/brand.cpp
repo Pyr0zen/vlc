@@ -107,7 +107,7 @@ QString engineText(const QString& text)
 {
 #ifdef VLC_BRAND_PUBLIC
     static const QRegularExpression vlcName(
-        QStringLiteral("\\bVLC(?: media player)?\\b(?!\\s*\\d)"));
+        QStringLiteral("\\bVLC(?: media player)?+\\b(?!\\s*\\d)"));
     QString result = text;
     result.replace(vlcName, qtr(BRAND_SHORT_NAME));
     return result;

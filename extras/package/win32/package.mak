@@ -198,7 +198,11 @@ endif
 
 package-win32-debug-zip: package-win-common
 	rm -f -- $(WINVERSION)-debug.zip
-	zip -r -9 $(WINVERSION)-debug.zip vlc-$(VERSION)
+if BRAND_PUBLIC
+	rm -f -- "$(WINPACKAGE)"
+	ln -s vlc-$(VERSION) "$(WINPACKAGE)"
+endif
+	zip -r -9 $(WINVERSION)-debug.zip $(WINPACKAGE)
 
 package-win32-7zip: package-win-strip
 	$(SEVENZIP) a $(7ZIP_OPTS) $(WINVERSION).7z vlc-$(VERSION)
@@ -208,6 +212,9 @@ package-win32-debug-7zip: package-win-common
 
 package-win32-cleanup:
 	rm -Rf $(win32_destdir) $(win32_debugdir)
+if BRAND_PUBLIC
+	rm -f -- "$(WINPACKAGE)"
+endif
 
 package-win32: package-win32-zip package-win32-7zip package-win32-exe
 

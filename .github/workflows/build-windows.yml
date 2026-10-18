@@ -195,7 +195,7 @@ jobs:
             BRAND_VERSION=""
           fi
           if [ -n "$BRAND_PACKAGE_SUFFIX" ] && ! echo "$BRAND_PACKAGE_SUFFIX" | grep -Eq '^-[A-Za-z0-9.]+$'; then
-            echo "::warning::package suffix '$BRAND_PACKAGE_SUFFIX' is not -<letters, digits, dots>: not used"
+            echo "::warning::the package suffix is not -<letters, digits, dots>: not used"
             BRAND_PACKAGE_SUFFIX=""
           fi
           docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/build" -w /build -e HOME=/tmp \
@@ -227,7 +227,7 @@ jobs:
           ls -la win64/*.zip
           mkdir dist
           # vlc-<version>-win64.zip, or Cone-<version><suffix>-win64.zip in the public profile
-          unzip -q win64/*-win64.zip -d dist
+          unzip -q "$(ls win64/*-win64.zip | head -n 1)" -d dist
           ls dist dist/*
 
       - uses: actions/upload-artifact@v4
